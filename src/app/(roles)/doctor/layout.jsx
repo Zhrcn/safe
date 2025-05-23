@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Typography, Container, IconButton, Switch, FormControlLabel } from '@mui/material';
+import { Box, Typography, IconButton, Switch, FormControlLabel } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu'; // Placeholder for menu icon
 import AccountCircle from '@mui/icons-material/AccountCircle'; // Placeholder for avatar
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -8,10 +8,11 @@ import PeopleIcon from '@mui/icons-material/People';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import MessageIcon from '@mui/icons-material/Message';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
-import PersonIcon from '@mui/icons-material/Person';
+import PersonIcon from '@mui/icons-material/Person'; // Corrected import path
 import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'; // Updated import path
 import { toggleThemeMode } from '@/lib/redux/slices/themeSlice'; // Updated import path
+import { usePathname } from 'next/navigation';
 
 // Basic Header Component
 function DoctorHeader() {
@@ -23,15 +24,15 @@ function DoctorHeader() {
   };
 
   return (
-    <Box className="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between shadow-md dark:shadow-lg">
+    <Box className="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between shadow-md dark:shadow-lg"> {/* Theme-aware background and shadow */}
       <Box className="flex items-center">
+        {/* Menu icon can be used for future sidebar collapse */}
         <IconButton color="inherit" aria-label="open drawer" edge="start" sx={{ mr: 2 }}>
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" component="div" className="font-bold">
           S.A.F.E
         </Typography>
-        {/* Add dark/light mode toggle and avatar later */}
       </Box>
        {/* Right side: Logo, S.A.F.E, Dark/Light Toggle, Avatar */}
        <Box className="flex items-center space-x-4">
@@ -42,10 +43,25 @@ function DoctorHeader() {
            </Typography>
            {/* Dark/Light Toggle */}
             <FormControlLabel
-              control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" />}
+              control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
               label={themeMode === 'dark' ? 'Dark' : 'Light'}
               sx={{
-                   color: themeMode === 'dark' ? 'white' : '#212121' // Theme-aware label color
+                   color: themeMode === 'dark' ? 'white' : '#212121', // Theme-aware label color
+                   '.MuiSwitch-thumb': { // Style the switch thumb
+                        backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
+                   },
+                    '.MuiSwitch-track': { // Style the switch track
+                        backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
+                        opacity: 1, // Ensure track is visible
+                   },
+                   '& .Mui-checked': { // Style when checked (Dark mode)
+                        '.MuiSwitch-thumb': {
+                             backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
+                        },
+                         '.MuiSwitch-track': {
+                             backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Consistent track color
+                         },
+                    }
               }}
             />
 
@@ -60,6 +76,8 @@ function DoctorHeader() {
 
 // Basic Sidebar Component
 function DoctorSidebar() {
+    const pathname = usePathname(); // Get current path to highlight active item
+
     const sidebarItems = [
         { name: 'Dashboard', icon: DashboardIcon, link: '/doctor/dashboard' },
         { name: 'Patients', icon: PeopleIcon, link: '/doctor/patients' },
@@ -70,13 +88,15 @@ function DoctorSidebar() {
     ];
 
     return (
-        <Box className="w-64 bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl">
+        <Box className="w-64 bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl"> {/* Theme-aware background and text color */}
             {/* Logo/Title in Sidebar if needed, based on image. The image shows it in header. */}
             {sidebarItems.map((item) => (
                 <Link href={item.link} key={item.name} passHref legacyBehavior>
                     <Box
                         component="a"
-                        className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors duration-200"
+                        className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
+                            ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700' : 'hover:bg-gray-700 dark:hover:bg-gray-700'} {/* Highlight active link */}
+                        `}
                     >
                         <item.icon fontSize="small" />
                         <Typography variant="body1">{item.name}</Typography>
@@ -89,14 +109,14 @@ function DoctorSidebar() {
 
 export default function DoctorLayout({ children }) {
   return (
-    <Box className="flex h-screen bg-gray-700 dark:bg-[#0f172a]">
+    <Box className="flex h-screen bg-gray-700 dark:bg-[#0f172a]"> {/* Theme-aware background */}
       <DoctorSidebar />
       <Box className="flex flex-col flex-1 overflow-hidden">
         <DoctorHeader />
-        <Box component="main" className="flex-1 overflow-y-auto p-6">
+        <Box component="main" className="flex-1 overflow-y-auto p-6"> {/* Padding remains consistent, background inherited */}
           {children}
         </Box>
       </Box>
     </Box>
   );
-} 
+}

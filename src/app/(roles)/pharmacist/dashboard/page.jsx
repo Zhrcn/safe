@@ -1,7 +1,7 @@
 'use client';
 
-import { Typography, Card, CardContent, Box, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from '@mui/material';
-import { Package, FileText, ShoppingCart, AlertCircle } from 'lucide-react';
+import { Typography, Card, CardContent, Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
+import { Package, FileText, ShoppingCart, AlertCircle, Eye } from 'lucide-react';
 
 // Mock Pharmacist Data (replace with actual authenticated pharmacist data fetching)
 const mockPharmacistData = {
@@ -29,129 +29,134 @@ function DashboardCard({
   actionButton
 }) {
   return (
-    <Card className="h-full shadow-lg">
+    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200"> {/* Added theme-aware borders and background */}
       <CardContent>
         <Box className="flex justify-between items-center mb-4">
           <Box className="flex items-center">
-             <IconComponent size={24} className="mr-3 text-green-600" />
+             <Box className="p-3 rounded-full bg-green-100 dark:bg-green-700 mr-4"> {/* Themed icon background with Pharmacist color and spacing */}
+                <IconComponent size={28} className="text-green-600 dark:text-green-200" /> {/* Themed icon color and size */}
+             </Box>
              <Typography variant="h6" component="div" className="font-semibold">
                {title}
              </Typography>
           </Box>
           {actionButton}
         </Box>
-        {children}
+        <Box className="text-gray-700 dark:text-gray-300"> {/* Themed text color for card content */}
+           {children}
+        </Box>
       </CardContent>
     </Card>
   );
 }
 
-export default function PharmacistDashboard() {
+export default function PharmacistDashboardPage() {
    const pharmacist = mockPharmacistData; // In a real app, fetch authenticated pharmacist data
 
   return (
-    <div className="p-6 bg-gray-100 min-h-full">
-      <Card className="mb-6 shadow-lg">
-        <CardContent>
-          <Box className="flex items-center mb-4">
-             <Package size={40} className="mr-3 text-green-600" />
-             <Typography variant="h5" component="h1" className="font-bold">Pharmacist Dashboard</Typography>
-          </Box>
-           <Typography variant="body1" color="text.secondary">Welcome, {pharmacist.name} ({pharmacist.location})!</Typography>
-        </CardContent>
-      </Card>
+    <Box>
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md"> {/* Theme-aware background and shadow */}
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
+          Pharmacist Dashboard
+        </Typography>
+         <Typography variant="body1" className="text-gray-700 dark:text-gray-300 mb-6"> {/* Theme-aware text color */}
+           Welcome, {pharmacist.name} ({pharmacist.location})!
+         </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="Low Stock Items"
-            icon={AlertCircle}
-          >
-            <TableContainer component={Paper} elevation={1}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Item</TableCell>
-                    <TableCell align="right">Stock</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {mockInventorySummary.filter(item => item.stock <= item.lowStockThreshold).length === 0 ? (
-                     <TableRow>
-                       <TableCell colSpan={2} align="center">No items currently low in stock.</TableCell>
-                     </TableRow>
-                  ) : (
-                     mockInventorySummary.filter(item => item.stock <= item.lowStockThreshold).map((item, index) => (
-                       <TableRow key={index}>
-                         <TableCell>{item.item}</TableCell>
-                         <TableCell align="right">{item.stock}</TableCell>
+        <Grid container spacing={3}> {/* Added spacing between grid items */}
+          <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="Low Stock Items"
+              icon={AlertCircle}
+            >
+              <TableContainer component={Paper} elevation={1} className="bg-white dark:bg-gray-700 rounded-md"> {/* Themed table container */}
+                <Table size="small">
+                  <TableHead>
+                    <TableRow className="bg-gray-100 dark:bg-gray-600"> {/* Themed table header */}
+                      <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Item</TableCell> {/* Themed text and font weight */}
+                      <TableCell align="right" className="text-gray-800 dark:text-gray-200 font-semibold">Stock</TableCell> {/* Themed text and font weight */}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {mockInventorySummary.filter(item => item.stock <= item.lowStockThreshold).length === 0 ? (
+                       <TableRow>
+                         <TableCell colSpan={2} align="center" className="text-gray-700 dark:text-gray-300"> {/* Themed text */}
+                           No items currently low in stock.
+                         </TableCell>
                        </TableRow>
-                     ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </DashboardCard>
-        </Grid>
+                    ) : (
+                       mockInventorySummary.map((item, index) => (
+                         <TableRow key={index} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"> {/* Hover effect */}
+                           <TableCell className="text-gray-900 dark:text-gray-100">{item.item}</TableCell> {/* Themed text */}
+                           <TableCell align="right" className="text-gray-900 dark:text-gray-100">{item.stock}</TableCell> {/* Themed text */}
+                         </TableRow>
+                       ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DashboardCard>
+          </Grid>
 
-        <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="Prescriptions to Fill"
-            icon={FileText}
-            actionButton={(
-              <Button variant="outlined" size="small" startIcon={<Eye size={16} />}>View All</Button>
-            )}
-          >
-             <TableContainer component={Paper} elevation={1}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Patient</TableCell>
-                    <TableCell>Medication</TableCell>
-                    <TableCell>Date</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                   {mockPrescriptionsToFill.length === 0 ? (
-                     <TableRow>
-                       <TableCell colSpan={3} align="center">No prescriptions to fill.</TableCell>
-                     </TableRow>
-                   ) : (
-                      mockPrescriptionsToFill.map((prescription) => (
-                       <TableRow key={prescription.id}>
-                         <TableCell>{prescription.patientName}</TableCell>
-                         <TableCell>{prescription.medication}</TableCell>
-                         <TableCell>{prescription.date}</TableCell>
+          <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="Prescriptions to Fill"
+              icon={FileText}
+              actionButton={(
+                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-green-600 dark:text-green-300 border-green-600 dark:border-green-300 hover:bg-green-50 dark:hover:bg-green-900 transition-colors duration-200">View All</Button>
+              )}
+            >
+               <TableContainer component={Paper} elevation={1} className="bg-white dark:bg-gray-700 rounded-md"> {/* Themed table container */}
+                <Table size="small">
+                  <TableHead>
+                    <TableRow className="bg-gray-100 dark:bg-gray-600"> {/* Themed table header */}
+                      <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Patient</TableCell> {/* Themed text and font weight */}
+                      <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Medication</TableCell> {/* Themed text and font weight */}
+                      <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Date</TableCell> {/* Themed text and font weight */}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                     {mockPrescriptionsToFill.length === 0 ? (
+                       <TableRow>
+                         <TableCell colSpan={3} align="center" className="text-gray-700 dark:text-gray-300"> {/* Themed text */}
+                           No prescriptions to fill.
+                         </TableCell>
                        </TableRow>
-                     ))
-                   )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </DashboardCard>
+                     ) : (
+                        mockPrescriptionsToFill.map((prescription) => (
+                         <TableRow key={prescription.id} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"> {/* Hover effect */}
+                           <TableCell className="text-gray-900 dark:text-gray-100">{prescription.patientName}</TableCell> {/* Themed text */}
+                           <TableCell className="text-gray-900 dark:text-gray-100">{prescription.medication}</TableCell> {/* Themed text */}
+                           <TableCell className="text-gray-900 dark:text-gray-100">{prescription.date}</TableCell> {/* Themed text */}
+                         </TableRow>
+                       ))
+                     )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DashboardCard>
+          </Grid>
+
+           <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="Recent Orders"
+              icon={ShoppingCart}
+              actionButton={(
+                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-green-600 dark:text-green-300 border-green-600 dark:border-green-300 hover:bg-green-50 dark:hover:bg-green-900 transition-colors duration-200">View All</Button>
+              )}
+            >
+               <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ Placeholder for a list of recent medication orders ]</Typography> {/* Themed text */}
+               {/* Table or List of recent orders */}
+               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
+                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ Recent Orders List Placeholder ]</Typography> {/* Themed text */}
+               </Box>
+            </DashboardCard>
+          </Grid>
+
+          {/* Add more pharmacist dashboard sections */}
+
         </Grid>
-
-         <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="Recent Orders"
-            icon={ShoppingCart}
-            actionButton={(
-              <Button variant="outlined" size="small" startIcon={<Eye size={16} />}>View All</Button>
-            )}
-          >
-             <Typography variant="body2" color="text.secondary">[ Placeholder for a list of recent medication orders ]</Typography>
-             {/* Table or List of recent orders */}
-             <Box sx={{ mt: 2, height: 100, bgcolor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">[ Recent Orders List Placeholder ]</Typography>
-              </Box>
-          </DashboardCard>
-        </Grid>
-
-        {/* Add more pharmacist dashboard sections */}
-
-      </Grid>
-    </div>
+      </Paper>
+    </Box>
   );
 }
-
-import { Eye } from 'lucide-react'; // Ensure Eye icon is imported if used in actionButton 

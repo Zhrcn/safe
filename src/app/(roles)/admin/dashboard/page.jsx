@@ -1,7 +1,14 @@
 'use client';
 
-import { Typography, Card, CardContent, Box, Grid, Button } from '@mui/material';
-import { Users, BarChart, Settings, Hospital } from 'lucide-react';
+import { Typography, Card, CardContent, Box, Grid, Paper, Button } from '@mui/material';
+import { Users, BarChart, Settings, Hospital, Eye } from 'lucide-react';
+// Import motion from framer-motion
+import { motion } from 'framer-motion';
+
+// Mock Admin Data (replace with actual authenticated admin data fetching)
+const mockAdminData = {
+  hospitalName: 'Syrian Central Hospital',
+};
 
 // Placeholder Card Component for Dashboard sections
 function DashboardCard({
@@ -11,90 +18,101 @@ function DashboardCard({
   actionButton
 }) {
   return (
-    <Card className="h-full shadow-lg">
+    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200"> {/* Added theme-aware borders and background */}
       <CardContent>
         <Box className="flex justify-between items-center mb-4">
           <Box className="flex items-center">
-             <IconComponent size={24} className="mr-3 text-purple-600" />
+             <Box className="p-3 rounded-full bg-red-100 dark:bg-red-700 mr-4"> {/* Themed icon background with Admin color and spacing */}
+                <IconComponent size={28} className="text-red-600 dark:text-red-200" /> {/* Themed icon color and size */}
+             </Box>
              <Typography variant="h6" component="div" className="font-semibold">
                {title}
              </Typography>
           </Box>
           {actionButton}
         </Box>
-        {children}
+         <Box className="text-gray-700 dark:text-gray-300"> {/* Themed text color for card content */}
+             {children}
+         </Box>
       </CardContent>
     </Card>
   );
 }
 
-export default function AdminDashboard() {
-  // Mock Admin Data (replace with actual authenticated admin data fetching)
-  const mockAdminData = {
-    hospitalName: 'Syrian Central Hospital',
+export default function AdminDashboardPage() {
+  const admin = mockAdminData; // In a real app, fetch authenticated admin data
+
+   // Define animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-full">
-      <Card className="mb-6 shadow-lg">
-        <CardContent>
-          <Box className="flex items-center mb-4">
-             <Hospital size={40} className="mr-3 text-purple-600" />
-             <Typography variant="h5" component="h1" className="font-bold">Admin Dashboard</Typography>
-          </Box>
-           <Typography variant="body1" color="text.secondary">Welcome, Administrator of {mockAdminData.hospitalName}!</Typography>
-        </CardContent>
-      </Card>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6" // Added spacing between sections
+    >
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md"> {/* Theme-aware background and shadow */}
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
+          Admin Dashboard
+        </Typography>
+         <Typography variant="body1" className="text-gray-700 dark:text-gray-300 mb-6"> {/* Theme-aware text color */}
+           Welcome, Administrator of {admin.hospitalName}!
+         </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="User Management"
-            icon={Users}
-            actionButton={(
-              <Button variant="outlined" size="small">Manage Users</Button>
-            )}
-          >
-            <Typography variant="body2" color="text.secondary">Overview of registered users (Doctors, Patients, Pharmacists, Admins).</Typography>
-             <Box sx={{ mt: 2, height: 100, bgcolor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">[ User Statistics Placeholder ]</Typography>
-              </Box>
-          </DashboardCard>
+        <Grid container spacing={3}> {/* Added spacing between grid items */}
+          <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="User Management"
+              icon={Users}
+              actionButton={(
+                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">Manage Users</Button>
+              )}
+            >
+              <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Overview of registered users (Doctors, Patients, Pharmacists, Admins).</Typography>
+               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
+                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ User Statistics Placeholder ]</Typography>
+               </Box>
+            </DashboardCard>
+          </Grid>
+
+          <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="System Overview"
+              icon={Settings}
+              actionButton={(
+                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">System Settings</Button>
+              )}
+            >
+              <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Monitoring system health, performance, and key metrics.</Typography>
+               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
+                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ System Metrics Placeholder ]</Typography>
+               </Box>
+            </DashboardCard>
+          </Grid>
+
+           <Grid item xs={12} md={6}> {/* Made cards responsive */}
+            <DashboardCard
+              title="Reports and Analytics"
+              icon={BarChart}
+              actionButton={(
+                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">View Reports</Button>
+              )}
+            >
+               <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Access various reports on appointments, patients, inventory, etc.</Typography>
+               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
+                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ Report Summaries Placeholder ]</Typography>
+               </Box>
+            </DashboardCard>
+          </Grid>
+
+          {/* Add more admin dashboard sections */}
+
         </Grid>
-
-        <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="System Overview"
-            icon={Settings}
-            actionButton={(
-              <Button variant="outlined" size="small">System Settings</Button>
-            )}
-          >
-            <Typography variant="body2" color="text.secondary">Monitoring system health, performance, and key metrics.</Typography>
-             <Box sx={{ mt: 2, height: 100, bgcolor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">[ System Metrics Placeholder ]</Typography>
-              </Box>
-          </DashboardCard>
-        </Grid>
-
-         <Grid item xs={12} md={6}>
-          <DashboardCard
-            title="Reports and Analytics"
-            icon={BarChart}
-            actionButton={(
-              <Button variant="outlined" size="small">View Reports</Button>
-            )}
-          >
-             <Typography variant="body2" color="text.secondary">Access various reports on appointments, patients, inventory, etc.</Typography>
-             <Box sx={{ mt: 2, height: 100, bgcolor: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">[ Report Summaries Placeholder ]</Typography>
-              </Box>
-          </DashboardCard>
-        </Grid>
-
-        {/* Add more admin dashboard sections */}
-
-      </Grid>
-    </div>
+      </Paper>
+    </motion.div>
   );
 } 

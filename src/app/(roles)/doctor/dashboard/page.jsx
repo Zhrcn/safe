@@ -7,6 +7,8 @@ import { setSelectedPatient } from '@/lib/redux/patientSlice';
 import { Typography, Card, CardContent, List, ListItem, ListItemText, Paper, Box, Divider, Grid, TextField, InputAdornment } from '@mui/material';
 // Import Lucid Icons
 import { CalendarDays, User, Hospital, Search } from 'lucide-react';
+// Import motion from framer-motion
+import { motion } from 'framer-motion';
 
 // We'll need to import patient and appointment data fetching logic here later
 
@@ -210,97 +212,68 @@ function Calendar({
 
 export default function DoctorDashboard() {
   const dispatch = useAppDispatch();
-  const selectedDate = useAppSelector((state) => state.date.selectedDate);
-  const selectedPatient = useAppSelector((state) => state.patient.selectedPatient);
+  const selectedDate = useAppSelector(state => state.date.selectedDate);
+  const selectedPatient = useAppSelector(state => state.patient.selectedPatient);
 
-  // --- Mock Data ---\n  // In a real application, fetch this data from your backend API
+  // Mock data - replace with API calls
   const doctor = {
     name: 'Ahmad Al-Ali',
     specialty: 'General Surgery',
-    contact: 'ahmad.ali@example.com'
+    contact: 'ahmad.ali@example.com',
   };
 
-  const mockPatients = {
-    '2024-06-01': [{
-      id: 1,
-      name: 'Patient A',
-      age: 45,
-      gender: 'Male',
-      medicalHistory: 'Hypertension'
-    }, {
-      id: 2,
-      name: 'Patient B',
-      age: 30,
-      gender: 'Female',
-      medicalHistory: 'Diabetes'
-    }, ],
-    '2024-06-02': [{
-      id: 3,
-      name: 'Patient C',
-      age: 60,
-      gender: 'Male',
-      medicalHistory: 'Heart Disease'
-    }, ],
-    '2024-06-03': [{
-      id: 4,
-      name: 'Patient D',
-      age: 35,
-      gender: 'Female',
-      medicalHistory: 'Asthma'
-    }, {
-      id: 5,
-      name: 'Patient E',
-      age: 50,
-      gender: 'Male',
-      medicalHistory: 'Arthritis'
-    }, ],
-    // Add more mock data for other dates
-  };
+  const patientsTodayMock = [
+    { id: 1, name: 'Patient A', age: 45, gender: 'Male', medicalHistory: 'Hypertension' },
+    { id: 2, name: 'Patient B', age: 30, gender: 'Female', medicalHistory: 'Diabetes' },
+  ];
 
-  const patientsForSelectedDate = mockPatients[selectedDate] || [];
-  // ---\n
+  useEffect(() => {
+    // Fetch data for the selected date - implement API call here
+    // For now, just use mock data
+    console.log(`Fetching data for date: ${selectedDate}`);
+
+  }, [selectedDate]);
+
   const handleSelectPatient = (patient) => {
     dispatch(setSelectedPatient(patient));
   };
 
   const handleDateChange = (date) => {
     dispatch(setSelectedDate(date));
-    dispatch(setSelectedPatient(null)); // Clear selected patient when date changes
+    // Clear selected patient when date changes
+    dispatch(setSelectedPatient(null));
   };
 
-  // Initial fetch based on the default selected date
-  useEffect(() => {
-    // In a real app, trigger API call here to fetch patients for selectedDate
-    console.log(`Fetching patients for date: ${selectedDate}`);
-  }, [selectedDate]); // Re-run when selectedDate changes
-
+  // Define animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
 
   return (
-    <Box className="bg-transparent">
-      {/* Doctor Info - Placed outside the main grid for now, adjust as per final layout decisions */}
-      {/* <DoctorInfo doctor={doctor} /> */}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6" // Added spacing between sections
+    >
+      <DoctorInfo doctor={doctor} />
 
-      {/* Main Content Grid - Two columns top, one column bottom */}
-      <Grid container spacing={3}>
-        {/* Left Column: Patient List and Search */}
-        <Grid item xs={12} md={6}>
+      <Grid container spacing={6}> {/* Increased spacing */}
+        <Grid item xs={12} md={4}> {/* Adjusted grid size */}
+          <Calendar selectedDate={selectedDate} onSelectDate={handleDateChange} />
+        </Grid>
+        <Grid item xs={12} md={4}> {/* Adjusted grid size */}
           <PatientsList
-            patients={patientsForSelectedDate}
+            patients={patientsTodayMock} // Use fetched data here
             onSelectPatient={handleSelectPatient}
             selectedPatientId={selectedPatient?.id}
           />
         </Grid>
-
-        {/* Right Column: Patient Details */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}> {/* Adjusted grid size */}
           <PatientDetails patient={selectedPatient} />
         </Grid>
-
-        {/* Bottom Section: Calendar */}
-        <Grid item xs={12}>
-          <Calendar selectedDate={selectedDate} onSelectDate={handleDateChange} />
-        </Grid>
       </Grid>
-    </Box>
+    </motion.div>
   );
-} 
+}

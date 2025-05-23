@@ -57,69 +57,104 @@ export default function DoctorPatientsListPage() {
 
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white">
-          Patients List
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+          Doctor Patients List
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300">
-          This is the Doctor Patients List page. Content will be added here to display a list of patients. This page will adapt to both light and dark themes.
+        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
+          This page displays a list of patients.
         </Typography>
-        <Card className="mb-6 shadow-lg">
+        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <CardContent>
-            <Box className="flex justify-between items-center mb-4">
-              <Typography variant="h5" component="h1" className="font-bold">Patients List</Typography>
-              <Box className="flex items-center space-x-4">
+            <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
+              <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Patients List</Typography>
+              <Box className="flex items-center space-x-4 w-full sm:w-auto">
                 <TextField
                   variant="outlined"
                   size="small"
                   placeholder="Search Patients"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full sm:w-auto"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search size={20} />
+                        <Search size={20} className="text-gray-500 dark:text-gray-400"/>
                       </InputAdornment>
                     ),
+                    className: 'text-gray-900 dark:text-white',
                   }}
+                  InputLabelProps={{
+                     style: { color: 'inherit' },
+                  }}
+                   sx={{
+                      '& .MuiOutlinedInput-root': {
+                          fieldset: { borderColor: '#d1d5db' },
+                          '&:hover fieldset': { borderColor: '#9ca3af' },
+                           '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
+                            '& .MuiOutlinedInput-notchedOutline': {
+                                 borderColor: '#4b5563',
+                           },
+                           '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#6b7280',
+                           },
+                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                 borderColor: '#60a5fa',
+                           },
+                      },
+                       '& .MuiInputBase-input::placeholder': {
+                           color: '#9ca3af',
+                           opacity: 1,
+                           '.dark & ': {
+                                color: '#6b7280',
+                           },
+                       },
+                       '& .MuiInputLabel-outlined': {
+                            color: '#6b7280',
+                             '.dark & ': {
+                                 color: '#9ca3af',
+                           },
+                       },
+                   }}
                 />
-                <Button variant="contained" startIcon={<UserPlus size={20} />} className="bg-blue-600 hover:bg-blue-700">
+                <Button variant="contained" startIcon={<UserPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
                   Add New Patient
                 </Button>
               </Box>
             </Box>
 
-            <TableContainer component={Paper} elevation={2}>
+            <TableContainer component={Paper} elevation={2} className="bg-white dark:bg-gray-700 rounded-md">
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Age</TableCell>
-                    <TableCell>Gender</TableCell>
-                    <TableCell>Last Appointment</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                  <TableRow className="bg-gray-100 dark:bg-gray-600">
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Name</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Age</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Gender</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Last Appointment</TableCell>
+                    <TableCell align="right" className="text-gray-800 dark:text-gray-200 font-semibold">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredPatients.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={5} align="center" className="text-gray-700 dark:text-gray-300">
                         No patients found.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredPatients.map((patient) => (
-                      <TableRow key={patient.id}>
-                        <TableCell>{patient.name}</TableCell>
-                        <TableCell>{patient.age}</TableCell>
-                        <TableCell>{patient.gender}</TableCell>
-                        <TableCell>{patient.lastAppointment}</TableCell>
+                      <TableRow key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
+                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.name}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.age}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.gender}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.lastAppointment}</TableCell>
                         <TableCell align="right">
                           <Button
                             variant="outlined"
                             size="small"
                             startIcon={<Eye size={16} />}
                             onClick={() => handleViewDetails(patient.id)}
+                            className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
                           >
                             View
                           </Button>

@@ -39,53 +39,54 @@ export default function DoctorAppointmentsPage() {
 
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white">
-          Appointments
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+          Doctor Appointments
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300">
-          This is the Doctor Appointments page. Content will be added here to manage appointments. This page will adapt to both light and dark themes.
+        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
+          This page displays the doctor's appointments.
         </Typography>
-        <Card className="mb-6 shadow-lg">
+        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <CardContent>
             <Box className="flex justify-between items-center mb-4">
-              <Typography variant="h5" component="h1" className="font-bold">Appointments</Typography>
-              <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-blue-600 hover:bg-blue-700">
+              <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Appointments</Typography>
+              <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
                 Schedule New Appointment
               </Button>
             </Box>
 
-            <Typography variant="h6" className="mb-4">Appointments Today</Typography>
+            <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200">Appointments Today</Typography>
 
-            <TableContainer component={Paper} elevation={2}>
+            <TableContainer component={Paper} elevation={2} className="bg-white dark:bg-gray-700 rounded-md">
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Patient Name</TableCell>
-                    <TableCell>Time</TableCell>
-                    <TableCell>Reason</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                  <TableRow className="bg-gray-100 dark:bg-gray-600">
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Patient Name</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Time</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Reason</TableCell>
+                    <TableCell align="right" className="text-gray-800 dark:text-gray-200 font-semibold">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {appointmentsToday.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} align="center">
+                      <TableCell colSpan={4} align="center" className="text-gray-700 dark:text-gray-300">
                         No appointments scheduled for today.
                       </TableCell>
                     </TableRow>
                   ) : (
                     appointmentsToday.map((appointment) => (
-                      <TableRow key={appointment.id}>
-                        <TableCell>{appointment.patientName}</TableCell>
-                        <TableCell>{appointment.time}</TableCell>
-                        <TableCell>{appointment.reason}</TableCell>
+                      <TableRow key={appointment.id} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
+                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.patientName}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.time}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.reason}</TableCell>
                         <TableCell align="right">
                           <Button
                             variant="outlined"
                             size="small"
                             startIcon={<Eye size={16} />}
                             onClick={() => handleViewDetails(appointment.id)}
+                            className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
                           >
                             View
                           </Button>

@@ -27,12 +27,12 @@ function AnalyticsCard({
 export default function DoctorAnalyticsPage() {
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white">
-          Analytics
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+          Doctor Analytics
         </Typography>
         <Typography paragraph className="text-gray-700 dark:text-gray-300">
-          This is the Doctor Analytics page. Content will be added here to display analytics and reports. This page will adapt to both light and dark themes.
+          This page will display analytics and insights for the doctor.
         </Typography>
         <Card className="mb-6 shadow-lg">
           <CardContent>
