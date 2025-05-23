@@ -137,18 +137,21 @@ export default function DoctorPatientsListPage() {
                 <TableBody>
                   {filteredPatients.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" className="text-gray-700 dark:text-gray-300">
+                      <TableCell colSpan={5} align="center" className="text-gray-700 dark:text-gray-300 py-4">
                         No patients found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredPatients.map((patient) => (
-                      <TableRow key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
-                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.name}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.age}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.gender}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100">{patient.lastAppointment}</TableCell>
-                        <TableCell align="right">
+                    filteredPatients.map((patient, index) => (
+                      <TableRow 
+                        key={patient.id} 
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 ${index < filteredPatients.length - 1 ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}
+                      >
+                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.name}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.age}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.gender}</TableCell>
+                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.lastAppointment}</TableCell>
+                        <TableCell align="right" className="py-3 px-4">
                           <Button
                             variant="outlined"
                             size="small"

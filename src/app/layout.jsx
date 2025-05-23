@@ -1,4 +1,4 @@
-import '../../styles/globals.css';
+import '../styles/globals.css';
 import { Inter } from 'next/font/google';
 import { ReduxProvider } from '@/lib/redux/provider';
 import { Box, Typography, Container } from '@mui/material';

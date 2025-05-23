@@ -5,4 +5,4 @@ import { store } from '@/lib/redux/store'; // Updated import path
 
 export function ReduxProvider({ children }) {
   return <Provider store={store}>{children}</Provider>;
-} 
+}   

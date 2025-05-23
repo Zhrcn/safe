@@ -1,7 +1,7 @@
 'use client';
 
 import { Typography, Card, CardContent, Box, Avatar, Grid, TextField, Paper, InputAdornment } from '@mui/material';
-import { User, Mail, Phone, Hospital, Home } from 'lucide-react';
+import { User, Mail, Phone, Hospital, Home, FileText } from 'lucide-react';
 
 // Mock Doctor Profile Data (replace with actual data fetching)
 const mockDoctorProfile = {
@@ -30,8 +30,8 @@ export default function DoctorProfilePage() {
         </Typography>
         <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <CardContent>
-            <Box className="flex items-center mb-6">
-              <Avatar sx={{ bgcolor: 'primary.main', mr: 3, width: 80, height: 80 }} className="bg-blue-500 dark:bg-blue-700">
+            <Box className="flex items-center mb-6 p-4 border-b border-gray-200 dark:border-gray-700">
+              <Avatar sx={{ bgcolor: 'primary.main', mr: 3, width: 80, height: 80 }} className="bg-blue-500 dark:bg-blue-700 shadow-md">
                 <User size={40} className="text-white dark:text-gray-200"/>
               </Avatar>
               <div>
@@ -205,7 +205,7 @@ export default function DoctorProfilePage() {
                    }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Address"
                   value={doctor.address}
@@ -251,7 +251,7 @@ export default function DoctorProfilePage() {
                   label="License Number"
                   value={doctor.licenseNumber}
                   fullWidth
-                  InputProps={{ readOnly: true, className: 'text-gray-900 dark:text-white' }}
+                  InputProps={{ readOnly: true, startAdornment: (<InputAdornment position="start"><FileText size={20} className="text-gray-500 dark:text-gray-400"/></InputAdornment>), className: 'text-gray-900 dark:text-white' }}
                    InputLabelProps={{
                      style: { color: 'inherit' },
                   }}

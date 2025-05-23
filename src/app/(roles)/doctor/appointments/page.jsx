@@ -1,40 +1,57 @@
 'use client';
 
-import { Typography, Card, CardContent, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { CalendarPlus, Eye } from 'lucide-react';
+import { Typography, Card, CardContent, Box, Button, List, ListItem, ListItemText, Paper, Grid } from '@mui/material';
+import { CalendarPlus, Eye, Clock, User, FileText } from 'lucide-react';
 
-// Mock Appointments Data
+// Mock Appointments Data (replace with actual data fetching)
 const mockAppointments = [
-  {
-    id: 1,
-    patientName: 'Patient A',
-    date: '2024-06-15',
-    time: '10:00 AM',
-    reason: 'Follow-up',
-  },
-  {
-    id: 2,
-    patientName: 'Patient B',
-    date: '2024-06-15',
-    time: '11:00 AM',
-    reason: 'New Consultation',
-  },
-  {
-    id: 3,
-    patientName: 'Patient C',
-    date: '2024-06-16',
-    time: '02:00 PM',
-    reason: 'Check-up',
-  },
+  { id: 1, patientName: 'Patient A', date: '2024-06-21', time: '10:00 AM', reason: 'Follow-up', status: 'upcoming' },
+  { id: 2, patientName: 'Patient B', date: '2024-06-21', time: '11:00 AM', reason: 'New Consultation', status: 'today' },
+  { id: 3, patientName: 'Patient C', date: '2024-06-20', time: '02:00 PM', reason: 'Check-up', status: 'past' },
+  { id: 4, patientName: 'Patient D', date: '2024-06-21', time: '01:00 PM', reason: 'Vaccination', status: 'today' },
+  { id: 5, patientName: 'Patient E', date: '2024-06-22', time: '09:00 AM', reason: 'Annual Physical', status: 'upcoming' },
 ];
 
+// Helper component for displaying appointment cards
+function AppointmentCard({ appointment, onViewDetails }) {
+  return (
+    <Card className="shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200 hover:shadow-xl"> {/* Theme-aware styles and hover effect */}
+      <CardContent>
+        <Box className="flex items-center mb-3">
+           <User size={24} className="mr-3 text-blue-600 dark:text-blue-400"/> {/* Themed icon */}
+           <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">{appointment.patientName}</Typography> {/* Theme-aware text */}
+        </Box>
+        <Box className="space-y-2 text-gray-700 dark:text-gray-300"> {/* Themed text color and spacing */}
+           <Typography variant="body2" className="flex items-center"><Clock size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>{appointment.time} on {appointment.date}</Typography> {/* Themed icon and text */}
+           <Typography variant="body2" className="flex items-center"><FileText size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>Reason: {appointment.reason}</Typography> {/* Themed icon and text */}
+        </Box>
+        <Box className="mt-4 flex justify-end"> {/* Align button to the right */}
+           <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Eye size={16} />}
+              onClick={() => onViewDetails(appointment.id)}
+              className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200" // Themed button
+            >
+              View Details
+            </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DoctorAppointmentsPage() {
-  // In a real app, you would fetch and filter appointments
-  const appointmentsToday = mockAppointments.filter(app => app.date === new Date().toISOString().split('T')[0]);
+  // In a real app, you would fetch appointments based on selected date/filters
+  const today = new Date().toISOString().split('T')[0];
+
+  const appointmentsToday = mockAppointments.filter(app => app.date === today && app.status === 'today');
+  const upcomingAppointments = mockAppointments.filter(app => app.date > today && app.status === 'upcoming').sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort upcoming
+   const pastAppointments = mockAppointments.filter(app => app.date < today || app.status === 'past').sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort past descending
 
   const handleViewDetails = (appointmentId) => {
     console.log(`View details for appointment ${appointmentId}`);
-    // Implement navigation to appointment/patient detail page
+    // Implement navigation to appointment/patient detail page or show modal
   };
 
   return (
@@ -44,61 +61,65 @@ export default function DoctorAppointmentsPage() {
           Doctor Appointments
         </Typography>
         <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
-          This page displays the doctor's appointments.
+          This page displays your appointments.
         </Typography>
-        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+
+        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Card for Appointments section */}
           <CardContent>
-            <Box className="flex justify-between items-center mb-4">
-              <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Appointments</Typography>
-              <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
-                Schedule New Appointment
-              </Button>
-            </Box>
+             <Box className="flex justify-between items-center mb-6">
+                <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Appointments Overview</Typography>
+                <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
+                  Schedule New Appointment
+                </Button>
+              </Box>
 
-            <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200">Appointments Today</Typography>
+             {/* Today's Appointments */}
+             <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Today's Appointments</Typography>
+              <Grid container spacing={3} className="mb-6"> {/* Added spacing and bottom margin */}
+                 {appointmentsToday.length === 0 ? (
+                   <Grid item xs={12}> {/* Full width for message */}
+                     <Typography className="text-gray-700 dark:text-gray-300">No appointments scheduled for today.</Typography>
+                   </Grid>
+                 ) : (
+                   appointmentsToday.map((appointment) => (
+                     <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
+                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                     </Grid>
+                   ))
+                 )}
+              </Grid>
 
-            <TableContainer component={Paper} elevation={2} className="bg-white dark:bg-gray-700 rounded-md">
-              <Table>
-                <TableHead>
-                  <TableRow className="bg-gray-100 dark:bg-gray-600">
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Patient Name</TableCell>
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Time</TableCell>
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Reason</TableCell>
-                    <TableCell align="right" className="text-gray-800 dark:text-gray-200 font-semibold">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {appointmentsToday.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} align="center" className="text-gray-700 dark:text-gray-300">
-                        No appointments scheduled for today.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    appointmentsToday.map((appointment) => (
-                      <TableRow key={appointment.id} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
-                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.patientName}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.time}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100">{appointment.reason}</TableCell>
-                        <TableCell align="right">
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<Eye size={16} />}
-                            onClick={() => handleViewDetails(appointment.id)}
-                            className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+              {/* Upcoming Appointments */}
+              <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Upcoming Appointments</Typography>
+               <Grid container spacing={3} className="mb-6"> {/* Added spacing and bottom margin */}
+                 {upcomingAppointments.length === 0 ? (
+                   <Grid item xs={12}> {/* Full width for message */}
+                     <Typography className="text-gray-700 dark:text-gray-300">No upcoming appointments.</Typography>
+                   </Grid>
+                 ) : (
+                   upcomingAppointments.map((appointment) => (
+                      <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
+                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                      </Grid>
+                   ))
+                 )}
+              </Grid>
 
-            {/* You could add sections for upcoming appointments, past appointments, etc. */}
+               {/* Past Appointments */}
+              <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Past Appointments</Typography>
+               <Grid container spacing={3}> {/* Added spacing */}
+                 {pastAppointments.length === 0 ? (
+                   <Grid item xs={12}> {/* Full width for message */}
+                     <Typography className="text-gray-700 dark:text-gray-300">No past appointments found.</Typography>
+                   </Grid>
+                 ) : (
+                   pastAppointments.map((appointment) => (
+                      <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
+                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                      </Grid>
+                   ))
+                 )}
+              </Grid>
 
           </CardContent>
         </Card>

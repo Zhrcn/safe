@@ -10,7 +10,7 @@ function AnalyticsCard({
   children
 }) {
   return (
-    <Card className="h-full shadow-lg">
+    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200 hover:shadow-xl">
       <CardContent>
         <Box className="flex items-center mb-4">
           <IconComponent size={24} className="mr-3 text-blue-600" />
@@ -27,11 +27,11 @@ function AnalyticsCard({
 export default function DoctorAnalyticsPage() {
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md min-h-[80vh]">
         <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
           Doctor Analytics
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300">
+        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
           This page will display analytics and insights for the doctor.
         </Typography>
         <Card className="mb-6 shadow-lg">

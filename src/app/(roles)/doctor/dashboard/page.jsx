@@ -46,7 +46,7 @@ function PatientsList({
   selectedPatientId
 }) {
   return (
-    <Paper elevation={3} className="h-full flex flex-col bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+    <Paper elevation={3} className="h-full flex flex-col bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700">
         <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">Patients Today</Typography>
       </Box>
@@ -122,7 +122,7 @@ function PatientDetails({
 }) {
   if (!patient) {
     return (
-      <Paper elevation={3} className="h-full flex items-center justify-center p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+      <Paper elevation={3} className="h-full flex items-center justify-center p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <Typography variant="h6" color="text.secondary" className="text-gray-500 dark:text-gray-400">Select a patient to view details</Typography>
       </Paper>
     );
