@@ -29,14 +29,14 @@ function DashboardCard({
   actionButton
 }) {
   return (
-    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200"> {/* Added theme-aware borders and background */}
+    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200 hover:shadow-xl"> {/* Added theme-aware borders and background */}
       <CardContent>
         <Box className="flex justify-between items-center mb-4">
           <Box className="flex items-center">
              <Box className="p-3 rounded-full bg-green-100 dark:bg-green-700 mr-4"> {/* Themed icon background with Pharmacist color and spacing */}
                 <IconComponent size={28} className="text-green-600 dark:text-green-200" /> {/* Themed icon color and size */}
              </Box>
-             <Typography variant="h6" component="div" className="font-semibold">
+             <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white"> {/* Ensure Typography text is theme-aware */}
                {title}
              </Typography>
           </Box>
@@ -54,7 +54,7 @@ export default function PharmacistDashboardPage() {
    const pharmacist = mockPharmacistData; // In a real app, fetch authenticated pharmacist data
 
   return (
-    <Box>
+    <Box className="p-6 bg-gray-100 dark:bg-[#0f172a] min-h-screen"> {/* Add theme-aware background and padding to the main container */}
       <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md"> {/* Theme-aware background and shadow */}
         <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
           Pharmacist Dashboard

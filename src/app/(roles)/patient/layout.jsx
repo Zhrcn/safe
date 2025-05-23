@@ -25,25 +25,24 @@ function PatientHeader() {
     };
 
     return (
-        <Box className="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between shadow-md dark:shadow-lg">
+        <Box className="bg-green-600 dark:bg-gray-800 text-white dark:text-gray-200 p-4 flex items-center justify-between shadow-md dark:shadow-lg">
             <Box className="flex items-center">
-                <IconButton color="inherit" aria-label="open drawer" edge="start" sx={{ mr: 2 }}>
+                <IconButton color="inherit" aria-label="open drawer" edge="start" sx={{ mr: 2 }} className="text-white dark:text-gray-200">
                     <MenuIcon />
                 </IconButton>
-                <Typography variant="h6" component="div" className="font-bold">
+                <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200">
                     S.A.F.E Patient Portal
                 </Typography>
             </Box>
             <Box className="flex items-center space-x-4">
                 <Box className="w-8 h-8 bg-green-500 dark:bg-green-600 rounded-full"></Box>
-                <Typography variant="h6" component="div" className="font-bold">
+                <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200">
                     S.A.F.E
                 </Typography>
                 <FormControlLabel
                     control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
-                    label={themeMode === 'dark' ? 'Dark' : 'Light'}
+                    label={<Typography className="text-gray-900 dark:text-white">{themeMode === 'dark' ? 'Dark' : 'Light'}</Typography>}
                     sx={{
-                         color: themeMode === 'dark' ? 'white' : '#212121',
                          '.MuiSwitch-thumb': {
                               backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000',
                          },
@@ -61,7 +60,7 @@ function PatientHeader() {
                           }
                     }}
                 />
-                <IconButton color="inherit">
+                <IconButton color="inherit" className="text-white dark:text-gray-200">
                     <AccountCircle />
                 </IconButton>
             </Box>
@@ -90,11 +89,13 @@ function PatientSidebar() {
                     <Box
                         component="a"
                         className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
-                            ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700' : 'hover:bg-gray-700 dark:hover:bg-gray-700'}
+                            ${pathname === `/` + item.link ? 'bg-green-600 dark:bg-green-700 text-white' : 'hover:bg-gray-300 dark:hover:bg-gray-700'}
                         `}
                     >
-                        <item.icon fontSize="small" />
-                        <Typography variant="body1">{item.name}</Typography>
+                        <item.icon fontSize="small" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} />
+                        <Typography variant="body1" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>
+                            {item.name}
+                        </Typography>
                     </Box>
                 </Link>
             ))}
@@ -104,7 +105,7 @@ function PatientSidebar() {
 
 export default function PatientLayout({ children }) {
     return (
-        <Box className="flex h-screen bg-gray-700 dark:bg-[#0f172a]">
+        <Box className="flex h-screen bg-gray-100 dark:bg-[#0f172a]">
             <PatientSidebar />
             <Box className="flex flex-col flex-1 overflow-hidden">
                 <PatientHeader />

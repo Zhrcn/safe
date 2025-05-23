@@ -1,4 +1,4 @@
-import '../styles/globals.css';
+import '../../styles/globals.css';
 import { Inter } from 'next/font/google';
 import { ReduxProvider } from '@/lib/redux/provider';
 import { Box, Typography, Container } from '@mui/material';
@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <ThemeProviderWrapper>
             {/* Header */}
-            <Box component="header" className="bg-blue-600 text-white p-4 shadow-md">
+            <Box component="header" className="bg-blue-600 dark:bg-blue-800 text-white dark:text-gray-200 p-4 shadow-md">
               <Container maxWidth="lg">
                 <Typography variant="h6" component="div" className="font-bold">
                   Safe E-Health Platform
@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
               {children}
             </Box>
             {/* Footer */}
-            <Box component="footer" className="bg-gray-800 text-white p-4  h-16 shadow-inner">
+            <Box component="footer" className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white p-4 h-16 shadow-inner">
               <Container maxWidth="lg" className="text-center">
                 <Typography variant="body2" component="p">
                   &copy; {new Date().getFullYear()} Safe E-Health Platform. All rights reserved.

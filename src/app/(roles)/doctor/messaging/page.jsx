@@ -102,13 +102,13 @@ function ConversationList({
                  sx={{
                   '&.Mui-selected': {
                     backgroundColor: '#e0e0e0', // Default selected background
-                    '.dark & ': { // Dark mode selected background
+                    '.dark & ': {
                         backgroundColor: '#4a5568',
                     },
                   },
                   '&.Mui-selected:hover': {
                      backgroundColor: '#d5d5d5', // Default selected hover background
-                     '.dark & ': { // Dark mode selected hover background
+                     '.dark & ': {
                           backgroundColor: '#4a5568',
                      },
                    },
@@ -137,7 +137,7 @@ function MessageDisplay({
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700"> {/* Theme-aware border */}
         <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">Conversation with Patient A</Typography> {/* Theme-aware text - replace with selected patient name */}
       </Box>
-      <Box className="flex-1 overflow-y-auto p-4 space-y-4"> {/* Added padding and spacing */}
+      <Box className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <Typography className="text-gray-500 dark:text-gray-400">No messages yet.</Typography> // Theme-aware text
         ) : (
@@ -178,7 +178,7 @@ function MessageInput({
 
   return (
     <Paper elevation={3} className="p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"> {/* Theme-aware styling */}
-      <Box className="flex items-center space-x-4"> {/* Added spacing */}
+      <Box className="flex items-center space-x-4">
         <TextField
           fullWidth
           variant="outlined"
@@ -187,17 +187,16 @@ function MessageInput({
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
            InputProps={{
-            className: 'text-gray-900 dark:text-white', // Theme-aware input text
+            className: 'text-gray-900 dark:text-white',
           }}
           InputLabelProps={{
-             style: { color: 'inherit' }, // Inherit color
+             style: { color: 'inherit' },
           }}
            sx={{
-              '& .MuiOutlinedInput-root': { // Style the input border
-                  fieldset: { borderColor: '#d1d5db' }, // Default border
-                  '&:hover fieldset': { borderColor: '#9ca3af' }, // Hover border
-                   '&.Mui-focused fieldset': { borderColor: '#3b82f6' }, // Focused border
-                    // Dark theme borders
+              '& .MuiOutlinedInput-root': {
+                  fieldset: { borderColor: '#d1d5db' },
+                  '&:hover fieldset': { borderColor: '#9ca3af' },
+                   '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
                     '.dark & .MuiOutlinedInput-notchedOutline': {
                          borderColor: '#4b5563',
                    },
@@ -209,21 +208,21 @@ function MessageInput({
                    },
               },
                '& .MuiInputBase-input::placeholder': {
-                   color: '#9ca3af', // Default placeholder color
-                   opacity: 1, // Ensure placeholder is visible
-                   '.dark & ': { // Dark mode placeholder color
+                   color: '#9ca3af',
+                   opacity: 1,
+                   '.dark & ': {
                         color: '#6b7280',
                    },
                },
                '& .MuiInputLabel-outlined': {
-                    color: '#6b7280', // Default label color
+                    color: '#6b7280',
                      '.dark & ': {
                          color: '#9ca3af',
                    },
                },
            }}
         />
-        <IconButton color="primary" onClick={handleSendMessage} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"> {/* Themed send button */}
+        <IconButton color="primary" onClick={handleSendMessage} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200">
           <Send size={24} />
         </IconButton>
       </Box>

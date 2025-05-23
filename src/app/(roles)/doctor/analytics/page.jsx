@@ -10,11 +10,11 @@ function AnalyticsCard({
   children
 }) {
   return (
-    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200 hover:shadow-xl">
-      <CardContent>
+    <Card className="h-full shadow-lg rounded-lg border bg-white border-gray-200 dark:border-gray-700  dark:bg-gray-800 transition-colors duration-200 hover:shadow-xl">
+      <CardContent className="dark:text-white">
         <Box className="flex items-center mb-4">
           <IconComponent size={24} className="mr-3 text-blue-600" />
-          <Typography variant="h6" component="div" className="font-semibold">
+          <Typography variant="h6" component="div" className="font-semibold text-gray-900s dark:text-white">
             {title}
           </Typography>
         </Box>
@@ -26,7 +26,7 @@ function AnalyticsCard({
 
 export default function DoctorAnalyticsPage() {
   return (
-    <Box>
+    <Box className="dark:text-white bg-white" >
       <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md min-h-[80vh]">
         <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
           Doctor Analytics
@@ -34,7 +34,7 @@ export default function DoctorAnalyticsPage() {
         <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
           This page will display analytics and insights for the doctor.
         </Typography>
-        <Card className="mb-6 shadow-lg">
+        <Card className="mb-6 shadow-lg bg-white">
           <CardContent>
             <Typography variant="h5" component="h1" className="font-bold mb-4">Doctor Analytics</Typography>
 

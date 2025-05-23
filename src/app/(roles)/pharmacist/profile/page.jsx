@@ -19,7 +19,7 @@ export default function PharmacistProfilePage() {
   const pharmacist = mockPharmacistProfile; // In a real app, fetch authenticated pharmacist's profile
 
   return (
-    <Box>
+    <Box className="p-6 bg-gray-100 dark:bg-[#0f172a] min-h-screen"> {/* Add theme-aware background and padding to the main container */}
       <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md min-h-[80vh]"> {/* Theme-aware background, shadow, and minimum height */}
         <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
           Pharmacist Profile
@@ -37,7 +37,7 @@ export default function PharmacistProfilePage() {
                  </Avatar>
                  <Typography variant="h5" component="div" className="font-bold mb-1 text-gray-900 dark:text-white">{pharmacist.name}</Typography> {/* Theme-aware text color */}
                  <Typography variant="body1" className="text-gray-700 dark:text-gray-300">License: {pharmacist.licenseNumber}</Typography> {/* Theme-aware text color */}
-                 <Typography variant="body1" className="text-gray-700 dark:text-gray-300 flex items-center"><MapPin size={16} className="mr-1"/>{pharmacist.location}</Typography> {/* Theme-aware text color and icon */}
+                 <Typography variant="body1" className="text-gray-700 dark:text-gray-300 flex items-center"><MapPin size={16} className="mr-1 text-gray-500 dark:text-gray-400"/>{pharmacist.location}</Typography> {/* Theme-aware text color and icon */}
               </CardContent>
             </Card>
           </Grid>

@@ -24,13 +24,13 @@ function DoctorHeader() {
   };
 
   return (
-    <Box className="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between shadow-md dark:shadow-lg"> {/* Theme-aware background and shadow */}
+    <Box className="bg-blue-600 dark:bg-gray-800 text-white dark:text-gray-200 p-4 flex items-center justify-between shadow-md dark:shadow-lg"> {/* Theme-aware background, text, and shadow */}
       <Box className="flex items-center">
         {/* Menu icon can be used for future sidebar collapse */}
         <IconButton color="inherit" aria-label="open drawer" edge="start" sx={{ mr: 2 }}>
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" component="div" className="font-bold">
+        <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200"> {/* Ensure Typography text is theme-aware */}
           S.A.F.E
         </Typography>
       </Box>
@@ -38,15 +38,15 @@ function DoctorHeader() {
        <Box className="flex items-center space-x-4">
            {/* Placeholder for Logo (adjust color for theme) */}
            <Box className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full"></Box>
-           <Typography variant="h6" component="div" className="font-bold">
+           <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200"> {/* Ensure Typography text is theme-aware */}
                S.A.F.E
            </Typography>
            {/* Dark/Light Toggle */}
             <FormControlLabel
               control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
-              label={themeMode === 'dark' ? 'Dark' : 'Light'}
+              label={<Typography className="text-gray-900 dark:text-white">{themeMode === 'dark' ? 'Dark' : 'Light'}</Typography>} // Make label theme-aware
               sx={{
-                   color: themeMode === 'dark' ? 'white' : '#212121', // Theme-aware label color
+                   // Removed explicit color from sx to rely on Tailwind classes
                    '.MuiSwitch-thumb': { // Style the switch thumb
                         backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
                    },
@@ -59,14 +59,14 @@ function DoctorHeader() {
                              backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
                         },
                          '.MuiSwitch-track': {
-                             backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Consistent track color
+                             backgroundColor: themeMode === 'dark' ? '#424242' : '#f1f1f1', // Consistent track color
                          },
                     }
               }}
             />
 
             {/* Avatar Placeholder (adjust color for theme) */}
-            <IconButton color="inherit">
+            <IconButton color="inherit" className="text-white dark:text-gray-200"> {/* Ensure icon button is theme-aware */}
                 <AccountCircle />
             </IconButton>
        </Box>
@@ -88,18 +88,20 @@ function DoctorSidebar() {
     ];
 
     return (
-        <Box className="w-64 bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl"> {/* Theme-aware background and text color */}
+        <Box className="w-64 bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl dark:shadow-none"> {/* Theme-aware background, text color, and shadow */}
             {/* Logo/Title in Sidebar if needed, based on image. The image shows it in header. */}
             {sidebarItems.map((item) => (
                 <Link href={item.link} key={item.name} passHref legacyBehavior>
                     <Box
                         component="a"
                         className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
-                            ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700' : 'hover:bg-gray-700 dark:hover:bg-gray-700'} {/* Highlight active link */}
+                            ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'hover:bg-gray-300 dark:hover:bg-gray-700'} {/* Highlight active link with theme-aware colors */}
                         `}
                     >
-                        <item.icon fontSize="small" />
-                        <Typography variant="body1">{item.name}</Typography>
+                        <item.icon fontSize="small" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} /> {/* Theme-aware icon color */}
+                        <Typography variant="body1" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}> {/* Theme-aware text color */}
+                          {item.name}
+                        </Typography>
                     </Box>
                 </Link>
             ))}
@@ -113,7 +115,7 @@ export default function DoctorLayout({ children }) {
       <DoctorSidebar />
       <Box className="flex flex-col flex-1 overflow-hidden">
         <DoctorHeader />
-        <Box component="main" className="flex-1 overflow-y-auto p-6"> {/* Padding remains consistent, background inherited */}
+        <Box component="main" className="flex-1 overflow-y-auto p-6 text-gray-800 dark:text-gray-200"> {/* Padding remains consistent, background inherited, added text color */}
           {children}
         </Box>
       </Box>
