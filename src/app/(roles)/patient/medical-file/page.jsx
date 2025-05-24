@@ -2,6 +2,7 @@
 
 import { Typography, Box, Paper, Card, CardContent, Grid, List, ListItem, ListItemText, Divider } from '@mui/material';
 import { HeartPulse, Allergy, FileText, Stethoscope } from 'lucide-react';
+import React from 'react';
 
 // Mock Medical File Data (replace with actual data fetching)
 const mockMedicalFile = {
@@ -30,22 +31,22 @@ export default function PatientMedicalFilePage() {
     <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Theme-aware card styles */}
       <CardContent>
         <Box className="flex items-center mb-4">
-           <IconComponent size={28} className="mr-4 text-blue-600 dark:text-blue-400"/> {/* Themed icon color and spacing */}
-           <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">{title}</Typography> {/* Theme-aware text color */}
+          <IconComponent size={28} className="mr-4 text-blue-600 dark:text-blue-400" /> {/* Themed icon color and spacing */}
+          <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">{title}</Typography> {/* Theme-aware text color */}
         </Box>
         <List className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden"> {/* Theme-aware border and rounded corners */}
           {items.length === 0 ? (
             <ListItem>
-              <ListItemText primary={`No ${title.toLowerCase()} found.`} className="text-gray-700 dark:text-gray-300"/> {/* Theme-aware text */}
+              <ListItemText primary={`No ${title.toLowerCase()} found.`} className="text-gray-700 dark:text-gray-300" /> {/* Theme-aware text */}
             </ListItem>
           ) : (
             items.map((item, index) => (
-              <>
-                <ListItem key={item.id || index} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"> {/* Theme-aware hover */}
+              <React.Fragment key={item.id || index}>
+                <ListItem className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                   {renderItem(item)}
                 </ListItem>
-                {index < items.length - 1 && <Divider className="!border-gray-200 dark:!border-gray-700"/> /* Theme-aware divider */}
-              </>
+                {index < items.length - 1 && <Divider className="!border-gray-200 dark:!border-gray-700" />}
+              </React.Fragment>
             ))
           )}
         </List>
@@ -92,7 +93,7 @@ export default function PatientMedicalFilePage() {
             />
           </Grid>
 
-           <Grid item xs={12} md={6}> {/* Procedures Section */}
+          <Grid item xs={12} md={6}> {/* Procedures Section */}
             <MedicalFileSection
               title="Procedures"
               icon={Stethoscope}
@@ -106,7 +107,7 @@ export default function PatientMedicalFilePage() {
             />
           </Grid>
 
-           <Grid item xs={12} md={6}> {/* Immunizations Section */}
+          <Grid item xs={12} md={6}> {/* Immunizations Section */}
             <MedicalFileSection
               title="Immunizations"
               icon={FileText}

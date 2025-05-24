@@ -9,7 +9,7 @@ export default function ThemeProviderWrapper({ children }) {
   const themeMode = useAppSelector((state) => state.theme.themeMode);
 
   useEffect(() => {
-    // Apply dark class to html element for Tailwind
+    // Sync Tailwind's dark mode with Redux theme
     if (themeMode === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -19,51 +19,47 @@ export default function ThemeProviderWrapper({ children }) {
 
   const theme = createTheme({
     palette: {
-      mode: themeMode, // Set MUI palette mode based on Redux state
-      // Define custom colors for both light and dark modes if needed
+      mode: themeMode,
       primary: {
-        main: themeMode === 'dark' ? '#90caf9' : '#1976d2', // Example primary color
+        main: themeMode === 'dark' ? '#90caf9' : '#1976d2',
       },
       secondary: {
-        main: themeMode === 'dark' ? '#f48fb1' : '#9c27b0', // Example secondary color
+        main: themeMode === 'dark' ? '#f48fb1' : '#9c27b0',
       },
-       background: {
-         default: themeMode === 'dark' ? '#121212' : '#f4f4f4', // Example background
-         paper: themeMode === 'dark' ? '#1e1e1e' : '#ffffff', // Example paper background
-       },
-       text: {
-         primary: themeMode === 'dark' ? '#ffffff' : '#212121', // Example text color
-         secondary: themeMode === 'dark' ? '#a0a0a0' : '#757575', // Example secondary text color
-       },
+      background: {
+        default: themeMode === 'dark' ? '#0f172a' : '#f4f4f4', // match Tailwind dark bg
+        paper: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
+      },
+      text: {
+        primary: themeMode === 'dark' ? '#ffffff' : '#212121',
+        secondary: themeMode === 'dark' ? '#a0a0a0' : '#757575',
+      },
     },
-     components: {
-       // Customize MUI components based on theme
-        MuiCard: {
-           styleOverrides: {
-             root: {
-               // Apply dark background to cards in dark mode
-                backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
-                color: themeMode === 'dark' ? '#ffffff' : '#212121', // Adjust text color
-             },
-           },
+    components: {
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
+            color: themeMode === 'dark' ? '#ffffff' : '#212121',
+          },
         },
-        MuiPaper: {
-            styleOverrides: {
-              root: {
-                // Apply dark background to Paper in dark mode
-                 backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
-                 color: themeMode === 'dark' ? '#ffffff' : '#212121', // Adjust text color
-              },
-            },
-         },
-         MuiTypography: {
-            styleOverrides: {
-              root: {
-                 color: themeMode === 'dark' ? '#ffffff' : '#212121', // Adjust text color for Typography
-              }
-            }
-         }
-     }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
+            color: themeMode === 'dark' ? '#ffffff' : '#212121',
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            color: themeMode === 'dark' ? '#ffffff' : '#212121',
+          },
+        },
+      },
+    },
   });
 
   return (

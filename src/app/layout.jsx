@@ -1,4 +1,4 @@
-import '../../styles/globals.css';
+import '../styles/globals.css';
 import { Inter } from 'next/font/google';
 import { ReduxProvider } from '@/lib/redux/provider';
 import { Box, Typography, Container } from '@mui/material';
@@ -9,11 +9,11 @@ const inter = Inter({ subsets: ['latin'] });
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-100 dark:bg-[#0f172a] text-gray-900 dark:text-gray-100`}>
+      <body className={`${inter.className} flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300`}>
         <ReduxProvider>
           <ThemeProviderWrapper>
             {/* Header */}
-            <Box component="header" className="bg-blue-600 dark:bg-blue-800 text-white dark:text-gray-200 p-4 shadow-md">
+            <Box component="header" className="bg-primary text-primary-foreground p-4 shadow-md transition-colors duration-300">
               <Container maxWidth="lg">
                 <Typography variant="h6" component="div" className="font-bold">
                   Safe E-Health Platform
@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
               {children}
             </Box>
             {/* Footer */}
-            <Box component="footer" className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white p-4 h-16 shadow-inner">
+            <Box component="footer" className="bg-muted text-muted-foreground p-4 h-16 shadow-inner transition-colors duration-300">
               <Container maxWidth="lg" className="text-center">
                 <Typography variant="body2" component="p">
                   &copy; {new Date().getFullYear()} Safe E-Health Platform. All rights reserved.

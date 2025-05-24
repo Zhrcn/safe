@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'; // Updated import path
 import { toggleThemeMode } from '@/lib/redux/slices/themeSlice'; // Updated import path
 import { usePathname } from 'next/navigation';
+import GenericRoleLayout from '@/components/GenericRoleLayout';
 
 // Basic Header Component
 function DoctorHeader() {
@@ -34,91 +35,100 @@ function DoctorHeader() {
           S.A.F.E
         </Typography>
       </Box>
-       {/* Right side: Logo, S.A.F.E, Dark/Light Toggle, Avatar */}
-       <Box className="flex items-center space-x-4">
-           {/* Placeholder for Logo (adjust color for theme) */}
-           <Box className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full"></Box>
-           <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200"> {/* Ensure Typography text is theme-aware */}
-               S.A.F.E
-           </Typography>
-           {/* Dark/Light Toggle */}
-            <FormControlLabel
-              control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
-              label={<Typography className="text-gray-900 dark:text-white">{themeMode === 'dark' ? 'Dark' : 'Light'}</Typography>} // Make label theme-aware
-              sx={{
-                   // Removed explicit color from sx to rely on Tailwind classes
-                   '.MuiSwitch-thumb': { // Style the switch thumb
-                        backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
-                   },
-                    '.MuiSwitch-track': { // Style the switch track
-                        backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
-                        opacity: 1, // Ensure track is visible
-                   },
-                   '& .Mui-checked': { // Style when checked (Dark mode)
-                        '.MuiSwitch-thumb': {
-                             backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
-                        },
-                         '.MuiSwitch-track': {
-                             backgroundColor: themeMode === 'dark' ? '#424242' : '#f1f1f1', // Consistent track color
-                         },
-                    }
-              }}
-            />
+      {/* Right side: Logo, S.A.F.E, Dark/Light Toggle, Avatar */}
+      <Box className="flex items-center space-x-4">
+        {/* Placeholder for Logo (adjust color for theme) */}
+        <Box className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full"></Box>
+        <Typography variant="h6" component="div" className="font-bold text-white dark:text-gray-200"> {/* Ensure Typography text is theme-aware */}
+          S.A.F.E
+        </Typography>
+        {/* Dark/Light Toggle */}
+        <FormControlLabel
+          control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
+          label={<Typography className="text-gray-900 dark:text-white">{themeMode === 'dark' ? 'Dark' : 'Light'}</Typography>} // Make label theme-aware
+          sx={{
+            // Removed explicit color from sx to rely on Tailwind classes
+            '.MuiSwitch-thumb': { // Style the switch thumb
+              backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
+            },
+            '.MuiSwitch-track': { // Style the switch track
+              backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
+              opacity: 1, // Ensure track is visible
+            },
+            '& .Mui-checked': { // Style when checked (Dark mode)
+              '.MuiSwitch-thumb': {
+                backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
+              },
+              '.MuiSwitch-track': {
+                backgroundColor: themeMode === 'dark' ? '#424242' : '#f1f1f1', // Consistent track color
+              },
+            }
+          }}
+        />
 
-            {/* Avatar Placeholder (adjust color for theme) */}
-            <IconButton color="inherit" className="text-white dark:text-gray-200"> {/* Ensure icon button is theme-aware */}
-                <AccountCircle />
-            </IconButton>
-       </Box>
+        {/* Avatar Placeholder (adjust color for theme) */}
+        <IconButton color="inherit" className="text-white dark:text-gray-200"> {/* Ensure icon button is theme-aware */}
+          <AccountCircle />
+        </IconButton>
+      </Box>
     </Box>
   );
 }
 
 // Basic Sidebar Component
 function DoctorSidebar() {
-    const pathname = usePathname(); // Get current path to highlight active item
+  const pathname = usePathname(); // Get current path to highlight active item
 
-    const sidebarItems = [
-        { name: 'Dashboard', icon: DashboardIcon, link: '/doctor/dashboard' },
-        { name: 'Patients', icon: PeopleIcon, link: '/doctor/patients' },
-        { name: 'Appointments', icon: CalendarTodayIcon, link: '/doctor/appointments' },
-        { name: 'Messaging', icon: MessageIcon, link: '/doctor/messaging' },
-        { name: 'Analytics', icon: AnalyticsIcon, link: '/doctor/analytics' },
-        { name: 'Profile', icon: PersonIcon, link: '/doctor/profile' },
-    ];
+  const sidebarItems = [
+    { name: 'Dashboard', icon: DashboardIcon, link: '/doctor/dashboard' },
+    { name: 'Patients', icon: PeopleIcon, link: '/doctor/patients' },
+    { name: 'Appointments', icon: CalendarTodayIcon, link: '/doctor/appointments' },
+    { name: 'Messaging', icon: MessageIcon, link: '/doctor/messaging' },
+    { name: 'Analytics', icon: AnalyticsIcon, link: '/doctor/analytics' },
+    { name: 'Profile', icon: PersonIcon, link: '/doctor/profile' },
+  ];
 
-    return (
-        <Box className="w-64 bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl dark:shadow-none"> {/* Theme-aware background, text color, and shadow */}
-            {/* Logo/Title in Sidebar if needed, based on image. The image shows it in header. */}
-            {sidebarItems.map((item) => (
-                <Link href={item.link} key={item.name} passHref legacyBehavior>
-                    <Box
-                        component="a"
-                        className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
+  return (
+    <Box className="w-64 bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-100 h-screen flex flex-col p-4 space-y-2 shadow-xl dark:shadow-none"> {/* Theme-aware background, text color, and shadow */}
+      {/* Logo/Title in Sidebar if needed, based on image. The image shows it in header. */}
+      {sidebarItems.map((item) => (
+        <Link href={item.link} key={item.name} passHref legacyBehavior>
+          <Box
+            component="a"
+            className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
                             ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'hover:bg-gray-300 dark:hover:bg-gray-700'} {/* Highlight active link with theme-aware colors */}
                         `}
-                    >
-                        <item.icon fontSize="small" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} /> {/* Theme-aware icon color */}
-                        <Typography variant="body1" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}> {/* Theme-aware text color */}
-                          {item.name}
-                        </Typography>
-                    </Box>
-                </Link>
-            ))}
-        </Box>
-    );
+          >
+            <item.icon fontSize="small" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} /> {/* Theme-aware icon color */}
+            <Typography variant="body1" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}> {/* Theme-aware text color */}
+              {item.name}
+            </Typography>
+          </Box>
+        </Link>
+      ))}
+    </Box>
+  );
 }
+
+const sidebarItems = [
+  { name: 'Dashboard', icon: DashboardIcon, link: '/doctor/dashboard' },
+  { name: 'Patients', icon: PeopleIcon, link: '/doctor/patients' },
+  { name: 'Appointments', icon: CalendarTodayIcon, link: '/doctor/appointments' },
+  { name: 'Messaging', icon: MessageIcon, link: '/doctor/messaging' },
+  { name: 'Analytics', icon: AnalyticsIcon, link: '/doctor/analytics' },
+  { name: 'Profile', icon: PersonIcon, link: '/doctor/profile' },
+];
 
 export default function DoctorLayout({ children }) {
   return (
-    <Box className="flex h-screen bg-gray-700 dark:bg-[#0f172a]"> {/* Theme-aware background */}
-      <DoctorSidebar />
-      <Box className="flex flex-col flex-1 overflow-hidden">
-        <DoctorHeader />
-        <Box component="main" className="flex-1 overflow-y-auto p-6 text-gray-800 dark:text-gray-200"> {/* Padding remains consistent, background inherited, added text color */}
-          {children}
-        </Box>
-      </Box>
-    </Box>
+    <GenericRoleLayout
+      headerBg="bg-primary"
+      sidebarBg="bg-background"
+      logoBg="bg-primary"
+      title="S.A.F.E Doctor Portal"
+      sidebarItems={sidebarItems}
+    >
+      {children}
+    </GenericRoleLayout>
   );
 }

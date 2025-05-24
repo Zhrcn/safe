@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { toggleThemeMode } from '@/lib/redux/slices/themeSlice';
 import { usePathname } from 'next/navigation';
+import GenericRoleLayout from '@/components/GenericRoleLayout';
 
 // Basic Header Component (can be shared or role-specific)
 function AdminHeader() {
@@ -37,27 +38,27 @@ function AdminHeader() {
                 <Typography variant="h6" component="div" className="font-bold">
                     S.A.F.E
                 </Typography>
-                 {/* Dark/Light Toggle */}
+                {/* Dark/Light Toggle */}
                 <FormControlLabel
                     control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
                     label={themeMode === 'dark' ? 'Dark' : 'Light'}
                     sx={{
-                         color: themeMode === 'dark' ? 'white' : '#212121', // Theme-aware label color
-                         '.MuiSwitch-thumb': { // Style the switch thumb
-                              backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
-                         },
-                          '.MuiSwitch-track': { // Style the switch track
-                              backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
-                              opacity: 1, // Ensure track is visible
-                         },
-                         '& .Mui-checked': { // Style when checked (Dark mode)
-                              '.MuiSwitch-thumb': {
-                                   backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
-                              },
-                               '.MuiSwitch-track': {
-                                   backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Consistent track color
-                               },
-                          }
+                        color: themeMode === 'dark' ? 'white' : '#212121', // Theme-aware label color
+                        '.MuiSwitch-thumb': { // Style the switch thumb
+                            backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
+                        },
+                        '.MuiSwitch-track': { // Style the switch track
+                            backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
+                            opacity: 1, // Ensure track is visible
+                        },
+                        '& .Mui-checked': { // Style when checked (Dark mode)
+                            '.MuiSwitch-thumb': {
+                                backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
+                            },
+                            '.MuiSwitch-track': {
+                                backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Consistent track color
+                            },
+                        }
                     }}
                 />
                 {/* Avatar Placeholder (adjust color for theme) */}
@@ -98,16 +99,22 @@ function AdminSidebar() {
     );
 }
 
+const sidebarItems = [
+    { name: 'Dashboard', icon: DashboardIcon, link: '/admin/dashboard' },
+    { name: 'Users', icon: PeopleIcon, link: '/admin/users' },
+    { name: 'Settings', icon: SettingsIcon, link: '/admin/settings' },
+];
+
 export default function AdminLayout({ children }) {
     return (
-        <Box className="flex h-screen bg-gray-700 dark:bg-[#0f172a]"> {/* Theme-aware background */}
-            <AdminSidebar />
-            <Box className="flex flex-col flex-1 overflow-hidden">
-                <AdminHeader />
-                <Box component="main" className="flex-1 overflow-y-auto p-6"> {/* Padding remains consistent, background inherited */}
-                    {children}
-                </Box>
-            </Box>
-        </Box>
+        <GenericRoleLayout
+            headerBg="bg-primary"
+            sidebarBg="bg-background"
+            logoBg="bg-primary"
+            title="S.A.F.E Admin Portal"
+            sidebarItems={sidebarItems}
+        >
+            {children}
+        </GenericRoleLayout>
     );
 } 

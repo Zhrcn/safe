@@ -34,7 +34,7 @@ export default function HomePage() {
       iconColor: 'text-purple-600 dark:text-purple-200',
       hoverColor: 'hover:bg-purple-200 dark:hover:bg-purple-600'
     },
-     {
+    {
       name: 'Admin',
       icon: User, // Consider a different icon for admin if available
       link: '/login?role=admin',
@@ -57,17 +57,17 @@ export default function HomePage() {
 
   return (
     <Box
-      className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-[#0f172a] p-6 transition-colors duration-200"
+      className="flex items-center justify-center min-h-screen bg-background text-foreground p-6 transition-colors duration-300"
     >
-      <Paper elevation={6} className="p-8 rounded-lg shadow-xl text-center w-full max-w-4xl bg-white dark:bg-gray-800 transition-colors duration-200">
-        <Typography variant="h3" gutterBottom className="text-gray-900 dark:text-white font-bold">
+      <Paper elevation={6} className="p-8 rounded-lg shadow-xl text-center w-full max-w-4xl bg-card text-card-foreground transition-colors duration-300">
+        <Typography variant="h3" gutterBottom className="text-foreground font-bold">
           Welcome to S.A.F.E
         </Typography>
-        <Typography variant="h6" gutterBottom className="text-gray-700 dark:text-gray-300 mb-8">
+        <Typography variant="h6" gutterBottom className="text-muted-foreground mb-8">
           Secure, Accessible, Fast, Efficient Medical Service Platform
         </Typography>
 
-        <Typography variant="h5" component="h2" gutterBottom className="text-gray-800 dark:text-gray-200 mt-8 mb-6 font-semibold">
+        <Typography variant="h5" component="h2" gutterBottom className="text-foreground mt-8 mb-6 font-semibold">
           Select Your Role
         </Typography>
 
@@ -88,15 +88,15 @@ export default function HomePage() {
               <Link href={role.link} passHref legacyBehavior>
                 <Card
                   component="a"
-                  className={`flex flex-col items-center p-6 rounded-lg shadow-md cursor-pointer h-full transition-all duration-300 ${role.hoverColor} bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600`}
+                  className={`flex flex-col items-center p-6 rounded-lg shadow-md cursor-pointer h-full transition-all duration-300 ${role.hoverColor} bg-card text-card-foreground border border-border`}
                 >
                   <Box className={`p-4 rounded-full ${role.bgColor} mb-4`}>
                     <role.icon size={40} className={role.iconColor} />
                   </Box>
-                  <Typography variant="h6" component="div" className="font-semibold mb-2 text-gray-900 dark:text-white">
+                  <Typography variant="h6" component="div" className="font-semibold mb-2 text-foreground">
                     {role.name}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" className="text-gray-700 dark:text-gray-300 flex-grow">
+                  <Typography variant="body2" color="text.secondary" className="text-muted-foreground flex-grow">
                     {role.description}
                   </Typography>
                 </Card>

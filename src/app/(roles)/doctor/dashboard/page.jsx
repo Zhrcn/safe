@@ -6,7 +6,7 @@ import { setSelectedDate } from '@/lib/redux/dateSlice';
 import { setSelectedPatient } from '@/lib/redux/patientSlice';
 import { Typography, Card, CardContent, List, ListItem, ListItemText, Paper, Box, Divider, Grid, TextField, InputAdornment } from '@mui/material';
 // Import Lucid Icons
-import { CalendarDays, User, Hospital, Search } from 'lucide-react';
+import { CalendarDays, Building2 as Hospital, Search, User } from 'lucide-react';
 // Import motion from framer-motion
 import { motion } from 'framer-motion';
 
@@ -23,13 +23,13 @@ function DoctorInfo({
           {/* Using Hospital icon from Lucid */}
           <Hospital size={40} strokeWidth={1.5} className="mr-4 text-blue-600 dark:text-blue-400" />
           <div>
-            <Typography variant="h5" component="div" className="font-bold text-gray-900 dark:text-white">
+            <Typography variant="h5" component="h2" className="font-bold text-gray-900 dark:text-white">
               Dr. {doctor?.name}
             </Typography>
-            <Typography color="text.secondary" className="text-gray-700 dark:text-gray-300">
+            <Typography variant="body1" component="div" className="text-gray-700 dark:text-gray-300">
               Specialty: {doctor?.specialty}
             </Typography>
-            <Typography color="text.secondary" className="text-gray-700 dark:text-gray-300">
+            <Typography variant="body1" component="div" className="text-gray-700 dark:text-gray-300">
               Contact: {doctor?.contact}
             </Typography>
           </div>
@@ -48,7 +48,7 @@ function PatientsList({
   return (
     <Paper elevation={3} className="h-full flex flex-col bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">Patients Today</Typography>
+        <Typography variant="h6" component="h3" className="font-semibold text-gray-900 dark:text-white">Patients Today</Typography>
       </Box>
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700">
         <TextField
@@ -130,13 +130,13 @@ function PatientDetails({
   return (
     <Paper elevation={3} className="h-full flex flex-col bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">Patient Details</Typography>
+        <Typography variant="h6" component="h3" className="font-semibold text-gray-900 dark:text-white">Patient Details</Typography>
       </Box>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <Typography variant="body1" className="text-gray-900 dark:text-white"><strong>Name:</strong> {patient.name}</Typography>
-        <Typography variant="body1" className="text-gray-900 dark:text-white"><strong>Age:</strong> {patient.age}</Typography>
-        <Typography variant="body1" className="text-gray-900 dark:text-white"><strong>Gender:</strong> {patient.gender}</Typography>
-        <Typography variant="body1" className="text-gray-900 dark:text-white"><strong>Medical History:</strong> {patient.medicalHistory}</Typography>
+        <Typography variant="body1" component="div" className="text-gray-900 dark:text-white"><strong>Name:</strong> {patient.name}</Typography>
+        <Typography variant="body1" component="div" className="text-gray-900 dark:text-white"><strong>Age:</strong> {patient.age}</Typography>
+        <Typography variant="body1" component="div" className="text-gray-900 dark:text-white"><strong>Gender:</strong> {patient.gender}</Typography>
+        <Typography variant="body1" component="div" className="text-gray-900 dark:text-white"><strong>Medical History:</strong> {patient.medicalHistory}</Typography>
         {/* Add more patient details as needed */}
       </div>
     </Paper>
@@ -179,7 +179,7 @@ function Calendar({
       </Box>
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium">
-          {[ 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ].map((dayName) => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
             <div key={dayName} className="text-gray-600 dark:text-gray-400">{dayName}</div>
           ))}
           {emptyCells}

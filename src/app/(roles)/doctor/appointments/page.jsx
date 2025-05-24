@@ -15,26 +15,26 @@ const mockAppointments = [
 // Helper component for displaying appointment cards
 function AppointmentCard({ appointment, onViewDetails }) {
   return (
-    <Card className="shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200 hover:shadow-xl"> {/* Theme-aware styles and hover effect */}
+    <Card className="shadow-lg rounded-lg border border-border bg-card text-card-foreground transition-colors duration-200 hover:shadow-xl">
       <CardContent>
         <Box className="flex items-center mb-3">
-           <User size={24} className="mr-3 text-blue-600 dark:text-blue-400"/> {/* Themed icon */}
-           <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">{appointment.patientName}</Typography> {/* Theme-aware text */}
+          <User size={24} className="mr-3 text-primary" />
+          <Typography variant="h6" component="div" className="font-semibold text-foreground">{appointment.patientName}</Typography>
         </Box>
-        <Box className="space-y-2 text-gray-700 dark:text-gray-300"> {/* Themed text color and spacing */}
-           <Typography variant="body2" className="flex items-center"><Clock size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>{appointment.time} on {appointment.date}</Typography> {/* Themed icon and text */}
-           <Typography variant="body2" className="flex items-center"><FileText size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>Reason: {appointment.reason}</Typography> {/* Themed icon and text */}
+        <Box className="space-y-2 text-muted-foreground">
+          <Typography variant="body2" className="flex items-center"><Clock size={16} className="mr-2 text-muted-foreground" />{appointment.time} on {appointment.date}</Typography>
+          <Typography variant="body2" className="flex items-center"><FileText size={16} className="mr-2 text-muted-foreground" />Reason: {appointment.reason}</Typography>
         </Box>
-        <Box className="mt-4 flex justify-end"> {/* Align button to the right */}
-           <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Eye size={16} />}
-              onClick={() => onViewDetails(appointment.id)}
-              className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200" // Themed button
-            >
-              View Details
-            </Button>
+        <Box className="mt-4 flex justify-end">
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Eye size={16} />}
+            onClick={() => onViewDetails(appointment.id)}
+            className="text-primary border-primary hover:bg-primary/10 transition-colors duration-200"
+          >
+            View Details
+          </Button>
         </Box>
       </CardContent>
     </Card>
@@ -47,7 +47,7 @@ export default function DoctorAppointmentsPage() {
 
   const appointmentsToday = mockAppointments.filter(app => app.date === today && app.status === 'today');
   const upcomingAppointments = mockAppointments.filter(app => app.date > today && app.status === 'upcoming').sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort upcoming
-   const pastAppointments = mockAppointments.filter(app => app.date < today || app.status === 'past').sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort past descending
+  const pastAppointments = mockAppointments.filter(app => app.date < today || app.status === 'past').sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort past descending
 
   const handleViewDetails = (appointmentId) => {
     console.log(`View details for appointment ${appointmentId}`);
@@ -56,70 +56,70 @@ export default function DoctorAppointmentsPage() {
 
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-card text-card-foreground rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-foreground font-bold">
           Doctor Appointments
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
+        <Typography paragraph className="text-muted-foreground mb-6">
           This page displays your appointments.
         </Typography>
 
-        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Card for Appointments section */}
+        <Card className="mb-6 shadow-lg rounded-lg border border-border bg-card">
           <CardContent>
-             <Box className="flex justify-between items-center mb-6">
-                <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Appointments Overview</Typography>
-                <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
-                  Schedule New Appointment
-                </Button>
-              </Box>
+            <Box className="flex justify-between items-center mb-6">
+              <Typography variant="h5" component="h1" className="font-bold text-foreground">Appointments Overview</Typography>
+              <Button variant="contained" startIcon={<CalendarPlus size={20} />} className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold transition-colors duration-200">
+                Schedule New Appointment
+              </Button>
+            </Box>
 
-             {/* Today's Appointments */}
-             <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Today's Appointments</Typography>
-              <Grid container spacing={3} className="mb-6"> {/* Added spacing and bottom margin */}
-                 {appointmentsToday.length === 0 ? (
-                   <Grid item xs={12}> {/* Full width for message */}
-                     <Typography className="text-gray-700 dark:text-gray-300">No appointments scheduled for today.</Typography>
-                   </Grid>
-                 ) : (
-                   appointmentsToday.map((appointment) => (
-                     <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
-                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
-                     </Grid>
-                   ))
-                 )}
-              </Grid>
+            {/* Today's Appointments */}
+            <Typography variant="h6" className="mb-4 text-foreground border-b border-border pb-2">Today's Appointments</Typography>
+            <Grid container spacing={3} className="mb-6">
+              {appointmentsToday.length === 0 ? (
+                <Grid item xs={12}>
+                  <Typography className="text-muted-foreground">No appointments scheduled for today.</Typography>
+                </Grid>
+              ) : (
+                appointmentsToday.map((appointment) => (
+                  <Grid item xs={12} sm={6} md={4} key={appointment.id}>
+                    <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                  </Grid>
+                ))
+              )}
+            </Grid>
 
-              {/* Upcoming Appointments */}
-              <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Upcoming Appointments</Typography>
-               <Grid container spacing={3} className="mb-6"> {/* Added spacing and bottom margin */}
-                 {upcomingAppointments.length === 0 ? (
-                   <Grid item xs={12}> {/* Full width for message */}
-                     <Typography className="text-gray-700 dark:text-gray-300">No upcoming appointments.</Typography>
-                   </Grid>
-                 ) : (
-                   upcomingAppointments.map((appointment) => (
-                      <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
-                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
-                      </Grid>
-                   ))
-                 )}
-              </Grid>
+            {/* Upcoming Appointments */}
+            <Typography variant="h6" className="mb-4 text-foreground border-b border-border pb-2">Upcoming Appointments</Typography>
+            <Grid container spacing={3} className="mb-6">
+              {upcomingAppointments.length === 0 ? (
+                <Grid item xs={12}>
+                  <Typography className="text-muted-foreground">No upcoming appointments.</Typography>
+                </Grid>
+              ) : (
+                upcomingAppointments.map((appointment) => (
+                  <Grid item xs={12} sm={6} md={4} key={appointment.id}>
+                    <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                  </Grid>
+                ))
+              )}
+            </Grid>
 
-               {/* Past Appointments */}
-              <Typography variant="h6" className="mb-4 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Past Appointments</Typography>
-               <Grid container spacing={3}> {/* Added spacing */}
-                 {pastAppointments.length === 0 ? (
-                   <Grid item xs={12}> {/* Full width for message */}
-                     <Typography className="text-gray-700 dark:text-gray-300">No past appointments found.</Typography>
-                   </Grid>
-                 ) : (
-                   pastAppointments.map((appointment) => (
-                      <Grid item xs={12} sm={6} md={4} key={appointment.id}> {/* Responsive grid items */}
-                        <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
-                      </Grid>
-                   ))
-                 )}
-              </Grid>
+            {/* Past Appointments */}
+            <Typography variant="h6" className="mb-4 text-foreground border-b border-border pb-2">Past Appointments</Typography>
+            <Grid container spacing={3}>
+              {pastAppointments.length === 0 ? (
+                <Grid item xs={12}>
+                  <Typography className="text-muted-foreground">No past appointments found.</Typography>
+                </Grid>
+              ) : (
+                pastAppointments.map((appointment) => (
+                  <Grid item xs={12} sm={6} md={4} key={appointment.id}>
+                    <AppointmentCard appointment={appointment} onViewDetails={handleViewDetails} />
+                  </Grid>
+                ))
+              )}
+            </Grid>
 
           </CardContent>
         </Card>

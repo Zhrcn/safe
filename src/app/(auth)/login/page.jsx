@@ -52,12 +52,12 @@ export default function LoginPage() {
   const displayRole = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
-    <Container component="main" maxWidth="xs" className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-[#0f172a] transition-colors duration-200">
-      <Paper elevation={6} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="w-full rounded-lg shadow-xl bg-white dark:bg-gray-800 transition-colors duration-200">
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }} className="bg-blue-500 dark:bg-blue-700">
-          <Lock size={24} className="text-white dark:text-gray-200"/>
+    <Container component="main" maxWidth="xs" className="flex items-center justify-center min-h-screen bg-background text-foreground transition-colors duration-300">
+      <Paper elevation={6} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="w-full rounded-lg shadow-xl bg-card text-card-foreground transition-colors duration-300">
+        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }} className="bg-primary text-primary-foreground">
+          <Lock size={24} className="text-primary-foreground" />
         </Avatar>
-        <Typography component="h1" variant="h5" sx={{ mb: 2 }} className="text-gray-900 dark:text-white font-bold">
+        <Typography component="h1" variant="h5" sx={{ mb: 2 }} className="text-foreground font-bold">
           Login as {displayRole}
         </Typography>
         <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }} className="w-full space-y-4">
@@ -76,9 +76,9 @@ export default function LoginPage() {
               style: { color: 'inherit' },
             }}
             InputProps={{
-              className: 'text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400',
+              className: 'text-foreground border-border focus:border-primary',
             }}
-            className="[&>label]:text-gray-700 dark:[&>label]:text-gray-300"
+            className="[&>label]:text-muted-foreground"
           />
           <TextField
             margin="normal"
@@ -95,16 +95,16 @@ export default function LoginPage() {
               style: { color: 'inherit' },
             }}
             InputProps={{
-              className: 'text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400',
+              className: 'text-foreground border-border focus:border-primary',
             }}
-            className="[&>label]:text-gray-700 dark:[&>label]:text-gray-300"
+            className="[&>label]:text-muted-foreground"
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
-            className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
           >
             Sign In
           </Button>

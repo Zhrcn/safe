@@ -57,17 +57,17 @@ export default function DoctorPatientsListPage() {
 
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-card text-card-foreground rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-foreground font-bold">
           Doctor Patients List
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
+        <Typography paragraph className="text-muted-foreground mb-6">
           This page displays a list of patients.
         </Typography>
-        <Card className="mb-6 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <Card className="mb-6 shadow-lg rounded-lg border border-border bg-card">
           <CardContent>
             <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
-              <Typography variant="h5" component="h1" className="font-bold text-gray-900 dark:text-white">Patients List</Typography>
+              <Typography variant="h5" component="h1" className="font-bold text-foreground">Patients List</Typography>
               <Box className="flex items-center space-x-4 w-full sm:w-auto">
                 <TextField
                   variant="outlined"
@@ -79,85 +79,79 @@ export default function DoctorPatientsListPage() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search size={20} className="text-gray-500 dark:text-gray-400"/>
+                        <Search size={20} className="text-muted-foreground" />
                       </InputAdornment>
                     ),
-                    className: 'text-gray-900 dark:text-white',
+                    className: 'text-foreground',
                   }}
                   InputLabelProps={{
-                     style: { color: 'inherit' },
+                    style: { color: 'inherit' },
                   }}
-                   sx={{
-                      '& .MuiOutlinedInput-root': {
-                          fieldset: { borderColor: '#d1d5db' },
-                          '&:hover fieldset': { borderColor: '#9ca3af' },
-                           '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
-                            '& .MuiOutlinedInput-notchedOutline': {
-                                 borderColor: '#4b5563',
-                           },
-                           '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#6b7280',
-                           },
-                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                 borderColor: '#60a5fa',
-                           },
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      fieldset: { borderColor: 'var(--border)' },
+                      '&:hover fieldset': { borderColor: 'var(--border)' },
+                      '&.Mui-focused fieldset': { borderColor: 'var(--primary)' },
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--border)',
                       },
-                       '& .MuiInputBase-input::placeholder': {
-                           color: '#9ca3af',
-                           opacity: 1,
-                           '.dark & ': {
-                                color: '#6b7280',
-                           },
-                       },
-                       '& .MuiInputLabel-outlined': {
-                            color: '#6b7280',
-                             '.dark & ': {
-                                 color: '#9ca3af',
-                           },
-                       },
-                   }}
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--border)',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'var(--primary)',
+                      },
+                    },
+                    '& .MuiInputBase-input::placeholder': {
+                      color: 'var(--muted-foreground)',
+                      opacity: 1,
+                    },
+                    '& .MuiInputLabel-outlined': {
+                      color: 'var(--muted-foreground)',
+                    },
+                  }}
                 />
-                <Button variant="contained" startIcon={<UserPlus size={20} />} className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-bold transition-colors duration-200">
+                <Button variant="contained" startIcon={<UserPlus size={20} />} className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold transition-colors duration-200">
                   Add New Patient
                 </Button>
               </Box>
             </Box>
 
-            <TableContainer component={Paper} elevation={2} className="bg-white dark:bg-gray-700 rounded-md">
+            <TableContainer component={Paper} elevation={2} className="bg-card text-card-foreground rounded-md">
               <Table>
                 <TableHead>
-                  <TableRow className="bg-gray-100 dark:bg-gray-600">
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Name</TableCell>
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Age</TableCell>
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Gender</TableCell>
-                    <TableCell className="text-gray-800 dark:text-gray-200 font-semibold">Last Appointment</TableCell>
-                    <TableCell align="right" className="text-gray-800 dark:text-gray-200 font-semibold">Actions</TableCell>
+                  <TableRow className="bg-muted">
+                    <TableCell className="text-foreground font-semibold">Name</TableCell>
+                    <TableCell className="text-foreground font-semibold">Age</TableCell>
+                    <TableCell className="text-foreground font-semibold">Gender</TableCell>
+                    <TableCell className="text-foreground font-semibold">Last Appointment</TableCell>
+                    <TableCell align="right" className="text-foreground font-semibold">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredPatients.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" className="text-gray-700 dark:text-gray-300 py-4">
+                      <TableCell colSpan={5} align="center" className="text-muted-foreground py-4">
                         No patients found.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredPatients.map((patient, index) => (
-                      <TableRow 
-                        key={patient.id} 
-                        className={`hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 ${index < filteredPatients.length - 1 ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}
+                      <TableRow
+                        key={patient.id}
+                        className={`hover:bg-muted transition-colors duration-200 ${index < filteredPatients.length - 1 ? 'border-b border-border' : ''}`}
                       >
-                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.name}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.age}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.gender}</TableCell>
-                        <TableCell className="text-gray-900 dark:text-gray-100 py-3 px-4">{patient.lastAppointment}</TableCell>
+                        <TableCell className="text-foreground py-3 px-4">{patient.name}</TableCell>
+                        <TableCell className="text-foreground py-3 px-4">{patient.age}</TableCell>
+                        <TableCell className="text-foreground py-3 px-4">{patient.gender}</TableCell>
+                        <TableCell className="text-foreground py-3 px-4">{patient.lastAppointment}</TableCell>
                         <TableCell align="right" className="py-3 px-4">
                           <Button
                             variant="outlined"
                             size="small"
                             startIcon={<Eye size={16} />}
                             onClick={() => handleViewDetails(patient.id)}
-                            className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
+                            className="text-primary border-primary hover:bg-primary/10 transition-colors duration-200"
                           >
                             View
                           </Button>

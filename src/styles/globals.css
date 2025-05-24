@@ -1,0 +1,227 @@
+@tailwind base;
+
+/* Base Theme Configuration */
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 217.2 91.2% 59.8%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 224.3 76.3% 48%;
+    }
+
+    /* Base Reset Styles */
+    * {
+        @apply border-border;
+    }
+
+    *,
+    *::before,
+    *::after {
+        @apply box-border;
+    }
+
+    body {
+        @apply bg-background text-foreground m-0 p-0 min-h-screen antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    ul,
+    ol {
+        @apply m-0;
+    }
+
+    img {
+        @apply max-w-full h-auto;
+    }
+
+    a {
+        @apply text-primary no-underline hover:underline focus:outline-none focus:ring-2 focus:ring-primary/40;
+    }
+
+    button {
+        @apply cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40;
+    }
+}
+
+@tailwind components;
+
+/* MUI Component Overrides */
+@layer components {
+
+    /* Paper Components */
+    .MuiPaper-root {
+        @apply bg-background text-foreground border-border shadow-sm transition-colors duration-200 !important;
+    }
+
+    /* Typography */
+    .MuiTypography-root {
+        @apply text-foreground transition-colors duration-200 !important;
+    }
+
+    /* Form Elements */
+    .MuiInputBase-root {
+        @apply bg-background text-foreground border-border rounded-md transition-colors duration-200 !important;
+    }
+
+    .MuiInputLabel-root {
+        @apply text-muted-foreground transition-colors duration-200 !important;
+    }
+
+    /* Buttons */
+    .MuiButton-root {
+        @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 rounded-md !important;
+    }
+
+    .MuiButton-outlined {
+        @apply border-primary bg-transparent hover:bg-primary/10 !important;
+    }
+
+    .MuiButton-text {
+        @apply bg-transparent hover:bg-primary/10 !important;
+    }
+
+    /* List Components */
+    .MuiListItem-root {
+        @apply text-foreground hover:bg-muted/40 transition-colors duration-200 !important;
+    }
+
+    .MuiListItem-root.Mui-selected {
+        @apply bg-primary/20 !important;
+    }
+
+    .MuiDivider-root {
+        @apply border-border !important;
+    }
+
+    /* Cards */
+    .MuiCard-root {
+        @apply bg-card text-card-foreground shadow-sm transition-colors duration-200 rounded-lg !important;
+    }
+
+    /* Tables */
+    .MuiTableCell-root {
+        @apply text-foreground border-border transition-colors duration-200 !important;
+    }
+
+    .MuiTableRow-root:hover {
+        @apply bg-muted/40 transition-colors duration-200 !important;
+    }
+
+    /* Dialogs and Menus */
+    .MuiDialog-paper {
+        @apply bg-background text-foreground shadow-lg transition-colors duration-200 rounded-lg !important;
+    }
+
+    .MuiMenu-paper {
+        @apply bg-popover text-popover-foreground shadow-lg transition-colors duration-200 rounded-lg !important;
+    }
+
+    .MuiMenuItem-root {
+        @apply text-foreground hover:bg-muted/40 transition-colors duration-200 !important;
+    }
+
+    /* Icons */
+    .MuiIconButton-root {
+        @apply text-foreground hover:bg-muted/40 rounded-full transition-colors duration-200 !important;
+    }
+
+    /* Form Controls */
+    .MuiFormControl-root {
+        @apply w-full !important;
+    }
+
+    /* Select */
+    .MuiSelect-select {
+        @apply bg-background text-foreground border-border rounded-md !important;
+    }
+
+    /* Checkbox and Radio */
+    .MuiCheckbox-root,
+    .MuiRadio-root {
+        @apply text-primary transition-colors duration-200 !important;
+    }
+
+    /* Switch */
+    .MuiSwitch-root {
+        @apply text-primary transition-colors duration-200 !important;
+    }
+
+    /* Tabs */
+    .MuiTab-root {
+        @apply text-muted-foreground hover:text-foreground transition-colors duration-200 !important;
+    }
+
+    .MuiTab-root.Mui-selected {
+        @apply text-primary !important;
+    }
+
+    /* Focus States */
+    .MuiButton-root:focus-visible,
+    .MuiIconButton-root:focus-visible,
+    .MuiTab-root:focus-visible {
+        @apply outline-none ring-2 ring-primary/40 !important;
+    }
+}
+
+@tailwind utilities;
+
+/* Custom Utilities */
+@layer utilities {
+
+    /* Scrollbar styles */
+    ::-webkit-scrollbar {
+        @apply w-2 h-2;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-muted hover:bg-muted/40 rounded-lg transition-colors duration-200;
+    }
+}
