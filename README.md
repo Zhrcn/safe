@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Medical Records System
+
+A secure and modern medical records management system built with Next.js, Material-UI, and MongoDB.
+
+## Features
+
+- 🏥 Centralized medical file management
+- 🔒 Secure authentication and authorization
+- 📱 Responsive design with dark mode support
+- 🔄 Real-time updates
+- 📊 Comprehensive medical history tracking
+
+## Tech Stack
+
+- **Frontend**: Next.js 13+, Material-UI, Tailwind CSS
+- **Backend**: Next.js API Routes, MongoDB
+- **Authentication**: NextAuth.js
+- **State Management**: React Context
+- **Styling**: Tailwind CSS + Material-UI
+
+## Prerequisites
+
+- Node.js 16.x or later
+- MongoDB 4.x or later
+- npm or yarn
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd medical-records-system
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp src/config/env.example .env.local
+   ```
+   Edit `.env.local` and add your configuration values.
+
+4. Start MongoDB:
+   Make sure your MongoDB instance is running.
+
+5. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js 13 app directory
+│   ├── (roles)/           # Role-based routes
+│   │   ├── patient/       # Patient-specific pages
+│   │   ├── doctor/        # Doctor-specific pages
+│   │   └── admin/         # Admin-specific pages
+│   └── api/               # API routes
+├── components/            # Reusable components
+├── lib/                   # Utilities and helpers
+│   ├── api/              # API utilities
+│   ├── db/               # Database configuration
+│   └── models/           # MongoDB models
+├── styles/               # Global styles
+└── config/              # Configuration files
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Routes
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Medical File Endpoints
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `GET /api/medical-file` - Get patient's medical file
+- `POST /api/medical-file` - Create new medical file
+- `PATCH /api/medical-file` - Update medical file
 
-## Learn More
+### Section-specific Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+- `GET /api/medical-file/[section]` - Get specific section (conditions, allergies, etc.)
+- `POST /api/medical-file/[section]` - Add item to section
+- `PATCH /api/medical-file/[section]` - Update item in section
+- `DELETE /api/medical-file/[section]` - Remove item from section
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security
+
+This project implements various security measures:
+
+- Authentication using NextAuth.js
+- JWT for secure sessions
+- CORS protection
+- Input validation
+- XSS protection
+- CSRF protection
+- Rate limiting
+
+Please report any security vulnerabilities responsibly.

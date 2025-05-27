@@ -1,22 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { UserRole } from '@/lib/config';
+import { createSlice } from '@reduxjs/toolkit';
 
-interface User {
-    id: string;
-    email: string;
-    name: string;
-    role: UserRole;
-}
-
-interface AuthState {
-    user: User | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    loading: boolean;
-    error: string | null;
-}
-
-const initialState: AuthState = {
+const initialState = {
     user: null,
     token: null,
     isAuthenticated: false,
@@ -28,20 +12,17 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setCredentials: (
-            state,
-            action: PayloadAction<{ user: User; token: string }>
-        ) => {
+        setCredentials: (state, action) => {
             const { user, token } = action.payload;
             state.user = user;
             state.token = token;
             state.isAuthenticated = true;
             state.error = null;
         },
-        setLoading: (state, action: PayloadAction<boolean>) => {
+        setLoading: (state, action) => {
             state.loading = action.payload;
         },
-        setError: (state, action: PayloadAction<string | null>) => {
+        setError: (state, action) => {
             state.error = action.payload;
         },
         logout: (state) => {
@@ -50,7 +31,7 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.error = null;
         },
-        updateUser: (state, action: PayloadAction<Partial<User>>) => {
+        updateUser: (state, action) => {
             if (state.user) {
                 state.user = { ...state.user, ...action.payload };
             }

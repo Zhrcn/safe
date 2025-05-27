@@ -1,36 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { API_BASE_URL } from '@/lib/config';
-import { RootState } from '../store';
-
-interface LoginRequest {
-    email: string;
-    password: string;
-    role: string;
-}
-
-interface LoginResponse {
-    token: string;
-    user: {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-    };
-}
-
-interface RegisterRequest {
-    email: string;
-    password: string;
-    name: string;
-    role: string;
-}
 
 export const authApi = createApi({
     reducerPath: 'authApi',
     baseQuery: fetchBaseQuery({
         baseUrl: API_BASE_URL,
         prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as RootState).auth.token;
+            const token = getState().auth.token;
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
@@ -38,37 +14,31 @@ export const authApi = createApi({
         },
     }),
     endpoints: (builder) => ({
-        login: builder.mutation<LoginResponse, LoginRequest>({
+        login: builder.mutation({
             query: (credentials) => ({
                 url: '/auth/login',
                 method: 'POST',
                 body: credentials,
             }),
         }),
-        register: builder.mutation<LoginResponse, RegisterRequest>({
+        register: builder.mutation({
             query: (userData) => ({
                 url: '/auth/register',
                 method: 'POST',
                 body: userData,
             }),
         }),
-        verifyToken: builder.query<{ valid: boolean }, void>({
+        verifyToken: builder.query({
             query: () => '/auth/verify',
         }),
-        resetPassword: builder.mutation<
-            { success: boolean },
-            { email: string; role: string }
-        >({
+        resetPassword: builder.mutation({
             query: (data) => ({
                 url: '/auth/reset-password',
                 method: 'POST',
                 body: data,
             }),
         }),
-        updatePassword: builder.mutation<
-            { success: boolean },
-            { token: string; password: string }
-        >({
+        updatePassword: builder.mutation({
             query: (data) => ({
                 url: '/auth/update-password',
                 method: 'POST',

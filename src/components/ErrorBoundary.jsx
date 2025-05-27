@@ -1,36 +1,30 @@
 'use client';
 
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 
-interface Props {
-    children: ReactNode;
-}
+export default class ErrorBoundary extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            hasError: false,
+            error: null,
+        };
+    }
 
-interface State {
-    hasError: boolean;
-    error: Error | null;
-}
-
-export default class ErrorBoundary extends Component<Props, State> {
-    public state: State = {
-        hasError: false,
-        error: null,
-    };
-
-    public static getDerivedStateFromError(error: Error): State {
+    static getDerivedStateFromError(error) {
         return { hasError: true, error };
     }
 
-    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    componentDidCatch(error, errorInfo) {
         console.error('Uncaught error:', error, errorInfo);
     }
 
-    private handleReset = () => {
+    handleReset = () => {
         this.setState({ hasError: false, error: null });
     };
 
-    public render() {
+    render() {
         if (this.state.hasError) {
             return (
                 <Box

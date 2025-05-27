@@ -1,21 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-interface Notification {
-    id: string;
-    type: 'success' | 'error' | 'info' | 'warning';
-    message: string;
-}
-
-interface UIState {
-    sidebarOpen: boolean;
-    notifications: Notification[];
-    loading: {
-        [key: string]: boolean;
-    };
-    theme: 'light' | 'dark';
-}
-
-const initialState: UIState = {
+const initialState = {
     sidebarOpen: true,
     notifications: [],
     loading: {},
@@ -29,26 +14,23 @@ const uiSlice = createSlice({
         toggleSidebar: (state) => {
             state.sidebarOpen = !state.sidebarOpen;
         },
-        setSidebarOpen: (state, action: PayloadAction<boolean>) => {
+        setSidebarOpen: (state, action) => {
             state.sidebarOpen = action.payload;
         },
-        addNotification: (state, action: PayloadAction<Omit<Notification, 'id'>>) => {
+        addNotification: (state, action) => {
             const id = Date.now().toString();
             state.notifications.push({ ...action.payload, id });
         },
-        removeNotification: (state, action: PayloadAction<string>) => {
+        removeNotification: (state, action) => {
             state.notifications = state.notifications.filter(
                 (notification) => notification.id !== action.payload
             );
         },
-        setLoading: (
-            state,
-            action: PayloadAction<{ key: string; value: boolean }>
-        ) => {
+        setLoading: (state, action) => {
             const { key, value } = action.payload;
             state.loading[key] = value;
         },
-        setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+        setTheme: (state, action) => {
             state.theme = action.payload;
         },
     },

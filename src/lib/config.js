@@ -10,9 +10,7 @@ export const ROLES = {
     PATIENT: 'patient',
     PHARMACIST: 'pharmacist',
     ADMIN: 'admin',
-} as const;
-
-export type UserRole = typeof ROLES[keyof typeof ROLES];
+};
 
 export const ROLE_ROUTES = {
     [ROLES.DOCTOR]: {
@@ -37,7 +35,7 @@ export const ROLE_ROUTES = {
         users: '/admin/users',
         settings: '/admin/settings',
     },
-} as const;
+};
 
 export const THEME = {
     light: {
@@ -102,4 +100,4 @@ export const THEME = {
             paper: '#1f2937',
         },
     },
-} as const; 
+}; 

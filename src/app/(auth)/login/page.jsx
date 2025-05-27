@@ -1,115 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
-import { setUser } from '@/lib/redux/userSlice'; // Updated import path
-import { TextField, Button, Typography, Box, Container, Paper } from '@mui/material';
-// Import Lucid Icons
-import { Lock } from 'lucide-react';
-import Avatar from '@mui/material/Avatar';
+import { Container, Typography, Box } from '@mui/material';
+import LoginForm from '@/components/auth/LoginForm';
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const dispatch = useDispatch();
-
   const role = searchParams.get('role');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const redirectUrl = searchParams.get('redirect');
 
-  // Redirect if role is not specified (optional, could default)
   useEffect(() => {
     if (!role) {
-      router.push('/'); // Redirect to home if no role is selected
+      router.push('/');
     }
   }, [role, router]);
 
-  const handleLogin = (event) => {
-    event.preventDefault();
-    // Here you would typically send a request to your backend for authentication
-    // For this example, we'll simulate a successful login and dispatch the action
-
-    // In a real app, validate credentials and get JWT/user data from backend
-    const mockUser = { username, role }; // Replace with actual user data from API
-    const mockToken = 'fake-jwt-token'; // Replace with actual JWT from API
-
-    // Dispatch action to update Redux state
-    dispatch(setUser({ user: mockUser, role }));
-
-    // Store token (e.g., in localStorage or cookies) - handle securely in production
-    localStorage.setItem('jwtToken', mockToken);
-
-    // Redirect to role-specific dashboard
-    router.push(`/${role}/dashboard`); // Corrected redirect path: removed '(roles)'
-  };
-
   if (!role) {
-    return null; // Or a loading spinner, while redirecting
+    return null;
   }
 
-  // Capitalize the first letter of the role for display
-  const displayRole = role.charAt(0).toUpperCase() + role.slice(1);
-
   return (
-    <Container component="main" maxWidth="xs" className="flex items-center justify-center min-h-screen bg-background text-foreground transition-colors duration-300">
-      <Paper elevation={6} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="w-full rounded-lg shadow-xl bg-card text-card-foreground transition-colors duration-300">
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }} className="bg-primary text-primary-foreground">
-          <Lock size={24} className="text-primary-foreground" />
-        </Avatar>
-        <Typography component="h1" variant="h5" sx={{ mb: 2 }} className="text-foreground font-bold">
-          Login as {displayRole}
+    <Container component="main" maxWidth="sm" className="mt-16">
+      <Box className="text-center mb-8">
+        <Typography component="h1" variant="h4" className="font-bold text-foreground">
+          Welcome to S.A.F.E
         </Typography>
-        <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }} className="w-full space-y-4">
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            InputLabelProps={{
-              style: { color: 'inherit' },
-            }}
-            InputProps={{
-              className: 'text-foreground border-border focus:border-primary',
-            }}
-            className="[&>label]:text-muted-foreground"
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            InputLabelProps={{
-              style: { color: 'inherit' },
-            }}
-            InputProps={{
-              className: 'text-foreground border-border focus:border-primary',
-            }}
-            className="[&>label]:text-muted-foreground"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
-          >
-            Sign In
-          </Button>
-        </Box>
-      </Paper>
+        <Typography variant="body1" className="mt-2 text-muted-foreground">
+          Please login to continue
+        </Typography>
+      </Box>
+      <LoginForm role={role} redirectUrl={redirectUrl} />
     </Container>
   );
 } 

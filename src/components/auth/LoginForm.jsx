@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,37 +16,47 @@ import {
 } from '@mui/material';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { motion } from 'framer-motion';
+import { ROLE_ROUTES } from '@/lib/config';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
-
-interface LoginFormProps {
-    role: string;
-}
-
-export default function LoginForm({ role }: LoginFormProps) {
+export default function LoginForm({ role, redirectUrl }) {
     const { login } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
+    const router = useRouter();
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<LoginFormData>({
+    } = useForm({
         resolver: zodResolver(loginSchema),
     });
 
-    const onSubmit = async (data: LoginFormData) => {
+    const onSubmit = async (data) => {
         try {
             setIsSubmitting(true);
             setError(null);
-            await login(data.email, data.password, role);
+
+            // Attempt to login
+            const success = await login(data.email, data.password, role);
+
+            if (success) {
+                if (redirectUrl) {
+                    console.log(`Login successful! Redirecting to ${redirectUrl}`);
+                    router.push(redirectUrl);
+                } else {
+                    console.log(`Login successful! Redirecting to ${ROLE_ROUTES[role].dashboard}`);
+                    // Redirect to the appropriate dashboard based on role
+                    router.push(ROLE_ROUTES[role].dashboard);
+                }
+            }
         } catch (err) {
+            console.error('Login error:', err);
             setError(err instanceof Error ? err.message : 'An error occurred during login');
         } finally {
             setIsSubmitting(false);

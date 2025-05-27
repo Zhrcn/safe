@@ -1,34 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { API_BASE_URL } from '@/lib/config';
-import { RootState } from '../store';
-
-interface User {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-interface UpdateUserRequest {
-    name?: string;
-    email?: string;
-}
-
-interface PaginationParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    role?: string;
-}
 
 export const userApi = createApi({
     reducerPath: 'userApi',
     baseQuery: fetchBaseQuery({
         baseUrl: API_BASE_URL,
         prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as RootState).auth.token;
+            const token = getState().auth.token;
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
@@ -37,11 +15,11 @@ export const userApi = createApi({
     }),
     tagTypes: ['User'],
     endpoints: (builder) => ({
-        getProfile: builder.query<User, void>({
+        getProfile: builder.query({
             query: () => '/users/profile',
             providesTags: ['User'],
         }),
-        updateProfile: builder.mutation<User, UpdateUserRequest>({
+        updateProfile: builder.mutation({
             query: (data) => ({
                 url: '/users/profile',
                 method: 'PATCH',
@@ -49,21 +27,18 @@ export const userApi = createApi({
             }),
             invalidatesTags: ['User'],
         }),
-        getUsers: builder.query<
-            { users: User[]; total: number; pages: number },
-            PaginationParams
-        >({
+        getUsers: builder.query({
             query: (params) => ({
                 url: '/users',
                 params,
             }),
             providesTags: ['User'],
         }),
-        getUserById: builder.query<User, string>({
+        getUserById: builder.query({
             query: (id) => `/users/${id}`,
             providesTags: ['User'],
         }),
-        updateUser: builder.mutation<User, { id: string; data: UpdateUserRequest }>({
+        updateUser: builder.mutation({
             query: ({ id, data }) => ({
                 url: `/users/${id}`,
                 method: 'PATCH',
@@ -71,7 +46,7 @@ export const userApi = createApi({
             }),
             invalidatesTags: ['User'],
         }),
-        deleteUser: builder.mutation<void, string>({
+        deleteUser: builder.mutation({
             query: (id) => ({
                 url: `/users/${id}`,
                 method: 'DELETE',

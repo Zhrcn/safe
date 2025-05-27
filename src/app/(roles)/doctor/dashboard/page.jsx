@@ -212,8 +212,8 @@ function Calendar({
 
 export default function DoctorDashboard() {
   const dispatch = useAppDispatch();
-  const selectedDate = useAppSelector(state => state.date.selectedDate);
-  const selectedPatient = useAppSelector(state => state.patient.selectedPatient);
+  const selectedDate = useAppSelector(state => state?.date?.selectedDate || new Date().toISOString().split('T')[0]);
+  const selectedPatient = useAppSelector(state => state?.patient?.selectedPatient || null);
 
   // Mock data - replace with API calls
   const doctor = {
@@ -228,11 +228,17 @@ export default function DoctorDashboard() {
   ];
 
   useEffect(() => {
+    // Initialize selected date if not already set
+    if (!selectedDate) {
+      const today = new Date().toISOString().split('T')[0];
+      dispatch(setSelectedDate(today));
+    }
+
     // Fetch data for the selected date - implement API call here
     // For now, just use mock data
     console.log(`Fetching data for date: ${selectedDate}`);
 
-  }, [selectedDate]);
+  }, [selectedDate, dispatch]);
 
   const handleSelectPatient = (patient) => {
     dispatch(setSelectedPatient(patient));

@@ -10,19 +10,13 @@ import MessageIcon from '@mui/icons-material/Message';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import PersonIcon from '@mui/icons-material/Person'; // Corrected import path
 import Link from 'next/link';
-import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'; // Updated import path
-import { toggleThemeMode } from '@/lib/redux/slices/themeSlice'; // Updated import path
 import { usePathname } from 'next/navigation';
 import GenericRoleLayout from '@/components/GenericRoleLayout';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 // Basic Header Component
 function DoctorHeader() {
-  const dispatch = useAppDispatch();
-  const themeMode = useAppSelector((state) => state.theme.themeMode);
-
-  const handleThemeToggle = () => {
-    dispatch(toggleThemeMode());
-  };
+  const { mode, toggleTheme } = useTheme();
 
   return (
     <Box className="bg-blue-600 dark:bg-gray-800 text-white dark:text-gray-200 p-4 flex items-center justify-between shadow-md dark:shadow-lg"> {/* Theme-aware background, text, and shadow */}
@@ -44,23 +38,23 @@ function DoctorHeader() {
         </Typography>
         {/* Dark/Light Toggle */}
         <FormControlLabel
-          control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
-          label={<Typography className="text-gray-900 dark:text-white">{themeMode === 'dark' ? 'Dark' : 'Light'}</Typography>} // Make label theme-aware
+          control={<Switch checked={mode === 'dark'} onChange={toggleTheme} color="default" size="small" />}
+          label={<Typography className="text-white dark:text-gray-200">{mode === 'dark' ? 'Dark' : 'Light'}</Typography>} // Make label theme-aware
           sx={{
             // Removed explicit color from sx to rely on Tailwind classes
             '.MuiSwitch-thumb': { // Style the switch thumb
-              backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
+              backgroundColor: mode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
             },
             '.MuiSwitch-track': { // Style the switch track
-              backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
+              backgroundColor: mode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
               opacity: 1, // Ensure track is visible
             },
             '& .Mui-checked': { // Style when checked (Dark mode)
               '.MuiSwitch-thumb': {
-                backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
+                backgroundColor: mode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
               },
               '.MuiSwitch-track': {
-                backgroundColor: themeMode === 'dark' ? '#424242' : '#f1f1f1', // Consistent track color
+                backgroundColor: mode === 'dark' ? '#424242' : '#f1f1f1', // Consistent track color
               },
             }
           }}
@@ -122,7 +116,7 @@ const sidebarItems = [
 export default function DoctorLayout({ children }) {
   return (
     <GenericRoleLayout
-      headerBg="bg-primary"
+      headerBg="bg-blue-600 dark:bg-gray-800"
       sidebarBg="bg-background"
       logoBg="bg-primary"
       title="S.A.F.E Doctor Portal"

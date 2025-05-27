@@ -1,61 +1,86 @@
 'use client';
 
-import { useEffect } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'; // Updated import path to use @/lib alias
+import { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { THEME } from '@/lib/config';
+
+const ThemeContext = createContext(undefined);
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}
 
 export default function ThemeProviderWrapper({ children }) {
-  const themeMode = useAppSelector((state) => state.theme.themeMode);
+  const [mode, setMode] = useState('light');
 
   useEffect(() => {
-    // Sync Tailwind's dark mode with Redux theme
-    if (themeMode === 'dark') {
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setMode(savedTheme);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setMode('dark');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Sync Tailwind's dark mode with theme state
+    if (mode === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [themeMode]);
+  }, [mode]);
+
+  const toggleTheme = () => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    setMode(newMode);
+    localStorage.setItem('theme', newMode);
+  };
 
   const theme = createTheme({
     palette: {
-      mode: themeMode,
-      primary: {
-        main: themeMode === 'dark' ? '#90caf9' : '#1976d2',
-      },
-      secondary: {
-        main: themeMode === 'dark' ? '#f48fb1' : '#9c27b0',
-      },
-      background: {
-        default: themeMode === 'dark' ? '#0f172a' : '#f4f4f4', // match Tailwind dark bg
-        paper: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
-      },
-      text: {
-        primary: themeMode === 'dark' ? '#ffffff' : '#212121',
-        secondary: themeMode === 'dark' ? '#a0a0a0' : '#757575',
-      },
+      mode,
+      primary: THEME[mode].primary,
+      secondary: THEME[mode].secondary,
+      error: THEME[mode].error,
+      warning: THEME[mode].warning,
+      success: THEME[mode].success,
+      background: THEME[mode].background,
+    },
+    typography: {
+      fontFamily: [
+        'Inter',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"Segoe UI"',
+        'Roboto',
+        '"Helvetica Neue"',
+        'Arial',
+        'sans-serif',
+      ].join(','),
+    },
+    shape: {
+      borderRadius: 8,
     },
     components: {
-      MuiCard: {
+      MuiButton: {
         styleOverrides: {
           root: {
-            backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
-            color: themeMode === 'dark' ? '#ffffff' : '#212121',
+            textTransform: 'none',
+            fontWeight: 500,
           },
         },
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: themeMode === 'dark' ? '#1e1e1e' : '#ffffff',
-            color: themeMode === 'dark' ? '#ffffff' : '#212121',
-          },
-        },
-      },
-      MuiTypography: {
-        styleOverrides: {
-          root: {
-            color: themeMode === 'dark' ? '#ffffff' : '#212121',
+            backgroundImage: 'none',
           },
         },
       },
@@ -63,9 +88,11 @@ export default function ThemeProviderWrapper({ children }) {
   });
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline /> {/* Optional: resets CSS to provide a consistent baseline */}
-      {children}
-    </ThemeProvider>
+    <ThemeContext.Provider value={{ mode, toggleTheme }}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </ThemeContext.Provider>
   );
 } 

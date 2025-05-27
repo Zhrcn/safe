@@ -34,23 +34,13 @@ import { useRouter, usePathname } from 'next/navigation';
 
 const drawerWidth = 240;
 
-interface DashboardLayoutProps {
-    children: React.ReactNode;
-    title: string;
-    menuItems: Array<{
-        icon: React.ElementType;
-        text: string;
-        href: string;
-    }>;
-}
-
 export default function DashboardLayout({
     children,
     title,
     menuItems,
-}: DashboardLayoutProps) {
+}) {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [anchorEl, setAnchorEl] = useState(null);
     const { user, logout } = useAuth();
     const { mode, toggleTheme } = useTheme();
     const router = useRouter();
@@ -60,7 +50,7 @@ export default function DashboardLayout({
         setMobileOpen(!mobileOpen);
     };
 
-    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
 

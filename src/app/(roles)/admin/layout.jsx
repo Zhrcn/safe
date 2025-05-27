@@ -7,19 +7,13 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Link from 'next/link';
-import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { toggleThemeMode } from '@/lib/redux/slices/themeSlice';
 import { usePathname } from 'next/navigation';
 import GenericRoleLayout from '@/components/GenericRoleLayout';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 // Basic Header Component (can be shared or role-specific)
 function AdminHeader() {
-    const dispatch = useAppDispatch();
-    const themeMode = useAppSelector((state) => state.theme.themeMode);
-
-    const handleThemeToggle = () => {
-        dispatch(toggleThemeMode());
-    };
+    const { mode, toggleTheme } = useTheme();
 
     return (
         <Box className="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between shadow-md dark:shadow-lg"> {/* Theme-aware background and shadow */}
@@ -40,29 +34,28 @@ function AdminHeader() {
                 </Typography>
                 {/* Dark/Light Toggle */}
                 <FormControlLabel
-                    control={<Switch checked={themeMode === 'dark'} onChange={handleThemeToggle} color="default" size="small" />}
-                    label={themeMode === 'dark' ? 'Dark' : 'Light'}
+                    control={<Switch checked={mode === 'dark'} onChange={toggleTheme} color="default" size="small" />}
+                    label={<Typography className="text-white dark:text-gray-200">{mode === 'dark' ? 'Dark' : 'Light'}</Typography>}
                     sx={{
-                        color: themeMode === 'dark' ? 'white' : '#212121', // Theme-aware label color
-                        '.MuiSwitch-thumb': { // Style the switch thumb
-                            backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // White thumb in dark, black in light
+                        '.MuiSwitch-thumb': {
+                            backgroundColor: mode === 'dark' ? '#ffffff' : '#000000',
                         },
-                        '.MuiSwitch-track': { // Style the switch track
-                            backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Darker track in dark, lighter in light
-                            opacity: 1, // Ensure track is visible
+                        '.MuiSwitch-track': {
+                            backgroundColor: mode === 'dark' ? '#424242' : '#bdbdbd',
+                            opacity: 1,
                         },
-                        '& .Mui-checked': { // Style when checked (Dark mode)
+                        '& .Mui-checked': {
                             '.MuiSwitch-thumb': {
-                                backgroundColor: themeMode === 'dark' ? '#ffffff' : '#000000', // Consistent thumb color
+                                backgroundColor: mode === 'dark' ? '#ffffff' : '#000000',
                             },
                             '.MuiSwitch-track': {
-                                backgroundColor: themeMode === 'dark' ? '#424242' : '#bdbdbd', // Consistent track color
+                                backgroundColor: mode === 'dark' ? '#424242' : '#f1f1f1',
                             },
                         }
                     }}
                 />
                 {/* Avatar Placeholder (adjust color for theme) */}
-                <IconButton color="inherit">
+                <IconButton color="inherit" className="text-white dark:text-gray-200">
                     <AccountCircle />
                 </IconButton>
             </Box>
@@ -108,7 +101,7 @@ const sidebarItems = [
 export default function AdminLayout({ children }) {
     return (
         <GenericRoleLayout
-            headerBg="bg-primary"
+            headerBg="bg-gray-900 dark:bg-gray-800"
             sidebarBg="bg-background"
             logoBg="bg-primary"
             title="S.A.F.E Admin Portal"

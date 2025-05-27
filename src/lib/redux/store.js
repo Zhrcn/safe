@@ -1,14 +1,23 @@
 import { configureStore } from '@reduxjs/toolkit';
-import userReducer from '@/lib/redux/userSlice'; // Corrected import path
-import dateReducer from '@/lib/redux/dateSlice'; // Corrected import path
-import patientReducer from '@/lib/redux/patientSlice'; // Corrected import path
-import themeReducer from '@/lib/redux/slices/themeSlice'; // Corrected import path
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { authApi } from './services/authApi';
+import { userApi } from './services/userApi';
+import authReducer from './slices/authSlice';
+import uiReducer from './slices/uiSlice';
+import dateReducer from './dateSlice';
+import patientReducer from './patientSlice';
 
 export const store = configureStore({
   reducer: {
-    user: userReducer,
+    auth: authReducer,
+    ui: uiReducer,
     date: dateReducer,
     patient: patientReducer,
-    theme: themeReducer, // Add the theme reducer
+    [authApi.reducerPath]: authApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
   },
-}); 
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware, userApi.middleware),
+});
+
+setupListeners(store.dispatch); 

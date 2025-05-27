@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
 
 // Add paths that don't require authentication
@@ -19,7 +18,7 @@ const roleRestrictedPaths = {
     '/admin': ['admin'],
 };
 
-export function middleware(request: NextRequest) {
+export function middleware(request) {
     const { pathname } = request.nextUrl;
 
     // Allow access to public paths
@@ -38,7 +37,7 @@ export function middleware(request: NextRequest) {
 
     try {
         // Verify token and check role permissions
-        const decoded = jwtDecode<{ role: string }>(token);
+        const decoded = jwtDecode(token);
         const userRole = decoded.role;
 
         // Check role-restricted paths
