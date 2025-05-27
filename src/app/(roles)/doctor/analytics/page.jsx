@@ -1,7 +1,7 @@
 'use client';
 
 import { Typography, Card, CardContent, Box, Grid, Paper } from '@mui/material';
-import { BarChart, PieChart, LineChart, Activity } from 'lucide-react';
+import { Activity, CalendarDays, Users, Pill } from 'lucide-react';
 
 // Placeholder for Analytics sections
 function AnalyticsCard({
@@ -87,7 +87,4 @@ export default function DoctorAnalyticsPage() {
       </Paper>
     </Box>
   );
-}
-
-// Import additional Lucid Icons needed
-import { CalendarDays, Users, Pill } from 'lucide-react'; 
+} 

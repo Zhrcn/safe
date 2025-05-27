@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { THEME } from '@/lib/config';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const ThemeContext = createContext(undefined);
 
@@ -84,14 +86,47 @@ export default function ThemeProviderWrapper({ children }) {
           },
         },
       },
+      MuiPickersDay: {
+        styleOverrides: {
+          root: {
+            color: mode === 'dark' ? '#E5E7EB' : '#1F2937',
+            '&.Mui-selected': {
+              backgroundColor: THEME[mode].primary.main,
+              color: '#FFFFFF',
+              '&:hover': {
+                backgroundColor: THEME[mode].primary.dark,
+              }
+            },
+          },
+        },
+      },
+      MuiDateCalendar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: mode === 'dark' ? '#1F2937' : '#FFFFFF',
+            color: mode === 'dark' ? '#E5E7EB' : '#1F2937',
+          },
+        },
+      },
+      MuiDayCalendar: {
+        styleOverrides: {
+          header: {
+            '& .MuiDayCalendar-weekDayLabel': {
+              color: mode === 'dark' ? '#9CA3AF' : '#6B7280',
+            },
+          },
+        },
+      },
     },
   });
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme }}>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <CssBaseline />
+          {children}
+        </LocalizationProvider>
       </ThemeProvider>
     </ThemeContext.Provider>
   );

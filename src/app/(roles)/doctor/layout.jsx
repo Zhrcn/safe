@@ -90,11 +90,11 @@ function DoctorSidebar() {
           <Box
             component="a"
             className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
-                            ${pathname === `/` + item.link ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'hover:bg-gray-300 dark:hover:bg-gray-700'} {/* Highlight active link with theme-aware colors */}
+                            ${pathname === item.link ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'hover:bg-gray-300 dark:hover:bg-gray-700'} {/* Highlight active link with theme-aware colors */}
                         `}
           >
-            <item.icon fontSize="small" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} /> {/* Theme-aware icon color */}
-            <Typography variant="body1" className={`${pathname === `/` + item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}> {/* Theme-aware text color */}
+            <item.icon fontSize="small" className={`${pathname === item.link ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} /> {/* Theme-aware icon color */}
+            <Typography variant="body1" className={`${pathname === item.link ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}> {/* Theme-aware text color */}
               {item.name}
             </Typography>
           </Box>
@@ -104,6 +104,7 @@ function DoctorSidebar() {
   );
 }
 
+// Define sidebar items for the GenericRoleLayout
 const sidebarItems = [
   { name: 'Dashboard', icon: DashboardIcon, link: '/doctor/dashboard' },
   { name: 'Patients', icon: PeopleIcon, link: '/doctor/patients' },

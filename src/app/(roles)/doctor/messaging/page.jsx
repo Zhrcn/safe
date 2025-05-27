@@ -2,7 +2,7 @@
 
 import { Typography, Box, Paper, Grid, List, ListItem, ListItemText, Divider, TextField, InputAdornment, IconButton } from '@mui/material';
 import { MessageSquare, Send, User, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Mock Conversation Data
 const mockConversations = [
@@ -11,12 +11,24 @@ const mockConversations = [
   { id: 3, patientName: 'Patient C', lastMessage: 'Is the prescription ready?', time: '2024-06-19' },
 ];
 
-// Mock Message Data for a specific conversation (e.g., Patient A)
-const mockMessages = [
-  { id: 1, sender: 'Patient A', text: 'Hello Doctor, I have a question about my medication.', time: '10:25 AM' },
-  { id: 2, sender: 'Doctor', text: 'Hi Patient A, I received your message. What is your question?', time: '10:28 AM' },
-  { id: 3, sender: 'Patient A', text: 'It\'s about the dosage schedule.', time: '10:30 AM' },
-];
+// Mock Message Data for conversations
+const mockMessagesMap = {
+  1: [
+    { id: 1, sender: 'Patient A', text: 'Hello Doctor, I have a question about my medication.', time: '10:25 AM' },
+    { id: 2, sender: 'Doctor', text: 'Hi Patient A, I received your message. What is your question?', time: '10:28 AM' },
+    { id: 3, sender: 'Patient A', text: 'It\'s about the dosage schedule.', time: '10:30 AM' },
+  ],
+  2: [
+    { id: 1, sender: 'Patient B', text: 'Good morning Doctor.', time: 'Yesterday' },
+    { id: 2, sender: 'Doctor', text: 'Good morning, how can I help you today?', time: 'Yesterday' },
+    { id: 3, sender: 'Patient B', text: 'I wanted to thank you for the last appointment.', time: 'Yesterday' },
+    { id: 4, sender: 'Doctor', text: 'You\'re welcome! Let me know if you have any questions.', time: 'Yesterday' },
+    { id: 5, sender: 'Patient B', text: 'Thanks, Doctor.', time: 'Yesterday' },
+  ],
+  3: [
+    { id: 1, sender: 'Patient C', text: 'Hello Doctor, is my prescription ready?', time: '2024-06-19' },
+  ],
+};
 
 // Placeholder Conversation List Component
 function ConversationList({
@@ -45,51 +57,51 @@ function ConversationList({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search size={20} className="text-gray-500 dark:text-gray-400"/> {/* Theme-aware icon */}
+                <Search size={20} className="text-gray-500 dark:text-gray-400" /> {/* Theme-aware icon */}
               </InputAdornment>
             ),
             className: 'text-gray-900 dark:text-white', // Theme-aware input text
           }}
           InputLabelProps={{
-             style: { color: 'inherit' }, // Inherit color to work with theme-aware label
+            style: { color: 'inherit' }, // Inherit color to work with theme-aware label
           }}
-           sx={{
-              '& .MuiOutlinedInput-root': { // Style the input border
-                  fieldset: { borderColor: '#d1d5db' }, // Default border
-                  '&:hover fieldset': { borderColor: '#9ca3af' }, // Hover border
-                   '&.Mui-focused fieldset': { borderColor: '#3b82f6' }, // Focused border
-                    // Dark theme borders
-                    '.dark & .MuiOutlinedInput-notchedOutline': {
-                         borderColor: '#4b5563',
-                   },
-                   '.dark &:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#6b7280',
-                   },
-                   '.dark &.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#60a5fa',
-                   },
+          sx={{
+            '& .MuiOutlinedInput-root': { // Style the input border
+              fieldset: { borderColor: '#d1d5db' }, // Default border
+              '&:hover fieldset': { borderColor: '#9ca3af' }, // Hover border
+              '&.Mui-focused fieldset': { borderColor: '#3b82f6' }, // Focused border
+              // Dark theme borders
+              '.dark & .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#4b5563',
               },
-               '& .MuiInputBase-input::placeholder': {
-                   color: '#9ca3af', // Default placeholder color
-                   opacity: 1, // Ensure placeholder is visible
-                   '.dark & ': {
-                        color: '#6b7280',
-                   },
-               },
-               '& .MuiInputLabel-outlined': {
-                    color: '#6b7280', // Default label color
-                     '.dark & ': {
-                         color: '#9ca3af',
-                   },
-               },
-           }}
+              '.dark &:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6b7280',
+              },
+              '.dark &.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#60a5fa',
+              },
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: '#9ca3af', // Default placeholder color
+              opacity: 1, // Ensure placeholder is visible
+              '.dark & ': {
+                color: '#6b7280',
+              },
+            },
+            '& .MuiInputLabel-outlined': {
+              color: '#6b7280', // Default label color
+              '.dark & ': {
+                color: '#9ca3af',
+              },
+            },
+          }}
         />
       </Box>
       <div className="flex-1 overflow-y-auto">
         <List>
           {filteredConversations.length === 0 ? (
             <ListItem>
-              <ListItemText primary="No conversations found." className="text-gray-500 dark:text-gray-400"/> {/* Theme-aware text */}
+              <ListItemText primary="No conversations found." className="text-gray-500 dark:text-gray-400" /> {/* Theme-aware text */}
             </ListItem>
           ) : (
             filteredConversations.map((conversation) => (
@@ -99,19 +111,19 @@ function ConversationList({
                 onClick={() => onSelectConversation(conversation.id)}
                 selected={selectedConversationId === conversation.id}
                 className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700" // Theme-aware border and hover
-                 sx={{
+                sx={{
                   '&.Mui-selected': {
                     backgroundColor: '#e0e0e0', // Default selected background
                     '.dark & ': {
-                        backgroundColor: '#4a5568',
+                      backgroundColor: '#4a5568',
                     },
                   },
                   '&.Mui-selected:hover': {
-                     backgroundColor: '#d5d5d5', // Default selected hover background
-                     '.dark & ': {
-                          backgroundColor: '#4a5568',
-                     },
-                   },
+                    backgroundColor: '#d5d5d5', // Default selected hover background
+                    '.dark & ': {
+                      backgroundColor: '#4a5568',
+                    },
+                  },
                 }}
               >
                 <ListItemText
@@ -127,18 +139,31 @@ function ConversationList({
   );
 }
 
-// Placeholder Message Display Component
+// Message Display Component
 function MessageDisplay({
-  messages
+  messages,
+  patientName
 }) {
-  // In a real app, replace with dynamic messages for the selected conversation
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
     <Paper elevation={3} className="h-full flex flex-col bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"> {/* Theme-aware styling */}
       <Box className="p-4 border-b border-gray-200 dark:border-gray-700"> {/* Theme-aware border */}
-        <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">Conversation with Patient A</Typography> {/* Theme-aware text - replace with selected patient name */}
+        <Typography variant="h6" className="font-semibold text-gray-900 dark:text-white">
+          {patientName ? `Conversation with ${patientName}` : 'Select a conversation'}
+        </Typography> {/* Theme-aware text */}
       </Box>
       <Box className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
+        {!patientName ? (
+          <Typography className="text-gray-500 dark:text-gray-400 text-center py-8">Select a conversation to view messages</Typography>
+        ) : messages.length === 0 ? (
           <Typography className="text-gray-500 dark:text-gray-400">No messages yet.</Typography> // Theme-aware text
         ) : (
           messages.map(message => (
@@ -152,14 +177,16 @@ function MessageDisplay({
             </Box>
           ))
         )}
+        <div ref={messagesEndRef} />
       </Box>
     </Paper>
   );
 }
 
-// Placeholder Message Input Component
+// Message Input Component
 function MessageInput({
-  onSendMessage
+  onSendMessage,
+  disabled
 }) {
   const [message, setMessage] = useState('');
 
@@ -171,7 +198,8 @@ function MessageInput({
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
@@ -182,47 +210,55 @@ function MessageInput({
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Type your message..."
+          placeholder={disabled ? "Select a conversation to send a message" : "Type your message..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-           InputProps={{
+          disabled={disabled}
+          multiline
+          maxRows={4}
+          InputProps={{
             className: 'text-gray-900 dark:text-white',
           }}
           InputLabelProps={{
-             style: { color: 'inherit' },
+            style: { color: 'inherit' },
           }}
-           sx={{
-              '& .MuiOutlinedInput-root': {
-                  fieldset: { borderColor: '#d1d5db' },
-                  '&:hover fieldset': { borderColor: '#9ca3af' },
-                   '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
-                    '.dark & .MuiOutlinedInput-notchedOutline': {
-                         borderColor: '#4b5563',
-                   },
-                   '.dark &:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#6b7280',
-                   },
-                   '.dark &.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#60a5fa',
-                   },
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              fieldset: { borderColor: '#d1d5db' },
+              '&:hover fieldset': { borderColor: '#9ca3af' },
+              '&.Mui-focused fieldset': { borderColor: '#3b82f6' },
+              '.dark & .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#4b5563',
               },
-               '& .MuiInputBase-input::placeholder': {
-                   color: '#9ca3af',
-                   opacity: 1,
-                   '.dark & ': {
-                        color: '#6b7280',
-                   },
-               },
-               '& .MuiInputLabel-outlined': {
-                    color: '#6b7280',
-                     '.dark & ': {
-                         color: '#9ca3af',
-                   },
-               },
-           }}
+              '.dark &:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#6b7280',
+              },
+              '.dark &.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#60a5fa',
+              },
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: '#9ca3af',
+              opacity: 1,
+              '.dark & ': {
+                color: '#6b7280',
+              },
+            },
+            '& .MuiInputLabel-outlined': {
+              color: '#6b7280',
+              '.dark & ': {
+                color: '#9ca3af',
+              },
+            },
+          }}
         />
-        <IconButton color="primary" onClick={handleSendMessage} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200">
+        <IconButton
+          color="primary"
+          onClick={handleSendMessage}
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
+          disabled={disabled}
+        >
           <Send size={24} />
         </IconButton>
       </Box>
@@ -231,47 +267,99 @@ function MessageInput({
 }
 
 export default function DoctorMessagingPage() {
-  const [selectedConversationId, setSelectedConversationId] = useState(mockConversations[0]?.id || null);
-  const [messages, setMessages] = useState(mockMessages); // Replace with fetching messages for selectedConversationId
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState(mockConversations);
 
-  // In a real app, you would fetch messages based on selectedConversationId
+  // Get selected conversation
+  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+
+  // When conversation is selected, load messages
+  useEffect(() => {
+    if (selectedConversationId) {
+      // In a real app, fetch messages from API
+      // For now, use mock data
+      setMessages(mockMessagesMap[selectedConversationId] || []);
+    } else {
+      setMessages([]);
+    }
+  }, [selectedConversationId]);
+
   const handleSelectConversation = (id) => {
     setSelectedConversationId(id);
-    // Fetch messages for this conversation
-    // For now, use mockMessages
-    setMessages(mockMessages); 
   };
 
   const handleSendMessage = (text) => {
-    console.log('Sending message:', text);
-    // Implement send message logic (API call)
-    // For now, add to mock messages
-    const newMessage = { id: messages.length + 1, sender: 'Doctor', text, time: 'Now' };
-    setMessages([...messages, newMessage]);
+    if (!selectedConversationId) return;
+
+    // Create new message
+    const newMessage = {
+      id: messages.length + 1,
+      sender: 'Doctor',
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // Add to messages
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
+
+    // Update conversation's last message
+    const updatedConversations = conversations.map(conv => {
+      if (conv.id === selectedConversationId) {
+        return {
+          ...conv,
+          lastMessage: text,
+          time: 'Just now'
+        };
+      }
+      return conv;
+    });
+
+    setConversations(updatedConversations);
+
+    // In a real app, send to API
+    // Example:
+    // sendMessageToApi(selectedConversationId, text);
   };
 
   return (
-    <Box sx={{ p: 3 }}> {/* Added padding to the outer Box */}
-      <Paper elevation={3} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md h-[80vh] flex"> {/* Set a fixed height and ensure flex display */}
-        {/* Conversation List Sidebar */}
-        <Box className="w-1/4 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full"> {/* Theme-aware border, ensure flex column, and take full height */}
-          <ConversationList
-            conversations={mockConversations} // Replace with fetched conversations
-            onSelectConversation={handleSelectConversation}
-            selectedConversationId={selectedConversationId}
-          />
-        </Box>
+    <Box className="h-[calc(100vh-120px)]">
+      <Paper elevation={3} sx={{ p: 3, height: '100%' }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
+          Messages
+        </Typography>
+        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
+          Communicate with your patients securely.
+        </Typography>
 
-        {/* Message Display and Input Area */}
-        <Box className="flex-1 flex flex-col"> {/* Flex column to stack messages and input */}
-          <Box className="flex-1 overflow-y-auto"> {/* Message Display Area */}
-             <MessageDisplay messages={messages} /> {/* Pass messages */}
-          </Box>
+        <Grid container spacing={3} sx={{ height: 'calc(100% - 100px)' }}>
+          {/* Conversation List */}
+          <Grid item xs={12} md={4} sx={{ height: '100%' }}>
+            <ConversationList
+              conversations={conversations}
+              onSelectConversation={handleSelectConversation}
+              selectedConversationId={selectedConversationId}
+            />
+          </Grid>
 
-          <Box className="p-4 border-t border-gray-200 dark:border-gray-700"> {/* Message Input Area with top border */}
-             <MessageInput onSendMessage={handleSendMessage} />
-          </Box>
-        </Box>
+          {/* Message Area */}
+          <Grid item xs={12} md={8} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Messages Display */}
+            <Box sx={{ flexGrow: 1, mb: 2 }}>
+              <MessageDisplay
+                messages={messages}
+                patientName={selectedConversation?.patientName}
+              />
+            </Box>
+
+            {/* Message Input */}
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              disabled={!selectedConversationId}
+            />
+          </Grid>
+        </Grid>
       </Paper>
     </Box>
   );
