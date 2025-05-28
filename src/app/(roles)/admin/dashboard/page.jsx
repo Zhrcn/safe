@@ -1,118 +1,404 @@
 'use client';
 
-import { Typography, Card, CardContent, Box, Grid, Paper, Button } from '@mui/material';
-import { Users, BarChart, Settings, Hospital, Eye } from 'lucide-react';
-// Import motion from framer-motion
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Box, Grid, Typography, Button, Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Users, Activity, Bell, Server, UserPlus, Settings, BarChart2, PieChart } from 'lucide-react';
+import { AdminPageContainer, AdminCard, StatCard, ChartContainer, UserRoleBadge, UserStatusBadge, ActivityLogItem, NotificationItem } from '@/components/admin/AdminComponents';
+import { getUsers, getSystemStats, getActivityLogs, getNotifications } from '@/services/adminService';
+import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Mock Admin Data (replace with actual authenticated admin data fetching)
-const mockAdminData = {
-  hospitalName: 'Syrian Central Hospital',
-};
+export default function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [systemStats, setSystemStats] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
 
-// Placeholder Card Component for Dashboard sections
-function DashboardCard({
-  title,
-  icon: IconComponent,
-  children,
-  actionButton
-}) {
-  return (
-    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200"> {/* Added theme-aware borders and background */}
-      <CardContent>
-        <Box className="flex justify-between items-center mb-4">
-          <Box className="flex items-center">
-             <Box className="p-3 rounded-full bg-red-100 dark:bg-red-700 mr-4"> {/* Themed icon background with Admin color and spacing */}
-                <IconComponent size={28} className="text-red-600 dark:text-red-200" /> {/* Themed icon color and size */}
-             </Box>
-             <Typography variant="h6" component="div" className="font-semibold">
-               {title}
-             </Typography>
-          </Box>
-          {actionButton}
-        </Box>
-         <Box className="text-gray-700 dark:text-gray-300"> {/* Themed text color for card content */}
-             {children}
-         </Box>
-      </CardContent>
-    </Card>
-  );
-}
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
+        const [usersData, statsData, logsData, notificationsData] = await Promise.all([
+          getUsers({ status: 'active' }),
+          getSystemStats(),
+          getActivityLogs(),
+          getNotifications()
+        ]);
 
-export default function AdminDashboardPage() {
-  const admin = mockAdminData; // In a real app, fetch authenticated admin data
+        setUsers(usersData);
+        setSystemStats(statsData);
+        setActivityLogs(logsData);
+        setNotifications(notificationsData);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-   // Define animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    loadDashboardData();
+  }, []);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
+  const handleMarkAsRead = async (id) => {
+    // In a real app, this would call the API to mark the notification as read
+    console.log(`Marking notification ${id} as read`);
+    // Then update the local state
+    setNotifications(notifications.map(notification =>
+      notification.id === id ? { ...notification, isRead: true } : notification
+    ));
+  };
+
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6" // Added spacing between sections
+    <AdminPageContainer
+      title="Admin Dashboard"
+      description="Monitor system health, user activity, and manage platform settings."
     >
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md"> {/* Theme-aware background and shadow */}
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
-          Admin Dashboard
-        </Typography>
-         <Typography variant="body1" className="text-gray-700 dark:text-gray-300 mb-6"> {/* Theme-aware text color */}
-           Welcome, Administrator of {admin.hospitalName}!
-         </Typography>
+      {loading ? (
+        <Box className="flex justify-center items-center h-64">
+          <Typography className="text-muted-foreground">Loading dashboard data...</Typography>
+        </Box>
+      ) : (
+        <>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            className="mb-6 border-b border-border"
+            TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
+          >
+            <Tab
+              label="Overview"
+              value="overview"
+              className={activeTab === 'overview' ? 'text-primary' : 'text-muted-foreground'}
+            />
+            <Tab
+              label="Users"
+              value="users"
+              className={activeTab === 'users' ? 'text-primary' : 'text-muted-foreground'}
+            />
+            <Tab
+              label="Activity"
+              value="activity"
+              className={activeTab === 'activity' ? 'text-primary' : 'text-muted-foreground'}
+            />
+            <Tab
+              label="System"
+              value="system"
+              className={activeTab === 'system' ? 'text-primary' : 'text-muted-foreground'}
+            />
+          </Tabs>
 
-        <Grid container spacing={3}> {/* Added spacing between grid items */}
-          <Grid item xs={12} md={6}> {/* Made cards responsive */}
-            <DashboardCard
+          {activeTab === 'overview' && (
+            <Grid container spacing={3}>
+              {/* System Stats Cards */}
+              <Grid item xs={12} md={6} lg={3}>
+                <StatCard
+                  title="Total Users"
+                  value={systemStats.users.total}
+                  icon={<Users />}
+                  description={`${systemStats.users.active} active users`}
+                  onClick={() => setActiveTab('users')}
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={3}>
+                <StatCard
+                  title="Appointments"
+                  value={systemStats.appointments.total}
+                  icon={<Activity />}
+                  description={`${systemStats.appointments.scheduled} scheduled`}
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={3}>
+                <StatCard
+                  title="Prescriptions"
+                  value={systemStats.prescriptions.total}
+                  icon={<Bell />}
+                  description={`${systemStats.prescriptions.active} active`}
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={3}>
+                <StatCard
+                  title="System Health"
+                  value={systemStats.systemHealth.status}
+                  icon={<Server />}
+                  description={`${systemStats.systemHealth.uptime} uptime`}
+                  onClick={() => setActiveTab('system')}
+                />
+              </Grid>
+
+              {/* User Distribution Chart */}
+              <Grid item xs={12} md={6}>
+                <ChartContainer title="User Distribution by Role">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(systemStats.users.byRole).map(([name, value]) => ({ name, value }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {Object.entries(systemStats.users.byRole).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'var(--card)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--foreground)'
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </Grid>
+
+              {/* Appointment Status Chart */}
+              <Grid item xs={12} md={6}>
+                <ChartContainer title="Appointment Status">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={Object.entries(systemStats.appointments).filter(([key]) => key !== 'total').map(([name, value]) => ({ name, value }))}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="name" stroke="var(--muted-foreground)" />
+                      <YAxis stroke="var(--muted-foreground)" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'var(--card)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--foreground)'
+                        }}
+                      />
+                      <Bar dataKey="value" fill="var(--primary)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </Grid>
+
+              {/* Recent Activity */}
+              <Grid item xs={12} md={6}>
+                <AdminCard
+                  title="Recent Activity"
+                  actions={
+                    <Button
+                      variant="text"
+                      size="small"
+                      className="text-primary hover:bg-primary/10"
+                      onClick={() => setActiveTab('activity')}
+                    >
+                      View All
+                    </Button>
+                  }
+                >
+                  {activityLogs.slice(0, 3).map((log) => (
+                    <ActivityLogItem
+                      key={log.id}
+                      user={log.user}
+                      action={log.action}
+                      timestamp={log.timestamp}
+                      details={log.details}
+                      category={log.category}
+                    />
+                  ))}
+                </AdminCard>
+              </Grid>
+
+              {/* Notifications */}
+              <Grid item xs={12} md={6}>
+                <AdminCard
+                  title="Notifications"
+                  actions={
+                    <Button
+                      variant="text"
+                      size="small"
+                      className="text-primary hover:bg-primary/10"
+                    >
+                      Mark All Read
+                    </Button>
+                  }
+                >
+                  {notifications.slice(0, 3).map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      title={notification.title}
+                      message={notification.message}
+                      timestamp={notification.timestamp}
+                      severity={notification.severity}
+                      isRead={notification.isRead}
+                      onMarkAsRead={() => handleMarkAsRead(notification.id)}
+                    />
+                  ))}
+                </AdminCard>
+              </Grid>
+            </Grid>
+          )}
+
+          {activeTab === 'users' && (
+            <AdminCard
               title="User Management"
-              icon={Users}
-              actionButton={(
-                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">Manage Users</Button>
-              )}
+              actions={
+                <Button
+                  variant="contained"
+                  startIcon={<UserPlus size={20} />}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Add User
+                </Button>
+              }
             >
-              <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Overview of registered users (Doctors, Patients, Pharmacists, Admins).</Typography>
-               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
-                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ User Statistics Placeholder ]</Typography>
-               </Box>
-            </DashboardCard>
-          </Grid>
+              <TableContainer component={Paper} elevation={0} className="bg-transparent">
+                <Table>
+                  <TableHead>
+                    <TableRow className="bg-muted/50">
+                      <TableCell className="text-foreground font-medium">Name</TableCell>
+                      <TableCell className="text-foreground font-medium">Email</TableCell>
+                      <TableCell className="text-foreground font-medium">Role</TableCell>
+                      <TableCell className="text-foreground font-medium">Status</TableCell>
+                      <TableCell className="text-foreground font-medium">Last Active</TableCell>
+                      <TableCell className="text-foreground font-medium" align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-muted/30">
+                        <TableCell className="text-foreground">{user.name}</TableCell>
+                        <TableCell className="text-foreground">{user.email}</TableCell>
+                        <TableCell>
+                          <UserRoleBadge role={user.role} />
+                        </TableCell>
+                        <TableCell>
+                          <UserStatusBadge status={user.status} />
+                        </TableCell>
+                        <TableCell className="text-foreground">
+                          {new Date(user.lastActive).toLocaleString()}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Settings size={16} />}
+                            className="text-primary border-primary hover:bg-primary/10"
+                          >
+                            Manage
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </AdminCard>
+          )}
 
-          <Grid item xs={12} md={6}> {/* Made cards responsive */}
-            <DashboardCard
-              title="System Overview"
-              icon={Settings}
-              actionButton={(
-                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">System Settings</Button>
-              )}
-            >
-              <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Monitoring system health, performance, and key metrics.</Typography>
-               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
-                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ System Metrics Placeholder ]</Typography>
-               </Box>
-            </DashboardCard>
-          </Grid>
+          {activeTab === 'activity' && (
+            <AdminCard title="Activity Logs">
+              {activityLogs.map((log) => (
+                <ActivityLogItem
+                  key={log.id}
+                  user={log.user}
+                  action={log.action}
+                  timestamp={log.timestamp}
+                  details={log.details}
+                  category={log.category}
+                />
+              ))}
+            </AdminCard>
+          )}
 
-           <Grid item xs={12} md={6}> {/* Made cards responsive */}
-            <DashboardCard
-              title="Reports and Analytics"
-              icon={BarChart}
-              actionButton={(
-                <Button variant="outlined" size="small" startIcon={<Eye size={16} />} className="text-red-600 dark:text-red-300 border-red-600 dark:border-red-300 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200">View Reports</Button>
-              )}
-            >
-               <Typography variant="body2" className="text-gray-700 dark:text-gray-300">Access various reports on appointments, patients, inventory, etc.</Typography>
-               <Box sx={{ mt: 2, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-gray-200 dark:bg-gray-600 rounded-md"> {/* Themed placeholder box */}
-                    <Typography variant="body2" className="text-gray-700 dark:text-gray-300">[ Report Summaries Placeholder ]</Typography>
-               </Box>
-            </DashboardCard>
-          </Grid>
-
-          {/* Add more admin dashboard sections */}
-
-        </Grid>
-      </Paper>
-    </motion.div>
+          {activeTab === 'system' && (
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <AdminCard title="System Health">
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                      <Box className="p-4 border border-border rounded-md">
+                        <Typography variant="h6" className="text-foreground mb-2">Status</Typography>
+                        <Typography variant="body1" className="text-foreground">
+                          {systemStats.systemHealth.status === 'healthy' ? (
+                            <span className="text-green-500">● Healthy</span>
+                          ) : (
+                            <span className="text-red-500">● Issues Detected</span>
+                          )}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box className="p-4 border border-border rounded-md">
+                        <Typography variant="h6" className="text-foreground mb-2">Uptime</Typography>
+                        <Typography variant="body1" className="text-foreground">
+                          {systemStats.systemHealth.uptime}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box className="p-4 border border-border rounded-md">
+                        <Typography variant="h6" className="text-foreground mb-2">Response Time</Typography>
+                        <Typography variant="body1" className="text-foreground">
+                          {systemStats.systemHealth.responseTime}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box className="p-4 border border-border rounded-md">
+                        <Typography variant="h6" className="text-foreground mb-2">Last Issue</Typography>
+                        <Typography variant="body1" className="text-foreground">
+                          {new Date(systemStats.systemHealth.lastIssue).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </AdminCard>
+              </Grid>
+              <Grid item xs={12}>
+                <ChartContainer title="System Performance">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={[
+                        { name: '00:00', value: 230 },
+                        { name: '03:00', value: 180 },
+                        { name: '06:00', value: 200 },
+                        { name: '09:00', value: 280 },
+                        { name: '12:00', value: 250 },
+                        { name: '15:00', value: 310 },
+                        { name: '18:00', value: 290 },
+                        { name: '21:00', value: 240 }
+                      ]}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="name" stroke="var(--muted-foreground)" />
+                      <YAxis stroke="var(--muted-foreground)" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'var(--card)',
+                          borderColor: 'var(--border)',
+                          color: 'var(--foreground)'
+                        }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="value" stroke="var(--primary)" name="Response Time (ms)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </Grid>
+            </Grid>
+          )}
+        </>
+      )}
+    </AdminPageContainer>
   );
 } 

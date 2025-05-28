@@ -50,7 +50,14 @@ export async function POST(req) {
                     email: 'pharmacist@example.com',
                     role: 'pharmacist',
                     password: 'pharmacist'
-                }
+                },
+                'admin@admin.com': {
+                    _id: 'dev_pharmacist_123',
+                    name: 'Test Pharmacist',
+                    email: 'admin@admin.com',
+                    role: 'admin',
+                    password: 'admin123'
+                },
             };
 
             // Check if user exists in mock data

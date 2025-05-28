@@ -1,111 +1,315 @@
 'use client';
 
-import { Typography, Card, CardContent, Box, Grid, Paper } from '@mui/material';
-import { User, Heart, Calendar, Pill, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Activity, Calendar, Pill, Clock, Heart, Droplets, Weight, Thermometer } from 'lucide-react';
+import { PatientPageContainer, PatientCard, StatCard, ChartContainer, AppointmentStatusBadge, MedicationStatusBadge } from '@/components/patient/PatientComponents';
+import { getPatientProfile, getAppointments, getPrescriptions, getHealthMetrics } from '@/services/patientService';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Mock Patient Data (replace with actual authenticated patient data fetching)
-const mockPatientData = {
-  name: 'Patient A',
-  age: 45,
-  gender: 'Male',
-  upcomingAppointment: {
-    date: '2024-06-20',
-    time: '10:00 AM',
-    doctor: 'Dr. Ahmad Al-Ali',
-  },
-  recentPrescriptions: [
-    { id: 1, medication: 'Amoxicillin', date: '2024-06-15' },
-    { id: 2, medication: 'Lisinopril', date: '2024-06-10' },
-  ],
-  medicalHistorySummary: 'Diagnosed with Hypertension in 2020. No known allergies.',
-};
+export default function PatientDashboard() {
+  const [profile, setProfile] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [healthMetrics, setHealthMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-// Placeholder Card Component for Dashboard sections
-function DashboardCard({
-  title,
-  icon: IconComponent,
-  children
-}) {
-  return (
-    <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200">
-      <CardContent>
-        <Box className="flex items-center mb-4">
-          <Box className="p-3 rounded-full bg-blue-100 dark:bg-blue-700 mr-4">
-             <IconComponent size={28} className="text-blue-600 dark:text-blue-200" />
-          </Box>
-          <Typography variant="h6" component="div" className="font-semibold">
-            {title}
-          </Typography>
-        </Box>
-        <Box className="text-gray-700 dark:text-gray-300">
-           {children}
-        </Box>
-      </CardContent>
-    </Card>
-  );
-}
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
+        const [profileData, appointmentsData, prescriptionsData, metricsData] = await Promise.all([
+          getPatientProfile(),
+          getAppointments(),
+          getPrescriptions(),
+          getHealthMetrics()
+        ]);
 
-export default function PatientDashboardPage() {
-  const patient = mockPatientData; // In a real app, fetch authenticated patient data
+        setProfile(profileData);
+        setAppointments(appointmentsData);
+        setPrescriptions(prescriptionsData);
+        setHealthMetrics(metricsData);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  // Define animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    loadDashboardData();
+  }, []);
+
+  // Get the most recent metrics
+  const getLatestMetric = (metricType) => {
+    if (!healthMetrics || !healthMetrics[metricType] || healthMetrics[metricType].length === 0) {
+      return null;
+    }
+    return healthMetrics[metricType][healthMetrics[metricType].length - 1];
   };
 
+  // Calculate trend direction
+  const calculateTrend = (metricType, valueKey = 'value') => {
+    if (!healthMetrics || !healthMetrics[metricType] || healthMetrics[metricType].length < 2) {
+      return 'neutral';
+    }
+
+    const data = healthMetrics[metricType];
+    const current = data[data.length - 1][valueKey];
+    const previous = data[data.length - 2][valueKey];
+
+    if (current < previous) return 'down';
+    if (current > previous) return 'up';
+    return 'neutral';
+  };
+
+  // Filter upcoming appointments
+  const upcomingAppointments = appointments.filter(
+    appointment => new Date(appointment.date) >= new Date()
+  ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Filter active prescriptions
+  const activePrescriptions = prescriptions.filter(
+    prescription => prescription.status === 'Active'
+  );
+
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6"
+    <PatientPageContainer
+      title="Patient Dashboard"
+      description="Monitor your health, appointments, and prescriptions."
     >
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md">
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold">
-          Patient Dashboard
-        </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6">
-          Welcome to your Patient Dashboard. This is where you can see an overview of your health information, appointments, and messages.
-        </Typography>
+      {loading ? (
+        <Box className="flex justify-center items-center h-64">
+          <Typography className="text-muted-foreground">Loading dashboard data...</Typography>
+        </Box>
+      ) : (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <DashboardCard title="Upcoming Appointment" icon={Calendar}>
-              {patient.upcomingAppointment ? (
-                <Box className="space-y-2">
-                  <Typography variant="body1"><strong>Date:</strong> {patient.upcomingAppointment.date}</Typography>
-                  <Typography variant="body1"><strong>Time:</strong> {patient.upcomingAppointment.time}</Typography>
-                  <Typography variant="body1"><strong>Doctor:</strong> {patient.upcomingAppointment.doctor}</Typography>
-                </Box>
-              ) : (
-                <Typography variant="body1">No upcoming appointments.</Typography>
-              )}
-            </DashboardCard>
+          {/* Health Metrics Cards */}
+          <Grid item xs={12} md={6} lg={3}>
+            <StatCard
+              title="Blood Pressure"
+              value={getLatestMetric('bloodPressure') ?
+                `${getLatestMetric('bloodPressure').systolic}/${getLatestMetric('bloodPressure').diastolic}` :
+                'N/A'}
+              trend={calculateTrend('bloodPressure', 'systolic')}
+              icon={<Droplets />}
+              description="Last measured today"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <StatCard
+              title="Heart Rate"
+              value={getLatestMetric('heartRate') ? `${getLatestMetric('heartRate').value} bpm` : 'N/A'}
+              trend={calculateTrend('heartRate')}
+              icon={<Heart />}
+              description="Last measured today"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <StatCard
+              title="Weight"
+              value={getLatestMetric('weight') ? `${getLatestMetric('weight').value} kg` : 'N/A'}
+              trend={calculateTrend('weight')}
+              icon={<Weight />}
+              description="Last measured today"
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <StatCard
+              title="Blood Glucose"
+              value={getLatestMetric('bloodGlucose') ? `${getLatestMetric('bloodGlucose').value} mg/dL` : 'N/A'}
+              trend={calculateTrend('bloodGlucose')}
+              icon={<Thermometer />}
+              description="Last measured today"
+            />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <DashboardCard title="Recent Prescriptions" icon={Pill}>
-              {patient.recentPrescriptions.length > 0 ? (
-                <Box className="space-y-2">
-                  {patient.recentPrescriptions.map(prescription => (
-                    <Typography key={prescription.id} variant="body1"><strong>{prescription.date}:</strong> {prescription.medication}</Typography>
-                  ))
-                  }
-                </Box>
-              ) : (
-                <Typography variant="body1">No recent prescriptions on record.</Typography>
-              )}
-            </DashboardCard>
-          </Grid>
-
+          {/* Health Trends Chart */}
           <Grid item xs={12}>
-            <DashboardCard title="Medical History Summary" icon={FileText}>
-              <Typography variant="body1">{patient.medicalHistorySummary}</Typography>
-            </DashboardCard>
+            <ChartContainer title="Health Trends">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={healthMetrics?.bloodPressure.map((bp, index) => ({
+                    date: bp.date,
+                    systolic: bp.systolic,
+                    diastolic: bp.diastolic,
+                    heartRate: healthMetrics.heartRate[index]?.value,
+                    weight: healthMetrics.weight[index]?.value,
+                    glucose: healthMetrics.bloodGlucose[index]?.value
+                  }))}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="date" stroke="var(--muted-foreground)" />
+                  <YAxis stroke="var(--muted-foreground)" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--foreground)'
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="systolic" stroke="#8884d8" name="Systolic BP (mmHg)" />
+                  <Line type="monotone" dataKey="diastolic" stroke="#82ca9d" name="Diastolic BP (mmHg)" />
+                  <Line type="monotone" dataKey="heartRate" stroke="#ff7300" name="Heart Rate (bpm)" />
+                  <Line type="monotone" dataKey="glucose" stroke="#0088fe" name="Blood Glucose (mg/dL)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </Grid>
+
+          {/* Upcoming Appointments */}
+          <Grid item xs={12} md={6}>
+            <PatientCard
+              title="Upcoming Appointments"
+              actions={
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Calendar size={16} />}
+                  className="text-primary border-primary hover:bg-primary/10"
+                >
+                  Schedule New
+                </Button>
+              }
+            >
+              {upcomingAppointments.length === 0 ? (
+                <Box className="text-center py-6">
+                  <Calendar size={40} className="mx-auto text-muted-foreground mb-2" />
+                  <Typography variant="body1" className="text-muted-foreground">
+                    No upcoming appointments
+                  </Typography>
+                  <Typography variant="body2" className="text-muted-foreground">
+                    Schedule a new appointment to see your doctor
+                  </Typography>
+                </Box>
+              ) : (
+                <TableContainer component={Paper} elevation={0} className="bg-transparent">
+                  <Table>
+                    <TableHead>
+                      <TableRow className="bg-muted/50">
+                        <TableCell className="text-foreground font-medium">Doctor</TableCell>
+                        <TableCell className="text-foreground font-medium">Date & Time</TableCell>
+                        <TableCell className="text-foreground font-medium">Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {upcomingAppointments.slice(0, 5).map((appointment) => (
+                        <TableRow key={appointment.id} className="hover:bg-muted/30">
+                          <TableCell>
+                            <Typography variant="body2" className="font-medium text-foreground">
+                              {appointment.doctorName}
+                            </Typography>
+                            <Typography variant="caption" className="text-muted-foreground">
+                              {appointment.doctorSpecialty}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" className="text-foreground">
+                              {appointment.date}
+                            </Typography>
+                            <Typography variant="caption" className="text-muted-foreground">
+                              {appointment.time}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <AppointmentStatusBadge status={appointment.status} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              {upcomingAppointments.length > 0 && (
+                <Box className="mt-3 text-right">
+                  <Button
+                    variant="text"
+                    size="small"
+                    endIcon={<Clock size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                  >
+                    View All Appointments
+                  </Button>
+                </Box>
+              )}
+            </PatientCard>
+          </Grid>
+
+          {/* Active Medications */}
+          <Grid item xs={12} md={6}>
+            <PatientCard
+              title="Current Medications"
+              actions={
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Pill size={16} />}
+                  className="text-primary border-primary hover:bg-primary/10"
+                >
+                  Request Refill
+                </Button>
+              }
+            >
+              {activePrescriptions.length === 0 ? (
+                <Box className="text-center py-6">
+                  <Pill size={40} className="mx-auto text-muted-foreground mb-2" />
+                  <Typography variant="body1" className="text-muted-foreground">
+                    No active medications
+                  </Typography>
+                  <Typography variant="body2" className="text-muted-foreground">
+                    Your prescribed medications will appear here
+                  </Typography>
+                </Box>
+              ) : (
+                <TableContainer component={Paper} elevation={0} className="bg-transparent">
+                  <Table>
+                    <TableHead>
+                      <TableRow className="bg-muted/50">
+                        <TableCell className="text-foreground font-medium">Medication</TableCell>
+                        <TableCell className="text-foreground font-medium">Dosage</TableCell>
+                        <TableCell className="text-foreground font-medium">Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {activePrescriptions.slice(0, 5).map((prescription) => (
+                        <TableRow key={prescription.id} className="hover:bg-muted/30">
+                          <TableCell>
+                            <Typography variant="body2" className="font-medium text-foreground">
+                              {prescription.medication}
+                            </Typography>
+                            <Typography variant="caption" className="text-muted-foreground">
+                              {prescription.frequency}
+                            </Typography>
+                          </TableCell>
+                          <TableCell className="text-foreground">
+                            {prescription.dosage}
+                          </TableCell>
+                          <TableCell>
+                            <MedicationStatusBadge status={prescription.status} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              {activePrescriptions.length > 0 && (
+                <Box className="mt-3 text-right">
+                  <Button
+                    variant="text"
+                    size="small"
+                    endIcon={<Activity size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                  >
+                    View All Medications
+                  </Button>
+                </Box>
+              )}
+            </PatientCard>
           </Grid>
         </Grid>
-      </Paper>
-    </motion.div>
+      )}
+    </PatientPageContainer>
   );
 } 
