@@ -33,11 +33,10 @@ api.interceptors.request.use(
                             !window.location.pathname.includes('/register')) {
                             window.location.href = '/login';
                         }
-                        return config;
+                    } else {
+                        // Token is valid, add it to headers
+                        config.headers.Authorization = `Bearer ${token}`;
                     }
-
-                    // Token is valid, add it to headers
-                    config.headers.Authorization = `Bearer ${token}`;
                 } catch (error) {
                     console.error('Error decoding token:', error);
                     localStorage.removeItem('safe_auth_token');

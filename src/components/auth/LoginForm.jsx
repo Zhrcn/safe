@@ -46,14 +46,10 @@ export default function LoginForm({ role, redirectUrl }) {
             const success = await login(data.email, data.password, role);
 
             if (success) {
-                if (redirectUrl) {
-                    console.log(`Login successful! Redirecting to ${redirectUrl}`);
-                    router.push(redirectUrl);
-                } else {
-                    console.log(`Login successful! Redirecting to ${ROLE_ROUTES[role].dashboard}`);
-                    // Redirect to the appropriate dashboard based on role
-                    router.push(ROLE_ROUTES[role].dashboard);
-                }
+                console.log(`Login successful! Redirecting to ${redirectUrl || ROLE_ROUTES[role].dashboard}`);
+                // Redirect to the appropriate dashboard based on role
+                router.push(redirectUrl || ROLE_ROUTES[role].dashboard);
+                // Don't add code after this since it might not execute due to navigation
             }
         } catch (err) {
             console.error('Login error:', err);

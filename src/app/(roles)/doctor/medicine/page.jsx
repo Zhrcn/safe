@@ -6,21 +6,21 @@ import {
   Typography,
   Paper,
 } from '@mui/material';
-import PatientAnalytics from '@/components/doctor/PatientAnalytics';
+import MedicineQuery from '@/components/doctor/MedicineQuery';
 
-export default function AnalyticsPage() {
+export default function MedicinePage() {
   return (
     <Box className="p-6">
       <Box className="mb-6">
         <Typography variant="h4" component="h1" className="font-bold text-foreground">
-          Patient Analytics
+          Medicine Availability
         </Typography>
         <Typography variant="body1" className="text-muted-foreground">
-          View analytics and statistics about your patients, appointments, and prescriptions.
+          Check the availability of medicines at partner pharmacies and find alternatives when needed.
         </Typography>
       </Box>
       
-      <PatientAnalytics />
+      <MedicineQuery />
     </Box>
   );
 } 

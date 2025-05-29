@@ -2,386 +2,420 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Typography,
   Box,
+  Typography,
   Paper,
   Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
+  Card,
+  CardContent,
   Button,
-  Tabs,
-  Tab
+  Divider,
+  CircularProgress,
+  Alert,
+  Chip
 } from '@mui/material';
-import { Calendar, Activity, FileText } from 'lucide-react';
-import { DoctorPageContainer, DoctorCard, SearchField, ChartContainer } from '@/components/doctor/DoctorComponents';
-import { getPatients, getAppointments } from '@/services/doctorService';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+import { 
+  Users, 
+  Calendar, 
+  Clock, 
+  Activity, 
+  FileText,
+  ChevronRight,
+  MessageSquare
+} from 'lucide-react';
+import Link from 'next/link';
+import { getPatients, getAppointments, getPatientStatistics } from '@/services/doctorService';
+import PatientCard from '@/components/doctor/PatientCard';
 
-// Mock data for patient health trends
-const patientHealthData = [
-  { date: 'Jan', glucose: 120, bloodPressure: 130, weight: 70 },
-  { date: 'Feb', glucose: 115, bloodPressure: 135, weight: 69 },
-  { date: 'Mar', glucose: 118, bloodPressure: 132, weight: 69 },
-  { date: 'Apr', glucose: 122, bloodPressure: 128, weight: 68 },
-  { date: 'May', glucose: 116, bloodPressure: 130, weight: 68 },
-  { date: 'Jun', glucose: 110, bloodPressure: 125, weight: 67 },
-];
-
-// Patient List Table Component
-function PatientTable({ patients, onSelectPatient, selectedPatientId }) {
+// Dashboard Stat Card component
+function DashboardStatCard({ title, value, icon: Icon, color, linkTo }) {
   return (
-    <TableContainer component={Paper} elevation={0} sx={{ maxHeight: 400, overflow: 'auto' }} className="bg-card border border-border rounded-md">
-      <Table stickyHeader>
-        <TableHead>
-          <TableRow className="bg-muted">
-            <TableCell className="text-foreground font-semibold">PATIENT</TableCell>
-            <TableCell className="text-foreground font-semibold">AGE</TableCell>
-            <TableCell className="text-foreground font-semibold">CONDITION/STATUS</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {patients.map((patient) => (
-            <TableRow
-              key={patient.id}
-              onClick={() => onSelectPatient(patient)}
-              selected={selectedPatientId === patient.id}
-              hover
-              className={`cursor-pointer transition-colors duration-200 ${selectedPatientId === patient.id ? 'bg-muted/50' : 'hover:bg-muted/30'}`}
-            >
-              <TableCell className="text-foreground">{patient.name}</TableCell>
-              <TableCell className="text-foreground">{patient.age}</TableCell>
-              <TableCell>
-                {patient.condition}
-                <br />
-                <Chip
-                  label={patient.status}
-                  size="small"
-                  color={patient.status === 'Active' ? 'success' : patient.status === 'Urgent' ? 'error' : 'default'}
-                  className={
-                    patient.status === 'Active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                      patient.status === 'Urgent' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' :
-                        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                  }
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Card className="border border-border bg-card transition-all duration-200 hover:shadow-md">
+      <CardContent>
+        <Box className="flex items-center">
+          <Box className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${color}`}>
+            <Icon size={24} className="text-white" />
+          </Box>
+          <Box>
+            <Typography variant="h6" className="font-bold text-foreground">
+              {value}
+            </Typography>
+            <Typography variant="body2" className="text-muted-foreground">
+              {title}
+            </Typography>
+          </Box>
+          {linkTo && (
+            <Box className="ml-auto">
+              <Button 
+                component={Link} 
+                href={linkTo}
+                endIcon={<ChevronRight size={16} />}
+                size="small"
+                className="text-primary hover:bg-primary/10"
+              >
+                View
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
 
-// Patient Details Component
-function PatientDetails({ patient }) {
-  const [activeTab, setActiveTab] = useState('overview');
-
-  if (!patient) {
-    return (
-      <Paper elevation={1} className="p-3 h-full flex items-center justify-center bg-card border border-border rounded-md">
-        <Typography variant="body1" className="text-muted-foreground">Select a patient to view details</Typography>
-      </Paper>
-    );
-  }
-
-  // Mock patient details
-  const patientDetails = {
-    id: patient.id,
-    name: patient.name,
-    age: patient.age,
-    condition: patient.condition,
-    diabetes: patient.condition.includes('Diabetes'),
-    diabetesType: patient.condition.includes('Diabetes') ? 'Type 2' : null,
-    vitalSigns: {
-      bloodPressure: '120/80',
-      heartRate: '72',
-      temperature: '98.6',
-      respiratoryRate: '16'
-    },
-    allergies: [
-      { name: 'Penicillin', severity: 'Severe', reaction: 'Anaphylaxis' },
-      { name: 'Peanuts', severity: 'Moderate', reaction: 'Hives' }
-    ],
-    medications: [
-      { name: 'Lisinopril', dosage: '10mg', frequency: 'once daily', purpose: 'For Hypertension' },
-      { name: 'Atorvastatin', dosage: '20mg', frequency: 'once daily at bedtime', purpose: 'For High Cholesterol' },
-      { name: 'Metformin', dosage: '500mg', frequency: 'twice daily with meals', purpose: 'For Type 2 Diabetes' }
-    ]
-  };
-
+// Appointment card component
+function AppointmentCard({ appointment }) {
   return (
-    <Paper elevation={1} className="h-full flex flex-col bg-card border border-border rounded-md">
-      <Box className="p-3 flex items-center border-b border-border">
-        <Box className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-2">
-          {patient.name.split(' ').map(n => n[0]).join('')}
+    <Card className="border border-border bg-card mb-3 transition-all duration-200 hover:shadow-md">
+      <CardContent className="p-4">
+        <Box className="flex items-center mb-2">
+          <Box className="mr-3">
+            <Clock size={20} className="text-primary" />
+          </Box>
+          <Box className="flex-grow">
+            <Typography variant="body1" className="font-medium text-foreground">
+              {appointment.time}
+            </Typography>
+            <Typography variant="body2" className="text-muted-foreground">
+              {appointment.date}
+            </Typography>
+          </Box>
+          <Chip 
+            label={appointment.status} 
+            size="small" 
+            color={
+              appointment.status === 'Confirmed' ? 'success' : 
+              appointment.status === 'Pending' ? 'warning' : 'default'
+            }
+            className="ml-auto"
+          />
         </Box>
-        <Box>
-          <Typography variant="h6" className="text-foreground">{patient.name}</Typography>
+        <Box className="mt-2">
+          <Typography variant="body1" className="text-foreground">
+            {appointment.patientName}
+          </Typography>
           <Typography variant="body2" className="text-muted-foreground">
-            {patient.age} years
-            {patientDetails.diabetesType && ` • Diabetes ${patientDetails.diabetesType}`}
+            {appointment.type}
           </Typography>
         </Box>
-        <Box className="ml-auto">
-          <Button
-            variant="outlined"
-            startIcon={<FileText size={18} />}
-            className="mr-1 text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
-          >
-            Medical History
-          </Button>
-          <Button
-            variant="contained"
-            disableElevation
-            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white"
-          >
-            Schedule
-          </Button>
-        </Box>
-      </Box>
-
-      <Box className="border-b border-border">
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          className="px-2"
-          TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
-        >
-          <Tab label="Overview" value="overview" className={activeTab === 'overview' ? 'text-primary' : 'text-muted-foreground'} />
-          <Tab label="History" value="history" className={activeTab === 'history' ? 'text-primary' : 'text-muted-foreground'} />
-          <Tab label="Lab Results" value="lab" className={activeTab === 'lab' ? 'text-primary' : 'text-muted-foreground'} />
-          <Tab label="Medications" value="medications" className={activeTab === 'medications' ? 'text-primary' : 'text-muted-foreground'} />
-        </Tabs>
-      </Box>
-
-      <Box className="p-3 flex-grow overflow-auto">
-        {activeTab === 'overview' && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Box className="flex items-center mb-2">
-                  <Activity size={18} className="text-blue-600 dark:text-blue-300" />
-                  <Typography variant="h6" className="ml-1 text-foreground">Vital Signs</Typography>
-                </Box>
-                <Box className="mb-2">
-                  <Typography variant="body2" className="text-muted-foreground">Blood Pressure</Typography>
-                  <Typography variant="h6" className="text-foreground">{patientDetails.vitalSigns.bloodPressure} <Typography component="span" variant="body2" className="text-muted-foreground">mmHg</Typography></Typography>
-                </Box>
-                <Box className="mb-2">
-                  <Typography variant="body2" className="text-muted-foreground">Heart Rate</Typography>
-                  <Typography variant="h6" className="text-foreground">{patientDetails.vitalSigns.heartRate} <Typography component="span" variant="body2" className="text-muted-foreground">bpm</Typography></Typography>
-                </Box>
-                <Box className="mb-2">
-                  <Typography variant="body2" className="text-muted-foreground">Temperature</Typography>
-                  <Typography variant="h6" className="text-foreground">{patientDetails.vitalSigns.temperature} <Typography component="span" variant="body2" className="text-muted-foreground">°F</Typography></Typography>
-                </Box>
-                <Box className="mb-2">
-                  <Typography variant="body2" className="text-muted-foreground">Respiratory Rate</Typography>
-                  <Typography variant="h6" className="text-foreground">{patientDetails.vitalSigns.respiratoryRate} <Typography component="span" variant="body2" className="text-muted-foreground">bpm</Typography></Typography>
-                </Box>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Box className="flex items-center mb-2">
-                  <Box className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-300 mr-1">
-                    !
-                  </Box>
-                  <Typography variant="h6" className="text-foreground">Allergies</Typography>
-                </Box>
-                {patientDetails.allergies.map((allergy, index) => (
-                  <Box key={index} className="mb-2">
-                    <Typography variant="body1" className="font-medium text-foreground">{allergy.name}</Typography>
-                    <Typography variant="body2" className="text-muted-foreground">
-                      {allergy.severity} reaction - {allergy.reaction}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <ChartContainer title="Health Trends">
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart
-                    data={patientHealthData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="date" stroke="var(--muted-foreground)" />
-                    <YAxis stroke="var(--muted-foreground)" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'var(--card)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--foreground)'
-                      }}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="glucose" stroke="#8884d8" name="Glucose (mg/dL)" />
-                    <Line type="monotone" dataKey="bloodPressure" stroke="#82ca9d" name="Systolic BP (mmHg)" />
-                    <Line type="monotone" dataKey="weight" stroke="#ffc658" name="Weight (kg)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </Grid>
-          </Grid>
-        )}
-        {activeTab === 'history' && (
-          <Typography className="text-muted-foreground">Medical history information will be displayed here.</Typography>
-        )}
-        {activeTab === 'lab' && (
-          <Typography className="text-muted-foreground">Lab results will be displayed here.</Typography>
-        )}
-        {activeTab === 'medications' && (
-          <Box>
-            <Typography variant="h6" className="mb-2 text-foreground">Current Medications</Typography>
-            {patientDetails.medications.map((med, index) => (
-              <Box key={index} className="mb-3 p-3 border border-border rounded-md">
-                <Typography variant="body1" className="font-medium text-foreground">{med.name} ({med.dosage})</Typography>
-                <Typography variant="body2" className="text-muted-foreground">{med.frequency}</Typography>
-                <Typography variant="body2" className="text-muted-foreground">{med.purpose}</Typography>
-              </Box>
-            ))}
-          </Box>
-        )}
-      </Box>
-    </Paper>
+      </CardContent>
+    </Card>
   );
 }
 
-// Appointments Calendar Component
-function AppointmentsCalendar({ appointments }) {
-  return (
-    <Box>
-      <Box className="flex items-center justify-between mb-4">
-        <Typography variant="h6" className="text-foreground">Today's Appointments</Typography>
-        <Box className="flex items-center">
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Calendar size={16} />}
-            className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
-          >
-            View All
-          </Button>
-        </Box>
-      </Box>
-      <TableContainer component={Paper} elevation={0} className="bg-card border border-border rounded-md">
-        <Table size="small">
-          <TableHead>
-            <TableRow className="bg-muted">
-              <TableCell className="text-foreground font-semibold">Time</TableCell>
-              <TableCell className="text-foreground font-semibold">Patient</TableCell>
-              <TableCell className="text-foreground font-semibold">Type</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {appointments.map((appointment) => (
-              <TableRow key={appointment.id} className="hover:bg-muted/40 transition-colors duration-200">
-                <TableCell className="text-foreground">{appointment.time}</TableCell>
-                <TableCell className="text-foreground">{appointment.patientName}</TableCell>
-                <TableCell className="text-foreground">{appointment.type}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  );
-}
-
-export default function DoctorDashboard() {
+export default function DashboardPage() {
   const [patients, setPatients] = useState([]);
   const [appointments, setAppointments] = useState([]);
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [patientStats, setPatientStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
+  // Load dashboard data
   useEffect(() => {
-    async function loadDashboardData() {
+    const loadDashboardData = async () => {
       try {
         setLoading(true);
-        const [patientsData, appointmentsData] = await Promise.all([
+        setError('');
+        
+        // Load data in parallel
+        const [patientsData, appointmentsData, statsData] = await Promise.all([
           getPatients(),
-          getAppointments()
+          getAppointments(),
+          getPatientStatistics()
         ]);
-
+        
         setPatients(patientsData);
         setAppointments(appointmentsData);
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        setPatientStats(statsData);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+        console.error(err);
       } finally {
         setLoading(false);
       }
-    }
-
+    };
+    
     loadDashboardData();
   }, []);
-
-  const handleSelectPatient = (patient) => {
-    setSelectedPatient(patient);
-  };
-
-  // Filter patients based on search term
-  const filteredPatients = searchTerm
-    ? patients.filter(patient =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.condition.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : patients;
+  
+  // Get recent patients (last 3)
+  const recentPatients = patients.slice(0, 3);
+  
+  // Get upcoming appointments (next 4)
+  const upcomingAppointments = appointments
+    .filter(a => a.status !== 'Rejected')
+    .slice(0, 4);
+  
+  // Count pending appointments
+  const pendingAppointments = appointments.filter(a => a.status === 'Pending').length;
 
   return (
-    <DoctorPageContainer
-      title="Doctor Dashboard"
-      description="Manage your patients, appointments, and daily tasks."
-    >
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <DoctorCard
-            title="Patients"
-            actions={
-              <SearchField
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search patients..."
+    <Box className="p-6">
+      <Box className="mb-6">
+        <Typography variant="h4" component="h1" className="font-bold text-foreground">
+          Doctor Dashboard
+        </Typography>
+        <Typography variant="body1" className="text-muted-foreground">
+          Welcome back! Here's an overview of your practice.
+        </Typography>
+      </Box>
+      
+      {error && (
+        <Alert severity="error" className="mb-6">
+          {error}
+        </Alert>
+      )}
+      
+      {loading ? (
+        <Box className="flex justify-center items-center py-12">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <Grid container spacing={2} className="mb-4 md:mb-6">
+            <Grid item xs={12} sm={6} md={6} lg={3}>
+              <DashboardStatCard 
+                title="Total Patients" 
+                value={patientStats?.totalPatients || 0} 
+                icon={Users}
+                color="bg-blue-500"
+                linkTo="/doctor/patients"
               />
-            }
-          >
-            {loading ? (
-              <Box className="flex justify-center items-center h-64">
-                <Typography className="text-muted-foreground">Loading patients...</Typography>
-              </Box>
-            ) : (
-              <PatientTable
-                patients={filteredPatients}
-                onSelectPatient={handleSelectPatient}
-                selectedPatientId={selectedPatient?.id}
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={3}>
+              <DashboardStatCard 
+                title="Today's Appointments" 
+                value={appointments.filter(a => a.date === new Date().toISOString().split('T')[0]).length} 
+                icon={Calendar}
+                color="bg-purple-500"
+                linkTo="/doctor/appointments"
               />
-            )}
-          </DoctorCard>
-        </Grid>
-        <Grid item xs={12} md={8}>
-          <PatientDetails patient={selectedPatient} />
-        </Grid>
-        <Grid item xs={12}>
-          <DoctorCard title="Appointments">
-            {loading ? (
-              <Box className="flex justify-center items-center h-24">
-                <Typography className="text-muted-foreground">Loading appointments...</Typography>
-              </Box>
-            ) : (
-              <AppointmentsCalendar appointments={appointments} />
-            )}
-          </DoctorCard>
-        </Grid>
-      </Grid>
-    </DoctorPageContainer>
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={3}>
+              <DashboardStatCard 
+                title="Pending Requests" 
+                value={pendingAppointments} 
+                icon={Clock}
+                color="bg-amber-500"
+                linkTo="/doctor/appointments"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={3}>
+              <DashboardStatCard 
+                title="Urgent Cases" 
+                value={patientStats?.urgentCases || 0} 
+                icon={Activity}
+                color="bg-red-500"
+                linkTo="/doctor/patients"
+              />
+            </Grid>
+          </Grid>
+          
+          {/* Main Content */}
+          <Grid container spacing={3}>
+            {/* Left Column - Recent Patients */}
+            <Grid item xs={12} lg={8}>
+              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg mb-4 md:mb-6">
+                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
+                    Recent Patients
+                  </Typography>
+                  <Button 
+                    component={Link} 
+                    href="/doctor/patients"
+                    endIcon={<ChevronRight size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                  >
+                    View All
+                  </Button>
+                </Box>
+                <Divider className="mb-4" />
+                
+                {recentPatients.length === 0 ? (
+                  <Typography className="text-muted-foreground py-4 text-center">
+                    No patients found
+                  </Typography>
+                ) : (
+                  <Grid container spacing={2}>
+                    {recentPatients.map(patient => (
+                      <Grid item xs={12} sm={6} md={4} key={patient.id}>
+                        <PatientCard patient={patient} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Paper>
+              
+              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg">
+                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
+                    Patient Overview
+                  </Typography>
+                  <Button 
+                    component={Link} 
+                    href="/doctor/analytics"
+                    endIcon={<ChevronRight size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                  >
+                    View Analytics
+                  </Button>
+                </Box>
+                <Divider className="mb-4" />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Card className="border border-border bg-card">
+                      <CardContent>
+                        <Box className="flex flex-col items-center text-center">
+                          <Typography variant="h5" className="font-bold text-foreground mb-1">
+                            {patientStats?.activePatients || 0}
+                          </Typography>
+                          <Typography variant="body2" className="text-muted-foreground">
+                            Active Patients
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Card className="border border-border bg-card">
+                      <CardContent>
+                        <Box className="flex flex-col items-center text-center">
+                          <Typography variant="h5" className="font-bold text-foreground mb-1">
+                            {patientStats?.byCondition?.[0]?.condition || 'N/A'}
+                          </Typography>
+                          <Typography variant="body2" className="text-muted-foreground">
+                            Most Common Condition
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Card className="border border-border bg-card">
+                      <CardContent>
+                        <Box className="flex flex-col items-center text-center">
+                          <Typography variant="h5" className="font-bold text-foreground mb-1">
+                            {patientStats ? (patientStats.totalPatients / patientStats.activePatients).toFixed(1) : 'N/A'}
+                          </Typography>
+                          <Typography variant="body2" className="text-muted-foreground">
+                            Avg. Conditions per Patient
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+            
+            {/* Right Column - Appointments and Quick Actions */}
+            <Grid item xs={12} lg={4}>
+              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg mb-4 md:mb-6">
+                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
+                    Upcoming Appointments
+                  </Typography>
+                  <Button 
+                    component={Link} 
+                    href="/doctor/appointments"
+                    endIcon={<ChevronRight size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                  >
+                    View All
+                  </Button>
+                </Box>
+                <Divider className="mb-4" />
+                
+                {upcomingAppointments.length === 0 ? (
+                  <Typography className="text-muted-foreground py-4 text-center">
+                    No upcoming appointments
+                  </Typography>
+                ) : (
+                  upcomingAppointments.map(appointment => (
+                    <AppointmentCard key={appointment.id} appointment={appointment} />
+                  ))
+                )}
+              </Paper>
+              
+              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg">
+                <Typography variant="h6" className="font-bold text-foreground mb-4">
+                  Quick Actions
+                </Typography>
+                <Divider className="mb-4" />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Button
+                      component={Link}
+                      href="/doctor/patients"
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<Users size={18} />}
+                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
+                    >
+                      <Box className="text-center w-full">
+                        <Typography variant="body2" className="font-medium">
+                          Add Patient
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      component={Link}
+                      href="/doctor/appointments"
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<Calendar size={18} />}
+                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
+                    >
+                      <Box className="text-center w-full">
+                        <Typography variant="body2" className="font-medium">
+                          Schedule
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      component={Link}
+                      href="/doctor/messaging"
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<MessageSquare size={18} />}
+                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
+                    >
+                      <Box className="text-center w-full">
+                        <Typography variant="body2" className="font-medium">
+                          Messages
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      component={Link}
+                      href="/doctor/medicine"
+                      variant="outlined"
+                      fullWidth
+                      startIcon={<FileText size={18} />}
+                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
+                    >
+                      <Box className="text-center w-full">
+                        <Typography variant="body2" className="font-medium">
+                          Medicines
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
+        </>
+      )}
+    </Box>
   );
 }
