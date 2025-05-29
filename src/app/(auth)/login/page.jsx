@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, CircularProgress } from '@mui/material';
 import LoginForm from '@/components/auth/LoginForm';
 
-export default function LoginPage() {
+// Component with search params access
+function LoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const role = searchParams.get('role');
@@ -33,5 +34,18 @@ export default function LoginPage() {
       </Box>
       <LoginForm role={role} redirectUrl={redirectUrl} />
     </Container>
+  );
+}
+
+// Main component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <Container className="flex justify-center items-center min-h-screen">
+        <CircularProgress />
+      </Container>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 } 

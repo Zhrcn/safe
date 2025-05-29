@@ -5,7 +5,8 @@ import { jwtDecode } from 'jwt-decode';
 
 // Helper function to get authenticated user from request
 async function getAuthenticatedUser(req) {
-    const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
+    // Changed to only use Authorization header to avoid cookies usage
+    const token = req.headers.get('Authorization')?.split('Bearer ')[1];
 
     if (!token) {
         return null;
@@ -26,6 +27,9 @@ async function getAuthenticatedUser(req) {
         return null;
     }
 }
+
+// Export configuration to mark this route as dynamic
+export const dynamic = 'force-dynamic';
 
 // GET /api/users/patients
 export async function GET(req) {

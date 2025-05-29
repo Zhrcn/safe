@@ -3,9 +3,13 @@ import connectDB from '@/lib/db/mongoose';
 import MedicalFile from '@/lib/models/MedicalFile';
 import { jwtDecode } from 'jwt-decode';
 
+// Export configuration to mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 // Helper function to get the authenticated user from the request
 async function getAuthenticatedUser(req) {
-    const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
+    // Changed to only use Authorization header to avoid cookies usage
+    const token = req.headers.get('Authorization')?.split('Bearer ')[1];
 
     if (!token) {
         return null;
