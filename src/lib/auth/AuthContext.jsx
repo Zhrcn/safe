@@ -78,26 +78,14 @@ export const AuthProvider = ({ children }) => {
                 } else {
                     // No token in localStorage, check if there's a cookie-based session
                     try {
-                        const response = await fetch('/api/auth/check', {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            credentials: 'include', // Important for cookies
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.authenticated && data.user) {
-                                console.log('User authenticated from cookie:', data.user.email);
-                                // Save to localStorage for future use
-                                const token = data.token || 'cookie-auth';
-                                localStorage.setItem(TOKEN_STORAGE_KEY, token);
-                                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
-                                setUser(data.user);
-                            } else {
-                                setUser(null);
-                            }
+                        const data = await authService.checkAuth();
+                        if (data.authenticated && data.user) {
+                            console.log('User authenticated from cookie:', data.user.email);
+                            // Save to localStorage for future use
+                            const token = data.token || 'cookie-auth';
+                            localStorage.setItem(TOKEN_STORAGE_KEY, token);
+                            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+                            setUser(data.user);
                         } else {
                             setUser(null);
                         }
@@ -185,10 +173,7 @@ export const AuthProvider = ({ children }) => {
     const handleLogout = async () => {
         try {
             // Call the logout API to clear server-side cookies
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                credentials: 'include',
-            });
+            await authService.logout();
         } catch (error) {
             console.error('Logout API error:', error);
         } finally {

@@ -1,19 +1,9 @@
 import { NextResponse } from 'next/server';
+import { corsHeaders, handleCorsOptions, addCorsHeaders } from '@/lib/cors';
 
 // Handle OPTIONS requests for CORS
-export async function OPTIONS(req) {
-    const response = new NextResponse(null, { status: 200 });
-    
-    // Add CORS headers
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-    response.headers.set(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-    );
-    
-    return response;
+export async function OPTIONS() {
+    return handleCorsOptions();
 }
 
 export async function POST() {
@@ -35,10 +25,7 @@ export async function POST() {
         });
 
         // Add CORS headers
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-        response.headers.set('Access-Control-Allow-Origin', '*');
-
-        return response;
+        return addCorsHeaders(response);
     } catch (error) {
         console.error('Logout error:', error);
         const response = NextResponse.json(
@@ -47,9 +34,6 @@ export async function POST() {
         );
         
         // Add CORS headers
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-        response.headers.set('Access-Control-Allow-Origin', '*');
-        
-        return response;
+        return addCorsHeaders(response);
     }
 } 

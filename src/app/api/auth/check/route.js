@@ -2,24 +2,14 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import User from '@/models/User';
+import { corsHeaders, handleCorsOptions, addCorsHeaders } from '@/lib/cors';
 
 // Use the same JWT secret as in the login route
 const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
 // Handle OPTIONS requests for CORS
-export async function OPTIONS(req) {
-    const response = new NextResponse(null, { status: 200 });
-    
-    // Add CORS headers
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-    response.headers.set(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-    );
-    
-    return response;
+export async function OPTIONS() {
+    return handleCorsOptions();
 }
 
 export async function GET(req) {
@@ -36,8 +26,7 @@ export async function GET(req) {
         
         if (!token) {
             const response = NextResponse.json({ authenticated: false, error: 'No token provided' }, { status: 401 });
-            addCorsHeaders(response);
-            return response;
+            return addCorsHeaders(response);
         }
         
         try {
@@ -50,8 +39,7 @@ export async function GET(req) {
             
             if (!user) {
                 const response = NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 401 });
-                addCorsHeaders(response);
-                return response;
+                return addCorsHeaders(response);
             }
             
             // Return user data and token for client-side storage
@@ -66,30 +54,15 @@ export async function GET(req) {
                 }
             });
             
-            addCorsHeaders(response);
-            return response;
+            return addCorsHeaders(response);
         } catch (error) {
             console.error('Token verification error:', error);
             const response = NextResponse.json({ authenticated: false, error: 'Invalid token' }, { status: 401 });
-            addCorsHeaders(response);
-            return response;
+            return addCorsHeaders(response);
         }
     } catch (error) {
         console.error('Auth check error:', error);
         const response = NextResponse.json({ authenticated: false, error: 'Server error' }, { status: 500 });
-        addCorsHeaders(response);
-        return response;
+        return addCorsHeaders(response);
     }
-}
-
-// Helper function to add CORS headers
-function addCorsHeaders(response) {
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-    response.headers.set(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-    );
-    return response;
 } 

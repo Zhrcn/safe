@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import User from '@/models/User';
-import handleCors from '@/lib/api/cors';
+import { corsHeaders, handleCorsOptions } from '@/lib/cors';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -16,19 +16,8 @@ const loginSchema = z.object({
 const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
 // Handle OPTIONS requests for CORS
-export async function OPTIONS(req) {
-    const response = new NextResponse(null, { status: 200 });
-    
-    // Add CORS headers
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
-    response.headers.set(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-    );
-    
-    return response;
+export async function OPTIONS() {
+    return handleCorsOptions();
 }
 
 export async function POST(req) {
@@ -108,8 +97,9 @@ export async function POST(req) {
                     });
 
                     // Add CORS headers
-                    response.headers.set('Access-Control-Allow-Credentials', 'true');
-                    response.headers.set('Access-Control-Allow-Origin', '*');
+                    Object.entries(corsHeaders).forEach(([key, value]) => {
+                        response.headers.set(key, value);
+                    });
                     
                     return response;
                 }
@@ -117,10 +107,17 @@ export async function POST(req) {
                 console.error('Direct MongoDB query error:', mongoError);
             }
             
-            return NextResponse.json(
+            const errorResponse = NextResponse.json(
                 { error: 'Invalid credentials or role' },
                 { status: 401 }
             );
+            
+            // Add CORS headers to error response
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+            
+            return errorResponse;
         }
 
         // Get user with password for comparison
@@ -128,10 +125,17 @@ export async function POST(req) {
         
         if (!userWithPassword || !userWithPassword.password) {
             console.log('Password not found in user document');
-            return NextResponse.json(
+            const errorResponse = NextResponse.json(
                 { error: 'Authentication error' },
                 { status: 401 }
             );
+            
+            // Add CORS headers to error response
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+            
+            return errorResponse;
         }
 
         // For debugging - check if password exists and its format
@@ -151,10 +155,17 @@ export async function POST(req) {
                     validatedData.password === 'pharmacist123' && validatedData.role === 'pharmacist') {
                     console.log('Using fallback authentication for seeded user');
                 } else {
-                    return NextResponse.json(
+                    const errorResponse = NextResponse.json(
                         { error: 'Invalid credentials' },
                         { status: 401 }
                     );
+                    
+                    // Add CORS headers to error response
+                    Object.entries(corsHeaders).forEach(([key, value]) => {
+                        errorResponse.headers.set(key, value);
+                    });
+                    
+                    return errorResponse;
                 }
             }
         } catch (bcryptError) {
@@ -210,22 +221,37 @@ export async function POST(req) {
         });
 
         // Add CORS headers
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-        response.headers.set('Access-Control-Allow-Origin', '*');
+        Object.entries(corsHeaders).forEach(([key, value]) => {
+            response.headers.set(key, value);
+        });
 
         return response;
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
+            const errorResponse = NextResponse.json(
                 { error: 'Invalid request data', details: error.errors },
                 { status: 400 }
             );
+            
+            // Add CORS headers to error response
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+            
+            return errorResponse;
         }
 
         console.error('Login error:', error);
-        return NextResponse.json(
+        const errorResponse = NextResponse.json(
             { error: 'Internal server error', message: error.message },
             { status: 500 }
         );
+        
+        // Add CORS headers to error response
+        Object.entries(corsHeaders).forEach(([key, value]) => {
+            errorResponse.headers.set(key, value);
+        });
+        
+        return errorResponse;
     }
 } 
