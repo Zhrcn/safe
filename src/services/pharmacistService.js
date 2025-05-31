@@ -162,4 +162,164 @@ export async function addInventoryItem(item) {
             resolve(newItem);
         }, 300);
     });
+}
+
+/**
+ * Fetches dashboard data for the pharmacist dashboard
+ * @returns {Promise<Object>} Dashboard data for the pharmacist dashboard
+ */
+export async function getPharmacistDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard/pharmacist', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch dashboard data');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching pharmacist dashboard data:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetches pending prescriptions
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @returns {Promise<Object>} Prescriptions data
+ */
+export async function getPendingPrescriptions(options = {}) {
+    try {
+        const { page = 1, limit = 10 } = options;
+        
+        const response = await fetch(`/api/prescriptions?page=${page}&limit=${limit}&status=active&filled=false`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch pending prescriptions');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching pending prescriptions:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fills a prescription
+ * @param {string} prescriptionId - Prescription ID
+ * @param {Object} fillData - Fill data including notes
+ * @returns {Promise<Object>} Updated prescription
+ */
+export async function fillPrescription(prescriptionId, fillData) {
+    try {
+        const response = await fetch(`/api/prescriptions/${prescriptionId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify({
+                status: 'Filled',
+                filledBy: {
+                    notes: fillData.notes || '',
+                    date: new Date().toISOString()
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fill prescription');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error filling prescription:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetches patient prescriptions
+ * @param {string} patientId - Patient ID
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @param {string} options.status - Filter by status
+ * @returns {Promise<Object>} Prescriptions data
+ */
+export async function getPatientPrescriptions(patientId, options = {}) {
+    try {
+        const { page = 1, limit = 10, status } = options;
+        
+        let url = `/api/prescriptions?page=${page}&limit=${limit}&patientId=${patientId}`;
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch patient prescriptions');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching patient prescriptions:', error);
+        throw error;
+    }
+}
+
+/**
+ * Searches for patients
+ * @param {string} searchTerm - Search term
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @returns {Promise<Object>} Patients data
+ */
+export async function searchPatients(searchTerm, options = {}) {
+    try {
+        const { page = 1, limit = 10 } = options;
+        
+        const response = await fetch(`/api/users/patients?page=${page}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to search patients');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error searching patients:', error);
+        throw error;
+    }
 } 

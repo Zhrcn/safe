@@ -34,6 +34,13 @@ function generateAvatars() {
     
     fs.writeFileSync(path.join(avatarsDir, `avatar-${i}.svg`), svg);
     console.log(`Generated avatar-${i}.svg`);
+    
+    // Create a JPG file that's actually just the SVG
+    fs.copyFileSync(
+      path.join(avatarsDir, `avatar-${i}.svg`),
+      path.join(avatarsDir, `avatar-${i}.jpg`)
+    );
+    console.log(`Created avatar-${i}.jpg (copy of SVG)`);
   }
   
   // Create a favicon

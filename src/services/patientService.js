@@ -686,73 +686,23 @@ export async function updateMedicineReminder(id, data) {
  * @returns {Promise<Object>} Dashboard data for the patient dashboard
  */
 export async function getPatientDashboardData() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // Get upcoming appointments (only scheduled ones)
-            const upcomingAppointments = MOCK_APPOINTMENTS
-                .filter(appointment => appointment.status === 'Scheduled')
-                .map(appointment => ({
-                    id: appointment.id,
-                    doctorName: appointment.doctorName,
-                    specialty: appointment.doctorSpecialty,
-                    date: appointment.date,
-                    time: appointment.time,
-                    location: appointment.location
-                }))
-                .slice(0, 3); // Limit to 3 appointments for the dashboard
+    try {
+        const response = await fetch('/api/dashboard/patient', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
 
-            // Get active medications
-            const medications = MOCK_PRESCRIPTIONS
-                .filter(prescription => prescription.status === 'Active')
-                .map(prescription => ({
-                    id: prescription.id,
-                    name: prescription.medication,
-                    dosage: prescription.dosage,
-                    frequency: prescription.frequency,
-                    prescribedBy: prescription.prescribedBy
-                }))
-                .slice(0, 3); // Limit to 3 medications for the dashboard
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch dashboard data');
+        }
 
-            // Get latest health stats
-            const healthStats = [
-                {
-                    name: 'Blood Pressure',
-                    value: `${MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].systolic}/${MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].diastolic} mmHg`,
-                    date: MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].date
-                },
-                {
-                    name: 'Heart Rate',
-                    value: `${MOCK_HEALTH_METRICS.heartRate[MOCK_HEALTH_METRICS.heartRate.length - 1].value} bpm`,
-                    date: MOCK_HEALTH_METRICS.heartRate[MOCK_HEALTH_METRICS.heartRate.length - 1].date
-                },
-                {
-                    name: 'Weight',
-                    value: `${MOCK_HEALTH_METRICS.weight[MOCK_HEALTH_METRICS.weight.length - 1].value} kg`,
-                    date: MOCK_HEALTH_METRICS.weight[MOCK_HEALTH_METRICS.weight.length - 1].date
-                },
-                {
-                    name: 'Blood Glucose',
-                    value: `${MOCK_HEALTH_METRICS.bloodGlucose[MOCK_HEALTH_METRICS.bloodGlucose.length - 1].value} mg/dL`,
-                    date: MOCK_HEALTH_METRICS.bloodGlucose[MOCK_HEALTH_METRICS.bloodGlucose.length - 1].date
-                }
-            ];
-
-            // Calculate dashboard stats
-            const stats = {
-                upcomingAppointments: MOCK_APPOINTMENTS.filter(appointment => appointment.status === 'Scheduled').length,
-                activeMedications: MOCK_PRESCRIPTIONS.filter(prescription => prescription.status === 'Active').length,
-                lastCheckup: MOCK_MEDICAL_RECORDS
-                    .filter(record => record.type === 'Follow-up' || record.type === 'Diagnosis')
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || 'N/A',
-                activeProviders: MOCK_PROVIDERS.doctors.filter(doctor => doctor.hasAccess).length
-            };
-
-            resolve({
-                stats,
-                upcomingAppointments,
-                medications,
-                healthStats
-            });
-        }, 500);
-    });
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching patient dashboard data:', error);
+        throw error;
+    }
 } 

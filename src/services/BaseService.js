@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { API_BASE_URL } from '@/lib/config';
 
+// Constants
+const TOKEN_STORAGE_KEY = 'safe_auth_token';
+const USER_STORAGE_KEY = 'safe_user_data';
 
 export default class BaseService {
   constructor(basePath = '') {
@@ -13,7 +16,7 @@ export default class BaseService {
     
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('safe_auth_token');
+        const token = localStorage.getItem(TOKEN_STORAGE_KEY);
         
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -31,11 +34,16 @@ export default class BaseService {
           const { status } = error.response;
           
           if (status === 401) {
-            localStorage.removeItem('safe_auth_token');
-            localStorage.removeItem('safe_user_data');
-            
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            // Only redirect to login if the error is not from the auth check endpoint
+            if (!error.config.url.includes('/auth/check')) {
+              localStorage.removeItem('safe_auth_token');
+              localStorage.removeItem('safe_user_data');
+              
+              // Don't redirect if already on login page or home page
+              const currentPath = window.location.pathname;
+              if (currentPath !== '/login' && currentPath !== '/') {
+                window.location.href = '/login';
+              }
             }
           }
           

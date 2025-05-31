@@ -405,31 +405,222 @@ const MOCK_ANALYTICS = {
     ]
 };
 
+/**
+ * Fetches dashboard data for the doctor dashboard
+ * @returns {Promise<Object>} Dashboard data for the doctor dashboard
+ */
+export async function getDoctorDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard/doctor', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
 
-export async function getPatients(searchTerm = '') {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (searchTerm) {
-        const lowercaseSearch = searchTerm.toLowerCase();
-        return MOCK_PATIENTS.filter(patient => 
-            patient.name.toLowerCase().includes(lowercaseSearch) || 
-            patient.condition.toLowerCase().includes(lowercaseSearch) ||
-            patient.medicalId?.toLowerCase().includes(lowercaseSearch)
-        );
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch dashboard data');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching doctor dashboard data:', error);
+        throw error;
     }
-    
-    return MOCK_PATIENTS;
 }
 
+/**
+ * Fetches patients for the doctor
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @param {string} options.search - Search term
+ * @returns {Promise<Object>} Patients data
+ */
+export async function getPatients(options = {}) {
+    try {
+        const { page = 1, limit = 10, search = '' } = options;
+        
+        let url = `/api/doctor/patients?page=${page}&limit=${limit}`;
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
 
-export async function getAppointments(date = '') {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (date) {
-        return MOCK_APPOINTMENTS.filter(appointment => appointment.date === date);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch patients');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching patients:', error);
+        throw error;
     }
-    
-    return MOCK_APPOINTMENTS;
+}
+
+/**
+ * Fetches appointments for the doctor
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @param {string} options.status - Filter by status
+ * @param {string} options.patientId - Filter by patient ID
+ * @param {string} options.startDate - Filter by start date
+ * @param {string} options.endDate - Filter by end date
+ * @returns {Promise<Object>} Appointments data
+ */
+export async function getAppointments(options = {}) {
+    try {
+        const { page = 1, limit = 10, status, patientId, startDate, endDate } = options;
+        
+        let url = `/api/appointments?page=${page}&limit=${limit}`;
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+        if (patientId) url += `&patientId=${encodeURIComponent(patientId)}`;
+        if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+        if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch appointments');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching appointments:', error);
+        throw error;
+    }
+}
+
+/**
+ * Creates a new appointment
+ * @param {Object} appointmentData - Appointment data
+ * @returns {Promise<Object>} Created appointment
+ */
+export async function createAppointment(appointmentData) {
+    try {
+        const response = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(appointmentData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create appointment');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating appointment:', error);
+        throw error;
+    }
+}
+
+/**
+ * Updates an appointment
+ * @param {string} appointmentId - Appointment ID
+ * @param {Object} appointmentData - Updated appointment data
+ * @returns {Promise<Object>} Updated appointment
+ */
+export async function updateAppointment(appointmentId, appointmentData) {
+    try {
+        const response = await fetch(`/api/appointments/${appointmentId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(appointmentData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update appointment');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating appointment:', error);
+        throw error;
+    }
+}
+
+/**
+ * Creates a new prescription
+ * @param {Object} prescriptionData - Prescription data
+ * @returns {Promise<Object>} Created prescription
+ */
+export async function createPrescription(prescriptionData) {
+    try {
+        const response = await fetch('/api/prescriptions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(prescriptionData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create prescription');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating prescription:', error);
+        throw error;
+    }
+}
+
+/**
+ * Updates a patient's medical file
+ * @param {string} patientId - Patient ID
+ * @param {Object} medicalData - Medical data to update
+ * @returns {Promise<Object>} Updated medical file
+ */
+export async function updateMedicalFile(patientId, medicalData) {
+    try {
+        const response = await fetch(`/api/medical-file?patientId=${patientId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(medicalData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update medical file');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating medical file:', error);
+        throw error;
+    }
 }
 
 export async function getDoctorProfile() {
@@ -489,10 +680,10 @@ export async function addPatient(patientData) {
 }
 
 /**
- * @param {number} patientId
+ * @param {number} patientId 
  * @param {Object} prescriptionData 
  */
-export async function createPrescription(patientId, prescriptionData) {
+export async function createPatientPrescription(patientId, prescriptionData) {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);

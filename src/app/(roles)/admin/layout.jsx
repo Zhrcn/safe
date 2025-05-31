@@ -74,8 +74,7 @@ function AdminSidebar() {
                     <Box
                         component="a"
                         className={`flex items-center space-x-3 p-2 rounded-md transition-colors duration-200
-                            ${pathname === `/` + item.link ? 'bg-red-600 dark:bg-red-700' : 'hover:bg-gray-700 dark:hover:bg-gray-700'} {/* Highlight active link with Admin color */}
-                        `}
+                            ${pathname === item.link ? 'bg-red-600 dark:bg-red-700' : 'hover:bg-gray-700 dark:hover:bg-gray-700'}`}
                     >
                         <item.icon fontSize="small" />
                         <Typography variant="body1">{item.name}</Typography>

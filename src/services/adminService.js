@@ -322,4 +322,212 @@ export async function markNotificationAsRead(id) {
             resolve(MOCK_NOTIFICATIONS[notificationIndex]);
         }, 300);
     });
+}
+
+/**
+ * Fetches dashboard data for the admin dashboard
+ * @returns {Promise<Object>} Dashboard data for the admin dashboard
+ */
+export async function getAdminDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard/admin', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch dashboard data');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching admin dashboard data:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetches users with pagination and filtering
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @param {string} options.role - Filter by role
+ * @param {string} options.search - Search term
+ * @returns {Promise<Object>} Users data
+ */
+export async function getUsersFromAPI(options = {}) {
+    try {
+        const { page = 1, limit = 10, role, search } = options;
+        
+        let url = `/api/users?page=${page}&limit=${limit}`;
+        if (role) url += `&role=${encodeURIComponent(role)}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch users');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+    }
+}
+
+/**
+ * Creates a new user
+ * @param {Object} userData - User data
+ * @returns {Promise<Object>} Created user
+ */
+export async function createUserAPI(userData) {
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating user:', error);
+        throw error;
+    }
+}
+
+/**
+ * Updates a user
+ * @param {string} userId - User ID
+ * @param {Object} userData - Updated user data
+ * @returns {Promise<Object>} Updated user
+ */
+export async function updateUserAPI(userId, userData) {
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        throw error;
+    }
+}
+
+/**
+ * Deletes a user
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Response
+ */
+export async function deleteUserAPI(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete user');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetches system logs
+ * @param {Object} options - Query options
+ * @param {number} options.page - Page number
+ * @param {number} options.limit - Number of items per page
+ * @param {string} options.type - Filter by log type
+ * @returns {Promise<Object>} Logs data
+ */
+export async function getSystemLogs(options = {}) {
+    try {
+        const { page = 1, limit = 10, type } = options;
+        
+        let url = `/api/admin/logs?page=${page}&limit=${limit}`;
+        if (type) url += `&type=${encodeURIComponent(type)}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch system logs');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching system logs:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetches system statistics
+ * @returns {Promise<Object>} System statistics
+ */
+export async function getSystemStatsAPI() {
+    try {
+        const response = await fetch('/api/admin/stats', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch system statistics');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching system statistics:', error);
+        throw error;
+    }
 } 

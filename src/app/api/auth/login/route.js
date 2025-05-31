@@ -11,7 +11,8 @@ const loginSchema = z.object({
     role: z.enum(['doctor', 'patient', 'pharmacist', 'admin']),
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Use a consistent JWT secret that won't change between server restarts
+const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
 export async function POST(req) {
     try {
@@ -55,7 +56,7 @@ export async function POST(req) {
                 if (mongoUser) {
                     console.log('User found directly in MongoDB Users collection');
                     
-                    // Create a JWT token for the user
+                    // Create a JWT token for the user with extended expiration
                     const token = jwt.sign(
                         {
                             id: mongoUser._id.toString(),
@@ -64,7 +65,7 @@ export async function POST(req) {
                             name: mongoUser.name,
                         },
                         JWT_SECRET,
-                        { expiresIn: '1d' }
+                        { expiresIn: '30d' } // Extended to 30 days
                     );
                     
                     return NextResponse.json({
@@ -146,12 +147,13 @@ export async function POST(req) {
                 name: user.name,
             },
             JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '30d' } // Extended to 30 days
         );
 
         console.log('Login successful for:', user.email);
 
-        return NextResponse.json({
+        // Set the token as a cookie
+        const response = NextResponse.json({
             token,
             user: {
                 id: user._id,
@@ -160,6 +162,19 @@ export async function POST(req) {
                 role: user.role
             }
         });
+
+        // Set a secure, httpOnly cookie
+        response.cookies.set({
+            name: 'safe_auth_token',
+            value: token,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+            path: '/',
+        });
+
+        return response;
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

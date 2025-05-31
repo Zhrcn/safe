@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/components/ThemeProviderWrapper';
 import { APP_NAME } from '@/lib/config';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 /**
  * Enhanced GenericRoleLayout component with animations and better mobile experience
@@ -35,6 +36,7 @@ export default function GenericRoleLayout({
     const pathname = usePathname();
     const router = useRouter();
     const { mode, toggleTheme } = useTheme();
+    const { logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
@@ -98,8 +100,8 @@ export default function GenericRoleLayout({
     };
     
     const handleLogout = () => {
-      // Handle logout logic here
-      router.push('/auth/login');
+      // Use the auth context to handle logout
+      logout();
     };
 
     // Define SidebarContent component

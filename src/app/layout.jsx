@@ -31,6 +31,9 @@ export default function RootLayout({
             </NotificationProvider>
           </ReduxProvider>
         </ErrorBoundary>
+        {process.env.NODE_ENV !== 'production' && (
+          <script src="/auth-debug.js" />
+        )}
       </body>
     </html>
   );
