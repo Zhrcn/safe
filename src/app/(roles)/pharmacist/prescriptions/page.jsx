@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip } from '@mui/material';
 import { FileText, Eye, CheckCircle, X } from 'lucide-react';
-import { PharmacistPageContainer, PharmacistCard, SearchField } from '@/components/pharmacist/PharmacistComponents';
+import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
+import { SearchField } from '@/components/ui/Notification';
 import { getPrescriptions, updatePrescriptionStatus } from '@/services/pharmacistService';
 
-// Prescription Detail Dialog Component
 function PrescriptionDetailDialog({ open, onClose, prescription }) {
   if (!prescription) return null;
 
@@ -88,7 +88,6 @@ export default function PharmacistPrescriptionsPage() {
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  // Load prescriptions data
   useEffect(() => {
     async function loadPrescriptions() {
       try {
@@ -105,7 +104,6 @@ export default function PharmacistPrescriptionsPage() {
     loadPrescriptions();
   }, []);
 
-  // Filter prescriptions based on search term
   const filteredPrescriptions = searchTerm
     ? prescriptions.filter(prescription =>
       prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||

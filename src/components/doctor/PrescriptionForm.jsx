@@ -24,7 +24,6 @@ import { z } from 'zod';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { createPrescription, queryMedicineAvailability } from '@/services/doctorService';
 
-// Common medications for autocomplete
 const commonMedications = [
     'Lisinopril 10mg',
     'Lisinopril 20mg',
@@ -48,7 +47,6 @@ const commonMedications = [
     'Hydrochlorothiazide 25mg'
 ];
 
-// Validation schema
 const prescriptionSchema = z.object({
     medications: z.array(z.string()).min(1, 'At least one medication is required'),
     instructions: z.string().min(5, 'Instructions must be at least 5 characters'),
@@ -83,10 +81,8 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
         }
     });
 
-    // Watch medications field
     const watchedMedications = watch('medications');
 
-    // Add medication to the list
     const handleAddMedication = () => {
         if (!newMedication || newMedication.trim() === '') {
             setMedicationError('Please enter a medication');
@@ -100,14 +96,12 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
         setMedicationError('');
     };
 
-    // Remove medication from the list
     const handleRemoveMedication = (index) => {
         const updatedMedications = medications.filter((_, i) => i !== index);
         setMedications(updatedMedications);
         setValue('medications', updatedMedications);
     };
 
-    // Check medication availability
     const handleCheckAvailability = async () => {
         if (!newMedication || newMedication.trim() === '') {
             setMedicationError('Please enter a medication to check');
@@ -118,7 +112,6 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             setCheckingAvailability(true);
             setAvailabilityResult(null);
             
-            // Extract just the medication name without dosage
             const medicationName = newMedication.split(' ')[0];
             
             const result = await queryMedicineAvailability(medicationName);
@@ -144,7 +137,6 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 return;
             }
             
-            // Create prescription data
             const prescriptionData = {
                 medications: data.medications,
                 instructions: data.instructions,
@@ -152,7 +144,6 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 notes: data.notes || ''
             };
             
-            // Call the API to create prescription
             const result = await createPrescription(patientId, prescriptionData);
             
             if (result.success) {
@@ -160,12 +151,10 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 reset();
                 setMedications([]);
                 
-                // Notify parent component
                 if (onSuccess) {
                     onSuccess(result.prescription);
                 }
                 
-                // Close form after a short delay
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);

@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip } from '@mui/material';
 import { ShoppingCart, Eye, CheckCircle, X } from 'lucide-react';
-import { PharmacistPageContainer, PharmacistCard, SearchField } from '@/components/pharmacist/PharmacistComponents';
+import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
+import { SearchField } from '@/components/ui/Notification';
 import { getOrders, updateOrderStatus } from '@/services/pharmacistService';
 
-// Order Detail Dialog Component
 function OrderDetailDialog({ open, onClose, order }) {
   if (!order) return null;
 
@@ -82,7 +82,6 @@ export default function PharmacistOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-  // Load orders data
   useEffect(() => {
     async function loadOrders() {
       try {
@@ -99,7 +98,6 @@ export default function PharmacistOrdersPage() {
     loadOrders();
   }, []);
 
-  // Filter orders based on search term
   const filteredOrders = searchTerm
     ? orders.filter(order =>
       order.items.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +115,6 @@ export default function PharmacistOrdersPage() {
 
   const handleMarkAsProcessed = async (orderId) => {
     try {
-      // Determine next status
       const order = orders.find(o => o.id === orderId);
       const nextStatus = order.status === 'Pending' ? 'Processing' : 'Completed';
 
@@ -130,7 +127,6 @@ export default function PharmacistOrdersPage() {
     }
   };
 
-  // Get status chip color
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending':
@@ -144,7 +140,6 @@ export default function PharmacistOrdersPage() {
     }
   };
 
-  // Get button text based on status
   const getActionButtonText = (status) => {
     return status === 'Pending' ? 'Start Processing' : 'Mark as Completed';
   };

@@ -19,13 +19,16 @@ import {
     Step,
     StepLabel,
     Divider,
-    FormHelperText
+    FormHelperText,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { motion } from 'framer-motion';
 import { ROLES, ROLE_ROUTES } from '@/lib/config';
 
-// Base schema for all registrations
 const baseSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
@@ -37,7 +40,6 @@ const baseSchema = z.object({
     path: ['confirmPassword'],
 });
 
-// Role-specific schemas - Fix: use spread syntax instead of .extend
 const patientSchema = z.object({
     ...baseSchema.shape,
     profile: z.object({
@@ -88,7 +90,6 @@ const pharmacistSchema = z.object({
     }).optional()
 });
 
-// Step labels for the registration stepper
 const steps = ['Account Information', 'Personal Details', 'Role-Specific Information'];
 
 export default function RegisterForm() {
@@ -97,6 +98,8 @@ export default function RegisterForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [selectedRole, setSelectedRole] = useState(ROLES.PATIENT);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formValues, setFormValues] = useState({
         name: '',
         email: '',
@@ -106,7 +109,6 @@ export default function RegisterForm() {
     });
     const router = useRouter();
 
-    // Get default values based on role
     const getDefaultValues = (role) => {
         const common = {
             role: role,
@@ -126,7 +128,7 @@ export default function RegisterForm() {
                 profile: {
                     ...common.profile,
                     dateOfBirth: '',
-                    gender: 'Male'  // Default gender value
+                    gender: 'Male' 
                 },
                 patientProfile: {
                     emergencyContact: {
@@ -165,8 +167,6 @@ export default function RegisterForm() {
 
         return common;
     };
-
-    // Use appropriate schema based on selected role
     const getSchemaForRole = () => {
         switch (selectedRole) {
             case ROLES.PATIENT:
@@ -195,7 +195,6 @@ export default function RegisterForm() {
         defaultValues: getDefaultValues(ROLES.PATIENT)
     });
 
-    // Save core form values when they change
     useEffect(() => {
         const subscription = watch((value, { name, type }) => {
             if (['name', 'email', 'password', 'confirmPassword', 'role'].includes(name)) {
@@ -209,7 +208,6 @@ export default function RegisterForm() {
         return () => subscription.unsubscribe();
     }, [watch]);
 
-    // Watch the role field to update the form schema when it changes
     const watchedRole = watch('role');
 
     useEffect(() => {
@@ -221,7 +219,6 @@ export default function RegisterForm() {
                 role: watchedRole
             }));
 
-            // Reset the form with new default values for the selected role
             const newDefaults = getDefaultValues(watchedRole);
             console.log('Setting new default values:', newDefaults);
             reset(newDefaults);
@@ -231,7 +228,6 @@ export default function RegisterForm() {
     const validateStep1 = () => {
         const currentValues = getValues();
 
-        // Check for required fields
         const requiredFields = ['name', 'email', 'password', 'confirmPassword', 'role'];
         const missingFields = requiredFields.filter(field =>
             !currentValues[field] || currentValues[field].trim() === '');
@@ -241,20 +237,17 @@ export default function RegisterForm() {
             return false;
         }
 
-        // Check if passwords match
         if (currentValues.password !== currentValues.confirmPassword) {
             setError('Passwords do not match');
             return false;
         }
 
-        // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(currentValues.email)) {
             setError('Please enter a valid email address');
             return false;
         }
 
-        // Store these values in formValues
         setFormValues({
             name: currentValues.name,
             email: currentValues.email,
@@ -274,14 +267,12 @@ export default function RegisterForm() {
     };
 
     const handleNext = () => {
-        // Validate current step before proceeding
         let canProceed = true;
 
         if (activeStep === 0) {
             canProceed = validateStep1();
 
             if (canProceed) {
-                // Save form values from step 1
                 const values = getValues();
                 setFormValues(prev => ({
                     ...prev,
@@ -295,7 +286,7 @@ export default function RegisterForm() {
         }
 
         if (canProceed) {
-            setError(null); // Clear any previous errors
+            setError(null); 
             setActiveStep((prevStep) => prevStep + 1);
         }
     };
@@ -309,7 +300,6 @@ export default function RegisterForm() {
             setIsSubmitting(true);
             setError(null);
 
-            // Get core registration data from form state
             const registrationData = {
                 name: formValues.name,
                 email: formValues.email,
@@ -318,10 +308,8 @@ export default function RegisterForm() {
                 ...data
             };
 
-            // Remove confirmPassword field
             delete registrationData.confirmPassword;
 
-            // Check that required fields are present
             const requiredFields = ['name', 'email', 'password', 'role'];
             const missingFields = requiredFields.filter(field => !registrationData[field]);
 
@@ -329,7 +317,6 @@ export default function RegisterForm() {
                 throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
             }
 
-            // Remove empty objects to prevent validation errors
             if (registrationData.profile) {
                 Object.keys(registrationData.profile).forEach(key => {
                     if (registrationData.profile[key] === '') {
@@ -337,23 +324,19 @@ export default function RegisterForm() {
                     }
                 });
 
-                // Remove profile if empty
                 if (Object.keys(registrationData.profile).every(key =>
                     registrationData.profile[key] === undefined)) {
                     delete registrationData.profile;
                 }
             }
 
-            // Clean up role-specific profile data
             const roleProfileKey = `${selectedRole.toLowerCase()}Profile`;
             if (registrationData[roleProfileKey]) {
-                // Recursively clean empty values
                 const cleanObject = (obj) => {
                     if (obj && typeof obj === 'object') {
                         Object.keys(obj).forEach(key => {
                             if (typeof obj[key] === 'object') {
                                 cleanObject(obj[key]);
-                                // Remove empty nested objects
                                 if (obj[key] && Object.keys(obj[key]).length === 0) {
                                     delete obj[key];
                                 }
@@ -366,7 +349,6 @@ export default function RegisterForm() {
 
                 cleanObject(registrationData[roleProfileKey]);
 
-                // Remove profile if empty
                 if (Object.keys(registrationData[roleProfileKey]).length === 0) {
                     delete registrationData[roleProfileKey];
                 }
@@ -374,15 +356,12 @@ export default function RegisterForm() {
 
             console.log('Final registration data:', JSON.stringify(registrationData, null, 2));
 
-            // Register the user
             const success = await registerUser(registrationData);
 
             if (success) {
                 console.log(`Registration successful! Redirecting to ${ROLE_ROUTES[registrationData.role].dashboard}`);
-                // Redirect to the appropriate dashboard based on role
                 router.push(ROLE_ROUTES[registrationData.role].dashboard);
             } else {
-                // Reset to first step if registration failed
                 setActiveStep(0);
             }
         } catch (err) {
@@ -396,23 +375,94 @@ export default function RegisterForm() {
         }
     };
 
-    // Form content for each step
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
+
     const renderStepContent = (step) => {
         switch (step) {
             case 0:
                 return (
-                    <>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel id="role-label">Role</InputLabel>
+                    <Box className="space-y-4">
+                        <TextField
+                            {...register('name')}
+                            label="Full Name"
+                            fullWidth
+                            error={!!errors.name}
+                            helperText={errors.name?.message}
+                            disabled={isSubmitting}
+                        />
+                        <TextField
+                            {...register('email')}
+                            label="Email"
+                            fullWidth
+                            error={!!errors.email}
+                            helperText={errors.email?.message}
+                            disabled={isSubmitting}
+                        />
+                        <TextField
+                            {...register('password')}
+                            label="Password"
+                            type={showPassword ? "text" : "password"}
+                            fullWidth
+                            error={!!errors.password}
+                            helperText={errors.password?.message}
+                            disabled={isSubmitting}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label="toggle password visibility"
+                                            onClick={togglePasswordVisibility}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                        <TextField
+                            {...register('confirmPassword')}
+                            label="Confirm Password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            fullWidth
+                            error={!!errors.confirmPassword}
+                            helperText={errors.confirmPassword?.message}
+                            disabled={isSubmitting}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label="toggle confirm password visibility"
+                                            onClick={toggleConfirmPasswordVisibility}
+                                            edge="end"
+                                        >
+                                            {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                        <FormControl fullWidth error={!!errors.role}>
+                            <InputLabel>Role</InputLabel>
                             <Controller
                                 name="role"
                                 control={control}
                                 render={({ field }) => (
                                     <Select
                                         {...field}
-                                        labelId="role-label"
                                         label="Role"
-                                        error={!!errors.role}
+                                        onChange={(e) => {
+                                            field.onChange(e);
+                                            setSelectedRole(e.target.value);
+                                            reset(getDefaultValues(e.target.value));
+                                        }}
+                                        disabled={isSubmitting}
                                     >
                                         <MenuItem value={ROLES.PATIENT}>Patient</MenuItem>
                                         <MenuItem value={ROLES.DOCTOR}>Doctor</MenuItem>
@@ -420,48 +470,11 @@ export default function RegisterForm() {
                                     </Select>
                                 )}
                             />
-                            {errors.role && <FormHelperText error>{errors.role.message?.toString()}</FormHelperText>}
+                            {errors.role && (
+                                <FormHelperText>{errors.role.message}</FormHelperText>
+                            )}
                         </FormControl>
-
-                        <TextField
-                            {...register('name')}
-                            label="Full Name"
-                            fullWidth
-                            margin="normal"
-                            error={!!errors.name}
-                            helperText={errors.name?.message?.toString()}
-                        />
-
-                        <TextField
-                            {...register('email')}
-                            label="Email"
-                            type="email"
-                            fullWidth
-                            margin="normal"
-                            error={!!errors.email}
-                            helperText={errors.email?.message?.toString()}
-                        />
-
-                        <TextField
-                            {...register('password')}
-                            label="Password"
-                            type="password"
-                            fullWidth
-                            margin="normal"
-                            error={!!errors.password}
-                            helperText={errors.password?.message?.toString()}
-                        />
-
-                        <TextField
-                            {...register('confirmPassword')}
-                            label="Confirm Password"
-                            type="password"
-                            fullWidth
-                            margin="normal"
-                            error={!!errors.confirmPassword}
-                            helperText={errors.confirmPassword?.message?.toString()}
-                        />
-                    </>
+                    </Box>
                 );
 
             case 1:

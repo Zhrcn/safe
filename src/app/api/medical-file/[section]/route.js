@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Mock medical file data
 const MOCK_MEDICAL_FILES = {
   'patient1': {
     overview: {
@@ -62,19 +61,16 @@ const MOCK_MEDICAL_FILES = {
 };
 
 /**
- * GET handler for retrieving medical file data
- * @param {Request} request - The request object
- * @param {Object} context - The context object with params
- * @returns {NextResponse} - The response object
+ * @param {Request} request
+ * @param {Object} context with params
+ * @returns {NextResponse} 
  */
 export async function GET(request, { params }) {
   const { section } = params;
   const { searchParams } = new URL(request.url);
   
-  // Get patientId from query params
   const patientId = searchParams.get('patientId');
   
-  // Return 400 if no patientId provided
   if (!patientId) {
     return NextResponse.json(
       { error: 'Patient ID is required' },
@@ -82,10 +78,8 @@ export async function GET(request, { params }) {
     );
   }
   
-  // Get medical file for patient
   const medicalFile = MOCK_MEDICAL_FILES[patientId];
   
-  // Return 404 if no medical file found
   if (!medicalFile) {
     return NextResponse.json(
       { error: 'Medical file not found' },
@@ -93,7 +87,6 @@ export async function GET(request, { params }) {
     );
   }
   
-  // Return requested section or 404 if section not found
   if (section && section !== 'all') {
     if (!medicalFile[section]) {
       return NextResponse.json(
@@ -108,7 +101,7 @@ export async function GET(request, { params }) {
     });
   }
   
-  // Return entire medical file if section is 'all' or not specified
+
   return NextResponse.json({ 
     success: true, 
     data: medicalFile 
@@ -116,19 +109,16 @@ export async function GET(request, { params }) {
 }
 
 /**
- * POST handler for creating/updating medical file data
- * @param {Request} request - The request object
- * @param {Object} context - The context object with params
- * @returns {NextResponse} - The response object
+ * @param {Request} request
+ * @param {Object} context 
+ * @returns {NextResponse} 
  */
 export async function POST(request, { params }) {
   const { section } = params;
   const { searchParams } = new URL(request.url);
   
-  // Get patientId from query params
   const patientId = searchParams.get('patientId');
   
-  // Return 400 if no patientId provided
   if (!patientId) {
     return NextResponse.json(
       { error: 'Patient ID is required' },
@@ -137,11 +127,8 @@ export async function POST(request, { params }) {
   }
   
   try {
-    // Parse request body
     const body = await request.json();
     
-    // In a real app, this would update a database
-    // For now, we'll just return success
     return NextResponse.json({ 
       success: true, 
       message: `Medical file ${section} updated for patient ${patientId}`,
@@ -157,19 +144,16 @@ export async function POST(request, { params }) {
 }
 
 /**
- * PATCH handler for updating medical file data
- * @param {Request} request - The request object
- * @param {Object} context - The context object with params
- * @returns {NextResponse} - The response object
+ * @param {Request} request
+ * @param {Object} context 
+ * @returns {NextResponse} 
  */
 export async function PATCH(request, { params }) {
   const { section } = params;
   const { searchParams } = new URL(request.url);
   
-  // Get patientId from query params
   const patientId = searchParams.get('patientId');
   
-  // Return 400 if no patientId provided
   if (!patientId) {
     return NextResponse.json(
       { error: 'Patient ID is required' },
@@ -177,10 +161,8 @@ export async function PATCH(request, { params }) {
     );
   }
   
-  // Get medical file for patient
   const medicalFile = MOCK_MEDICAL_FILES[patientId];
   
-  // Return 404 if no medical file found
   if (!medicalFile) {
     return NextResponse.json(
       { error: 'Medical file not found' },
@@ -189,11 +171,8 @@ export async function PATCH(request, { params }) {
   }
   
   try {
-    // Parse request body
     const body = await request.json();
     
-    // In a real app, this would update a database
-    // For now, we'll just return success
     return NextResponse.json({ 
       success: true, 
       message: `Medical file ${section} updated for patient ${patientId}`,

@@ -3,9 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
-import { authApi } from '@/lib/services/api';
 import { useNotification } from '@/components/ui/Notification';
 import { ROLES, ROLE_ROUTES } from '@/lib/config';
+import { authService } from '@/services';
 
 const AuthContext = createContext(undefined);
 
@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter();
     const notification = useNotification();
 
-    // Check if user is already logged in
     useEffect(() => {
         const checkAuth = async () => {
             try {
@@ -34,18 +33,15 @@ export const AuthProvider = ({ children }) => {
                 const userData = localStorage.getItem(USER_STORAGE_KEY);
 
                 if (token && userData) {
-                    // Verify token is valid and not expired
                     try {
                         const decoded = jwtDecode(token);
                         const currentTime = Date.now() / 1000;
 
                         if (decoded.exp && decoded.exp < currentTime) {
-                            // Token expired
                             handleLogout();
                             return;
                         }
 
-                        // Token is valid
                         setUser(JSON.parse(userData));
                     } catch (error) {
                         console.error('Error decoding token:', error);
@@ -65,14 +61,12 @@ export const AuthProvider = ({ children }) => {
     const handleLogin = async (email, password, role) => {
         setIsLoading(true);
         try {
-            const response = await authApi.login(email, password, role);
-            const { token, user } = response.data;
+            const response = await authService.login(email, password, role);
+            const { token, user } = response;
 
-            // Store token and user data in localStorage
             localStorage.setItem(TOKEN_STORAGE_KEY, token);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 
-            // Update state
             setUser(user);
             notification.showNotification('Login successful', 'success');
             return true;
@@ -89,21 +83,18 @@ export const AuthProvider = ({ children }) => {
     const handleRegister = async (userData) => {
         setIsLoading(true);
         try {
-            const response = await authApi.register(userData);
-            const { token, user } = response.data;
+            const response = await authService.register(userData);
+            const { token, user } = response;
 
-            // Store token and user data in localStorage
             localStorage.setItem(TOKEN_STORAGE_KEY, token);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 
-            // Update state
             setUser(user);
             notification.showNotification('Registration successful', 'success');
             return true;
         } catch (error) {
             console.error('Registration error:', error);
 
-            // Extract and format error messages from the API response
             let errorMessage = 'Registration failed. Please try again.';
 
             if (error.response?.data) {
@@ -113,7 +104,6 @@ export const AuthProvider = ({ children }) => {
                     errorMessage = errorText;
                 }
 
-                // If there are validation details, format them for display
                 if (details && Array.isArray(details)) {
                     const validationErrors = details
                         .map(err => `${err.path}: ${err.message}`)
@@ -132,17 +122,22 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const handleLogout = () => {
-        // Clear auth data from localStorage
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        localStorage.removeItem(USER_STORAGE_KEY);
+    const handleLogout = async () => {
+        try {
+            if (user) {
+                await authService.logout();
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+            localStorage.removeItem(USER_STORAGE_KEY);
 
-        // Reset state
-        setUser(null);
+            setUser(null);
 
-        // Redirect to home page
-        router.push('/');
-        notification.showNotification('Logged out successfully', 'info');
+            router.push('/');
+            notification.showNotification('Logged out successfully', 'info');
+        }
     };
 
     const updateUserData = (data) => {

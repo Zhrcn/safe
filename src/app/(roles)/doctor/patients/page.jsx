@@ -29,7 +29,6 @@ export default function PatientsPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 
-  // Load patients on component mount
   useEffect(() => {
     const loadPatients = async () => {
       try {
@@ -50,11 +49,10 @@ export default function PatientsPage() {
     loadPatients();
   }, []);
   
-  // Filter patients based on search term and active tab
   useEffect(() => {
     let filtered = patients;
     
-    // Apply search filter
+    
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(patient => 
@@ -64,7 +62,6 @@ export default function PatientsPage() {
       );
     }
     
-    // Apply tab filter
     if (activeTab !== 'all') {
       filtered = filtered.filter(patient => patient.status.toLowerCase() === activeTab);
     }
@@ -72,27 +69,22 @@ export default function PatientsPage() {
     setFilteredPatients(filtered);
   }, [searchTerm, activeTab, patients]);
   
-  // Handle tab change
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
   
-  // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
   
-  // Open add patient dialog
   const handleOpenAddDialog = () => {
     setAddDialogOpen(true);
   };
   
-  // Close add patient dialog
   const handleCloseAddDialog = () => {
     setAddDialogOpen(false);
   };
   
-  // Handle successful patient addition
   const handlePatientAdded = (newPatient) => {
     setPatients(prevPatients => [...prevPatients, newPatient]);
   };
@@ -208,7 +200,6 @@ export default function PatientsPage() {
         )}
       </Paper>
       
-      {/* Add Patient Dialog */}
       <Dialog
         open={addDialogOpen}
         onClose={handleCloseAddDialog}

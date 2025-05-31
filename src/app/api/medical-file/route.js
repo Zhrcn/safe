@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db/mongoose';
-import MedicalFile from '@/lib/models/MedicalFile';
+import { connectToDatabase } from '@/lib/db/mongodb';
+import MedicalFile from '@/models/MedicalFile';
+import User from '@/models/User';
 import { jwtDecode } from 'jwt-decode';
 
-// Export configuration to mark this route as dynamic
 export const dynamic = 'force-dynamic';
 
-// Helper function to get the authenticated user from the request
 async function getAuthenticatedUser(req) {
-    // Changed to only use Authorization header to avoid cookies usage
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
 
     if (!token) {
@@ -16,10 +14,8 @@ async function getAuthenticatedUser(req) {
     }
 
     try {
-        // Verify JWT token
         const decoded = jwtDecode(token);
 
-        // Check if token is expired
         const currentTime = Date.now() / 1000;
         if (decoded.exp && decoded.exp < currentTime) {
             return null;
@@ -32,7 +28,6 @@ async function getAuthenticatedUser(req) {
     }
 }
 
-// Helper function to log access
 async function logAccess(fileId, userId, action) {
     await MedicalFile.findByIdAndUpdate(fileId, {
         $push: {
@@ -46,7 +41,6 @@ async function logAccess(fileId, userId, action) {
     });
 }
 
-// GET /api/medical-file
 export async function GET(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -54,12 +48,10 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await connectDB();
+        await connectToDatabase();
 
-        // Get patientId from query params or use the authenticated user's ID if they're a patient
         let patientId = user.role === 'patient' ? user.id : null;
 
-        // If user is not a patient, check if they're authorized to access another patient's file
         if (!patientId) {
             const url = new URL(req.url);
             patientId = url.searchParams.get('patientId');
@@ -68,13 +60,11 @@ export async function GET(req) {
                 return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 });
             }
 
-            // Only doctors, pharmacists, and admins can access other patients' files
             if (!['doctor', 'pharmacist', 'admin'].includes(user.role)) {
                 return NextResponse.json({ error: 'Unauthorized to access this medical file' }, { status: 403 });
             }
         }
 
-        // Find medical file by patientId
         const medicalFile = await MedicalFile.findOne({ patientId })
             .populate('conditions.diagnosedBy', 'name')
             .populate('procedures.performedBy', 'name')
@@ -84,7 +74,6 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Medical file not found' }, { status: 404 });
         }
 
-        // Log the access
         await logAccess(medicalFile._id, user.id, 'view');
 
         return NextResponse.json(medicalFile);
@@ -94,7 +83,6 @@ export async function GET(req) {
     }
 }
 
-// POST /api/medical-file
 export async function POST(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -102,28 +90,24 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const data = await req.json();
 
-        // Determine patientId - either from request body or from the authenticated user if they're a patient
         const patientId = data.patientId || (user.role === 'patient' ? user.id : null);
 
         if (!patientId) {
             return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 });
         }
 
-        // Check if user is authorized to create a medical file
         if (user.role !== 'admin' && user.role !== 'doctor' && user.id !== patientId) {
             return NextResponse.json({ error: 'Unauthorized to create this medical file' }, { status: 403 });
         }
 
-        // Check if medical file already exists for this patient
         const existingFile = await MedicalFile.findOne({ patientId });
         if (existingFile) {
             return NextResponse.json({ error: 'Medical file already exists for this patient' }, { status: 409 });
         }
 
-        // Create new medical file
         const medicalFile = new MedicalFile({
             patientId,
             ...data,
@@ -143,7 +127,6 @@ export async function POST(req) {
     }
 }
 
-// PATCH /api/medical-file
 export async function PATCH(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -151,10 +134,9 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const data = await req.json();
 
-        // Get patientId from query params or use the authenticated user's ID if they're a patient
         const url = new URL(req.url);
         let patientId = url.searchParams.get('patientId') || (user.role === 'patient' ? user.id : null);
 
@@ -162,12 +144,10 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 });
         }
 
-        // Check authorization for updating medical file
         if (user.role !== 'admin' && user.role !== 'doctor' && user.id !== patientId) {
             return NextResponse.json({ error: 'Unauthorized to update this medical file' }, { status: 403 });
         }
 
-        // Find and update the medical file
         const medicalFile = await MedicalFile.findOneAndUpdate(
             { patientId },
             {
@@ -181,7 +161,6 @@ export async function PATCH(req) {
             return NextResponse.json({ error: 'Medical file not found' }, { status: 404 });
         }
 
-        // Log the update access
         await logAccess(medicalFile._id, user.id, 'update');
 
         return NextResponse.json(medicalFile);

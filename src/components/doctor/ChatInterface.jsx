@@ -35,7 +35,6 @@ import {
 import { format } from 'date-fns';
 import { getConversations, getMessages, sendMessage } from '@/services/doctorService';
 
-// Role icon mapping
 const getRoleIcon = (role) => {
     switch(role) {
         case 'patient':
@@ -49,7 +48,6 @@ const getRoleIcon = (role) => {
     }
 };
 
-// Role color mapping
 const getRoleColor = (role) => {
     switch(role) {
         case 'patient':
@@ -63,11 +61,9 @@ const getRoleColor = (role) => {
     }
 };
 
-// Conversation list item component
 function ConversationItem({ conversation, isActive, onClick }) {
     const { participants, lastMessage, unreadCount } = conversation;
     
-    // Find the other participant (not the doctor)
     const otherParticipant = participants.find(p => p.role !== 'doctor');
     
     if (!otherParticipant) return null;
@@ -117,7 +113,6 @@ function ConversationItem({ conversation, isActive, onClick }) {
     );
 }
 
-// Message bubble component
 function MessageBubble({ message, isCurrentUser }) {
     return (
         <Box 
@@ -178,7 +173,6 @@ export default function ChatInterface() {
     
     const messagesEndRef = useRef(null);
 
-    // Check if mobile view
     useEffect(() => {
         const handleResize = () => {
             setIsMobileView(window.innerWidth < 768);
@@ -192,7 +186,6 @@ export default function ChatInterface() {
         };
     }, []);
 
-    // Load conversations
     useEffect(() => {
         const loadConversations = async () => {
             try {
@@ -201,7 +194,6 @@ export default function ChatInterface() {
                 
                 const data = await getConversations();
                 
-                // If no conversations returned, use mock data for demonstration
                 if (!data || data.length === 0) {
                     const mockConversations = [
                         {
@@ -246,13 +238,11 @@ export default function ChatInterface() {
                     ];
                     setConversations(mockConversations);
                     
-                    // Set active conversation to the first one
                     setActiveConversation(mockConversations[0].id);
                     loadMessages(mockConversations[0].id);
                 } else {
                     setConversations(data);
                     
-                    // Set active conversation to the first one if not set
                     if (data.length > 0 && !activeConversation) {
                         setActiveConversation(data[0].id);
                         loadMessages(data[0].id);
@@ -269,30 +259,25 @@ export default function ChatInterface() {
         loadConversations();
     }, []);
 
-    // Scroll to bottom of messages
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages]);
 
-    // Load messages for a conversation
     const loadMessages = async (conversationId) => {
         try {
             setLoadingMessages(true);
             
             const data = await getMessages(conversationId);
             
-            // If no messages returned, use mock data for demonstration
             if (!data || data.length === 0) {
-                // Find the conversation
                 const conversation = conversations.find(c => c.id === conversationId);
                 if (!conversation) {
                     setMessages([]);
                     return;
                 }
                 
-                // Create mock messages
                 const mockMessages = [
                     {
                         id: 'msg1',
@@ -304,7 +289,6 @@ export default function ChatInterface() {
                     }
                 ];
                 
-                // Add a reply if not from the doctor
                 if (conversation.lastMessage && conversation.participants.find(p => p.role !== 'doctor')) {
                     mockMessages.push({
                         id: 'msg2',
@@ -321,7 +305,6 @@ export default function ChatInterface() {
                 setMessages(data);
             }
             
-            // Update conversation to mark as read
             setConversations(conversations.map(conv => 
                 conv.id === conversationId 
                     ? { ...conv, unreadCount: 0 } 
@@ -334,28 +317,23 @@ export default function ChatInterface() {
         }
     };
 
-    // Handle conversation click
     const handleConversationClick = (conversationId) => {
         setActiveConversation(conversationId);
         loadMessages(conversationId);
         
-        // On mobile, hide conversation list and show messages
         if (isMobileView) {
             setShowConversations(false);
         }
     };
 
-    // Handle back button click (mobile view)
     const handleBackClick = () => {
         setShowConversations(true);
     };
 
-    // Handle tab change
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
 
-    // Handle send message
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !activeConversation) return;
         
@@ -376,7 +354,6 @@ export default function ChatInterface() {
                 content: newMessage
             };
             
-            // Optimistically add message to UI
             const tempMessage = {
                 ...messageData,
                 id: `temp-${Date.now()}`,
@@ -387,18 +364,15 @@ export default function ChatInterface() {
             setMessages([...messages, tempMessage]);
             setNewMessage('');
             
-            // Send message to server
             const result = await sendMessage(messageData);
             
             if (result.success) {
-                // Replace temp message with actual message
                 setMessages(messages => 
                     messages.map(msg => 
                         msg.id === tempMessage.id ? result.data : msg
                     )
                 );
                 
-                // Update conversation last message
                 setConversations(conversations => 
                     conversations.map(conv => 
                         conv.id === activeConversation 
@@ -417,14 +391,12 @@ export default function ChatInterface() {
         } catch (err) {
             console.error('Failed to send message:', err);
             
-            // Remove temp message on error
             setMessages(messages => 
                 messages.filter(msg => !msg.id.startsWith('temp-'))
             );
         }
     };
 
-    // Handle key press for sending message
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -432,17 +404,12 @@ export default function ChatInterface() {
         }
     };
 
-    // Filter conversations based on search query and active tab
     const filteredConversations = conversations.filter(conversation => {
-        // Find the other participant
         const otherParticipant = conversation.participants.find(p => p.role !== 'doctor');
         if (!otherParticipant) return false;
         
-        // Check if name matches search query
         const nameMatches = otherParticipant.name.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        // Check if role matches active tab
-        const roleMatches = 
+                const roleMatches = 
             activeTab === 'all' || 
             (activeTab === 'patients' && otherParticipant.role === 'patient') ||
             (activeTab === 'pharmacists' && otherParticipant.role === 'pharmacist') ||
@@ -451,7 +418,6 @@ export default function ChatInterface() {
         return nameMatches && roleMatches;
     });
 
-    // Find current conversation
     const currentConversation = conversations.find(c => c.id === activeConversation);
 
     return (
@@ -608,7 +574,6 @@ export default function ChatInterface() {
                                 </Box>
                             ) : (
                                 messages.map((message) => {
-                                    // Check if current user is the sender
                                     const isCurrentUser = message.sender.role === 'doctor';
                                     
                                     return (

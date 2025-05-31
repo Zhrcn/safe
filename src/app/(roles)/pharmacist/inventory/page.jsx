@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from '@mui/material';
 import { Package, AlertCircle, PlusCircle, X } from 'lucide-react';
-import { PharmacistPageContainer, PharmacistCard, SearchField } from '@/components/pharmacist/PharmacistComponents';
+import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
+import { SearchField } from '@/components/ui/Notification';
 import { getInventory, addInventoryItem, updateInventoryItem } from '@/services/pharmacistService';
 
-// Inventory Item Form Dialog
 function InventoryItemDialog({ open, onClose, item, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -15,7 +15,6 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
   });
   const [errors, setErrors] = useState({});
 
-  // Reset form when dialog opens with new item
   useEffect(() => {
     if (open) {
       setFormData(item || {
@@ -34,7 +33,6 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
       [name]: name === 'name' ? value : parseInt(value, 10) || 0
     }));
 
-    // Clear error when field is edited
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -137,7 +135,6 @@ export default function PharmacistInventoryPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Load inventory data
   useEffect(() => {
     async function loadInventory() {
       try {
@@ -154,7 +151,6 @@ export default function PharmacistInventoryPage() {
     loadInventory();
   }, []);
 
-  // Filter inventory based on search term
   const filteredInventory = searchTerm
     ? inventory.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
     : inventory;
@@ -177,13 +173,11 @@ export default function PharmacistInventoryPage() {
       let updatedItem;
 
       if (itemData.id) {
-        // Update existing item
         updatedItem = await updateInventoryItem(itemData);
         setInventory(prev => prev.map(item =>
           item.id === updatedItem.id ? updatedItem : item
         ));
       } else {
-        // Add new item
         updatedItem = await addInventoryItem(itemData);
         setInventory(prev => [...prev, updatedItem]);
       }
@@ -192,7 +186,6 @@ export default function PharmacistInventoryPage() {
     }
   };
 
-  // Function to determine row color based on stock level
   const getRowClassName = (item) => {
     if (item.stock <= item.lowStockThreshold) {
       return 'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/40';
@@ -283,7 +276,6 @@ export default function PharmacistInventoryPage() {
         </TableContainer>
       </PharmacistCard>
 
-      {/* Inventory Item Dialog */}
       <InventoryItemDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

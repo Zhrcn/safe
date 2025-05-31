@@ -41,7 +41,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getDoctorProfile, updateDoctorProfile, addProfileItem } from '@/services/doctorService';
 
-// Validation schema for personal info
 const personalInfoSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     specialty: z.string().min(2, 'Specialty is required'),
@@ -53,21 +52,18 @@ const personalInfoSchema = z.object({
     })
 });
 
-// Validation schema for education
 const educationSchema = z.object({
     degree: z.string().min(2, 'Degree is required'),
     institution: z.string().min(2, 'Institution is required'),
     year: z.string().min(4, 'Year is required')
 });
 
-// Validation schema for achievement
 const achievementSchema = z.object({
     title: z.string().min(2, 'Title is required'),
     year: z.string().min(4, 'Year is required'),
     issuer: z.string().min(2, 'Issuer is required')
 });
 
-// Personal Information Form Component
 function PersonalInfoForm({ profile, onSave }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -92,7 +88,6 @@ function PersonalInfoForm({ profile, onSave }) {
         }
     });
 
-    // Update form when profile changes
     useEffect(() => {
         if (profile) {
             reset({
@@ -338,7 +333,6 @@ function PersonalInfoForm({ profile, onSave }) {
     );
 }
 
-// Add Education Dialog
 function AddEducationDialog({ open, onClose, onAdd }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -502,7 +496,6 @@ function AddEducationDialog({ open, onClose, onAdd }) {
     );
 }
 
-// Add Achievement Dialog
 function AddAchievementDialog({ open, onClose, onAdd }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -674,7 +667,6 @@ export default function ProfileManager() {
     const [educationDialogOpen, setEducationDialogOpen] = useState(false);
     const [achievementDialogOpen, setAchievementDialogOpen] = useState(false);
 
-    // Load doctor profile
     useEffect(() => {
         loadProfile();
     }, []);
@@ -694,12 +686,10 @@ export default function ProfileManager() {
         }
     };
 
-    // Handle tab change
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
 
-    // Handle profile update
     const handleProfileUpdate = (updatedProfile) => {
         setProfile(updatedProfile);
     };

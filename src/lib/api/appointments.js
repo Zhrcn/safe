@@ -1,7 +1,5 @@
-// DEV MODE: Set to true to bypass real API calls and return mock data
 const DEV_MODE = true;
 
-// Mock data for development
 const MOCK_APPOINTMENTS = [
     {
         id: 'app_001',
@@ -90,13 +88,11 @@ const MOCK_APPOINTMENTS = [
     }
 ];
 
-// Helper function to get auth token
 function getAuthToken() {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('safe_auth_token');
 }
 
-// Helper to simulate filtering based on parameters
 function filterAppointments(appointments, params) {
     let filtered = [...appointments];
 
@@ -113,12 +109,10 @@ function filterAppointments(appointments, params) {
         if (params.date) {
             filtered = filtered.filter(app => app.date === params.date);
         }
-        // Sort by date
         if (params.sortBy === 'date') {
             filtered.sort((a, b) => {
                 const dateComparison = new Date(a.date) - new Date(b.date);
                 if (dateComparison === 0) {
-                    // If same date, sort by time
                     return a.time.localeCompare(b.time);
                 }
                 return dateComparison;
@@ -129,15 +123,13 @@ function filterAppointments(appointments, params) {
     return filtered;
 }
 
-// Get all appointments with optional filtering
 export async function getAppointments(params = {}) {
-    // DEV MODE: Return filtered mock data
     if (DEV_MODE) {
         console.log('DEV MODE: Returning mock appointments data with params:', params);
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve(filterAppointments(MOCK_APPOINTMENTS, params));
-            }, 500); // Simulate network delay
+            }, 500);
         });
     }
 
@@ -150,7 +142,6 @@ export async function getAppointments(params = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Convert params to query string
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
         if (value) queryParams.append(key, value);
@@ -168,9 +159,7 @@ export async function getAppointments(params = {}) {
     return response.json();
 }
 
-// Get a specific appointment by ID
 export async function getAppointmentById(id) {
-    // DEV MODE: Return mock appointment
     if (DEV_MODE) {
         console.log(`DEV MODE: Returning mock appointment with ID: ${id}`);
         return new Promise(resolve => {
@@ -204,9 +193,7 @@ export async function getAppointmentById(id) {
     return response.json();
 }
 
-// Create a new appointment
 export async function createAppointment(appointmentData) {
-    // DEV MODE: Simulate creating an appointment
     if (DEV_MODE) {
         console.log('DEV MODE: Creating mock appointment', appointmentData);
         return new Promise(resolve => {
@@ -243,9 +230,7 @@ export async function createAppointment(appointmentData) {
     return response.json();
 }
 
-// Update an existing appointment
 export async function updateAppointment(id, appointmentData) {
-    // DEV MODE: Simulate updating an appointment
     if (DEV_MODE) {
         console.log(`DEV MODE: Updating mock appointment with ID: ${id}`, appointmentData);
         return new Promise(resolve => {
@@ -255,7 +240,7 @@ export async function updateAppointment(id, appointmentData) {
                     const updatedAppointment = {
                         ...MOCK_APPOINTMENTS[appointmentIndex],
                         ...appointmentData,
-                        id // Ensure ID doesn't change
+                        id
                     };
                     resolve(updatedAppointment);
                 } else {
@@ -286,9 +271,7 @@ export async function updateAppointment(id, appointmentData) {
     return response.json();
 }
 
-// Cancel an appointment
 export async function cancelAppointment(id, reason) {
-    // DEV MODE: Simulate canceling an appointment
     if (DEV_MODE) {
         console.log(`DEV MODE: Cancelling mock appointment with ID: ${id}`, reason);
         return new Promise(resolve => {

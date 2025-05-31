@@ -3,7 +3,6 @@
 import GenericRoleLayout from '@/components/GenericRoleLayout';
 import { BarChart, Users, Calendar, MessageSquare, Activity, User } from 'lucide-react';
 
-// Define sidebar items for the doctor role
 const sidebarItems = [
   { name: 'Dashboard', icon: BarChart, link: '/doctor/dashboard' },
   { name: 'Patients', icon: Users, link: '/doctor/patients' },

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
 
-// Add paths that don't require authentication
 const publicPaths = [
     '/',
     '/login',
@@ -10,7 +9,6 @@ const publicPaths = [
     '/reset-password',
 ];
 
-// Add paths that require specific roles
 const roleRestrictedPaths = {
     '/doctor': ['doctor'],
     '/patient': ['patient'],
@@ -21,12 +19,10 @@ const roleRestrictedPaths = {
 export function middleware(request) {
     const { pathname } = request.nextUrl;
 
-    // Allow access to public paths
     if (publicPaths.some((path) => pathname.startsWith(path))) {
         return NextResponse.next();
     }
 
-    // Check for authentication token
     const token = request.cookies.get('token')?.value;
 
     if (!token) {
@@ -36,11 +32,9 @@ export function middleware(request) {
     }
 
     try {
-        // Verify token and check role permissions
         const decoded = jwtDecode(token);
         const userRole = decoded.role;
 
-        // Check role-restricted paths
         for (const [path, roles] of Object.entries(roleRestrictedPaths)) {
             if (pathname.startsWith(path) && !roles.includes(userRole)) {
                 return NextResponse.redirect(new URL('/unauthorized', request.url));
@@ -49,7 +43,6 @@ export function middleware(request) {
 
         return NextResponse.next();
     } catch (error) {
-        // If token is invalid, redirect to login
         const url = new URL('/login', request.url);
         url.searchParams.set('from', pathname);
         return NextResponse.redirect(url);

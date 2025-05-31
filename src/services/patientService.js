@@ -1,9 +1,3 @@
-/**
- * Patient Service
- * Handles all API calls related to the patient role
- */
-
-// Mock data for development - replace with actual API calls in production
 const MOCK_PATIENT_PROFILE = {
     id: 1,
     name: 'Sarah Johnson',
@@ -32,33 +26,39 @@ const MOCK_PATIENT_PROFILE = {
 const MOCK_APPOINTMENTS = [
     {
         id: 1,
+        doctorId: 101,
         doctorName: 'Dr. Ahmed Hassan',
         doctorSpecialty: 'Cardiology',
         date: '2024-07-05',
         time: '10:00 AM',
         status: 'Scheduled',
         location: 'Main Hospital, Room 305',
-        notes: 'Regular checkup for hypertension'
+        notes: 'Regular checkup for hypertension',
+        createdAt: '2024-06-01T08:30:00'
     },
     {
         id: 2,
+        doctorId: 102,
         doctorName: 'Dr. Fatima Al-Abbas',
         doctorSpecialty: 'General Medicine',
         date: '2024-06-15',
         time: '2:30 PM',
         status: 'Completed',
         location: 'Downtown Clinic',
-        notes: 'Follow-up after medication change'
+        notes: 'Follow-up after medication change',
+        createdAt: '2024-05-20T14:15:00'
     },
     {
         id: 3,
+        doctorId: 101,
         doctorName: 'Dr. Ahmed Hassan',
         doctorSpecialty: 'Cardiology',
         date: '2024-08-10',
         time: '11:15 AM',
         status: 'Scheduled',
         location: 'Main Hospital, Room 305',
-        notes: 'Blood pressure monitoring'
+        notes: 'Blood pressure monitoring',
+        createdAt: '2024-06-10T09:45:00'
     }
 ];
 
@@ -74,7 +74,10 @@ const MOCK_PRESCRIPTIONS = [
         status: 'Active',
         refillsRemaining: 2,
         instructions: 'Take in the morning with water',
-        pharmacy: 'Downtown Pharmacy'
+        pharmacy: 'Downtown Pharmacy',
+        reminders: [
+            { time: '08:00', enabled: true, days: [1, 2, 3, 4, 5, 6, 7] }
+        ]
     },
     {
         id: 2,
@@ -87,7 +90,10 @@ const MOCK_PRESCRIPTIONS = [
         status: 'Active',
         refillsRemaining: 2,
         instructions: 'Take with food',
-        pharmacy: 'Downtown Pharmacy'
+        pharmacy: 'Downtown Pharmacy',
+        reminders: [
+            { time: '08:00', enabled: true, days: [1, 2, 3, 4, 5, 6, 7] }
+        ]
     },
     {
         id: 3,
@@ -100,7 +106,12 @@ const MOCK_PRESCRIPTIONS = [
         status: 'Completed',
         refillsRemaining: 0,
         instructions: 'Take until completed, even if feeling better',
-        pharmacy: 'Central Pharmacy'
+        pharmacy: 'Central Pharmacy',
+        reminders: [
+            { time: '08:00', enabled: false, days: [1, 2, 3, 4, 5, 6, 7] },
+            { time: '14:00', enabled: false, days: [1, 2, 3, 4, 5, 6, 7] },
+            { time: '20:00', enabled: false, days: [1, 2, 3, 4, 5, 6, 7] }
+        ]
     }
 ];
 
@@ -134,7 +145,8 @@ const MOCK_MEDICAL_RECORDS = [
         type: 'Imaging',
         provider: 'Imaging Center',
         description: 'Chest X-ray',
-        notes: 'Normal chest radiograph. No evidence of cardiomegaly or pulmonary disease.'
+        notes: 'Normal chest radiograph. No evidence of cardiomegaly or pulmonary disease.',
+        imageUrl: '/mock/images/chest-xray.pdf'
     },
     {
         id: 4,
@@ -151,6 +163,15 @@ const MOCK_MEDICAL_RECORDS = [
         provider: 'Dr. Fatima Al-Abbas',
         description: 'Upper Respiratory Infection',
         notes: 'Symptoms include sore throat, cough, and mild fever. Prescribed Amoxicillin for 10 days.'
+    },
+    {
+        id: 6,
+        date: '2024-04-25',
+        type: 'Imaging',
+        provider: 'Imaging Center',
+        description: 'Mammography',
+        notes: 'Routine screening mammogram. No suspicious findings.',
+        imageUrl: '/mock/images/mammogram.pdf'
     }
 ];
 
@@ -189,117 +210,549 @@ const MOCK_HEALTH_METRICS = {
     ]
 };
 
+const MOCK_PROVIDERS = {
+    doctors: [
+        {
+            id: 101,
+            name: 'Dr. Ahmed Hassan',
+            specialty: 'Cardiology',
+            hospital: 'Main Hospital',
+            photo: '/mock/images/doctor1.jpg',
+            hasAccess: true,
+            isPrimary: true,
+            rating: 4.8,
+            yearsExperience: 15
+        },
+        {
+            id: 102,
+            name: 'Dr. Fatima Al-Abbas',
+            specialty: 'General Medicine',
+            hospital: 'Downtown Clinic',
+            photo: '/mock/images/doctor2.jpg',
+            hasAccess: true,
+            isPrimary: false,
+            rating: 4.7,
+            yearsExperience: 8
+        },
+        {
+            id: 103,
+            name: 'Dr. Omar Najjar',
+            specialty: 'Neurology',
+            hospital: 'Main Hospital',
+            photo: '/mock/images/doctor3.jpg',
+            hasAccess: false,
+            isPrimary: false,
+            rating: 4.9,
+            yearsExperience: 12
+        }
+    ],
+    pharmacists: [
+        {
+            id: 201,
+            name: 'Leila Karam',
+            pharmacy: 'Downtown Pharmacy',
+            photo: '/mock/images/pharmacist1.jpg',
+            rating: 4.6,
+            yearsExperience: 10
+        },
+        {
+            id: 202,
+            name: 'Sami Al-Din',
+            pharmacy: 'Central Pharmacy',
+            photo: '/mock/images/pharmacist2.jpg',
+            rating: 4.5,
+            yearsExperience: 7
+        }
+    ]
+};
+
+const MOCK_CONVERSATIONS = [
+    {
+        id: 1,
+        participantId: 101,
+        participantName: 'Dr. Ahmed Hassan',
+        participantRole: 'doctor',
+        participantPhoto: '/mock/images/doctor1.jpg',
+        lastMessage: 'Your blood pressure readings look good. Keep taking your medication as prescribed.',
+        lastMessageDate: '2024-06-10T15:45:00',
+        unread: 1,
+        messages: [
+            {
+                id: 1,
+                sender: 'patient',
+                content: 'Hello Dr. Hassan, I wanted to ask about my blood pressure readings from last week.',
+                timestamp: '2024-06-10T15:30:00'
+            },
+            {
+                id: 2,
+                sender: 'doctor',
+                content: 'Your blood pressure readings look good. Keep taking your medication as prescribed.',
+                timestamp: '2024-06-10T15:45:00'
+            }
+        ]
+    },
+    {
+        id: 2,
+        participantId: 201,
+        participantName: 'Leila Karam',
+        participantRole: 'pharmacist',
+        participantPhoto: '/mock/images/pharmacist1.jpg',
+        lastMessage: 'Yes, we have Lisinopril in stock. You can come pick up your refill anytime.',
+        lastMessageDate: '2024-06-09T11:20:00',
+        unread: 0,
+        messages: [
+            {
+                id: 1,
+                sender: 'patient',
+                content: 'Hello, do you have Lisinopril 10mg in stock? I need a refill.',
+                timestamp: '2024-06-09T11:15:00'
+            },
+            {
+                id: 2,
+                sender: 'pharmacist',
+                content: 'Yes, we have Lisinopril in stock. You can come pick up your refill anytime.',
+                timestamp: '2024-06-09T11:20:00'
+            }
+        ]
+    }
+];
+
 /**
- * Get patient profile
- * @returns {Promise<Object>} - Patient profile
+ * @returns {Promise<Object>} 
  */
 export async function getPatientProfile() {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve(MOCK_PATIENT_PROFILE);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Get patient appointments
- * @param {string} status - Optional status filter
- * @returns {Promise<Array>} - List of appointments
+ * @param {Object} data 
+ * @returns {Promise<Object>} 
+ */
+export async function updatePatientProfile(data) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const updatedProfile = { ...MOCK_PATIENT_PROFILE, ...data };
+            resolve(updatedProfile);
+        }, 500);
+    });
+}
+
+/**
+ * @param {string} status 
+ * @returns {Promise<Array>} 
  */
 export async function getAppointments(status = '') {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
-            const filteredAppointments = status
-                ? MOCK_APPOINTMENTS.filter(appointment => appointment.status === status)
-                : MOCK_APPOINTMENTS;
+            let filteredAppointments = MOCK_APPOINTMENTS;
+            if (status) {
+                filteredAppointments = MOCK_APPOINTMENTS.filter(
+                    appointment => appointment.status.toLowerCase() === status.toLowerCase()
+                );
+            }
             resolve(filteredAppointments);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Get patient prescriptions
- * @param {string} status - Optional status filter
- * @returns {Promise<Array>} - List of prescriptions
+ * @param {string} status 
+ * @returns {Promise<Array>} 
  */
 export async function getPrescriptions(status = '') {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
-            const filteredPrescriptions = status
-                ? MOCK_PRESCRIPTIONS.filter(prescription => prescription.status === status)
-                : MOCK_PRESCRIPTIONS;
+            let filteredPrescriptions = MOCK_PRESCRIPTIONS;
+            if (status) {
+                filteredPrescriptions = MOCK_PRESCRIPTIONS.filter(
+                    prescription => prescription.status.toLowerCase() === status.toLowerCase()
+                );
+            }
             resolve(filteredPrescriptions);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Get patient medical records
- * @param {string} type - Optional type filter
- * @returns {Promise<Array>} - List of medical records
+ * @param {string} type 
+ * @returns {Promise<Array>}
  */
 export async function getMedicalRecords(type = '') {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
-            const filteredRecords = type
-                ? MOCK_MEDICAL_RECORDS.filter(record => record.type === type)
-                : MOCK_MEDICAL_RECORDS;
+            let filteredRecords = MOCK_MEDICAL_RECORDS;
+            if (type) {
+                filteredRecords = MOCK_MEDICAL_RECORDS.filter(
+                    record => record.type.toLowerCase() === type.toLowerCase()
+                );
+            }
             resolve(filteredRecords);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Get patient health metrics
- * @returns {Promise<Object>} - Health metrics data
+ * @returns {Promise<Object>} 
  */
 export async function getHealthMetrics() {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve(MOCK_HEALTH_METRICS);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Schedule new appointment
- * @param {Object} appointment - Appointment data
- * @returns {Promise<Object>} - Created appointment
+ * @param {Object} appointment 
+ * @returns {Promise<Object>} 
  */
 export async function scheduleAppointment(appointment) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const newAppointment = {
-                id: Math.max(...MOCK_APPOINTMENTS.map(a => a.id)) + 1,
+                id: MOCK_APPOINTMENTS.length + 1,
                 ...appointment,
-                status: 'Scheduled'
+                status: 'Scheduled',
+                createdAt: new Date().toISOString()
             };
-            MOCK_APPOINTMENTS.push(newAppointment);
             resolve(newAppointment);
-        }, 300);
+        }, 500);
     });
 }
 
 /**
- * Cancel appointment
- * @param {number} id - Appointment ID
- * @returns {Promise<Object>} - Updated appointment
+ * @param {number} id 
+ * @returns {Promise<Object>} 
  */
 export async function cancelAppointment(id) {
-    // Mock implementation
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const appointment = MOCK_APPOINTMENTS.find(apt => apt.id === id);
+            if (!appointment) {
+                reject(new Error('Appointment not found'));
+                return;
+            }
+            
+            const appointmentDate = new Date(appointment.date + 'T' + appointment.time);
+            const today = new Date();
+            const diffTime = appointmentDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 3) {
+                reject(new Error('Appointments can only be cancelled at least 3 days in advance'));
+                return;
+            }
+            
+            const cancelledAppointment = { ...appointment, status: 'Cancelled' };
+            resolve(cancelledAppointment);
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} id 
+ * @param {Object} data 
+ * @returns {Promise<Object>} 
+ */
+export async function updateAppointment(id, data) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const appointmentIndex = MOCK_APPOINTMENTS.findIndex(apt => apt.id === id);
+            if (appointmentIndex === -1) {
+                reject(new Error('Appointment not found'));
+                return;
+            }
+            
+            const appointmentDate = new Date(MOCK_APPOINTMENTS[appointmentIndex].date + 'T' + MOCK_APPOINTMENTS[appointmentIndex].time);
+            const today = new Date();
+            const diffTime = appointmentDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 3) {
+                reject(new Error('Appointments can only be updated at least 3 days in advance'));
+                return;
+            }
+            
+            const updatedAppointment = { ...MOCK_APPOINTMENTS[appointmentIndex], ...data };
+            resolve(updatedAppointment);
+        }, 500);
+    });
+}
+
+/**
+ * @param {string} type 
+ * @returns {Promise<Object>} 
+ */
+export async function getMedicalProviders(type = 'all') {
     return new Promise((resolve) => {
         setTimeout(() => {
-            const appointment = MOCK_APPOINTMENTS.find(a => a.id === id);
-            if (appointment) {
-                appointment.status = 'Cancelled';
+            if (type === 'doctors') {
+                resolve({ doctors: MOCK_PROVIDERS.doctors });
+            } else if (type === 'pharmacists') {
+                resolve({ pharmacists: MOCK_PROVIDERS.pharmacists });
+            } else {
+                resolve(MOCK_PROVIDERS);
             }
-            resolve(appointment);
-        }, 300);
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} doctorId 
+ * @param {boolean} hasAccess 
+ * @returns {Promise<Object>} 
+ */
+export async function updateDoctorAccess(doctorId, hasAccess) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const doctorIndex = MOCK_PROVIDERS.doctors.findIndex(doc => doc.id === doctorId);
+            if (doctorIndex === -1) {
+                reject(new Error('Doctor not found'));
+                return;
+            }
+            
+            const updatedDoctor = { ...MOCK_PROVIDERS.doctors[doctorIndex], hasAccess };
+            resolve(updatedDoctor);
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} doctorId 
+ * @returns {Promise<Array>} 
+ */
+export async function setPrimaryDoctor(doctorId) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const doctorIndex = MOCK_PROVIDERS.doctors.findIndex(doc => doc.id === doctorId);
+            if (doctorIndex === -1) {
+                reject(new Error('Doctor not found'));
+                return;
+            }
+            
+            const updatedDoctors = MOCK_PROVIDERS.doctors.map(doc => ({
+                ...doc,
+                isPrimary: doc.id === doctorId
+            }));
+            
+            resolve(updatedDoctors);
+        }, 500);
+    });
+}
+
+/**
+ * @returns {Promise<Array>}
+ */
+export async function getConversations() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(MOCK_CONVERSATIONS);
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} id 
+ * @returns {Promise<Object>} 
+ */
+export async function getConversation(id) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const conversation = MOCK_CONVERSATIONS.find(conv => conv.id === id);
+            if (!conversation) {
+                reject(new Error('Conversation not found'));
+                return;
+            }
+            resolve(conversation);
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} conversationId 
+ * @param {string} content 
+ * @returns {Promise<Object>} 
+ */
+export async function sendMessage(conversationId, content) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const conversationIndex = MOCK_CONVERSATIONS.findIndex(conv => conv.id === conversationId);
+            if (conversationIndex === -1) {
+                reject(new Error('Conversation not found'));
+                return;
+            }
+            
+            const newMessage = {
+                id: MOCK_CONVERSATIONS[conversationIndex].messages.length + 1,
+                sender: 'patient',
+                content,
+                timestamp: new Date().toISOString()
+            };
+            
+            resolve(newMessage);
+        }, 500);
+    });
+}
+
+/**
+ * @param {string} medication 
+ * @param {number} pharmacyId 
+ * @returns {Promise<Object>} 
+ */
+export async function checkMedicineAvailability(medication, pharmacyId) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const isAvailable = Math.random() > 0.3;
+            resolve({
+                medication,
+                isAvailable,
+                pharmacy: MOCK_PROVIDERS.pharmacists.find(p => p.id === pharmacyId)?.pharmacy || 'Unknown Pharmacy',
+                quantity: isAvailable ? Math.floor(Math.random() * 30) + 1 : 0
+            });
+        }, 500);
+    });
+}
+
+/**
+ * @param {number} doctorId 
+ * @param {string} reason 
+ * @param {string} preferredTime 
+ * @returns {Promise<Object>} 
+ */
+export async function requestConsultation(doctorId, reason, preferredTime) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({
+                id: Math.floor(Math.random() * 1000) + 1,
+                doctorId,
+                doctorName: MOCK_PROVIDERS.doctors.find(d => d.id === doctorId)?.name || 'Unknown Doctor',
+                reason,
+                preferredTime,
+                status: 'Pending',
+                requestedAt: new Date().toISOString()
+            });
+        }, 500);
+    });
+}
+
+/**
+ * @returns {Promise<Array>} 
+ */
+export async function getMedicineReminders() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const reminders = MOCK_PRESCRIPTIONS
+                .filter(p => p.status === 'Active')
+                .flatMap(p => p.reminders.map(r => ({
+                    id: `${p.id}-${r.time}`,
+                    medicationId: p.id,
+                    medication: p.medication,
+                    dosage: p.dosage,
+                    time: r.time,
+                    enabled: r.enabled,
+                    days: r.days
+                })));
+            resolve(reminders);
+        }, 500);
+    });
+}
+
+/**
+ * @param {string} id 
+ * @param {Object} data 
+ * @returns {Promise<Object>} 
+ */
+export async function updateMedicineReminder(id, data) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            
+            const [medicationId, time] = id.split('-');
+            
+            resolve({
+                id,
+                medicationId: parseInt(medicationId),
+                medication: MOCK_PRESCRIPTIONS.find(p => p.id === parseInt(medicationId))?.medication,
+                ...data
+            });
+        }, 500);
+    });
+}
+
+/**
+ * @returns {Promise<Object>} Dashboard data for the patient dashboard
+ */
+export async function getPatientDashboardData() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            // Get upcoming appointments (only scheduled ones)
+            const upcomingAppointments = MOCK_APPOINTMENTS
+                .filter(appointment => appointment.status === 'Scheduled')
+                .map(appointment => ({
+                    id: appointment.id,
+                    doctorName: appointment.doctorName,
+                    specialty: appointment.doctorSpecialty,
+                    date: appointment.date,
+                    time: appointment.time,
+                    location: appointment.location
+                }))
+                .slice(0, 3); // Limit to 3 appointments for the dashboard
+
+            // Get active medications
+            const medications = MOCK_PRESCRIPTIONS
+                .filter(prescription => prescription.status === 'Active')
+                .map(prescription => ({
+                    id: prescription.id,
+                    name: prescription.medication,
+                    dosage: prescription.dosage,
+                    frequency: prescription.frequency,
+                    prescribedBy: prescription.prescribedBy
+                }))
+                .slice(0, 3); // Limit to 3 medications for the dashboard
+
+            // Get latest health stats
+            const healthStats = [
+                {
+                    name: 'Blood Pressure',
+                    value: `${MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].systolic}/${MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].diastolic} mmHg`,
+                    date: MOCK_HEALTH_METRICS.bloodPressure[MOCK_HEALTH_METRICS.bloodPressure.length - 1].date
+                },
+                {
+                    name: 'Heart Rate',
+                    value: `${MOCK_HEALTH_METRICS.heartRate[MOCK_HEALTH_METRICS.heartRate.length - 1].value} bpm`,
+                    date: MOCK_HEALTH_METRICS.heartRate[MOCK_HEALTH_METRICS.heartRate.length - 1].date
+                },
+                {
+                    name: 'Weight',
+                    value: `${MOCK_HEALTH_METRICS.weight[MOCK_HEALTH_METRICS.weight.length - 1].value} kg`,
+                    date: MOCK_HEALTH_METRICS.weight[MOCK_HEALTH_METRICS.weight.length - 1].date
+                },
+                {
+                    name: 'Blood Glucose',
+                    value: `${MOCK_HEALTH_METRICS.bloodGlucose[MOCK_HEALTH_METRICS.bloodGlucose.length - 1].value} mg/dL`,
+                    date: MOCK_HEALTH_METRICS.bloodGlucose[MOCK_HEALTH_METRICS.bloodGlucose.length - 1].date
+                }
+            ];
+
+            // Calculate dashboard stats
+            const stats = {
+                upcomingAppointments: MOCK_APPOINTMENTS.filter(appointment => appointment.status === 'Scheduled').length,
+                activeMedications: MOCK_PRESCRIPTIONS.filter(prescription => prescription.status === 'Active').length,
+                lastCheckup: MOCK_MEDICAL_RECORDS
+                    .filter(record => record.type === 'Follow-up' || record.type === 'Diagnosis')
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || 'N/A',
+                activeProviders: MOCK_PROVIDERS.doctors.filter(doctor => doctor.hasAccess).length
+            };
+
+            resolve({
+                stats,
+                upcomingAppointments,
+                medications,
+                healthStats
+            });
+        }, 500);
     });
 } 

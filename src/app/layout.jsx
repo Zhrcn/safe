@@ -8,6 +8,14 @@ import { NotificationProvider } from '@/components/ui/Notification';
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const metadata = {
+  title: 'SAFE Medical App',
+  description: 'Secure Access For Everyone - Medical Application',
+  icons: {
+    icon: '/favicon.svg',
+  },
+};
+
 export default function RootLayout({
   children,
 }) {

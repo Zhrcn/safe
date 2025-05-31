@@ -4,7 +4,6 @@ import { Typography, Box, Paper, Card, CardContent, List, ListItem, ListItemText
 import { Pill, CalendarDays, User } from 'lucide-react';
 import React from 'react';
 
-// Mock Prescriptions Data (replace with actual data fetching)
 const mockPrescriptions = [
   { id: 1, medication: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily', issueDate: '2023-01-10', prescribingDoctor: 'Dr. Ahmad Al-Ali' },
   { id: 2, medication: 'Amoxicillin', dosage: '500 mg', frequency: 'Three times a day for 10 days', issueDate: '2024-06-15', prescribingDoctor: 'Dr. Maria Garcia' },
@@ -12,7 +11,7 @@ const mockPrescriptions = [
 ];
 
 export default function PatientPrescriptionsPage() {
-  const prescriptions = mockPrescriptions; // In a real app, fetch patient's prescriptions
+  const prescriptions = mockPrescriptions;
 
   return (
     <Box>

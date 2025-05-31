@@ -11,12 +11,10 @@ export default function ProtectedLayout({ children }) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      // Redirect to login page if not authenticated
       router.push('/login');
     }
   }, [isAuthenticated, loading, router]);
 
-  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <Box className="flex items-center justify-center min-h-screen">
@@ -25,14 +23,12 @@ export default function ProtectedLayout({ children }) {
     );
   }
 
-  // Render children only if authenticated, or render null while redirecting
   if (!isAuthenticated) {
     return null;
   }
 
   return (
     <div>
-      {/* You can add shared layout elements here, like a header or sidebar */}
       {children}
     </div>
   );

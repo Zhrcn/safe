@@ -34,7 +34,6 @@ import {
 } from 'recharts';
 import { getAnalyticsData, getPatientStatistics } from '@/services/doctorService';
 
-// Chart colors
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#f59e0b', '#6366f1'];
 
 export default function PatientAnalytics() {
@@ -45,7 +44,6 @@ export default function PatientAnalytics() {
     const [error, setError] = useState('');
     const [timeRange, setTimeRange] = useState('year');
 
-    // Load analytics data
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -70,17 +68,14 @@ export default function PatientAnalytics() {
         loadData();
     }, []);
 
-    // Handle tab change
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
 
-    // Handle time range change
     const handleTimeRangeChange = (event) => {
         setTimeRange(event.target.value);
     };
 
-    // Format data for appointments by month chart
     const getAppointmentData = () => {
         if (!analyticsData) return [];
         
@@ -93,7 +88,6 @@ export default function PatientAnalytics() {
         }
     };
 
-    // Custom tooltip for charts
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (

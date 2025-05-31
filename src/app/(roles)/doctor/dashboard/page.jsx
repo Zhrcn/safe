@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Grid,
-  Card,
-  CardContent,
-  Button,
-  Divider,
   CircularProgress,
   Alert,
-  Chip
+  Chip,
+  Avatar,
+  Skeleton,
+  Divider,
+  Tab,
+  Tabs
 } from '@mui/material';
 import { 
   Users, 
@@ -21,84 +21,308 @@ import {
   Activity, 
   FileText,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  UserPlus,
+  AlertCircle,
+  BarChart4,
+  CalendarClock,
+  CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
 import { getPatients, getAppointments, getPatientStatistics } from '@/services/doctorService';
-import PatientCard from '@/components/doctor/PatientCard';
+import { PageContainer } from '@/components/common';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
-// Dashboard Stat Card component
-function DashboardStatCard({ title, value, icon: Icon, color, linkTo }) {
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+function DashboardStatCard({ title, value, icon: Icon, color, linkTo, loading }) {
   return (
-    <Card className="border border-border bg-card transition-all duration-200 hover:shadow-md">
-      <CardContent>
-        <Box className="flex items-center">
-          <Box className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${color}`}>
-            <Icon size={24} className="text-white" />
-          </Box>
-          <Box>
-            <Typography variant="h6" className="font-bold text-foreground">
-              {value}
-            </Typography>
-            <Typography variant="body2" className="text-muted-foreground">
-              {title}
-            </Typography>
-          </Box>
-          {linkTo && (
-            <Box className="ml-auto">
-              <Button 
-                component={Link} 
-                href={linkTo}
-                endIcon={<ChevronRight size={16} />}
-                size="small"
-                className="text-primary hover:bg-primary/10"
-              >
-                View
-              </Button>
-            </Box>
+    <Card 
+      variant="elevated" 
+      className="h-full"
+      hoverable
+    >
+      <Box className="flex items-center">
+        <Box 
+          className={`rounded-full p-3 mr-4 ${color}`}
+        >
+          <Icon size={20} className="text-white" />
+        </Box>
+        <Box>
+          {loading ? (
+            <>
+              <Skeleton width={100} height={24} />
+              <Skeleton width={60} height={36} />
+            </>
+          ) : (
+            <>
+              <Typography variant="body2" color="text.secondary" className="font-medium">
+                {title}
+              </Typography>
+              <Typography variant="h4" className="font-bold">
+                {value}
+              </Typography>
+            </>
           )}
         </Box>
-      </CardContent>
+        {linkTo && !loading && (
+          <Box className="ml-auto">
+            <Button 
+              component={Link} 
+              href={linkTo}
+              endIcon={<ChevronRight size={16} />}
+              size="small"
+              variant="soft"
+            >
+              View
+            </Button>
+          </Box>
+        )}
+      </Box>
     </Card>
   );
 }
 
-// Appointment card component
-function AppointmentCard({ appointment }) {
+function AppointmentCard({ appointment, loading }) {
+  if (loading) {
+    return (
+      <Box className="mb-3">
+        <Skeleton variant="rounded" height={100} />
+      </Box>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Confirmed': return 'success';
+      case 'Pending': return 'warning';
+      case 'Cancelled': return 'error';
+      default: return 'default';
+    }
+  };
+
   return (
-    <Card className="border border-border bg-card mb-3 transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-4">
-        <Box className="flex items-center mb-2">
-          <Box className="mr-3">
-            <Clock size={20} className="text-primary" />
-          </Box>
-          <Box className="flex-grow">
-            <Typography variant="body1" className="font-medium text-foreground">
-              {appointment.time}
-            </Typography>
-            <Typography variant="body2" className="text-muted-foreground">
-              {appointment.date}
-            </Typography>
-          </Box>
-          <Chip 
-            label={appointment.status} 
-            size="small" 
-            color={
-              appointment.status === 'Confirmed' ? 'success' : 
-              appointment.status === 'Pending' ? 'warning' : 'default'
-            }
-            className="ml-auto"
-          />
+    <Card 
+      variant="outlined" 
+      bordered 
+      hoverable
+      className="mb-3 transition-all"
+    >
+      <Box className="flex items-center mb-2">
+        <Box className="mr-3">
+          <Avatar className="bg-blue-100 text-blue-600">
+            {appointment.patientName.charAt(0)}
+          </Avatar>
         </Box>
-        <Box className="mt-2">
-          <Typography variant="body1" className="text-foreground">
+        <Box className="flex-grow">
+          <Typography variant="subtitle1" className="font-medium text-foreground">
             {appointment.patientName}
           </Typography>
           <Typography variant="body2" className="text-muted-foreground">
             {appointment.type}
           </Typography>
         </Box>
-      </CardContent>
+        <Chip 
+          label={appointment.status} 
+          size="small" 
+          color={getStatusColor(appointment.status)}
+          variant="outlined"
+          className="ml-auto"
+        />
+      </Box>
+      <Divider className="my-2" />
+      <Box className="flex justify-between items-center">
+        <Box className="flex items-center text-sm text-gray-500">
+          <Calendar size={14} className="mr-1" />
+          {appointment.date}
+        </Box>
+        <Box className="flex items-center text-sm text-gray-500">
+          <Clock size={14} className="mr-1" />
+          {appointment.time}
+        </Box>
+        <Button 
+          variant="soft" 
+          color="primary" 
+          size="xs"
+        >
+          Details
+        </Button>
+      </Box>
+    </Card>
+  );
+}
+
+function PatientListItem({ patient, loading }) {
+  if (loading) {
+    return (
+      <Box className="mb-3">
+        <Skeleton variant="rounded" height={80} />
+      </Box>
+    );
+  }
+
+  return (
+    <Card 
+      variant="outlined" 
+      bordered 
+      hoverable
+      className="mb-3 transition-all"
+    >
+      <Box className="flex items-center">
+        <Avatar className="mr-3">
+          {patient.name.charAt(0)}
+        </Avatar>
+        <Box className="flex-grow">
+          <Typography variant="subtitle1" className="font-medium">
+            {patient.name}
+          </Typography>
+          <Box className="flex items-center text-sm text-gray-500">
+            <Typography variant="body2" color="text.secondary">
+              {patient.age} years • {patient.gender}
+            </Typography>
+          </Box>
+        </Box>
+        <Button 
+          variant="soft" 
+          color="primary" 
+          size="small"
+          component={Link}
+          href={`/doctor/patients/${patient.id}`}
+        >
+          View
+        </Button>
+      </Box>
+    </Card>
+  );
+}
+
+function AppointmentsChart({ data, loading }) {
+  const chartData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'This Week',
+        data: data?.thisWeek || [4, 6, 8, 7, 5, 3, 0],
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderRadius: 4,
+      },
+      {
+        label: 'Last Week',
+        data: data?.lastWeek || [3, 5, 7, 6, 4, 2, 0],
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0,
+        },
+      },
+    },
+  };
+
+  return (
+    <Card 
+      title="Appointments Overview" 
+      subtitle="Weekly comparison"
+      icon={<BarChart4 className="h-5 w-5 text-blue-500" />}
+      variant="elevated"
+    >
+      {loading ? (
+        <Box className="h-[300px] flex items-center justify-center">
+          <CircularProgress size={45} />
+        </Box>
+      ) : (
+        <Box className="h-[300px] pt-4">
+          <Bar data={chartData} options={options} />
+        </Box>
+      )}
+    </Card>
+  );
+}
+
+function PatientDistributionChart({ data, loading }) {
+  const chartData = {
+    labels: ['Male', 'Female'],
+    datasets: [
+      {
+        data: data?.genderDistribution || [55, 45],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(236, 72, 153, 0.8)',
+        ],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+      },
+    },
+    cutout: '60%',
+  };
+
+  return (
+    <Card 
+      title="Patient Distribution" 
+      subtitle="By gender"
+      icon={<Users className="h-5 w-5 text-purple-500" />}
+      variant="elevated"
+    >
+      {loading ? (
+        <Box className="h-[240px] flex items-center justify-center">
+          <CircularProgress size={45} />
+        </Box>
+      ) : (
+        <Box className="h-[240px] flex items-center justify-center">
+          <Doughnut data={chartData} options={options} />
+        </Box>
+      )}
     </Card>
   );
 }
@@ -109,15 +333,23 @@ export default function DashboardPage() {
   const [patientStats, setPatientStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tabValue, setTabValue] = useState(0);
 
-  // Load dashboard data
+  // Chart data
+  const [chartData, setChartData] = useState({
+    appointmentsData: {
+      thisWeek: [4, 6, 8, 7, 5, 3, 0],
+      lastWeek: [3, 5, 7, 6, 4, 2, 0],
+    },
+    genderDistribution: [55, 45],
+  });
+
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
         setError('');
         
-        // Load data in parallel
         const [patientsData, appointmentsData, statsData] = await Promise.all([
           getPatients(),
           getAppointments(),
@@ -127,6 +359,15 @@ export default function DashboardPage() {
         setPatients(patientsData);
         setAppointments(appointmentsData);
         setPatientStats(statsData);
+        
+        // In a real app, this would come from the API
+        setChartData({
+          appointmentsData: {
+            thisWeek: [4, 6, 8, 7, 5, 3, 0],
+            lastWeek: [3, 5, 7, 6, 4, 2, 0],
+          },
+          genderDistribution: [55, 45],
+        });
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error(err);
@@ -138,284 +379,235 @@ export default function DashboardPage() {
     loadDashboardData();
   }, []);
   
-  // Get recent patients (last 3)
-  const recentPatients = patients.slice(0, 3);
+  const recentPatients = patients.slice(0, 5);
   
-  // Get upcoming appointments (next 4)
   const upcomingAppointments = appointments
     .filter(a => a.status !== 'Rejected')
     .slice(0, 4);
   
-  // Count pending appointments
   const pendingAppointments = appointments.filter(a => a.status === 'Pending').length;
+  
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   return (
-    <Box className="p-6">
-      <Box className="mb-6">
-        <Typography variant="h4" component="h1" className="font-bold text-foreground">
-          Doctor Dashboard
-        </Typography>
-        <Typography variant="body1" className="text-muted-foreground">
-          Welcome back! Here's an overview of your practice.
-        </Typography>
-      </Box>
-      
+    <PageContainer
+      title="Dashboard"
+      description="Welcome back! Here's an overview of your practice."
+    >
       {error && (
         <Alert severity="error" className="mb-6">
           {error}
         </Alert>
       )}
       
-      {loading ? (
-        <Box className="flex justify-center items-center py-12">
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          {/* Stats Cards */}
-          <Grid container spacing={2} className="mb-4 md:mb-6">
-            <Grid item xs={12} sm={6} md={6} lg={3}>
-              <DashboardStatCard 
-                title="Total Patients" 
-                value={patientStats?.totalPatients || 0} 
-                icon={Users}
-                color="bg-blue-500"
-                linkTo="/doctor/patients"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={3}>
-              <DashboardStatCard 
-                title="Today's Appointments" 
-                value={appointments.filter(a => a.date === new Date().toISOString().split('T')[0]).length} 
-                icon={Calendar}
-                color="bg-purple-500"
-                linkTo="/doctor/appointments"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={3}>
-              <DashboardStatCard 
-                title="Pending Requests" 
-                value={pendingAppointments} 
-                icon={Clock}
-                color="bg-amber-500"
-                linkTo="/doctor/appointments"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={3}>
-              <DashboardStatCard 
-                title="Urgent Cases" 
-                value={patientStats?.urgentCases || 0} 
-                icon={Activity}
-                color="bg-red-500"
-                linkTo="/doctor/patients"
-              />
-            </Grid>
-          </Grid>
+      {/* Stats Cards */}
+      <Grid container spacing={3} className="mb-6">
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardStatCard 
+            title="Total Patients" 
+            value={patientStats?.totalPatients || 0} 
+            icon={Users}
+            color="bg-blue-500"
+            linkTo="/doctor/patients"
+            loading={loading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardStatCard 
+            title="Today's Appointments" 
+            value={appointments.filter(a => a.date === new Date().toISOString().split('T')[0]).length} 
+            icon={Calendar}
+            color="bg-purple-500"
+            linkTo="/doctor/appointments"
+            loading={loading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardStatCard 
+            title="Pending Requests" 
+            value={pendingAppointments} 
+            icon={Clock}
+            color="bg-amber-500"
+            linkTo="/doctor/appointments"
+            loading={loading}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardStatCard 
+            title="Urgent Cases" 
+            value={patientStats?.urgentCases || 0} 
+            icon={AlertCircle}
+            color="bg-red-500"
+            loading={loading}
+          />
+        </Grid>
+      </Grid>
+      
+      {/* Charts & Lists */}
+      <Grid container spacing={3}>
+        {/* Left Column - Charts */}
+        <Grid item xs={12} md={8}>
+          <AppointmentsChart data={chartData.appointmentsData} loading={loading} />
           
-          {/* Main Content */}
-          <Grid container spacing={3}>
-            {/* Left Column - Recent Patients */}
-            <Grid item xs={12} lg={8}>
-              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg mb-4 md:mb-6">
-                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
-                    Recent Patients
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    href="/doctor/patients"
-                    endIcon={<ChevronRight size={16} />}
-                    className="text-primary hover:bg-primary/10"
-                  >
-                    View All
-                  </Button>
+          <Box className="mt-6">
+            <Card
+              title="Today's Schedule"
+              subtitle="Your appointments for today"
+              icon={<CalendarClock className="h-5 w-5 text-emerald-500" />}
+              actions={
+                <Button 
+                  variant="soft" 
+                  color="primary" 
+                  size="small"
+                  href="/doctor/appointments"
+                  endIcon={<ChevronRight size={16} />}
+                >
+                  View All
+                </Button>
+              }
+              variant="elevated"
+            >
+              {loading ? (
+                [...Array(3)].map((_, index) => (
+                  <AppointmentCard key={index} loading={true} />
+                ))
+              ) : upcomingAppointments.length === 0 ? (
+                <Box className="text-center py-6">
+                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                  <Typography color="text.secondary">No appointments scheduled for today</Typography>
                 </Box>
-                <Divider className="mb-4" />
-                
-                {recentPatients.length === 0 ? (
-                  <Typography className="text-muted-foreground py-4 text-center">
-                    No patients found
-                  </Typography>
-                ) : (
-                  <Grid container spacing={2}>
-                    {recentPatients.map(patient => (
-                      <Grid item xs={12} sm={6} md={4} key={patient.id}>
-                        <PatientCard patient={patient} />
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-              </Paper>
+              ) : (
+                upcomingAppointments.map((appointment) => (
+                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                ))
+              )}
+            </Card>
+          </Box>
+        </Grid>
+        
+        {/* Right Column - Patients */}
+        <Grid item xs={12} md={4}>
+          <PatientDistributionChart data={chartData} loading={loading} />
+          
+          <Box className="mt-6">
+            <Card
+              title="Recent Patients"
+              subtitle="Your latest patient interactions"
+              icon={<UserPlus className="h-5 w-5 text-blue-500" />}
+              actions={
+                <Button 
+                  variant="soft" 
+                  color="primary" 
+                  size="small"
+                  href="/doctor/patients"
+                  endIcon={<ChevronRight size={16} />}
+                >
+                  View All
+                </Button>
+              }
+              variant="elevated"
+            >
+              <Box className="mb-3">
+                <Tabs 
+                  value={tabValue} 
+                  onChange={handleTabChange}
+                  variant="fullWidth"
+                  textColor="primary"
+                  indicatorColor="primary"
+                >
+                  <Tab 
+                    label="Recent" 
+                    icon={<Clock size={16} />} 
+                    iconPosition="start"
+                  />
+                  <Tab 
+                    label="Critical" 
+                    icon={<AlertCircle size={16} />} 
+                    iconPosition="start"
+                  />
+                </Tabs>
+              </Box>
               
-              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg">
-                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
-                    Patient Overview
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    href="/doctor/analytics"
-                    endIcon={<ChevronRight size={16} />}
-                    className="text-primary hover:bg-primary/10"
-                  >
-                    View Analytics
-                  </Button>
+              {loading ? (
+                [...Array(3)].map((_, index) => (
+                  <PatientListItem key={index} loading={true} />
+                ))
+              ) : recentPatients.length === 0 ? (
+                <Box className="text-center py-6">
+                  <Users className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                  <Typography color="text.secondary">No patients found</Typography>
                 </Box>
-                <Divider className="mb-4" />
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Card className="border border-border bg-card">
-                      <CardContent>
-                        <Box className="flex flex-col items-center text-center">
-                          <Typography variant="h5" className="font-bold text-foreground mb-1">
-                            {patientStats?.activePatients || 0}
-                          </Typography>
-                          <Typography variant="body2" className="text-muted-foreground">
-                            Active Patients
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Card className="border border-border bg-card">
-                      <CardContent>
-                        <Box className="flex flex-col items-center text-center">
-                          <Typography variant="h5" className="font-bold text-foreground mb-1">
-                            {patientStats?.byCondition?.[0]?.condition || 'N/A'}
-                          </Typography>
-                          <Typography variant="body2" className="text-muted-foreground">
-                            Most Common Condition
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Card className="border border-border bg-card">
-                      <CardContent>
-                        <Box className="flex flex-col items-center text-center">
-                          <Typography variant="h5" className="font-bold text-foreground mb-1">
-                            {patientStats ? (patientStats.totalPatients / patientStats.activePatients).toFixed(1) : 'N/A'}
-                          </Typography>
-                          <Typography variant="body2" className="text-muted-foreground">
-                            Avg. Conditions per Patient
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-            
-            {/* Right Column - Appointments and Quick Actions */}
-            <Grid item xs={12} lg={4}>
-              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg mb-4 md:mb-6">
-                <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <Typography variant="h6" className="font-bold text-foreground mb-2 sm:mb-0">
-                    Upcoming Appointments
-                  </Typography>
-                  <Button 
-                    component={Link} 
-                    href="/doctor/appointments"
-                    endIcon={<ChevronRight size={16} />}
-                    className="text-primary hover:bg-primary/10"
-                  >
-                    View All
-                  </Button>
-                </Box>
-                <Divider className="mb-4" />
-                
-                {upcomingAppointments.length === 0 ? (
-                  <Typography className="text-muted-foreground py-4 text-center">
-                    No upcoming appointments
-                  </Typography>
-                ) : (
-                  upcomingAppointments.map(appointment => (
-                    <AppointmentCard key={appointment.id} appointment={appointment} />
+              ) : (
+                tabValue === 0 ? (
+                  recentPatients.map((patient) => (
+                    <PatientListItem key={patient.id} patient={patient} />
                   ))
-                )}
-              </Paper>
-              
-              <Paper className="p-4 md:p-6 bg-card border border-border rounded-lg">
-                <Typography variant="h6" className="font-bold text-foreground mb-4">
-                  Quick Actions
-                </Typography>
-                <Divider className="mb-4" />
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Button
-                      component={Link}
-                      href="/doctor/patients"
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<Users size={18} />}
-                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
-                    >
-                      <Box className="text-center w-full">
-                        <Typography variant="body2" className="font-medium">
-                          Add Patient
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Button
-                      component={Link}
-                      href="/doctor/appointments"
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<Calendar size={18} />}
-                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
-                    >
-                      <Box className="text-center w-full">
-                        <Typography variant="body2" className="font-medium">
-                          Schedule
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Button
-                      component={Link}
-                      href="/doctor/messaging"
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<MessageSquare size={18} />}
-                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
-                    >
-                      <Box className="text-center w-full">
-                        <Typography variant="body2" className="font-medium">
-                          Messages
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Button
-                      component={Link}
-                      href="/doctor/medicine"
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<FileText size={18} />}
-                      className="p-2 md:p-3 h-auto border-border text-foreground hover:bg-muted/50"
-                    >
-                      <Box className="text-center w-full">
-                        <Typography variant="body2" className="font-medium">
-                          Medicines
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Grid>
+                ) : (
+                  patients.filter(p => p.isCritical).slice(0, 5).map((patient) => (
+                    <PatientListItem key={patient.id} patient={patient} />
+                  ))
+                )
+              )}
+            </Card>
+          </Box>
+          
+          <Box className="mt-6">
+            <Card
+              title="Quick Actions"
+              variant="elevated"
+            >
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Button
+                    variant="soft"
+                    color="primary"
+                    fullWidth
+                    startIcon={<UserPlus size={18} />}
+                    href="/doctor/patients/new"
+                  >
+                    New Patient
+                  </Button>
                 </Grid>
-              </Paper>
-            </Grid>
-          </Grid>
-        </>
-      )}
-    </Box>
+                <Grid item xs={6}>
+                  <Button
+                    variant="soft"
+                    color="secondary"
+                    fullWidth
+                    startIcon={<CalendarClock size={18} />}
+                    href="/doctor/appointments/new"
+                  >
+                    Schedule
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    variant="soft"
+                    color="success"
+                    fullWidth
+                    startIcon={<FileText size={18} />}
+                    href="/doctor/prescriptions/new"
+                  >
+                    Prescription
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    variant="soft"
+                    color="info"
+                    fullWidth
+                    startIcon={<MessageSquare size={18} />}
+                    href="/doctor/messaging"
+                  >
+                    Messages
+                  </Button>
+                </Grid>
+              </Grid>
+            </Card>
+          </Box>
+        </Grid>
+      </Grid>
+    </PageContainer>
   );
 }

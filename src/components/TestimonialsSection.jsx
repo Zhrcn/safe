@@ -10,7 +10,7 @@ const testimonials = [
     id: 1,
     name: 'Sarah Johnson',
     role: 'Patient',
-    avatar: '/avatars/avatar-1.jpg', // You can replace with actual images
+    avatar: '/avatars/avatar-1.jpg',
     rating: 5,
     text: 'The SAFE platform has completely transformed how I manage my healthcare. Scheduling appointments is so easy, and I love having all my medical records in one secure place. The digital prescriptions feature is a game-changer!'
   },
@@ -54,7 +54,6 @@ export default function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   
-  // Autoplay functionality
   useEffect(() => {
     let interval;
     if (autoplay) {
@@ -91,7 +90,6 @@ export default function TestimonialsSection() {
         overflow: 'hidden',
       }}
     >
-      {/* Background decoration */}
       <Box
         sx={{
           position: 'absolute',

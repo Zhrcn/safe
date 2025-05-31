@@ -19,7 +19,6 @@ import {
 import { Search, Check, X, AlertCircle } from 'lucide-react';
 import { queryMedicineAvailability } from '@/services/doctorService';
 
-// Common medications for autocomplete
 const commonMedications = [
     'Lisinopril',
     'Metformin',
@@ -65,9 +64,8 @@ export default function MedicineQuery() {
             
             setResult(response);
             
-            // Add to search history if not already present
             if (!searchHistory.some(item => item.medicine === response.medicine)) {
-                setSearchHistory(prev => [response, ...prev].slice(0, 5)); // Keep only last 5 searches
+                setSearchHistory(prev => [response, ...prev].slice(0, 5)); 
             }
         } catch (err) {
             setError('Failed to query medicine availability');

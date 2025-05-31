@@ -134,7 +134,7 @@ const AppointmentSchema = new mongoose.Schema(
         videoConferenceLink: String,
         duration: {
             type: Number,
-            default: 30, // Duration in minutes
+            default: 30, 
         },
     },
     {
@@ -142,17 +142,13 @@ const AppointmentSchema = new mongoose.Schema(
     }
 );
 
-// Indexes for common queries
 AppointmentSchema.index({ date: 1, startTime: 1 });
 AppointmentSchema.index({ status: 1 });
 AppointmentSchema.index({ 'diagnosis.condition': 1 });
 
-// Virtual for checking if appointment is upcoming
 AppointmentSchema.virtual('isUpcoming').get(function () {
     return this.date > new Date() && this.status !== 'Cancelled';
 });
-
-// Method to cancel an appointment
 AppointmentSchema.methods.cancel = function (cancelledBy, reason) {
     this.status = 'Cancelled';
     this.cancellationReason = reason;
@@ -160,7 +156,6 @@ AppointmentSchema.methods.cancel = function (cancelledBy, reason) {
     this.cancelledBy = cancelledBy;
 };
 
-// Method to complete an appointment
 AppointmentSchema.methods.complete = function (doctorNotes) {
     this.status = 'Completed';
     if (doctorNotes) {
@@ -168,7 +163,6 @@ AppointmentSchema.methods.complete = function (doctorNotes) {
     }
 };
 
-// Method to recommend follow-up
 AppointmentSchema.methods.recommendFollowUp = function (timeValue, timeUnit, notes) {
     this.followUp = {
         recommended: true,

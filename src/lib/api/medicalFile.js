@@ -1,7 +1,5 @@
-// DEV MODE: Set to true to bypass real API calls and return mock data
 const DEV_MODE = true;
 
-// Mock data for development
 const MOCK_MEDICAL_FILE = {
     _id: 'mock_medical_file_123',
     patientId: 'dev_patient_123',
@@ -75,21 +73,18 @@ const MOCK_MEDICAL_FILE = {
     lastUpdated: '2023-11-10T14:30:00Z'
 };
 
-// Helper function to get auth token
 function getAuthToken() {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('safe_auth_token');
 }
 
-// Fetch entire medical file
 export async function getMedicalFile() {
-    // DEV MODE: Return mock data
     if (DEV_MODE) {
         console.log('DEV MODE: Returning mock medical file data');
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve(MOCK_MEDICAL_FILE);
-            }, 500); // Simulate network delay
+            }, 500);
         });
     }
 
@@ -112,15 +107,13 @@ export async function getMedicalFile() {
     return response.json();
 }
 
-// Fetch specific section
 export async function getMedicalFileSection(section) {
-    // DEV MODE: Return mock data for the specific section
     if (DEV_MODE) {
         console.log(`DEV MODE: Returning mock ${section} data`);
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve(MOCK_MEDICAL_FILE[section] || []);
-            }, 300); // Simulate network delay
+            }, 300); 
         });
     }
 
@@ -143,9 +136,7 @@ export async function getMedicalFileSection(section) {
     return response.json();
 }
 
-// Add item to a section
 export async function addToMedicalFile(section, data) {
-    // DEV MODE: Simulate adding an item
     if (DEV_MODE) {
         console.log(`DEV MODE: Adding to ${section}`, data);
         return new Promise(resolve => {
@@ -180,9 +171,7 @@ export async function addToMedicalFile(section, data) {
     return response.json();
 }
 
-// Update item in a section
 export async function updateMedicalFileItem(section, itemId, data) {
-    // DEV MODE: Simulate updating an item
     if (DEV_MODE) {
         console.log(`DEV MODE: Updating ${section} item ${itemId}`, data);
         return new Promise(resolve => {
@@ -213,9 +202,7 @@ export async function updateMedicalFileItem(section, itemId, data) {
     return response.json();
 }
 
-// Delete item from a section
 export async function deleteMedicalFileItem(section, itemId) {
-    // DEV MODE: Simulate deleting an item
     if (DEV_MODE) {
         console.log(`DEV MODE: Deleting ${section} item ${itemId}`);
         return new Promise(resolve => {
@@ -245,9 +232,7 @@ export async function deleteMedicalFileItem(section, itemId) {
     return response.json();
 }
 
-// Update entire medical file
 export async function updateMedicalFile(data) {
-    // DEV MODE: Simulate updating the entire file
     if (DEV_MODE) {
         console.log('DEV MODE: Updating entire medical file', data);
         return new Promise(resolve => {

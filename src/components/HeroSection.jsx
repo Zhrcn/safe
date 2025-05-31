@@ -28,7 +28,6 @@ export default function HeroSection() {
         pb: { xs: 12, md: 16 },
       }}
     >
-      {/* Wave decoration */}
       <Box 
         className="absolute bottom-0 left-0 w-full"
         sx={{

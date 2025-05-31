@@ -1,9 +1,3 @@
-/**
- * Doctor Service
- * Handles all API calls related to the doctor role
- */
-
-// Mock data for development - replace with actual API calls in production
 const MOCK_PATIENTS = [
     {
         id: 1,
@@ -266,7 +260,6 @@ const MOCK_APPOINTMENTS = [
     },
 ];
 
-// Mock medicine database
 const MOCK_MEDICINES = [
     { id: 1, name: 'Lisinopril', availability: true, alternatives: ['Enalapril', 'Ramipril'] },
     { id: 2, name: 'Metformin', availability: true, alternatives: ['Glucophage', 'Fortamet'] },
@@ -276,7 +269,6 @@ const MOCK_MEDICINES = [
     { id: 6, name: 'Omeprazole', availability: false, alternatives: ['Prilosec', 'Nexium'] },
 ];
 
-// Mock doctors for referrals
 const MOCK_DOCTORS = [
     { id: 'D1001', name: 'Dr. Emily Rodriguez', specialty: 'Cardiology' },
     { id: 'D1002', name: 'Dr. Michael Chen', specialty: 'Endocrinology' },
@@ -285,7 +277,6 @@ const MOCK_DOCTORS = [
     { id: 'D1005', name: 'Dr. Lisa Patel', specialty: 'Dermatology' },
 ];
 
-// Mock messages
 const MOCK_MESSAGES = [
     {
         id: 1,
@@ -316,7 +307,6 @@ const MOCK_MESSAGES = [
     }
 ];
 
-// Mock conversations
 const MOCK_CONVERSATIONS = [
     {
         id: 'c1',
@@ -366,7 +356,6 @@ const MOCK_DOCTOR_PROFILE = {
     ]
 };
 
-// Analytics data
 const MOCK_ANALYTICS = {
     appointmentsByMonth: [
         { month: 'Jan', count: 45 },
@@ -416,11 +405,8 @@ const MOCK_ANALYTICS = {
     ]
 };
 
-/**
- * Get patients with optional search filter
- */
+
 export async function getPatients(searchTerm = '') {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (searchTerm) {
@@ -435,11 +421,8 @@ export async function getPatients(searchTerm = '') {
     return MOCK_PATIENTS;
 }
 
-/**
- * Get appointments with optional date filter
- */
+
 export async function getAppointments(date = '') {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (date) {
@@ -449,50 +432,35 @@ export async function getAppointments(date = '') {
     return MOCK_APPOINTMENTS;
 }
 
-/**
- * Get doctor profile
- */
 export async function getDoctorProfile() {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return MOCK_DOCTOR_PROFILE;
 }
 
-/**
- * Get analytics data
- */
+
 export async function getAnalyticsData() {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return MOCK_ANALYTICS;
 }
 
-/**
- * Update patient status
- */
+
 export async function updatePatientStatus(id, status) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // In a real app, this would update the database
     return { success: true, message: `Patient status updated to ${status}` };
 }
 
 /**
- * Add a new patient
- * @param {Object} patientData - Patient information
+ * @param {Object} patientData
  */
 export async function addPatient(patientData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Generate a unique ID and medical ID
     const newId = Math.max(...MOCK_PATIENTS.map(p => p.id)) + 1;
     const newMedicalId = `MID${10000 + newId}`;
     
-    // Create new patient object with default values
     const newPatient = {
         id: newId,
         medicalId: newMedicalId,
@@ -511,7 +479,6 @@ export async function addPatient(patientData) {
         ...patientData
     };
     
-    // In a real app, this would add to the database
     MOCK_PATIENTS.push(newPatient);
     
     return { 
@@ -522,12 +489,10 @@ export async function addPatient(patientData) {
 }
 
 /**
- * Create a prescription for a patient
- * @param {number} patientId - Patient ID
- * @param {Object} prescriptionData - Prescription details
+ * @param {number} patientId
+ * @param {Object} prescriptionData 
  */
 export async function createPrescription(patientId, prescriptionData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
@@ -536,10 +501,8 @@ export async function createPrescription(patientId, prescriptionData) {
         return { success: false, message: 'Patient not found' };
     }
     
-    // Generate prescription ID
     const prescriptionId = `P${patientId}${String(patient.prescriptions.length + 1).padStart(3, '0')}`;
     
-    // Create prescription object
     const newPrescription = {
         id: prescriptionId,
         date: new Date().toISOString().split('T')[0],
@@ -547,7 +510,6 @@ export async function createPrescription(patientId, prescriptionData) {
         ...prescriptionData
     };
     
-    // Add prescription to patient record
     patient.prescriptions.push(newPrescription);
     
     return {
@@ -558,12 +520,10 @@ export async function createPrescription(patientId, prescriptionData) {
 }
 
 /**
- * Add condition update for a patient
- * @param {number} patientId - Patient ID
- * @param {Object} updateData - Condition update details
+ * @param {number} patientId 
+ * @param {Object} updateData 
  */
 export async function addConditionUpdate(patientId, updateData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
@@ -572,13 +532,11 @@ export async function addConditionUpdate(patientId, updateData) {
         return { success: false, message: 'Patient not found' };
     }
     
-    // Create update object
     const newUpdate = {
         date: new Date().toISOString().split('T')[0],
         ...updateData
     };
     
-    // Add update to patient record
     patient.conditionUpdates.push(newUpdate);
     
     return {
@@ -589,11 +547,9 @@ export async function addConditionUpdate(patientId, updateData) {
 }
 
 /**
- * Get patient history
- * @param {number} patientId - Patient ID
+ * @param {number} patientId 
  */
 export async function getPatientHistory(patientId) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
@@ -602,7 +558,6 @@ export async function getPatientHistory(patientId) {
         return { success: false, message: 'Patient not found' };
     }
     
-    // Combine all patient history elements
     const history = {
         medicalHistory: patient.medicalHistory,
         prescriptions: patient.prescriptions,
@@ -618,14 +573,11 @@ export async function getPatientHistory(patientId) {
 }
 
 /**
- * Create or update an appointment
- * @param {Object} appointmentData - Appointment details
+ * @param {Object} appointmentData 
  */
 export async function manageAppointment(appointmentData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Check if this is an edit of an existing appointment
     if (appointmentData.id) {
         const appointmentIndex = MOCK_APPOINTMENTS.findIndex(a => a.id === appointmentData.id);
         
@@ -633,7 +585,6 @@ export async function manageAppointment(appointmentData) {
             return { success: false, message: 'Appointment not found' };
         }
         
-        // Check if edit is allowed (24 hours before appointment)
         const appointmentDate = new Date(`${MOCK_APPOINTMENTS[appointmentIndex].date}T${MOCK_APPOINTMENTS[appointmentIndex].time}`);
         const now = new Date();
         const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
@@ -645,7 +596,6 @@ export async function manageAppointment(appointmentData) {
             };
         }
         
-        // Update the appointment
         MOCK_APPOINTMENTS[appointmentIndex] = {
             ...MOCK_APPOINTMENTS[appointmentIndex],
             ...appointmentData
@@ -657,7 +607,6 @@ export async function manageAppointment(appointmentData) {
             appointment: MOCK_APPOINTMENTS[appointmentIndex]
         };
     } else {
-        // Create new appointment
         const newId = Math.max(...MOCK_APPOINTMENTS.map(a => a.id)) + 1;
         
         const newAppointment = {
@@ -677,12 +626,11 @@ export async function manageAppointment(appointmentData) {
 }
 
 /**
- * Update appointment status (accept/reject)
- * @param {number} appointmentId - Appointment ID
- * @param {string} status - New status ('Confirmed' or 'Rejected')
+
+ * @param {number} appointmentId 
+ * @param {string} status 
  */
 export async function updateAppointmentStatus(appointmentId, status) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const appointmentIndex = MOCK_APPOINTMENTS.findIndex(a => a.id === appointmentId);
@@ -691,10 +639,8 @@ export async function updateAppointmentStatus(appointmentId, status) {
         return { success: false, message: 'Appointment not found' };
     }
     
-    // Update status
     MOCK_APPOINTMENTS[appointmentIndex].status = status;
     
-    // In a real app, this would send a notification to the patient
     
     return {
         success: true,
@@ -704,11 +650,9 @@ export async function updateAppointmentStatus(appointmentId, status) {
 }
 
 /**
- * Query medicine availability
- * @param {string} medicineName - Name of the medicine to check
+ * @param {string} medicineName 
  */
 export async function queryMedicineAvailability(medicineName) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const medicine = MOCK_MEDICINES.find(
@@ -736,14 +680,11 @@ export async function queryMedicineAvailability(medicineName) {
 }
 
 /**
- * Update doctor profile
- * @param {Object} profileData - Updated profile information
+ * @param {Object} profileData
  */
 export async function updateDoctorProfile(profileData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Update profile
     Object.assign(MOCK_DOCTOR_PROFILE, profileData);
     
     return {
@@ -754,12 +695,10 @@ export async function updateDoctorProfile(profileData) {
 }
 
 /**
- * Add education or achievement to doctor profile
- * @param {string} type - 'education' or 'achievement'
- * @param {Object} data - Education or achievement data
+ * @param {string} type 
+ * @param {Object} data 
  */
 export async function addProfileItem(type, data) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (type === 'education') {
@@ -777,23 +716,18 @@ export async function addProfileItem(type, data) {
     };
 }
 
-/**
- * Get available doctors for referrals
- */
+
 export async function getAvailableDoctors() {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return MOCK_DOCTORS;
 }
 
 /**
- * Create a referral for a patient
- * @param {number} patientId - Patient ID
- * @param {Object} referralData - Referral details
+ * @param {number} patientId 
+ * @param {Object} referralData 
  */
 export async function createReferral(patientId, referralData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
@@ -802,7 +736,6 @@ export async function createReferral(patientId, referralData) {
         return { success: false, message: 'Patient not found' };
     }
     
-    // Create referral object
     const newReferral = {
         id: `R${patientId}${String(patient.referrals.length + 1).padStart(3, '0')}`,
         date: new Date().toISOString().split('T')[0],
@@ -810,7 +743,6 @@ export async function createReferral(patientId, referralData) {
         ...referralData
     };
     
-    // Add referral to patient record
     patient.referrals.push(newReferral);
     
     return {
@@ -820,36 +752,28 @@ export async function createReferral(patientId, referralData) {
     };
 }
 
-/**
- * Get conversations for the doctor
- */
+
 export async function getConversations() {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return MOCK_CONVERSATIONS;
 }
 
 /**
- * Get messages for a specific conversation
- * @param {string} conversationId - Conversation ID
+ * @param {string} conversationId 
  */
 export async function getMessages(conversationId) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return MOCK_MESSAGES.filter(m => m.conversationId === conversationId);
 }
 
 /**
- * Send a message
- * @param {Object} messageData - Message data
+ * @param {Object} messageData 
  */
 export async function sendMessage(messageData) {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Create message object
     const newMessage = {
         id: MOCK_MESSAGES.length + 1,
         timestamp: new Date().toISOString(),
@@ -857,10 +781,8 @@ export async function sendMessage(messageData) {
         ...messageData
     };
     
-    // Add message to mock data
     MOCK_MESSAGES.push(newMessage);
     
-    // Update conversation last message
     const conversationIndex = MOCK_CONVERSATIONS.findIndex(c => c.id === messageData.conversationId);
     if (conversationIndex !== -1) {
         MOCK_CONVERSATIONS[conversationIndex].lastMessage = {
@@ -881,7 +803,6 @@ export async function sendMessage(messageData) {
  * Get patient statistics for analytics
  */
 export async function getPatientStatistics() {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return {
@@ -904,22 +825,18 @@ export async function getPatientStatistics() {
 }
 
 /**
- * Get a patient by ID
- * @param {string|number} id - The patient ID to search for
- * @returns {Promise<Object>} - The result of the operation
+ * @param {string|number} id 
+ * @returns {Promise<Object>} 
  */
 export async function getPatientById(id) {
     return new Promise((resolve) => {
-        // Simulate API delay
         setTimeout(() => {
             try {
-                // Convert id to number if it's numeric
                 const patientId = isNaN(id) ? id : Number(id);
                 
-                // Find the patient in the mock data
                 const patient = MOCK_PATIENTS.find(p => p.id === patientId || p.medicalId === id);
                 
-                if (patient) {
+            if (patient) {
                     resolve({
                         success: true,
                         patient: { ...patient }
@@ -937,6 +854,6 @@ export async function getPatientById(id) {
                     message: 'An error occurred while searching for the patient'
                 });
             }
-        }, 800); // Simulate network delay
+        }, 800); 
     });
 } 

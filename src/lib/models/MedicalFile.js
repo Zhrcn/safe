@@ -166,13 +166,11 @@ const MedicalFileSchema = new mongoose.Schema(
     }
 );
 
-// Update lastUpdated timestamp on every save
 MedicalFileSchema.pre('save', function (next) {
     this.lastUpdated = new Date();
     next();
 });
 
-// Add access log entry on creation or update
 MedicalFileSchema.methods.addAccessLog = function (user, action, details) {
     this.accessLog.push({
         userId: user._id,

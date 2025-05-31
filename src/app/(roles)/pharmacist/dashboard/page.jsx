@@ -37,7 +37,6 @@ export default function PharmacistDashboardPage() {
     fetchDashboardData();
   }, []);
 
-  // Filter low stock items
   const lowStockItems = inventory.filter(item => item.stock <= item.lowStockThreshold);
 
   return (

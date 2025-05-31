@@ -45,15 +45,12 @@ export default function AdminDashboard() {
   };
 
   const handleMarkAsRead = async (id) => {
-    // In a real app, this would call the API to mark the notification as read
     console.log(`Marking notification ${id} as read`);
-    // Then update the local state
     setNotifications(notifications.map(notification =>
       notification.id === id ? { ...notification, isRead: true } : notification
     ));
   };
 
-  // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   return (
@@ -97,7 +94,6 @@ export default function AdminDashboard() {
 
           {activeTab === 'overview' && (
             <Grid container spacing={3}>
-              {/* System Stats Cards */}
               <Grid item xs={12} md={6} lg={3}>
                 <StatCard
                   title="Total Users"
@@ -133,7 +129,6 @@ export default function AdminDashboard() {
                 />
               </Grid>
 
-              {/* User Distribution Chart */}
               <Grid item xs={12} md={6}>
                 <ChartContainer title="User Distribution by Role">
                   <ResponsiveContainer width="100%" height={300}>
@@ -165,7 +160,6 @@ export default function AdminDashboard() {
                 </ChartContainer>
               </Grid>
 
-              {/* Appointment Status Chart */}
               <Grid item xs={12} md={6}>
                 <ChartContainer title="Appointment Status">
                   <ResponsiveContainer width="100%" height={300}>
@@ -189,7 +183,6 @@ export default function AdminDashboard() {
                 </ChartContainer>
               </Grid>
 
-              {/* Recent Activity */}
               <Grid item xs={12} md={6}>
                 <AdminCard
                   title="Recent Activity"
@@ -217,7 +210,6 @@ export default function AdminDashboard() {
                 </AdminCard>
               </Grid>
 
-              {/* Notifications */}
               <Grid item xs={12} md={6}>
                 <AdminCard
                   title="Notifications"

@@ -1,6 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Box, Typography, Paper, InputBase, IconButton, Card, CardContent, CardHeader, Chip, Button } from '@mui/material';
-import { Search, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
+import { Box, Typography, Paper, Card, CardContent, CardHeader, Chip, Button } from '@mui/material';
+import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 
 /**
  * Container component for admin pages with consistent styling
@@ -28,61 +30,20 @@ export function AdminPageContainer({ title, description, children }) {
  */
 export function AdminCard({ title, subtitle, actions, children, className = '' }) {
     return (
-        <Card
-            elevation={0}
-            className={`border border-border bg-card text-card-foreground rounded-lg overflow-hidden ${className}`}
-        >
-            {(title || actions) && (
-                <CardHeader
-                    title={
-                        <Box className="flex items-center justify-between">
-                            <Box>
-                                <Typography variant="h6" className="font-medium text-foreground">
-                                    {title}
-                                </Typography>
-                                {subtitle && (
-                                    <Typography variant="body2" className="text-muted-foreground">
-                                        {subtitle}
-                                    </Typography>
-                                )}
-                            </Box>
-                            {actions && (
-                                <Box className="flex items-center space-x-2">
-                                    {actions}
-                                </Box>
-                            )}
+        <Card className={`border border-border bg-card shadow-sm ${className}`}>
+            <CardContent>
+                {(title || subtitle || actions) && (
+                    <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                        <Box>
+                            {title && <Typography variant="h6" className="font-medium text-foreground">{title}</Typography>}
+                            {subtitle && <Typography variant="body2" className="text-muted-foreground">{subtitle}</Typography>}
                         </Box>
-                    }
-                    className="border-b border-border px-6 py-4"
-                />
-            )}
-            <CardContent className={`${title || actions ? 'pt-4' : 'pt-6'} px-6 pb-6`}>
+                        {actions && <Box className="mt-2 sm:mt-0">{actions}</Box>}
+                    </Box>
+                )}
                 {children}
             </CardContent>
         </Card>
-    );
-}
-
-/**
- * Search field component for admin interface
- */
-export function SearchField({ value, onChange, placeholder = 'Search...', className = '' }) {
-    return (
-        <Paper
-            component="form"
-            elevation={0}
-            className={`flex items-center px-3 py-1 border border-border bg-background rounded-md ${className}`}
-        >
-            <InputBase
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="ml-1 flex-1 text-foreground"
-            />
-            <IconButton type="button" size="small" className="text-muted-foreground">
-                <Search size={18} />
-            </IconButton>
-        </Paper>
     );
 }
 
@@ -97,48 +58,65 @@ export function StatCard({ title, value, trend = null, icon, description, classN
         return null;
     };
 
+    const getWrapperClass = () => {
+        let baseClass = 'border border-border bg-card text-card-foreground rounded-lg p-4 transition-all duration-200';
+        
+        if (onClick) {
+            baseClass += ' cursor-pointer hover:shadow-md';
+        }
+
+        return `${baseClass} ${className}`;
+    };
+
     return (
-        <Card
-            elevation={0}
-            className={`border border-border bg-card text-card-foreground rounded-lg ${onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''} ${className}`}
+        <Box 
+            className={getWrapperClass()}
             onClick={onClick}
         >
-            <CardContent className="p-6">
-                <Box className="flex items-center justify-between">
-                    <Typography variant="body2" className="font-medium text-muted-foreground">
-                        {title}
-                    </Typography>
-                    {icon && (
-                        <Box className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            {React.cloneElement(icon, { size: 18, className: 'text-primary' })}
-                        </Box>
-                    )}
-                </Box>
-                <Box className="mt-2 flex items-baseline">
-                    <Typography variant="h4" className="font-bold text-foreground">
+            <Box className="flex items-start justify-between">
+                <Box>
+                    <Typography variant="h5" className="font-bold text-foreground">
                         {value}
                     </Typography>
+                    
+                    <Typography variant="body2" className="text-muted-foreground mt-1">
+                        {title}
+                    </Typography>
+                    
+                    {description && (
+                        <Box className="mt-2">
+                            <Typography variant="body2" className="text-muted-foreground">
+                                {description}
+                            </Typography>
+                        </Box>
+                    )}
+                    
                     {trend && (
-                        <Box className="ml-2 flex items-center">
+                        <Box className="flex items-center mt-2">
                             {getTrendIcon()}
+                            <Typography
+                                variant="body2"
+                                className={`ml-1 ${
+                                    trend === 'up'
+                                        ? 'text-green-500'
+                                        : trend === 'down'
+                                        ? 'text-red-500'
+                                        : 'text-yellow-500'
+                                }`}
+                            >
+                                {trend === 'up' ? 'Increase' : trend === 'down' ? 'Decrease' : 'No change'}
+                            </Typography>
                         </Box>
                     )}
                 </Box>
-                {description && (
-                    <Typography variant="body2" className="mt-1 text-muted-foreground">
-                        {description}
-                    </Typography>
-                )}
-                {onClick && (
-                    <Box className="mt-4 flex items-center text-primary">
-                        <Typography variant="body2" className="font-medium">
-                            View details
-                        </Typography>
-                        <ArrowRight size={16} className="ml-1" />
+                
+                {icon && (
+                    <Box className="p-2 rounded-full bg-primary/10 text-primary">
+                        {icon}
                     </Box>
                 )}
-            </CardContent>
-        </Card>
+            </Box>
+        </Box>
     );
 }
 
@@ -258,61 +236,54 @@ export function NotificationSeverityBadge({ severity }) {
  * Activity log item component
  */
 export function ActivityLogItem({ user, action, timestamp, details, category }) {
-    const getCategoryClasses = () => {
-        switch (category.toLowerCase()) {
-            case 'authentication':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-            case 'clinical':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-            case 'pharmacy':
-                return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300';
-            case 'administration':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+    const getCategoryStyle = () => {
+        switch (category?.toLowerCase()) {
+            case 'user':
+                return 'text-blue-600 bg-blue-100 dark:text-blue-300 dark:bg-blue-900';
+            case 'security':
+                return 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-900';
             case 'system':
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                return 'text-purple-600 bg-purple-100 dark:text-purple-300 dark:bg-purple-900';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                return 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-800';
         }
     };
 
-    // Format timestamp
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
+    const formatTimestamp = (timestamp) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        return date.toLocaleString();
     };
 
     return (
-        <Box className="border-b border-border py-3 last:border-0">
-            <Box className="flex items-center justify-between">
+        <Box className="p-3 border-b border-border last:border-0">
+            <Box className="flex flex-col sm:flex-row sm:items-start justify-between mb-1">
                 <Box className="flex items-center">
-                    <Typography variant="body1" className="font-medium text-foreground">
-                        {user}
-                    </Typography>
-                    <Typography variant="body2" className="ml-2 text-muted-foreground">
-                        {action}
-                    </Typography>
+                    <Typography className="font-medium text-foreground">{user}</Typography>
+                    
+                    {category && (
+                        <Chip
+                            label={category}
+                            size="small"
+                            className={`ml-2 text-xs px-2 py-1 rounded ${getCategoryStyle()}`}
+                        />
+                    )}
                 </Box>
-                <Typography variant="caption" className="text-muted-foreground">
-                    {formatDate(timestamp)}
+                
+                <Typography variant="caption" className="text-muted-foreground mt-1 sm:mt-0">
+                    {formatTimestamp(timestamp)}
                 </Typography>
             </Box>
+            
+            <Typography className="mb-1 text-foreground">
+                {action}
+            </Typography>
+            
             {details && (
-                <Typography variant="body2" className="mt-1 text-muted-foreground">
+                <Typography variant="body2" className="text-muted-foreground">
                     {details}
                 </Typography>
             )}
-            <Box className="mt-2">
-                <Chip
-                    label={category.charAt(0).toUpperCase() + category.slice(1)}
-                    size="small"
-                    className={`${getCategoryClasses()}`}
-                />
-            </Box>
         </Box>
     );
 }
@@ -321,43 +292,46 @@ export function ActivityLogItem({ user, action, timestamp, details, category }) 
  * Notification item component
  */
 export function NotificationItem({ title, message, timestamp, severity, isRead, onMarkAsRead }) {
-    // Format timestamp
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
+    const getNotificationClasses = () => {
+        let baseClass = 'p-3 border-b border-border last:border-0 transition-colors duration-200';
+        if (!isRead) {
+            baseClass += ' bg-primary/5';
+        }
+        return baseClass;
+    };
+
+    const formatTimestamp = (timestamp) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        return date.toLocaleString();
     };
 
     return (
-        <Box className={`border-b border-border py-3 last:border-0 ${!isRead ? 'bg-muted/30' : ''}`}>
-            <Box className="flex items-center justify-between">
+        <Box className={getNotificationClasses()}>
+            <Box className="flex flex-col sm:flex-row sm:items-start justify-between mb-1">
                 <Box className="flex items-center">
-                    <Typography variant="body1" className="font-medium text-foreground">
-                        {title}
-                    </Typography>
-                    <NotificationSeverityBadge severity={severity} />
+                    <Typography className="font-medium text-foreground">{title}</Typography>
+                    {severity && <NotificationSeverityBadge severity={severity} />}
                 </Box>
-                <Typography variant="caption" className="text-muted-foreground">
-                    {formatDate(timestamp)}
+                
+                <Typography variant="caption" className="text-muted-foreground mt-1 sm:mt-0">
+                    {formatTimestamp(timestamp)}
                 </Typography>
             </Box>
-            <Typography variant="body2" className="mt-1 text-muted-foreground">
+            
+            <Typography variant="body2" className="mb-2 text-foreground">
                 {message}
             </Typography>
+            
             {!isRead && onMarkAsRead && (
-                <Box className="mt-2 flex justify-end">
-                    <Button
-                        size="small"
-                        onClick={onMarkAsRead}
-                        className="text-primary hover:bg-primary/10"
-                    >
-                        Mark as read
-                    </Button>
-                </Box>
+                <Button
+                    size="small"
+                    onClick={onMarkAsRead}
+                    endIcon={<ArrowRight size={16} />}
+                    className="text-primary hover:bg-primary/10"
+                >
+                    Mark as read
+                </Button>
             )}
         </Box>
     );

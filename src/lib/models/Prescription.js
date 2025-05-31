@@ -135,19 +135,17 @@ const PrescriptionSchema = new mongoose.Schema(
             },
             notes: String,
         }],
-        qrCode: String, // Base64 encoded QR code for prescription verification
+        qrCode: String,
     },
     {
         timestamps: true,
     }
 );
 
-// Virtual field for checking if prescription is expired
 PrescriptionSchema.virtual('isExpired').get(function () {
     return this.expiryDate && new Date() > this.expiryDate;
 });
 
-// Virtual field for checking if prescription is refillable
 PrescriptionSchema.virtual('isRefillable').get(function () {
     if (this.status === 'Cancelled' || this.status === 'Expired') {
         return false;
@@ -157,11 +155,9 @@ PrescriptionSchema.virtual('isRefillable').get(function () {
         return false;
     }
 
-    // Check if any medication has available refills
     return this.medications.some(med => med.refillsUsed < med.refills);
 });
 
-// Method to add a refill request
 PrescriptionSchema.methods.requestRefill = function () {
     this.refillHistory.push({
         requestDate: new Date(),
@@ -169,14 +165,12 @@ PrescriptionSchema.methods.requestRefill = function () {
     });
 };
 
-// Method to update status based on expiry date
 PrescriptionSchema.methods.updateStatus = function () {
     if (this.status !== 'Cancelled' && this.expiryDate && new Date() > this.expiryDate) {
         this.status = 'Expired';
     }
 };
 
-// Pre-save middleware to update status based on expiry date
 PrescriptionSchema.pre('save', function (next) {
     this.updateStatus();
     next();

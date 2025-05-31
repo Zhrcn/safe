@@ -13,21 +13,17 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     const notification = useNotification();
 
     useEffect(() => {
-        // Skip checks if still loading
         if (isLoading) return;
 
-        // If not authenticated, redirect to login
         if (!isAuthenticated) {
             notification.showNotification('Please log in to access this page', 'warning');
             router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
             return;
         }
 
-        // If role restrictions and user doesn't have an allowed role
         if (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role)) {
             notification.showNotification('You do not have permission to access this page', 'error');
 
-            // Redirect to appropriate dashboard based on role
             switch (user.role) {
                 case 'patient':
                     router.push('/patient/dashboard');
@@ -47,7 +43,6 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
         }
     }, [isLoading, isAuthenticated, user, router, pathname, notification, allowedRoles]);
 
-    // Show loading state
     if (isLoading) {
         return (
             <Box
@@ -67,11 +62,9 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
         );
     }
 
-    // Show unauthorized message if not authenticated or not allowed
     if (!isAuthenticated || (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role))) {
-        return null; // This will be redirected in the useEffect
+        return null;
     }
 
-    // If authenticated and authorized, render children
     return <>{children}</>;
 } 

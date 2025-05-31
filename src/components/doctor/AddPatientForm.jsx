@@ -25,7 +25,6 @@ import { z } from 'zod';
 import { X, Search } from 'lucide-react';
 import { addPatient, getPatientById } from '@/services/doctorService';
 
-// Validation schema for full form
 const patientSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     age: z.number().int().positive().min(1).max(120),
@@ -37,7 +36,6 @@ const patientSchema = z.object({
     })
 });
 
-// Validation schema for ID lookup
 const patientIdSchema = z.object({
     patientId: z.string().min(1, 'Patient ID is required')
 });
@@ -50,7 +48,6 @@ export default function AddPatientForm({ onClose, onSuccess }) {
     const [patientId, setPatientId] = useState('');
     const [isSearching, setIsSearching] = useState(false);
 
-    // Form for full patient details
     const { 
         control, 
         handleSubmit, 
@@ -76,28 +73,23 @@ export default function AddPatientForm({ onClose, onSuccess }) {
         setSuccess('');
     };
 
-    // Full form submission
     const onSubmit = async (data) => {
         try {
             setIsSubmitting(true);
             setError('');
             
-            // Convert age string to number
             data.age = Number(data.age);
             
-            // Call the API to add patient
             const result = await addPatient(data);
             
             if (result.success) {
                 setSuccess('Patient added successfully');
                 reset();
                 
-                // Notify parent component
                 if (onSuccess) {
                     onSuccess(result.patient);
                 }
                 
-                // Close form after a short delay
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);
@@ -112,7 +104,6 @@ export default function AddPatientForm({ onClose, onSuccess }) {
         }
     };
 
-    // Search patient by ID
     const handleSearchById = async () => {
         if (!patientId.trim()) {
             setError('Please enter a patient ID');
@@ -123,18 +114,15 @@ export default function AddPatientForm({ onClose, onSuccess }) {
             setIsSearching(true);
             setError('');
             
-            // Call API to find patient by ID
             const result = await getPatientById(patientId);
             
             if (result.success) {
                 setSuccess('Patient found and added successfully');
                 
-                // Notify parent component
                 if (onSuccess) {
                     onSuccess(result.patient);
                 }
                 
-                // Close form after a short delay
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);

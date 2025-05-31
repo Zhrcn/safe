@@ -1,9 +1,3 @@
-/**
- * Admin Service
- * Handles all API calls related to the admin role
- */
-
-// Mock data for development - replace with actual API calls in production
 const MOCK_USERS = [
     {
         id: 1,
@@ -168,12 +162,10 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 /**
- * Get all users
- * @param {Object} filters - Optional filters (role, status)
- * @returns {Promise<Array>} - List of users
+ * @param {Object} filters 
+ * @returns {Promise<Array>} 
  */
 export async function getUsers(filters = {}) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             let filteredUsers = [...MOCK_USERS];
@@ -200,11 +192,10 @@ export async function getUsers(filters = {}) {
 }
 
 /**
- * Get system statistics
- * @returns {Promise<Object>} - System statistics
+
+ * @returns {Promise<Object>} 
  */
 export async function getSystemStats() {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve(MOCK_SYSTEM_STATS);
@@ -213,12 +204,10 @@ export async function getSystemStats() {
 }
 
 /**
- * Get activity logs
- * @param {Object} filters - Optional filters (category, user, dateRange)
- * @returns {Promise<Array>} - List of activity logs
+ * @param {Object} filters
+ * @returns {Promise<Array>} 
  */
 export async function getActivityLogs(filters = {}) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             let filteredLogs = [...MOCK_ACTIVITY_LOGS];
@@ -232,8 +221,6 @@ export async function getActivityLogs(filters = {}) {
             }
 
             if (filters.dateRange) {
-                // Implementation for date filtering would go here
-                // This is simplified for the mock
             }
 
             resolve(filteredLogs);
@@ -242,12 +229,10 @@ export async function getActivityLogs(filters = {}) {
 }
 
 /**
- * Get notifications
- * @param {boolean} onlyUnread - Whether to return only unread notifications
- * @returns {Promise<Array>} - List of notifications
+ * @param {boolean} onlyUnread 
+ * @returns {Promise<Array>} 
  */
 export async function getNotifications(onlyUnread = false) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const filteredNotifications = onlyUnread
@@ -259,12 +244,10 @@ export async function getNotifications(onlyUnread = false) {
 }
 
 /**
- * Create new user
- * @param {Object} userData - User data
- * @returns {Promise<Object>} - Created user
+ * @param {Object} userData
+ * @returns {Promise<Object>} 
  */
 export async function createUser(userData) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const newUser = {
@@ -280,13 +263,11 @@ export async function createUser(userData) {
 }
 
 /**
- * Update user
- * @param {number} id - User ID
- * @param {Object} userData - User data to update
- * @returns {Promise<Object>} - Updated user
+ * @param {number} id 
+ * @param {Object} userData 
+ * @returns {Promise<Object>} 
  */
 export async function updateUser(id, userData) {
-    // Mock implementation
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const userIndex = MOCK_USERS.findIndex(u => u.id === id);
@@ -306,12 +287,10 @@ export async function updateUser(id, userData) {
 }
 
 /**
- * Delete user
- * @param {number} id - User ID
- * @returns {Promise<boolean>} - Success status
+ * @param {number} id 
+ * @returns {Promise<boolean>}
  */
 export async function deleteUser(id) {
-    // Mock implementation
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const userIndex = MOCK_USERS.findIndex(u => u.id === id);
@@ -327,12 +306,10 @@ export async function deleteUser(id) {
 }
 
 /**
- * Mark notification as read
- * @param {number} id - Notification ID
- * @returns {Promise<Object>} - Updated notification
+ * @param {number} id 
+ * @returns {Promise<Object>} 
  */
 export async function markNotificationAsRead(id) {
-    // Mock implementation
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const notificationIndex = MOCK_NOTIFICATIONS.findIndex(n => n.id === id);

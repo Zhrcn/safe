@@ -12,8 +12,12 @@ import {
     Typography,
     CircularProgress,
     Alert,
-    Paper
+    Paper,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { motion } from 'framer-motion';
 import { ROLE_ROUTES } from '@/lib/config';
@@ -27,6 +31,7 @@ export default function LoginForm({ role, redirectUrl }) {
     const { login } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
     const {
@@ -42,14 +47,11 @@ export default function LoginForm({ role, redirectUrl }) {
             setIsSubmitting(true);
             setError(null);
 
-            // Attempt to login
             const success = await login(data.email, data.password, role);
 
             if (success) {
                 console.log(`Login successful! Redirecting to ${redirectUrl || ROLE_ROUTES[role].dashboard}`);
-                // Redirect to the appropriate dashboard based on role
                 router.push(redirectUrl || ROLE_ROUTES[role].dashboard);
-                // Don't add code after this since it might not execute due to navigation
             }
         } catch (err) {
             console.error('Login error:', err);
@@ -57,6 +59,10 @@ export default function LoginForm({ role, redirectUrl }) {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     return (
@@ -83,11 +89,24 @@ export default function LoginForm({ role, redirectUrl }) {
                     <TextField
                         {...register('password')}
                         label="Password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         fullWidth
                         error={!!errors.password}
                         helperText={errors.password?.message}
                         disabled={isSubmitting}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label="toggle password visibility"
+                                        onClick={togglePasswordVisibility}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
 
                     {error && (

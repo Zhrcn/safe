@@ -3,7 +3,6 @@ import connectDB from '@/lib/db/mongoose';
 import User from '@/lib/models/User';
 import { jwtDecode } from 'jwt-decode';
 
-// Helper function to get authenticated user from request
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
 
@@ -14,7 +13,6 @@ async function getAuthenticatedUser(req) {
     try {
         const decoded = jwtDecode(token);
 
-        // Check if token is expired
         const currentTime = Date.now() / 1000;
         if (decoded.exp && decoded.exp < currentTime) {
             return null;
@@ -27,7 +25,6 @@ async function getAuthenticatedUser(req) {
     }
 }
 
-// GET /api/users/doctors
 export async function GET(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -38,7 +35,6 @@ export async function GET(req) {
         await connectDB();
         const url = new URL(req.url);
 
-        // Check if this is a request for a specific doctor
         const doctorId = url.searchParams.get('id');
         if (doctorId) {
             const doctor = await User.findOne({
@@ -53,13 +49,11 @@ export async function GET(req) {
             return NextResponse.json({ doctor });
         }
 
-        // Parse query parameters
         const specialization = url.searchParams.get('specialization');
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
         const searchTerm = url.searchParams.get('search');
 
-        // Build query - only fetch doctors
         let query = { role: 'doctor' };
 
         if (specialization) {
@@ -73,10 +67,8 @@ export async function GET(req) {
             ];
         }
 
-        // Calculate pagination
         const skip = (page - 1) * limit;
 
-        // Execute query with pagination
         const total = await User.countDocuments(query);
         const doctors = await User.find(query)
             .select('-password -resetPasswordToken -resetPasswordExpires')
@@ -99,7 +91,6 @@ export async function GET(req) {
     }
 }
 
-// POST /api/users/doctors
 export async function POST(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -110,22 +101,20 @@ export async function POST(req) {
         await connectDB();
         const data = await req.json();
 
-        // Validate required fields
+    
         if (!data.name || !data.email || !data.password) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Check if doctor with email already exists
         const existingDoctor = await User.findOne({ email: data.email });
         if (existingDoctor) {
             return NextResponse.json({ error: 'Doctor with this email already exists' }, { status: 409 });
         }
 
-        // Create new doctor
         const newDoctor = new User({
             name: data.name,
             email: data.email,
-            password: data.password, // This should be hashed in the model pre-save hook
+            password: data.password,
             role: 'doctor',
             doctorProfile: {
                 specialization: data.specialization || 'General Practice',
@@ -137,7 +126,6 @@ export async function POST(req) {
 
         await newDoctor.save();
 
-        // Return doctor without sensitive information
         const doctorToReturn = newDoctor.toObject();
         delete doctorToReturn.password;
         delete doctorToReturn.resetPasswordToken;
@@ -153,7 +141,6 @@ export async function POST(req) {
     }
 }
 
-// PATCH /api/users/doctors
 export async function PATCH(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -165,18 +152,15 @@ export async function PATCH(req) {
         const data = await req.json();
         const doctorId = data.id;
 
-        // Check permissions - only admin or the doctor themselves can update
         if (user.role !== 'admin' && user.id !== doctorId) {
             return NextResponse.json({ error: 'Unauthorized - Insufficient permissions' }, { status: 403 });
         }
 
-        // Find doctor
         const doctor = await User.findOne({ _id: doctorId, role: 'doctor' });
         if (!doctor) {
             return NextResponse.json({ error: 'Doctor not found' }, { status: 404 });
         }
 
-        // Update allowed fields
         if (data.name) doctor.name = data.name;
         if (data.email) doctor.email = data.email;
         if (data.specialization) doctor.doctorProfile.specialization = data.specialization;
@@ -186,7 +170,6 @@ export async function PATCH(req) {
 
         await doctor.save();
 
-        // Return updated doctor without sensitive information
         const updatedDoctor = doctor.toObject();
         delete updatedDoctor.password;
         delete updatedDoctor.resetPasswordToken;

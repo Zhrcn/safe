@@ -43,7 +43,6 @@ const features = [
   }
 ];
 
-// Feature card component with animation
 const FeatureCard = ({ icon: Icon, title, description, color, index }) => {
   return (
     <motion.div

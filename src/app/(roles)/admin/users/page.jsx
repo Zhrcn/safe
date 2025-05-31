@@ -4,7 +4,6 @@ import { Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, Ta
 import { Users, Search, Edit, UserX } from 'lucide-react';
 import { useState } from 'react';
 
-// Mock Users Data (replace with actual data fetching)
 const mockUsers = [
   { id: 1, name: 'Dr. Ahmad Al-Ali', role: 'Doctor', email: 'ahmad.ali@example.com', status: 'Active' },
   { id: 2, name: 'Patient A', role: 'Patient', email: 'patient.a@example.com', status: 'Active' },
@@ -24,13 +23,10 @@ export default function AdminUsersPage() {
 
   const handleEditUser = (userId) => {
     console.log('Edit User clicked for ID:', userId);
-    // Implement logic to edit user details (e.g., open a modal/form)
   };
 
   const handleToggleUserStatus = (userId, currentStatus) => {
     console.log(`Toggle status for User ID: ${userId}, current status: ${currentStatus}`);
-    // Implement logic to deactivate/activate user (API call)
-    // In a real app, you would likely refetch or update the state to reflect the change
   };
 
   return (

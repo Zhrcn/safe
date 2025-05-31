@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
-import connectDB from '@/lib/db/mongoose';
-import User from '@/lib/models/User';
-import MedicalFile from '@/lib/models/MedicalFile';
-import { ROLES } from '@/lib/config';
+import bcrypt from 'bcryptjs';
+import { connectToDatabase } from '@/lib/db/mongodb';
+import User from '@/models/User';
+import MedicalFile from '@/models/MedicalFile';
+
+// Define roles
+const ROLES = {
+  PATIENT: 'patient',
+  DOCTOR: 'doctor',
+  PHARMACIST: 'pharmacist',
+  ADMIN: 'admin'
+};
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-// DEVELOPMENT MODE: Set to true to bypass MongoDB connection for testing
-const DEV_MODE = true;
 
-// Registration schema with validation
 const registerSchema = z.object({
     email: z.string().email('Invalid email format'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -23,7 +28,6 @@ const registerSchema = z.object({
             .transform(val => val ? new Date(val) : undefined),
         gender: z.enum(['Male', 'Female', 'Other']).optional().nullable()
     }).optional().nullable(),
-    // Role-specific fields are optional depending on role
     doctorProfile: z.object({
         specialization: z.string().optional().nullable(),
         licenseNumber: z.string().optional().nullable(),
@@ -58,7 +62,6 @@ const registerSchema = z.object({
 
 export async function POST(req) {
     try {
-        // Parse and validate the request body
         const body = await req.json();
         console.log('Registration data received:', JSON.stringify(body, null, 2));
 
@@ -66,37 +69,22 @@ export async function POST(req) {
             const validatedData = registerSchema.parse(body);
             console.log('Validated data:', JSON.stringify(validatedData, null, 2));
 
-            // Connect to MongoDB (bypass in dev mode)
-            if (!DEV_MODE) {
-                // Try to connect to MongoDB
-                try {
-                    await connectDB();
-                } catch (dbError) {
-                    console.error('MongoDB connection error:', dbError);
+            // Connect to MongoDB
+            await connectToDatabase();
 
-                    // In development mode, continue without database
-                    if (process.env.NODE_ENV !== 'production') {
-                        console.log('Continuing in development mode without database connection');
-                    } else {
-                        throw dbError; // Re-throw in production
-                    }
-                }
-
-                // Check if user with this email already exists
-                const existingUser = await User.findOne({ email: validatedData.email.toLowerCase() });
-                if (existingUser) {
-                    return NextResponse.json(
-                        { error: 'User with this email already exists' },
-                        { status: 400 }
-                    );
-                }
+            // Check if user already exists
+            const existingUser = await User.findOne({ email: validatedData.email.toLowerCase() });
+            if (existingUser) {
+                return NextResponse.json(
+                    { error: 'User with this email already exists' },
+                    { status: 400 }
+                );
             }
 
-            // Clean up validated data by removing null/undefined nested objects
+            // Clean user data to remove null/undefined values
             const cleanUserData = (data) => {
                 const cleanedData = { ...data };
-
-                // Clean up profile fields
+                
                 if (cleanedData.profile) {
                     Object.keys(cleanedData.profile).forEach(key => {
                         if (cleanedData.profile[key] === null || cleanedData.profile[key] === undefined) {
@@ -109,10 +97,8 @@ export async function POST(req) {
                     }
                 }
 
-                // Clean up role-specific profiles
                 ['doctorProfile', 'patientProfile', 'pharmacistProfile'].forEach(profileKey => {
                     if (cleanedData[profileKey]) {
-                        // Recursively clean nested objects
                         const cleanNestedObject = (obj) => {
                             for (const key in obj) {
                                 if (obj[key] === null || obj[key] === undefined) {
@@ -140,60 +126,25 @@ export async function POST(req) {
             const cleanedUserData = cleanUserData(validatedData);
             console.log('Cleaned user data for saving:', JSON.stringify(cleanedUserData, null, 2));
 
-            // In DEV_MODE, create a mock user response
-            if (DEV_MODE) {
-                // Create a mock user object with the data we received
-                const mockUser = {
-                    _id: 'dev_' + Date.now(),
-                    name: cleanedUserData.name,
-                    email: cleanedUserData.email,
-                    role: cleanedUserData.role,
-                    profile: cleanedUserData.profile || {},
-                    ...(cleanedUserData.doctorProfile && { doctorProfile: cleanedUserData.doctorProfile }),
-                    ...(cleanedUserData.patientProfile && { patientProfile: cleanedUserData.patientProfile }),
-                    ...(cleanedUserData.pharmacistProfile && { pharmacistProfile: cleanedUserData.pharmacistProfile }),
-                };
+            // Hash the password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(cleanedUserData.password, salt);
 
-                // Create JWT payload
-                const payload = {
-                    id: mockUser._id,
-                    name: mockUser.name,
-                    email: mockUser.email,
-                    role: mockUser.role,
-                };
-
-                // Generate JWT token
-                const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-
-                console.log('DEV MODE: Created mock user and token');
-
-                // Return response with token and user data
-                return NextResponse.json(
-                    {
-                        token,
-                        user: mockUser,
-                    },
-                    { status: 201 }
-                );
-            }
-
-            // Create new user with validated data (This runs if DEV_MODE is false)
+            // Create new user
             const newUser = new User({
                 email: cleanedUserData.email.toLowerCase(),
-                password: cleanedUserData.password, // Will be hashed by pre-save hook
+                password: hashedPassword, 
                 name: cleanedUserData.name,
                 role: cleanedUserData.role,
                 profile: cleanedUserData.profile || {},
-                // Add role-specific fields if provided
                 ...(cleanedUserData.doctorProfile && { doctorProfile: cleanedUserData.doctorProfile }),
                 ...(cleanedUserData.patientProfile && { patientProfile: cleanedUserData.patientProfile }),
                 ...(cleanedUserData.pharmacistProfile && { pharmacistProfile: cleanedUserData.pharmacistProfile }),
             });
 
-            // Save user to database
             await newUser.save();
 
-            // If user is a patient, create a medical file
+            // Create medical file for patients
             if (cleanedUserData.role === ROLES.PATIENT) {
                 const medicalFile = new MedicalFile({
                     patientId: newUser._id,
@@ -208,12 +159,11 @@ export async function POST(req) {
 
                 await medicalFile.save();
 
-                // Update user with medical file reference
                 newUser.medicalFile = medicalFile._id;
                 await newUser.save();
             }
 
-            // Create JWT payload
+            // Generate JWT token
             const payload = {
                 id: newUser._id,
                 name: newUser.name,
@@ -221,40 +171,27 @@ export async function POST(req) {
                 role: newUser.role,
             };
 
-            // Generate JWT token
             const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 
-            // Get user data to return (exclude sensitive info)
-            const sanitizedUserData = newUser.toJSON();
-
-            // Return response with token and user data
+            // Return user data and token
             return NextResponse.json(
                 {
                     token,
-                    user: sanitizedUserData,
+                    user: {
+                        id: newUser._id,
+                        name: newUser.name,
+                        email: newUser.email,
+                        role: newUser.role,
+                    },
                 },
                 { status: 201 }
             );
         } catch (validationError) {
-            if (validationError instanceof z.ZodError) {
-                console.error('Validation error:', JSON.stringify(validationError.errors, null, 2));
-
-                // Format validation errors to be more user-friendly
-                const formattedErrors = validationError.errors.map(err => ({
-                    path: err.path.join('.'),
-                    message: err.message
-                }));
-
-                return NextResponse.json(
-                    {
-                        error: 'Invalid registration data',
-                        details: formattedErrors
-                    },
-                    { status: 400 }
-                );
-            }
-
-            throw validationError; // Re-throw if it's not a Zod error
+            console.error('Validation error:', validationError);
+            return NextResponse.json(
+                { error: 'Invalid data', details: validationError.errors },
+                { status: 400 }
+            );
         }
     } catch (error) {
         console.error('Registration error:', error);

@@ -42,7 +42,6 @@ import {
 } from 'lucide-react';
 import { getAppointments, manageAppointment, updateAppointmentStatus } from '@/services/doctorService';
 
-// Appointment types
 const appointmentTypes = [
     'Annual Physical',
     'Follow-up',
@@ -54,15 +53,12 @@ const appointmentTypes = [
     'Prescription Renewal'
 ];
 
-// Appointment card component
 function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
-    // Check if appointment can be edited (24 hours in advance)
     const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
     const now = new Date();
     const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
     const canEdit = hoursDifference >= 24;
     
-    // Status color
     const getStatusColor = (status) => {
         switch(status) {
             case 'Confirmed':
@@ -171,7 +167,6 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
     );
 }
 
-// Appointment detail dialog
 function AppointmentDetailDialog({ open, appointment, onClose }) {
     if (!appointment) return null;
 
@@ -249,7 +244,6 @@ function AppointmentDetailDialog({ open, appointment, onClose }) {
     );
 }
 
-// Edit appointment dialog
 function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
     const [date, setDate] = useState(null);
     const [time, setTime] = useState(null);
@@ -261,7 +255,6 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
     useEffect(() => {
         if (appointment) {
             try {
-                // Parse date and time
                 const dateObj = appointment.date ? parseISO(appointment.date) : null;
                 setDate(dateObj);
                 setTime(dateObj);
@@ -283,11 +276,9 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
                 return;
             }
             
-            // Format date and time
             const formattedDate = format(date, 'yyyy-MM-dd');
             const formattedTime = format(time, 'h:mm a');
             
-            // Check 24 hour restriction
             const appointmentDate = new Date(`${formattedDate}T${formattedTime}`);
             const now = new Date();
             const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
@@ -297,7 +288,6 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
                 return;
             }
             
-            // Create updated appointment data
             const updatedAppointment = {
                 ...appointment,
                 date: formattedDate,
@@ -306,7 +296,6 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
                 notes
             };
             
-            // Save appointment
             const result = await manageAppointment(updatedAppointment);
             
             if (result.success) {
@@ -441,7 +430,6 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
     );
 }
 
-// Confirmation dialog for accepting/rejecting appointments
 function ConfirmationDialog({ open, type, onClose, onConfirm, isSubmitting }) {
     const isAccept = type === 'accept';
     
@@ -498,7 +486,6 @@ function ConfirmationDialog({ open, type, onClose, onConfirm, isSubmitting }) {
     );
 }
 
-// Create New Appointment Dialog
 function CreateAppointmentDialog({ open, onClose, onSave }) {
     const [date, setDate] = useState(null);
     const [time, setTime] = useState(null);
@@ -519,15 +506,13 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
                 return;
             }
             
-            // Format date and time
             const formattedDate = format(date, 'yyyy-MM-dd');
             const formattedTime = format(time, 'h:mm a');
             
-            // Create appointment data
             const newAppointment = {
-                id: `app-${Date.now()}`, // Generate temporary ID
+                id: `app-${Date.now()}`,
                 patientId,
-                patientName: patientName || `Patient #${patientId}`, // Use entered name or default
+                patientName: patientName || `Patient #${patientId}`,
                 date: formattedDate,
                 time: formattedTime,
                 type,
@@ -535,7 +520,6 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
                 status: 'Pending'
             };
             
-            // Save appointment
             const result = await manageAppointment(newAppointment);
             
             if (result.success) {
@@ -729,12 +713,10 @@ export default function AppointmentManagement() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
-    // Load appointments
     useEffect(() => {
         loadAppointments();
     }, []);
 
-    // Load appointments from API
     const loadAppointments = async () => {
         try {
             setLoading(true);
@@ -750,7 +732,6 @@ export default function AppointmentManagement() {
         }
     };
 
-    // Filter appointments based on active tab
     const filteredAppointments = appointments.filter(appointment => {
         if (activeTab === 'all') return true;
         if (activeTab === 'pending') return appointment.status === 'Pending';
@@ -759,38 +740,32 @@ export default function AppointmentManagement() {
         return true;
     });
 
-    // Handle tab change
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
 
-    // View appointment details
     const handleViewAppointment = (appointment) => {
         setSelectedAppointment(appointment);
         setDetailDialogOpen(true);
     };
 
-    // Edit appointment
     const handleEditAppointment = (appointment) => {
         setSelectedAppointment(appointment);
         setEditDialogOpen(true);
     };
 
-    // Accept appointment
     const handleAcceptAppointment = (id) => {
         setConfirmationType('accept');
         setConfirmationId(id);
         setConfirmDialogOpen(true);
     };
 
-    // Reject appointment
     const handleRejectAppointment = (id) => {
         setConfirmationType('reject');
         setConfirmationId(id);
         setConfirmDialogOpen(true);
     };
 
-    // Confirm appointment status change
     const handleConfirmStatusChange = async () => {
         try {
             setIsSubmitting(true);
@@ -799,7 +774,6 @@ export default function AppointmentManagement() {
             const result = await updateAppointmentStatus(confirmationId, status);
             
             if (result.success) {
-                // Update local state
                 setAppointments(appointments.map(appointment => 
                     appointment.id === confirmationId 
                         ? { ...appointment, status } 
@@ -808,7 +782,6 @@ export default function AppointmentManagement() {
                 
                 setSuccessMessage(`Appointment ${status.toLowerCase()} successfully`);
                 
-                // Clear success message after a few seconds
                 setTimeout(() => {
                     setSuccessMessage('');
                 }, 3000);
@@ -824,9 +797,7 @@ export default function AppointmentManagement() {
         }
     };
 
-    // Save edited appointment
     const handleSaveAppointment = (updatedAppointment) => {
-        // Update local state
         setAppointments(appointments.map(appointment => 
             appointment.id === updatedAppointment.id 
                 ? updatedAppointment 
@@ -835,7 +806,6 @@ export default function AppointmentManagement() {
         
         setSuccessMessage('Appointment updated successfully');
         
-        // Clear success message after a few seconds
         setTimeout(() => {
             setSuccessMessage('');
         }, 3000);
@@ -913,14 +883,12 @@ export default function AppointmentManagement() {
                 )}
             </Paper>
 
-            {/* Appointment Detail Dialog */}
             <AppointmentDetailDialog
                 open={detailDialogOpen}
                 appointment={selectedAppointment}
                 onClose={() => setDetailDialogOpen(false)}
             />
 
-            {/* Edit Appointment Dialog */}
             <EditAppointmentDialog
                 open={editDialogOpen}
                 appointment={selectedAppointment}
@@ -928,7 +896,6 @@ export default function AppointmentManagement() {
                 onSave={handleSaveAppointment}
             />
 
-            {/* Confirmation Dialog */}
             <ConfirmationDialog
                 open={confirmDialogOpen}
                 type={confirmationType}
@@ -950,7 +917,6 @@ export default function AppointmentManagement() {
                 </Button>
             </Box>
 
-            {/* Create Appointment Dialog */}
             <CreateAppointmentDialog
                 open={createDialogOpen}
                 onClose={() => setCreateDialogOpen(false)}

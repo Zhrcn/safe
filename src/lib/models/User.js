@@ -56,7 +56,6 @@ const UserSchema = new mongoose.Schema(
             ref: 'MedicalFile',
         },
 
-        // Doctor specific fields
         doctorProfile: {
             specialization: String,
             licenseNumber: String,
@@ -78,7 +77,6 @@ const UserSchema = new mongoose.Schema(
             certifications: [String],
         },
 
-        // Patient specific fields
         patientProfile: {
             emergencyContact: {
                 name: String,
@@ -92,7 +90,6 @@ const UserSchema = new mongoose.Schema(
             },
         },
 
-        // Pharmacist specific fields
         pharmacistProfile: {
             licenseNumber: String,
             pharmacyName: String,
@@ -111,9 +108,7 @@ const UserSchema = new mongoose.Schema(
     }
 );
 
-// Hash password before saving
 UserSchema.pre('save', async function (next) {
-    // Only hash the password if it's modified or new
     if (!this.isModified('password')) return next();
 
     try {
@@ -125,12 +120,10 @@ UserSchema.pre('save', async function (next) {
     }
 });
 
-// Method to check password validity
 UserSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Method to hide sensitive information
 UserSchema.methods.toJSON = function () {
     const obj = this.toObject();
     delete obj.password;

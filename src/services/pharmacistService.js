@@ -1,9 +1,3 @@
-/**
- * Pharmacist Service
- * Handles all API calls related to the pharmacist role
- */
-
-// Mock data for development - replace with actual API calls in production
 const MOCK_INVENTORY = [
     { id: 1, name: 'Amoxicillin (500mg)', stock: 150, lowStockThreshold: 50 },
     { id: 2, name: 'Lisinopril (10mg)', stock: 30, lowStockThreshold: 40 },
@@ -37,17 +31,11 @@ const MOCK_PHARMACIST_PROFILE = {
 };
 
 /**
- * Get inventory items
- * @param {string} searchTerm - Optional search term
- * @returns {Promise<Array>} - List of inventory items
+ * @param {string} searchTerm 
+ * @returns {Promise<Array>} 
  */
 export async function getInventory(searchTerm = '') {
-    // In production, replace with actual API call
-    // const response = await fetch('/api/pharmacist/inventory');
-    // const data = await response.json();
-    // return data;
 
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const filteredInventory = searchTerm
@@ -56,17 +44,15 @@ export async function getInventory(searchTerm = '') {
                 )
                 : MOCK_INVENTORY;
             resolve(filteredInventory);
-        }, 300); // Simulate network delay
+        }, 300); 
     });
 }
 
 /**
- * Get prescriptions
- * @param {string} searchTerm - Optional search term
- * @returns {Promise<Array>} - List of prescriptions
+ * @param {string} searchTerm 
+ * @returns {Promise<Array>} 
  */
 export async function getPrescriptions(searchTerm = '') {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const filteredPrescriptions = searchTerm
@@ -81,13 +67,11 @@ export async function getPrescriptions(searchTerm = '') {
 }
 
 /**
- * Update prescription status
- * @param {number} id - Prescription ID
- * @param {string} status - New status
- * @returns {Promise<Object>} - Updated prescription
+ * @param {number} id 
+ * @param {string} status 
+ * @returns {Promise<Object>} 
  */
 export async function updatePrescriptionStatus(id, status) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const prescription = MOCK_PRESCRIPTIONS.find(p => p.id === id);
@@ -100,12 +84,10 @@ export async function updatePrescriptionStatus(id, status) {
 }
 
 /**
- * Get orders
- * @param {string} searchTerm - Optional search term
- * @returns {Promise<Array>} - List of orders
+ * @param {string} searchTerm 
+ * @returns {Promise<Array>} 
  */
 export async function getOrders(searchTerm = '') {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const filteredOrders = searchTerm
@@ -120,13 +102,11 @@ export async function getOrders(searchTerm = '') {
 }
 
 /**
- * Update order status
- * @param {number} id - Order ID
- * @param {string} status - New status
- * @returns {Promise<Object>} - Updated order
+ * @param {number} id 
+ * @param {string} status 
+ * @returns {Promise<Object>} 
  */
 export async function updateOrderStatus(id, status) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const order = MOCK_ORDERS.find(o => o.id === id);
@@ -139,11 +119,9 @@ export async function updateOrderStatus(id, status) {
 }
 
 /**
- * Get pharmacist profile
- * @returns {Promise<Object>} - Pharmacist profile
+ * @returns {Promise<Object>} 
  */
 export async function getPharmacistProfile() {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve(MOCK_PHARMACIST_PROFILE);
@@ -152,12 +130,10 @@ export async function getPharmacistProfile() {
 }
 
 /**
- * Update inventory item
- * @param {Object} item - Inventory item to update
- * @returns {Promise<Object>} - Updated inventory item
+ * @param {Object} item 
+ * @returns {Promise<Object>} 
  */
 export async function updateInventoryItem(item) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const index = MOCK_INVENTORY.findIndex(i => i.id === item.id);
@@ -172,12 +148,10 @@ export async function updateInventoryItem(item) {
 }
 
 /**
- * Add inventory item
- * @param {Object} item - New inventory item
- * @returns {Promise<Object>} - Added inventory item
+ * @param {Object} item 
+ * @returns {Promise<Object>} 
  */
 export async function addInventoryItem(item) {
-    // Mock implementation
     return new Promise((resolve) => {
         setTimeout(() => {
             const newItem = {

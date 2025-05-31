@@ -8,6 +8,5 @@ export const store = configureStore({
     user: userReducer,
     date: dateReducer,
     patient: patientReducer,
-    // Add other reducers here
   },
 }); 

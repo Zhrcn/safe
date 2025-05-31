@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db/mongoose';
-import Prescription from '@/lib/models/Prescription';
+import { connectToDatabase } from '@/lib/db/mongodb';
+import Prescription from '@/models/Prescription';
+import User from '@/models/User';
 import { jwtDecode } from 'jwt-decode';
 
-// Helper function to get the authenticated user from the request
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
 
@@ -14,7 +14,6 @@ async function getAuthenticatedUser(req) {
     try {
         const decoded = jwtDecode(token);
 
-        // Check if token is expired
         const currentTime = Date.now() / 1000;
         if (decoded.exp && decoded.exp < currentTime) {
             return null;
@@ -27,7 +26,6 @@ async function getAuthenticatedUser(req) {
     }
 }
 
-// GET /api/prescriptions
 export async function GET(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -35,38 +33,31 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const url = new URL(req.url);
 
-        // Handle different roles
         let query = {};
 
         if (user.role === 'patient') {
-            // Patients can only see their own prescriptions
             query.patientId = user.id;
         } else if (user.role === 'doctor') {
-            // Doctors can see prescriptions they created
             query.doctorId = user.id;
 
-            // Or prescriptions for a specific patient if patientId is provided
             const patientId = url.searchParams.get('patientId');
             if (patientId) {
                 query = { patientId };
             }
         } else if (user.role === 'pharmacist') {
-            // Pharmacists can see all prescriptions or filter by patient
             const patientId = url.searchParams.get('patientId');
             if (patientId) {
                 query.patientId = patientId;
             }
 
-            // Or by status
             const status = url.searchParams.get('status');
             if (status) {
                 query.status = status;
             }
         } else if (user.role === 'admin') {
-            // Admins can see all prescriptions or filter by various parameters
             const patientId = url.searchParams.get('patientId');
             const doctorId = url.searchParams.get('doctorId');
             const status = url.searchParams.get('status');
@@ -76,15 +67,12 @@ export async function GET(req) {
             if (status) query.status = status;
         }
 
-        // Handle pagination
         const page = parseInt(url.searchParams.get('page')) || 1;
         const limit = parseInt(url.searchParams.get('limit')) || 10;
         const skip = (page - 1) * limit;
 
-        // Get total count
         const total = await Prescription.countDocuments(query);
 
-        // Execute query with pagination
         const prescriptions = await Prescription.find(query)
             .populate('patientId', 'name')
             .populate('doctorId', 'name')
@@ -108,7 +96,6 @@ export async function GET(req) {
     }
 }
 
-// POST /api/prescriptions
 export async function POST(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -116,15 +103,13 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Only doctors can create prescriptions
         if (user.role !== 'doctor') {
             return NextResponse.json({ error: 'Only doctors can create prescriptions' }, { status: 403 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const data = await req.json();
 
-        // Validate required fields
         if (!data.patientId || !data.medications || !data.expiryDate) {
             return NextResponse.json({
                 error: 'Missing required fields',
@@ -132,7 +117,6 @@ export async function POST(req) {
             }, { status: 400 });
         }
 
-        // Create prescription
         const prescription = new Prescription({
             ...data,
             doctorId: user.id,
@@ -148,7 +132,6 @@ export async function POST(req) {
     }
 }
 
-// PATCH /api/prescriptions/{id}
 export async function PATCH(req, { params }) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -156,7 +139,6 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Get prescription ID from URL
         const url = new URL(req.url);
         const paths = url.pathname.split('/');
         const prescriptionId = paths[paths.length - 1];
@@ -165,34 +147,27 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ error: 'Prescription ID is required' }, { status: 400 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const data = await req.json();
 
-        // Find prescription
         const prescription = await Prescription.findById(prescriptionId);
         if (!prescription) {
             return NextResponse.json({ error: 'Prescription not found' }, { status: 404 });
         }
 
-        // Check authorization
         if (user.role === 'doctor') {
-            // Doctors can only update their own prescriptions
             if (prescription.doctorId.toString() !== user.id) {
                 return NextResponse.json({ error: 'Unauthorized to modify this prescription' }, { status: 403 });
             }
 
-            // Doctors can update most fields except filling information
             delete data.filledBy;
             delete data.refillsUsed;
             delete data.refillHistory;
 
-            // Update prescription
             Object.assign(prescription, data);
             await prescription.save();
         } else if (user.role === 'pharmacist') {
-            // Pharmacists can only update filling information
             if (data.status === 'Filled' || data.status === 'Cancelled') {
-                // Check if prescription can be filled
                 if (data.status === 'Filled' && !prescription.canBeFilled()) {
                     return NextResponse.json({
                         error: 'Prescription cannot be filled',
@@ -201,10 +176,7 @@ export async function PATCH(req, { params }) {
                 }
 
                 if (data.status === 'Filled') {
-                    // Fill prescription
-                    await prescription.fill(user.id, data.notes || '');
                 } else {
-                    // Cancel prescription
                     prescription.status = 'Cancelled';
                     await prescription.save();
                 }
@@ -216,7 +188,6 @@ export async function PATCH(req, { params }) {
         } else if (user.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized to modify prescriptions' }, { status: 403 });
         } else {
-            // Admins can update any field
             Object.assign(prescription, data);
             await prescription.save();
         }

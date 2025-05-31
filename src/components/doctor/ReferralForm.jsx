@@ -29,7 +29,6 @@ import { z } from 'zod';
 import { UserRound, Send, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { getAvailableDoctors, createReferral } from '@/services/doctorService';
 
-// Validation schema
 const referralSchema = z.object({
     doctorId: z.string().min(1, 'Doctor is required'),
     reason: z.string().min(5, 'Reason must be at least 5 characters'),
@@ -59,7 +58,6 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
         }
     });
 
-    // Load available doctors
     useEffect(() => {
         const loadDoctors = async () => {
             try {
@@ -77,7 +75,6 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
         loadDoctors();
     }, []);
 
-    // Get status chip color
     const getStatusColor = (status) => {
         switch(status.toLowerCase()) {
             case 'pending':
@@ -93,7 +90,6 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
         }
     };
 
-    // Get status icon
     const getStatusIcon = (status) => {
         switch(status.toLowerCase()) {
             case 'pending':
@@ -114,14 +110,12 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
             setIsSubmitting(true);
             setError('');
             
-            // Find doctor name
             const doctor = doctors.find(d => d.id === data.doctorId);
             if (!doctor) {
                 setError('Selected doctor not found');
                 return;
             }
             
-            // Create referral data
             const referralData = {
                 doctorId: data.doctorId,
                 doctorName: doctor.name,
@@ -131,19 +125,16 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 urgency: data.urgency
             };
             
-            // Call the API to create referral
             const result = await createReferral(patientId, referralData);
             
             if (result.success) {
                 setSuccess('Referral created successfully');
                 reset();
                 
-                // Notify parent component
                 if (onSuccess) {
                     onSuccess(result.referral);
                 }
                 
-                // Close form after a short delay
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);

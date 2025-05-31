@@ -26,7 +26,6 @@ import { z } from 'zod';
 import { X, Clock, ArrowUp, ArrowDown, Minus, Activity } from 'lucide-react';
 import { addConditionUpdate } from '@/services/doctorService';
 
-// Validation schema
 const conditionSchema = z.object({
     status: z.string().min(1, 'Status is required'),
     notes: z.string().min(5, 'Notes must be at least 5 characters'),
@@ -70,19 +69,16 @@ export default function PatientConditionForm({ patientId, patientName, previousU
             setIsSubmitting(true);
             setError('');
             
-            // Call the API to add condition update
             const result = await addConditionUpdate(patientId, data);
             
             if (result.success) {
                 setSuccess('Condition update added successfully');
                 reset();
                 
-                // Notify parent component
                 if (onSuccess) {
                     onSuccess(result.update);
                 }
                 
-                // Close form after a short delay
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);

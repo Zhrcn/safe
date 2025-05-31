@@ -3,7 +3,6 @@
 import GenericRoleLayout from '@/components/GenericRoleLayout';
 import { Package, FileText, ShoppingCart, BarChart, User } from 'lucide-react';
 
-// Define sidebar items for the pharmacist role
 const sidebarItems = [
     { name: 'Dashboard', icon: BarChart, link: '/pharmacist/dashboard' },
     { name: 'Inventory', icon: Package, link: '/pharmacist/inventory' },

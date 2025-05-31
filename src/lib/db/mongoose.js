@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
 
-// Use the environment variable or fallback to the provided string for development
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safe';
 
 if (!MONGODB_URI) {
     throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-// Global is used here to maintain a cached connection across hot reloads in development
 let cached = global.mongoose;
 
 if (!cached) {
@@ -47,7 +45,6 @@ async function connectDB() {
     return cached.conn;
 }
 
-// Event listeners for connection status
 mongoose.connection.on('connected', () => {
     console.log('MongoDB connection established');
 });
@@ -60,7 +57,6 @@ mongoose.connection.on('error', (err) => {
     console.error('MongoDB connection error:', err);
 });
 
-// Handle Node.js process termination and close the MongoDB connection
 process.on('SIGINT', async () => {
     await mongoose.connection.close();
     console.log('MongoDB connection closed due to application termination');

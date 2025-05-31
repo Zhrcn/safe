@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Container, Typography, Box, CircularProgress } from '@mui/material';
 import LoginForm from '@/components/auth/LoginForm';
 
-// Component with search params access
 function LoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -37,7 +36,6 @@ function LoginContent() {
   );
 }
 
-// Main component with Suspense boundary
 export default function LoginPage() {
   return (
     <Suspense fallback={

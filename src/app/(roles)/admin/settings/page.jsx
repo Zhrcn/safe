@@ -4,7 +4,6 @@ import { Typography, Box, Paper, Card, CardContent, Grid, TextField, Switch, For
 import { Settings, Palette, Database } from 'lucide-react';
 import { useState } from 'react';
 
-// Mock Settings Data (replace with actual data fetching/state management)
 const mockSettings = {
   appName: 'SAFE Medical Service Platform',
   systemEmail: 'noreply@safemedical.com',
@@ -13,7 +12,7 @@ const mockSettings = {
 };
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState(mockSettings); // Use state to manage settings
+  const [settings, setSettings] = useState(mockSettings); 
 
   const handleSettingChange = (event) => {
     const { name, value, checked, type } = event.target;
@@ -22,31 +21,29 @@ export default function AdminSettingsPage() {
       [name]: type === 'checkbox' ? checked : value,
     }));
     console.log(`Setting '${name}' changed to: ${type === 'checkbox' ? checked : value}`);
-    // Implement logic to save settings (API call or state update)
   };
 
   return (
     <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md min-h-[80vh]"> {/* Theme-aware background, shadow, and minimum height */}
-        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> {/* Theme-aware text color */}
+      <Paper elevation={3} sx={{ p: 3 }} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-md min-h-[80vh]">
+        <Typography variant="h4" gutterBottom className="text-gray-900 dark:text-white font-bold"> 
           Admin Settings
         </Typography>
-        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6"> {/* Theme-aware text color */}
+        <Typography paragraph className="text-gray-700 dark:text-gray-300 mb-6"> 
           Manage system-wide application settings.
         </Typography>
 
-        <Grid container spacing={3}> {/* Added spacing between grid items */}
+        <Grid container spacing={3}> 
 
-          {/* General Settings Section */}
-          <Grid item xs={12} md={6}> {/* Responsive grid item */}
-            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Theme-aware card styles */}
+          <Grid item xs={12} md={6}>
+            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> 
               <CardContent>
                  <Box className="flex items-center mb-4">
-                     <Settings size={28} className="mr-4 text-red-600 dark:text-red-400"/> {/* Themed icon color and spacing */}
-                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">General Settings</Typography> {/* Theme-aware text color */}
+                     <Settings size={28} className="mr-4 text-red-600 dark:text-red-400"/> 
+                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">General Settings</Typography> 
                  </Box>
-                <Grid container spacing={2}> {/* Spacing within this card */}
-                   <Grid item xs={12}> {/* Responsive grid item */}
+                <Grid container spacing={2}>
+                   <Grid item xs={12}>
                       <TextField
                         label="Application Name"
                         name="appName"
@@ -59,7 +56,7 @@ export default function AdminSettingsPage() {
                            style: { color: 'inherit' },
                         }}
                          InputProps={{
-                           className: 'text-gray-900 dark:text-white', // Themed input text
+                           className: 'text-gray-900 dark:text-white',
                          }}
                           sx={{
                              '& .MuiOutlinedInput-root': {
@@ -92,7 +89,7 @@ export default function AdminSettingsPage() {
                            }}
                       />
                    </Grid>
-                   <Grid item xs={12}> {/* Responsive grid item */}
+                   <Grid item xs={12}> 
                        <TextField
                         label="System Email Address"
                         name="systemEmail"
@@ -105,7 +102,7 @@ export default function AdminSettingsPage() {
                            style: { color: 'inherit' },
                         }}
                          InputProps={{
-                           className: 'text-gray-900 dark:text-white', // Themed input text
+                           className: 'text-gray-900 dark:text-white', 
                          }}
                           sx={{
                              '& .MuiOutlinedInput-root': {
@@ -143,13 +140,13 @@ export default function AdminSettingsPage() {
             </Card>
           </Grid>
 
-          {/* Theme Settings Section */}
-           <Grid item xs={12} md={6}> {/* Responsive grid item */}
-            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Theme-aware card styles */}
+  
+           <Grid item xs={12} md={6}>
+            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> 
               <CardContent>
                  <Box className="flex items-center mb-4">
-                     <Palette size={28} className="mr-4 text-red-600 dark:text-red-400"/> {/* Themed icon color and spacing */}
-                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">Theme Settings</Typography> {/* Theme-aware text color */}
+                     <Palette size={28} className="mr-4 text-red-600 dark:text-red-400"/>
+                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">Theme Settings</Typography>
                  </Box>
                  <FormControlLabel
                     control={
@@ -160,19 +157,19 @@ export default function AdminSettingsPage() {
                         color="primary"
                       />
                     }
-                    label={<Typography className="text-gray-900 dark:text-white">Enable Dark Mode</Typography>} // Theme-aware label text
+                    label={<Typography className="text-gray-900 dark:text-white">Enable Dark Mode</Typography>} 
                   />
               </CardContent>
             </Card>
           </Grid>
 
-           {/* Database Settings Section (Example) */}
-            <Grid item xs={12} md={6}> {/* Responsive grid item */}
-            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> {/* Theme-aware card styles */}
+          
+            <Grid item xs={12} md={6}> 
+            <Card className="h-full shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"> 
               <CardContent>
                  <Box className="flex items-center mb-4">
-                     <Database size={28} className="mr-4 text-red-600 dark:text-red-400"/> {/* Themed icon color and spacing */}
-                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">Database Settings</Typography> {/* Theme-aware text color */}
+                     <Database size={28} className="mr-4 text-red-600 dark:text-red-400"/> 
+                     <Typography variant="h6" component="div" className="font-semibold text-gray-900 dark:text-white">Database Settings</Typography> 
                  </Box>
                  <TextField
                     label="Database Backup Schedule"
@@ -186,7 +183,7 @@ export default function AdminSettingsPage() {
                        style: { color: 'inherit' },
                     }}
                      InputProps={{
-                       className: 'text-gray-900 dark:text-white', // Themed input text
+                       className: 'text-gray-900 dark:text-white',
                      }}
                       sx={{
                          '& .MuiOutlinedInput-root': {
@@ -221,8 +218,6 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
           </Grid>
-
-          {/* Add more settings sections as needed */}
 
         </Grid>
       </Paper>

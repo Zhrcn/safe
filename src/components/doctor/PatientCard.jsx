@@ -55,7 +55,6 @@ export default function PatientCard({ patient }) {
         setActiveDialog(null);
     };
     
-    // Get status chip color
     const getStatusChipProps = (status) => {
         switch(status.toLowerCase()) {
             case 'active':
@@ -81,7 +80,6 @@ export default function PatientCard({ patient }) {
         }
     };
     
-    // Get the patient's initials for the avatar
     const getInitials = (name) => {
         return name
             .split(' ')

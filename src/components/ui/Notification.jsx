@@ -1,12 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, Box, Paper, InputBase, IconButton } from '@mui/material';
 import {
     CheckCircle,
     AlertCircle,
     Info,
-    AlertTriangle
+    AlertTriangle,
+    Search
 } from 'lucide-react';
 
 const NotificationContext = createContext(undefined);
@@ -20,36 +21,40 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-    const [open, setOpen] = useState(false);
-    const [message, setMessage] = useState('');
-    const [type, setType] = useState('info');
-    const [duration, setDuration] = useState(6000);
+    const [notification, setNotification] = useState({
+        open: false,
+        message: '',
+        severity: 'info', 
+    });
 
-    const showNotification = (
-        message,
-        type = 'info',
-        duration = 6000
-    ) => {
-        setMessage(message);
-        setType(type);
-        setDuration(duration);
-        setOpen(true);
+    const showNotification = (message, severity = 'info') => {
+        setNotification({
+            open: true,
+            message,
+            severity,
+        });
     };
 
-    const closeNotification = () => {
-        setOpen(false);
+    const hideNotification = () => {
+        setNotification({
+            ...notification,
+            open: false,
+        });
     };
 
     return (
-        <NotificationContext.Provider value={{ showNotification, closeNotification }}>
+        <NotificationContext.Provider value={{ showNotification }}>
             {children}
-            <Notification
-                open={open}
-                message={message}
-                type={type}
-                duration={duration}
-                onClose={closeNotification}
-            />
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
+                onClose={hideNotification}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={hideNotification} severity={notification.severity} variant="filled">
+                    {notification.message}
+                </Alert>
+            </Snackbar>
         </NotificationContext.Provider>
     );
 };
@@ -104,4 +109,28 @@ const Notification = ({
     );
 };
 
-export default Notification; 
+export default Notification;
+
+/**
+ * Shared SearchField component that can be used across different roles
+ * This eliminates duplicate SearchField implementations in role-specific components
+ */
+export function SearchField({ value, onChange, placeholder = 'Search...', className = '' }) {
+    return (
+        <Paper
+            component="form"
+            elevation={0}
+            className={`flex items-center px-3 py-1 border border-border bg-background rounded-md ${className}`}
+        >
+            <InputBase
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className="ml-1 flex-1 text-foreground"
+            />
+            <IconButton type="button" size="small" className="text-muted-foreground">
+                <Search size={18} />
+            </IconButton>
+        </Paper>
+    );
+} 

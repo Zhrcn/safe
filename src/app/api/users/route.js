@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db/mongoose';
-import User from '@/lib/models/User';
+import { connectToDatabase } from '@/lib/db/mongodb';
+import User from '@/models/User';
 import { jwtDecode } from 'jwt-decode';
 
-// Helper function to get authenticated user from request
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
 
@@ -14,7 +13,6 @@ async function getAuthenticatedUser(req) {
     try {
         const decoded = jwtDecode(token);
 
-        // Check if token is expired
         const currentTime = Date.now() / 1000;
         if (decoded.exp && decoded.exp < currentTime) {
             return null;
@@ -27,8 +25,9 @@ async function getAuthenticatedUser(req) {
     }
 }
 
-// GET /api/users
-// Get users with filtering options (admin only)
+/**
+ * GET handler for fetching users
+ */
 export async function GET(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -36,21 +35,17 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Only admins can list all users
         if (user.role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const url = new URL(req.url);
 
-        // Parse query parameters
         const role = url.searchParams.get('role');
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
         const searchTerm = url.searchParams.get('search');
-
-        // Build query
         let query = {};
         if (role) {
             query.role = role;
@@ -63,13 +58,11 @@ export async function GET(req) {
             ];
         }
 
-        // Calculate pagination
         const skip = (page - 1) * limit;
 
-        // Execute query with pagination
         const total = await User.countDocuments(query);
         const users = await User.find(query)
-            .select('-password') // Exclude password
+            .select('-password') 
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -89,8 +82,9 @@ export async function GET(req) {
     }
 }
 
-// POST /api/users
-// Create a new user (admin only)
+/**
+ * POST handler for creating a new user
+ */
 export async function POST(req) {
     try {
         const user = await getAuthenticatedUser(req);
@@ -98,21 +92,18 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Only admins can create users directly
         if (user.role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
         }
 
-        await connectDB();
+        await connectToDatabase();
         const data = await req.json();
 
-        // Check if user with this email already exists
         const existingUser = await User.findOne({ email: data.email.toLowerCase() });
         if (existingUser) {
             return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
         }
 
-        // Create new user
         const newUser = new User({
             ...data,
             email: data.email.toLowerCase(),
@@ -120,7 +111,6 @@ export async function POST(req) {
 
         await newUser.save();
 
-        // Remove password from response
         const userResponse = newUser.toObject();
         delete userResponse.password;
 
