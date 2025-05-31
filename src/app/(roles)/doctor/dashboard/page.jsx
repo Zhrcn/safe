@@ -386,6 +386,28 @@ export default function DashboardPage() {
     .slice(0, 4);
   
   const pendingAppointments = appointments.filter(a => a.status === 'Pending').length;
+
+  // Get today's date in YYYY-MM-DD format safely
+  const getTodayDateString = () => {
+    try {
+      return new Date().toISOString().split('T')[0];
+    } catch (err) {
+      console.error('Date formatting error:', err);
+      return '';
+    }
+  };
+  
+  const todayDateString = getTodayDateString();
+  
+  // Count today's appointments safely
+  const todayAppointmentsCount = appointments.filter(a => {
+    try {
+      return a.date === todayDateString;
+    } catch (err) {
+      console.error('Error comparing appointment date:', err);
+      return false;
+    }
+  }).length;
   
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -417,7 +439,7 @@ export default function DashboardPage() {
         <Grid item xs={12} sm={6} md={3}>
           <DashboardStatCard 
             title="Today's Appointments" 
-            value={appointments.filter(a => a.date === new Date().toISOString().split('T')[0]).length} 
+            value={todayAppointmentsCount}
             icon={Calendar}
             color="bg-purple-500"
             linkTo="/doctor/appointments"
