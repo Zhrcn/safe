@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import User from '@/models/User';
+import handleCors from '@/lib/api/cors';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -13,6 +14,22 @@ const loginSchema = z.object({
 
 // Use a consistent JWT secret that won't change between server restarts
 const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
+
+// Handle OPTIONS requests for CORS
+export async function OPTIONS(req) {
+    const response = new NextResponse(null, { status: 200 });
+    
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.set(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+    
+    return response;
+}
 
 export async function POST(req) {
     try {
@@ -68,7 +85,8 @@ export async function POST(req) {
                         { expiresIn: '30d' } // Extended to 30 days
                     );
                     
-                    return NextResponse.json({
+                    // Set the token as a cookie
+                    const response = NextResponse.json({
                         token,
                         user: {
                             id: mongoUser._id.toString(),
@@ -77,6 +95,23 @@ export async function POST(req) {
                             role: mongoUser.role
                         }
                     });
+
+                    // Set a secure, httpOnly cookie
+                    response.cookies.set({
+                        name: 'safe_auth_token',
+                        value: token,
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'lax', // Changed to 'lax' for better cross-site compatibility
+                        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+                        path: '/',
+                    });
+
+                    // Add CORS headers
+                    response.headers.set('Access-Control-Allow-Credentials', 'true');
+                    response.headers.set('Access-Control-Allow-Origin', '*');
+                    
+                    return response;
                 }
             } catch (mongoError) {
                 console.error('Direct MongoDB query error:', mongoError);
@@ -169,10 +204,14 @@ export async function POST(req) {
             value: token,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax', // Changed to 'lax' for better cross-site compatibility
             maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
             path: '/',
         });
+
+        // Add CORS headers
+        response.headers.set('Access-Control-Allow-Credentials', 'true');
+        response.headers.set('Access-Control-Allow-Origin', '*');
 
         return response;
     } catch (error) {

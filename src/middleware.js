@@ -23,8 +23,25 @@ const roleRestrictedPaths = {
     '/admin': ['admin'],
 };
 
+// Helper function to add CORS headers
+function addCorsHeaders(response) {
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.set(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+    return response;
+}
+
 export function middleware(request) {
     const { pathname } = request.nextUrl;
+    
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+        return addCorsHeaders(new NextResponse(null, { status: 200 }));
+    }
     
     // Skip middleware for API routes except those that need role checking
     if (pathname.startsWith('/api/') && 
@@ -58,7 +75,7 @@ export function middleware(request) {
         
         // For API routes, return 401 instead of redirecting
         if (pathname.startsWith('/api/')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return addCorsHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
         }
         
         const url = new URL('/login', request.url);
@@ -79,7 +96,7 @@ export function middleware(request) {
             
             // For API routes, return 401 instead of redirecting
             if (pathname.startsWith('/api/')) {
-                return NextResponse.json({ error: 'Token expired' }, { status: 401 });
+                return addCorsHeaders(NextResponse.json({ error: 'Token expired' }, { status: 401 }));
             }
             
             const url = new URL('/login', request.url);
@@ -94,11 +111,17 @@ export function middleware(request) {
                 
                 // For API routes, return 403 instead of redirecting
                 if (pathname.startsWith('/api/')) {
-                    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+                    return addCorsHeaders(NextResponse.json({ error: 'Forbidden' }, { status: 403 }));
                 }
                 
                 return NextResponse.redirect(new URL('/unauthorized', request.url));
             }
+        }
+
+        // Add CORS headers to API responses
+        if (pathname.startsWith('/api/')) {
+            const response = NextResponse.next();
+            return addCorsHeaders(response);
         }
 
         return NextResponse.next();
@@ -107,7 +130,7 @@ export function middleware(request) {
         
         // For API routes, return 401 instead of redirecting
         if (pathname.startsWith('/api/')) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+            return addCorsHeaders(NextResponse.json({ error: 'Invalid token' }, { status: 401 }));
         }
         
         const url = new URL('/login', request.url);
@@ -120,10 +143,9 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except:
-         * 1. /api/auth/* (authentication endpoints)
-         * 2. /_next (Next.js internals)
-         * 3. /_static (static files)
-         * 4. /favicon.ico, /sitemap.xml (static files)
+         * 1. /_next (Next.js internals)
+         * 2. /_static (static files)
+         * 3. /favicon.ico, /sitemap.xml (static files)
          */
         '/((?!_next|_static|favicon.ico|sitemap.xml).*)',
     ],

@@ -12,6 +12,8 @@ export default class BaseService {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Include credentials for cookie-based auth
+      withCredentials: true,
     });
     
     this.api.interceptors.request.use(
@@ -30,7 +32,16 @@ export default class BaseService {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response) {
+        // Handle network errors (CORS issues, etc.)
+        if (!error.response) {
+          console.error('Network error:', error.message);
+          
+          // Check if it might be a CORS issue
+          if (error.message === 'Network Error') {
+            console.warn('Possible CORS issue. Check server configuration.');
+          }
+        }
+        else if (error.response) {
           const { status } = error.response;
           
           if (status === 401) {
@@ -73,7 +84,11 @@ export default class BaseService {
    */
   async get(url, params = {}, config = {}) {
     try {
-      const response = await this.api.get(url, { params, ...config });
+      const response = await this.api.get(url, { 
+        params, 
+        ...config,
+        withCredentials: true 
+      });
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -89,7 +104,10 @@ export default class BaseService {
    */
   async post(url, data = {}, config = {}) {
     try {
-      const response = await this.api.post(url, data, config);
+      const response = await this.api.post(url, data, { 
+        ...config,
+        withCredentials: true 
+      });
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -105,7 +123,10 @@ export default class BaseService {
    */
   async put(url, data = {}, config = {}) {
     try {
-      const response = await this.api.put(url, data, config);
+      const response = await this.api.put(url, data, { 
+        ...config,
+        withCredentials: true 
+      });
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -121,7 +142,10 @@ export default class BaseService {
    */
   async patch(url, data = {}, config = {}) {
     try {
-      const response = await this.api.patch(url, data, config);
+      const response = await this.api.patch(url, data, { 
+        ...config,
+        withCredentials: true 
+      });
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -130,14 +154,16 @@ export default class BaseService {
   }
   
   /**
-
    * @param {string} url 
    * @param {Object} config 
    * @returns {Promise}
    */
   async delete(url, config = {}) {
     try {
-      const response = await this.api.delete(url, config);
+      const response = await this.api.delete(url, { 
+        ...config,
+        withCredentials: true 
+      });
       return response.data;
     } catch (error) {
       this.handleError(error);

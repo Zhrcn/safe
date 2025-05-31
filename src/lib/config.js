@@ -1,7 +1,8 @@
 export const APP_NAME = 'S.A.F.E';
 export const APP_DESCRIPTION = 'Secure, Accessible, Fast, Efficient Medical Service Platform';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
+// Use relative URL for API endpoints to work in any environment
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 
 export const JWT_TOKEN_KEY = 'safe_jwt_token';
 

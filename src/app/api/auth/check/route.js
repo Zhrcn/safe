@@ -6,6 +6,22 @@ import User from '@/models/User';
 // Use the same JWT secret as in the login route
 const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
+// Handle OPTIONS requests for CORS
+export async function OPTIONS(req) {
+    const response = new NextResponse(null, { status: 200 });
+    
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.set(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+    
+    return response;
+}
+
 export async function GET(req) {
     try {
         // First check for token in cookie
@@ -19,7 +35,9 @@ export async function GET(req) {
         const token = tokenCookie || headerToken;
         
         if (!token) {
-            return NextResponse.json({ authenticated: false, error: 'No token provided' }, { status: 401 });
+            const response = NextResponse.json({ authenticated: false, error: 'No token provided' }, { status: 401 });
+            addCorsHeaders(response);
+            return response;
         }
         
         try {
@@ -31,11 +49,13 @@ export async function GET(req) {
             const user = await User.findById(decoded.id);
             
             if (!user) {
-                return NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 401 });
+                const response = NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 401 });
+                addCorsHeaders(response);
+                return response;
             }
             
             // Return user data and token for client-side storage
-            return NextResponse.json({
+            const response = NextResponse.json({
                 authenticated: true,
                 token: token, // Return the token so client can store it
                 user: {
@@ -45,12 +65,31 @@ export async function GET(req) {
                     role: user.role
                 }
             });
+            
+            addCorsHeaders(response);
+            return response;
         } catch (error) {
             console.error('Token verification error:', error);
-            return NextResponse.json({ authenticated: false, error: 'Invalid token' }, { status: 401 });
+            const response = NextResponse.json({ authenticated: false, error: 'Invalid token' }, { status: 401 });
+            addCorsHeaders(response);
+            return response;
         }
     } catch (error) {
         console.error('Auth check error:', error);
-        return NextResponse.json({ authenticated: false, error: 'Server error' }, { status: 500 });
+        const response = NextResponse.json({ authenticated: false, error: 'Server error' }, { status: 500 });
+        addCorsHeaders(response);
+        return response;
     }
+}
+
+// Helper function to add CORS headers
+function addCorsHeaders(response) {
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.set(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+    return response;
 } 
