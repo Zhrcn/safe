@@ -43,20 +43,20 @@ export async function POST(req) {
                     validatedData.password === 'doctor123' && validatedData.role === 'doctor' ||
                     validatedData.password === 'patient123' && validatedData.role === 'patient' ||
                     validatedData.password === 'pharmacist123' && validatedData.role === 'pharmacist') {
-                    
+
                     console.log('Using mock authentication for', validatedData.email);
-                    
+
                     // Create mock user data based on login credentials
                     const mockUserId = Math.random().toString(36).substring(2, 15);
                     const mockUser = {
                         _id: mockUserId,
                         email: validatedData.email,
                         role: validatedData.role,
-                        name: validatedData.role === 'patient' ? 'Ali Omar' : 
-                              validatedData.role === 'doctor' ? 'Dr. John Smith' :
-                              validatedData.role === 'pharmacist' ? 'Sam Pharmacist' : 'Admin User',
+                        name: validatedData.role === 'patient' ? 'Ali Omar' :
+                            validatedData.role === 'doctor' ? 'Dr. John Smith' :
+                                validatedData.role === 'pharmacist' ? 'Sam Pharmacist' : 'Admin User',
                     };
-                    
+
                     // Generate a token
                     const token = jwt.sign(
                         {
@@ -66,9 +66,9 @@ export async function POST(req) {
                             name: mockUser.name,
                         },
                         JWT_SECRET,
-                        { expiresIn: '1h' } // Short expiration for mock data
+                        { expiresIn: '30d' } // Extended to 30 days
                     );
-                    
+
                     const response = NextResponse.json({
                         token,
                         user: {
@@ -79,7 +79,7 @@ export async function POST(req) {
                         },
                         source: 'mock_data'
                     });
-                    
+
                     // Set cookie
                     response.cookies.set({
                         name: 'safe_auth_token',
@@ -87,19 +87,19 @@ export async function POST(req) {
                         httpOnly: true,
                         secure: process.env.NODE_ENV === 'production',
                         sameSite: 'lax',
-                        maxAge: 60 * 60, // 1 hour in seconds
+                        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
                         path: '/',
                     });
-                    
+
                     // Add CORS headers
                     Object.entries(corsHeaders).forEach(([key, value]) => {
                         response.headers.set(key, value);
                     });
-                    
+
                     // Add diagnostic headers
                     response.headers.set('X-Data-Source', 'mock_data');
                     response.headers.set('X-Mock-Auth', 'true');
-                    
+
                     return response;
                 } else {
                     // Invalid credentials for mock login
@@ -107,12 +107,12 @@ export async function POST(req) {
                         { error: 'Invalid credentials' },
                         { status: 401 }
                     );
-                    
+
                     // Add CORS headers
                     Object.entries(corsHeaders).forEach(([key, value]) => {
                         errorResponse.headers.set(key, value);
                     });
-                    
+
                     return errorResponse;
                 }
             }
@@ -143,7 +143,7 @@ export async function POST(req) {
                     const mongoose = await connectToDatabase();
                     const db = mongoose.connection.db;
                     const usersCollection = db.collection('Users');
-                    
+
                     // Query with timeout protection
                     const mongoUser = await withTimeout(
                         usersCollection.findOne({
@@ -153,10 +153,10 @@ export async function POST(req) {
                         5000,
                         'MongoDB user lookup timed out'
                     );
-                    
+
                     if (mongoUser) {
                         console.log('User found directly in MongoDB Users collection');
-                        
+
                         // Create a JWT token for the user with extended expiration
                         const token = jwt.sign(
                             {
@@ -168,7 +168,7 @@ export async function POST(req) {
                             JWT_SECRET,
                             { expiresIn: '30d' } // Extended to 30 days
                         );
-                        
+
                         // Set the token as a cookie
                         const response = NextResponse.json({
                             token,
@@ -195,41 +195,41 @@ export async function POST(req) {
                         Object.entries(corsHeaders).forEach(([key, value]) => {
                             response.headers.set(key, value);
                         });
-                        
+
                         return response;
                     }
                 } catch (mongoError) {
                     console.error('Direct MongoDB query error:', mongoError);
                 }
-                
+
                 const errorResponse = NextResponse.json(
                     { error: 'Invalid credentials or role' },
                     { status: 401 }
                 );
-                
+
                 // Add CORS headers to error response
                 Object.entries(corsHeaders).forEach(([key, value]) => {
                     errorResponse.headers.set(key, value);
                 });
-                
+
                 return errorResponse;
             }
 
             // Get user with password for comparison
             const userWithPassword = await User.findById(user._id).select('+password');
-            
+
             if (!userWithPassword || !userWithPassword.password) {
                 console.log('Password not found in user document');
                 const errorResponse = NextResponse.json(
                     { error: 'Authentication error' },
                     { status: 401 }
                 );
-                
+
                 // Add CORS headers to error response
                 Object.entries(corsHeaders).forEach(([key, value]) => {
                     errorResponse.headers.set(key, value);
                 });
-                
+
                 return errorResponse;
             }
 
@@ -241,7 +241,7 @@ export async function POST(req) {
                 // Compare password using bcrypt
                 const isPasswordValid = await bcrypt.compare(validatedData.password, userWithPassword.password);
                 console.log('Password valid:', isPasswordValid);
-                
+
                 if (!isPasswordValid) {
                     // Fallback for seed data - check if passwords match directly (for testing)
                     if (validatedData.password === 'admin123' && validatedData.role === 'admin' ||
@@ -254,12 +254,12 @@ export async function POST(req) {
                             { error: 'Invalid credentials' },
                             { status: 401 }
                         );
-                        
+
                         // Add CORS headers to error response
                         Object.entries(corsHeaders).forEach(([key, value]) => {
                             errorResponse.headers.set(key, value);
                         });
-                        
+
                         return errorResponse;
                     }
                 }
@@ -325,31 +325,31 @@ export async function POST(req) {
         } catch (err) {
             // Handle database connection errors gracefully
             console.error('MongoDB connection error in login:', err);
-            
+
             // Create more informative error response with diagnostic info
             const errorMessage = err.message || 'Unknown database error';
             const errorType = err.code || 'UNKNOWN_ERROR';
             const diagnostic = err.diagnostic || 'Database connection failed';
-            
+
             const errorResponse = NextResponse.json(
-                { 
-                    error: 'Internal server error', 
+                {
+                    error: 'Internal server error',
                     message: errorMessage,
                     type: errorType,
                     diagnostic: diagnostic,
                 },
                 { status: 500 }
             );
-            
+
             // Add diagnostic headers
             errorResponse.headers.set('X-Error-Type', errorType);
             errorResponse.headers.set('X-Error-Message', errorMessage.substring(0, 200));
-            
+
             // Add CORS headers
             Object.entries(corsHeaders).forEach(([key, value]) => {
                 errorResponse.headers.set(key, value);
             });
-            
+
             return errorResponse;
         }
     } catch (error) {
@@ -358,41 +358,41 @@ export async function POST(req) {
                 { error: 'Invalid request data', details: error.errors },
                 { status: 400 }
             );
-            
+
             // Add CORS headers to error response
             Object.entries(corsHeaders).forEach(([key, value]) => {
                 errorResponse.headers.set(key, value);
             });
-            
+
             return errorResponse;
         }
 
         console.error('Login error:', error);
-        
+
         // Create structured error response with more information
         const errorType = error.code || 'UNKNOWN_ERROR';
         const errorMessage = error.message || 'Unknown error';
         const diagnostic = error.diagnostic || 'Internal server error';
-        
+
         const errorResponse = NextResponse.json(
-            { 
-                error: 'Internal server error', 
+            {
+                error: 'Internal server error',
                 message: errorMessage,
                 type: errorType,
                 diagnostic: diagnostic,
             },
             { status: 500 }
         );
-        
+
         // Add diagnostic headers
         errorResponse.headers.set('X-Error-Type', errorType);
         errorResponse.headers.set('X-Error-Message', errorMessage.substring(0, 200));
-        
+
         // Add CORS headers
         Object.entries(corsHeaders).forEach(([key, value]) => {
             errorResponse.headers.set(key, value);
         });
-        
+
         return errorResponse;
     }
 }

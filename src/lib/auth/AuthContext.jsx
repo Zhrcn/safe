@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
+                setIsLoading(true);
                 // Check for token in localStorage
                 const token = localStorage.getItem(TOKEN_STORAGE_KEY);
                 const userData = localStorage.getItem(USER_STORAGE_KEY);
@@ -71,6 +72,32 @@ export const AuthProvider = ({ children }) => {
                         const user = JSON.parse(userData);
                         setUser(user);
                         console.log('User authenticated from localStorage:', user.email);
+
+                        // Verify the token with the server
+                        try {
+                            const verifyResponse = await fetch('/api/auth/verify', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+
+                            if (!verifyResponse.ok) {
+                                // Only log out if it's a 401 (Unauthorized) or 403 (Forbidden)
+                                if (verifyResponse.status === 401 || verifyResponse.status === 403) {
+                                    console.warn('Token verification failed with status:', verifyResponse.status);
+                                    await handleLogout();
+                                    return;
+                                } else {
+                                    // For other errors (like 500), continue with local auth
+                                    console.warn('Token verification had server error:', verifyResponse.status);
+                                    // Continue with local auth
+                                }
+                            }
+                        } catch (verifyError) {
+                            console.error('Error verifying token:', verifyError);
+                            // Continue with local auth if server is unreachable
+                        }
                     } catch (error) {
                         console.error('Error decoding token:', error);
                         await handleLogout();
@@ -122,7 +149,7 @@ export const AuthProvider = ({ children }) => {
             } catch (storageError) {
                 console.error('Failed to save to localStorage:', storageError);
             }
-            
+
             // Multi-layered approach to ensure cookie is set
             await ensureAuthCookieIsSet(token);
 
@@ -144,7 +171,7 @@ export const AuthProvider = ({ children }) => {
     const ensureAuthCookieIsSet = async (token) => {
         try {
             console.log('Setting auth cookie...');
-            
+
             // Approach 1: Direct document.cookie setting
             const cookieOptions = [
                 `safe_auth_token=${encodeURIComponent(token)}`,
@@ -152,15 +179,15 @@ export const AuthProvider = ({ children }) => {
                 `max-age=${30 * 24 * 60 * 60}`, // 30 days
                 'SameSite=Lax'
             ];
-            
+
             // Don't add secure flag in development
             if (window.location.protocol === 'https:') {
                 cookieOptions.push('secure');
             }
-            
+
             document.cookie = cookieOptions.join('; ');
             console.log('Approach 1: Set cookie via document.cookie');
-            
+
             // Approach 2: Use server endpoint to set the cookie
             try {
                 console.log('Approach 2: Using server endpoint to set cookie');
@@ -173,9 +200,9 @@ export const AuthProvider = ({ children }) => {
                     credentials: 'include', // Important for cookies
                     body: JSON.stringify({ token }) // Also include token in body
                 });
-                
+
                 console.log('Cookie refresh response:', response.status);
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Cookie set by server:', data);
@@ -183,7 +210,7 @@ export const AuthProvider = ({ children }) => {
             } catch (fetchError) {
                 console.error('Failed to set cookie via server:', fetchError);
             }
-            
+
             // Verify cookie was set
             setTimeout(() => {
                 const hasCookie = document.cookie.includes('safe_auth_token');

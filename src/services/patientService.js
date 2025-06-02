@@ -52,7 +52,7 @@ export async function getPrescriptions() {
             if (response.status === 404) {
                 throw new Error('Prescriptions endpoint not found (404)');
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -95,7 +95,7 @@ export async function getConsultations() {
             if (response.status === 404) {
                 throw new Error('Consultations endpoint not found (404)');
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -121,13 +121,13 @@ export async function getConsultations() {
 export async function scheduleAppointment(appointment) {
     try {
         console.log('Full appointment data received:', appointment);
-        
+
         // Handle both snake_case and camelCase field names
         const doctorId = appointment.doctorId || appointment.doctor_id;
         const reason = appointment.reason || appointment.reasonForVisit;
         const timeSlot = appointment.timeSlot || appointment.time_slot;
         const date = appointment.date || appointment.appointment_date;
-        
+
         if (!doctorId) {
             console.warn('Missing doctorId in appointment data:', appointment);
             throw new Error('Please select a doctor');
@@ -148,7 +148,7 @@ export async function scheduleAppointment(appointment) {
 
         // Map time slot to actual time ranges
         let startTime, endTime;
-        switch(timeSlot) {
+        switch (timeSlot) {
             case 'morning':
                 startTime = '09:00';
                 endTime = '12:00';
@@ -166,14 +166,15 @@ export async function scheduleAppointment(appointment) {
                 endTime = '12:00';
         }
 
+        // Ensure doctorId is sent as a string and include patientId
         const appointmentData = {
-            doctor_id: doctorId, // Using snake_case to match backend expectations
-            patient_id: patientId,
+            doctorId: String(doctorId), // Ensure it's a string
+            patientId: String(patientId), // Ensure patient ID is a string
             reason: reason,
             status: 'pending',  // Initial status is pending until doctor accepts
             time_slot: timeSlot || 'any',  // Patient's preferred time (morning/afternoon/evening)
-            notes: '',
-            follow_up: false
+            notes: appointment.notes || '',
+            follow_up: appointment.followUp || false
         };
 
         console.log('Processed appointment data:', appointmentData);
@@ -194,7 +195,17 @@ export async function scheduleAppointment(appointment) {
             try {
                 const errorData = JSON.parse(responseText);
                 console.error('Backend error details:', errorData);
-                throw new Error(errorData.error || errorData.message || `Server error: ${response.status}`);
+
+                // Provide more user-friendly error messages
+                if (errorData.error === 'Appointment exists') {
+                    throw new Error('Appointment exists: You already have a pending or scheduled appointment with this doctor.');
+                } else if (errorData.error === 'Invalid doctor') {
+                    throw new Error('Doctor not found or not available. Please select another doctor.');
+                } else if (errorData.error.includes('validation failed')) {
+                    throw new Error('Please check your appointment details and try again.');
+                } else {
+                    throw new Error(errorData.error || errorData.message || `Server error: ${response.status}`);
+                }
             } catch (parseError) {
                 console.error('Could not parse error response:', parseError);
                 console.error('Raw response:', responseText);
@@ -202,7 +213,12 @@ export async function scheduleAppointment(appointment) {
             }
         }
 
-        return await response.json();
+        try {
+            return JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Error parsing success response:', parseError);
+            return { success: true, message: 'Appointment scheduled successfully' };
+        }
     } catch (error) {
         console.error('Error in scheduleAppointment:', error);
         throw error;
@@ -426,7 +442,7 @@ export async function getConversations() {
             if (response.status === 404) {
                 throw new Error('Conversations endpoint not found (404)');
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -470,7 +486,7 @@ export async function getConversation(id) {
             if (response.status === 404) {
                 throw new Error(`Conversation endpoint not found (404) or conversation ${id} not found`);
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -697,12 +713,26 @@ export async function getPatientDashboardData() {
             }
         });
 
+        // Check if response is ok before trying to parse JSON
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch dashboard data');
+            // Try to get error details if available
+            try {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Failed to fetch dashboard data: ${response.status}`);
+            } catch (jsonError) {
+                // If JSON parsing fails, throw a generic error with status code
+                throw new Error(`Failed to fetch dashboard data: ${response.status}`);
+            }
         }
 
-        return await response.json();
+        // Safely parse the response
+        try {
+            const data = await response.json();
+            return data;
+        } catch (parseError) {
+            console.error('Error parsing dashboard data:', parseError);
+            throw new Error('Invalid response format from server');
+        }
     } catch (error) {
         console.error('Error fetching patient dashboard data:', error);
         throw error;
@@ -710,8 +740,7 @@ export async function getPatientDashboardData() {
 }
 
 /**
- * Get the patient's appointments
- * @returns {Promise<Array>} List of appointments
+ * @returns {Promise<Array>} 
  */
 export async function getAppointments() {
     try {
@@ -720,6 +749,7 @@ export async function getAppointments() {
             throw new Error('Authentication token not found');
         }
 
+        console.log('Fetching appointments...');
         const response = await fetch('/api/appointments', {
             method: 'GET',
             headers: {
@@ -728,12 +758,14 @@ export async function getAppointments() {
             }
         });
 
+        console.log('Appointments response status:', response.status);
+
         if (!response.ok) {
             // Handle 404 or other non-JSON responses gracefully
             if (response.status === 404) {
                 throw new Error('Appointments endpoint not found (404)');
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -744,9 +776,23 @@ export async function getAppointments() {
             }
         }
 
-        const data = await response.json();
-        const appointmentsData = data.appointments;
-        return Array.isArray(appointmentsData) ? appointmentsData : [];
+        // Safely parse the response
+        try {
+            const data = await response.json();
+            console.log('Appointments data received:', data);
+
+            // Check if appointments exists and is an array
+            const appointmentsData = data.appointments;
+            if (!appointmentsData) {
+                console.warn('No appointments field in response:', data);
+                return [];
+            }
+
+            return Array.isArray(appointmentsData) ? appointmentsData : [];
+        } catch (parseError) {
+            console.error('Error parsing appointments data:', parseError);
+            return [];
+        }
     } catch (error) {
         console.error('Error fetching appointments:', error);
         throw error;
@@ -777,7 +823,7 @@ export async function getPatientProfile() {
             if (response.status === 404) {
                 throw new Error('Patient profile endpoint not found (404)');
             }
-            
+
             // For other errors, try to parse JSON if possible
             try {
                 const errorData = await response.json();
@@ -891,12 +937,12 @@ export function getCurrentUserId() {
             console.warn('No auth token found');
             return null;
         }
-        
+
         // Simple JWT decoding without external library
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(atob(base64));
-        
+
         return payload?.id || payload?.userId || payload?.sub;
     } catch (error) {
         console.error('Error decoding token:', error);

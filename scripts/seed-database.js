@@ -26,7 +26,7 @@ async function ensureCollection(db, collectionName) {
       5000,
       `Timeout checking if collection ${collectionName} exists`
     );
-    
+
     if (collections.length === 0) {
       console.log(`Creating collection: ${collectionName}`);
       await withTimeout(
@@ -64,20 +64,19 @@ async function seedDatabase() {
       15000,
       'Connection to MongoDB timed out'
     );
-    
+
     const db = client.db();
     console.log('Connected to database:', db.databaseName);
-    
-    // Define collections to ensure exist
+
     const collections = [
-      'Users', 
-      'MedicalFiles', 
-      'Appointments', 
-      'Prescriptions', 
+      'Users',
+      'MedicalFiles',
+      'Appointments',
+      'Prescriptions',
       'Consultations',
       'Conversations'
     ];
-    
+
     // Ensure all collections exist
     console.log('Checking and creating collections if needed...');
     for (const collection of collections) {
@@ -89,21 +88,21 @@ async function seedDatabase() {
         // Continue with other collections even if one fails
       }
     }
-    
+
     // Check if we already have users
     const usersCount = await db.collection('Users').countDocuments();
-    
+
     if (usersCount > 0) {
       console.log(`Database already has ${usersCount} users. Skipping seed data.`);
       console.log('If you want to reseed, please drop the collections first.');
       await client.close();
       return;
     }
-    
+
     // Create admin user
     const salt = await bcrypt.genSalt(10);
     const adminPassword = await bcrypt.hash('admin123', salt);
-    
+
     const adminUser = {
       name: 'Admin User',
       email: 'admin@example.com',
@@ -113,11 +112,11 @@ async function seedDatabase() {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     console.log('Creating admin user...');
     const adminResult = await db.collection('Users').insertOne(adminUser);
     console.log('Admin user created with ID:', adminResult.insertedId);
-    
+
     // Create multiple doctors
     const doctorPassword = await bcrypt.hash('doctor123', salt);
     const doctors = [
@@ -131,80 +130,79 @@ async function seedDatabase() {
     const doctorIds = Object.values(doctorResults.insertedIds);
     console.log(`Created ${doctorResults.insertedCount} doctors`);
 
-    // Create multiple patients
     const patientPassword = await bcrypt.hash('patient123', salt);
     const patients = [
       {
-        name: 'John Doe',
+        name: 'Samer moussa',
         email: 'patient1@example.com',
         password: await bcrypt.hash('password123', 10),
         role: 'patient',
         dateOfBirth: new Date(1985, 0, 1),
         gender: 'male',
-        address: '123 Main St, Anytown, USA',
-        phone: '555-1234',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
         emergencyContact: {
-          name: 'Jane Doe',
-          relationship: 'spouse',
-          phone: '555-5678'
+          name: 'Laila moussa',
+          relationship: 'mother',
+          phone: '+963943681617'
         },
         insuranceInformation: {
           provider: 'Health Insurance Inc.',
           policyNumber: 'POL123456789',
-          validUntil: new Date(2025, 11, 31)
+          validUntil: new Date(2027, 11, 31)
         },
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        name: 'Jane Smith',
+        name: ' Sally youssef ',
         email: 'patient2@example.com',
         password: await bcrypt.hash('password123', 10),
         role: 'patient',
         dateOfBirth: new Date(1990, 5, 15),
         gender: 'female',
-        address: '456 Oak Ave, Somewhere, USA',
-        phone: '555-8765',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
         emergencyContact: {
-          name: 'John Smith',
+          name: 'Mohammed youssef',
           relationship: 'spouse',
-          phone: '555-4321'
+          phone: '+963943681617'
         },
         insuranceInformation: {
           provider: 'Care Insurance',
           policyNumber: 'POL987654321',
-          validUntil: new Date(2024, 11, 31)
+          validUntil: new Date(2027, 11, 31)
         },
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        name: 'Test Patient',
+        name: 'Ahmed youssef',
         email: 'patient@example.com',
         password: await bcrypt.hash('password123', 10),
         role: 'patient',
         dateOfBirth: new Date(1995, 2, 10),
         gender: 'male',
-        address: '789 Pine Rd, Anywhere, USA',
-        phone: '555-1122',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
         emergencyContact: {
-          name: 'Test Contact',
+          name: 'Laila youssef',
           relationship: 'parent',
-          phone: '555-3344'
+          phone: '+963943681617'
         },
         insuranceInformation: {
           provider: 'Test Insurance',
           policyNumber: 'POL1122334455',
-          validUntil: new Date(2026, 11, 31)
+          validUntil: new Date(2027, 11, 31)
         },
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      { name: 'Yomna', email: 'patient3@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', isActive: true, dateOfBirth: new Date('1990-05-15'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'mohammed', email: 'patient4@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/44.jpg', isActive: true, dateOfBirth: new Date('1985-02-20'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'asmaa', email: 'patient5@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/67.jpg', isActive: true, dateOfBirth: new Date('1995-08-10'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'samer', email: 'patient6@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, dateOfBirth: new Date('1980-01-01'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'mahmmod', email: 'patient7@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, dateOfBirth: new Date('1992-06-25'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() }
+      { name: 'Yomna youssef', email: 'patient3@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', isActive: true, dateOfBirth: new Date('1990-05-15'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mohammed youssef', email: 'patient4@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/44.jpg', isActive: true, dateOfBirth: new Date('1985-02-20'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'asmaa youssef', email: 'patient5@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/67.jpg', isActive: true, dateOfBirth: new Date('1995-08-10'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'samer youssef', email: 'patient6@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, dateOfBirth: new Date('1980-01-01'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mahmmod youssef', email: 'patient7@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, dateOfBirth: new Date('1992-06-25'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() }
     ];
 
     console.log('Creating patients...');
@@ -340,7 +338,7 @@ async function seedDatabase() {
     console.log(`Created ${conversationResults.insertedCount} conversations`);
 
     console.log('Database seeded successfully!');
-    
+
   } catch (error) {
     console.error('Error seeding database:', error.message);
     if (error.stack) {

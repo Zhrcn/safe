@@ -1,10 +1,9 @@
-// Use CommonJS imports for compatibility with Next.js 14.x
 const { NextResponse } = require('next/server');
 const { connectToDatabase } = require('@/lib/db/mongodb');
 const Appointment = require('@/models/Appointment');
-const User = require('@/models/User'); // Import User model
+const User = require('@/models/User');
 const { jwtDecode } = require('jwt-decode');
-const mongoose = require('mongoose'); // Import mongoose
+const mongoose = require('mongoose');
 
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
@@ -35,7 +34,29 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await connectToDatabase();
+        try {
+            await connectToDatabase();
+            console.log('Connected to database for appointments fetch');
+        } catch (dbError) {
+            console.error('MongoDB Atlas connection error in appointments API:', dbError);
+
+
+            if (dbError.message.includes('IP address is not whitelisted') ||
+                dbError.message.includes('Could not connect to any servers')) {
+                return NextResponse.json({
+                    error: 'MongoDB Atlas IP whitelist error',
+                    details: 'Your IP address is not whitelisted in MongoDB Atlas',
+                    solution: 'Go to MongoDB Atlas dashboard > Network Access and add your current IP address'
+                }, { status: 503 });
+            }
+
+            return NextResponse.json({
+                error: 'Database connection failed',
+                details: dbError.message,
+                solution: 'Please check your MongoDB Atlas connection string in .env.local file'
+            }, { status: 503 });
+        }
+
         const url = new URL(req.url);
 
         let query = {};
@@ -57,7 +78,9 @@ export async function GET(req) {
             if (patientId) query.patientId = patientId;
             if (doctorId) query.doctorId = doctorId;
             if (status) query.status = status;
-        }        const startDate = url.searchParams.get('startDate');
+        }
+
+        const startDate = url.searchParams.get('startDate');
         const endDate = url.searchParams.get('endDate');
 
         if (startDate || endDate) {
@@ -70,27 +93,42 @@ export async function GET(req) {
         const limit = parseInt(url.searchParams.get('limit')) || 10;
         const skip = (page - 1) * limit;
 
-        const total = await Appointment.countDocuments(query);
+        try {
+            console.log('Querying appointments with:', JSON.stringify(query));
+            const total = await Appointment.countDocuments(query);
+            console.log(`Found ${total} appointments matching query`);
 
-        const appointments = await Appointment.find(query)
-            .populate('patientId', 'name')
-            .populate('doctorId', 'name')
-            .sort({ date: 1, startTime: 1 })
-            .skip(skip)
-            .limit(limit);
+            const appointments = await Appointment.find(query)
+                .populate('patientId', 'name')
+                .populate('doctorId', 'name')
+                .sort({ date: 1, startTime: 1 })
+                .skip(skip)
+                .limit(limit);
 
-        return NextResponse.json({
-            appointments,
-            pagination: {
-                total,
-                page,
-                limit,
-                pages: Math.ceil(total / limit)
-            }
-        });
+            console.log(`Retrieved ${appointments.length} appointments`);
+
+            return NextResponse.json({
+                appointments,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    pages: Math.ceil(total / limit)
+                }
+            });
+        } catch (queryError) {
+            console.error('Error querying appointments:', queryError);
+            return NextResponse.json({
+                error: 'Failed to query appointments',
+                details: queryError.message
+            }, { status: 500 });
+        }
     } catch (error) {
         console.error('Error fetching appointments:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Internal server error',
+            details: error.message
+        }, { status: 500 });
     }
 }
 
@@ -126,36 +164,81 @@ export async function POST(req) {
             }, { status: 403 });
         }
 
-        const patientId = user._id;
+        // Get patient ID from authenticated user
+        const patientId = user._id || user.id;
+        console.log('Patient ID from token:', patientId);
+
+        // For debugging: log the patient ID from request body if provided
+        if (data.patientId) {
+            console.log('Patient ID from request body:', data.patientId);
+        }
 
         // Convert doctorId to ObjectId if needed
         let doctorId;
-        
+
+        // Log the received doctor ID for debugging
+        console.log('Requested doctor ID:', requestedDoctorId, 'Type:', typeof requestedDoctorId);
+
         // If it's already a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(requestedDoctorId)) {
             doctorId = new mongoose.Types.ObjectId(requestedDoctorId);
-        } 
+            console.log('Using valid ObjectId:', doctorId);
+        }
+        // If it's a string that might be convertible to ObjectId
+        else if (typeof requestedDoctorId === 'string') {
+            try {
+                // Find doctor by their ID
+                console.log('Searching for doctor with string ID:', requestedDoctorId);
+                const doctor = await User.findOne({
+                    role: 'doctor',
+                    $or: [
+                        { _id: requestedDoctorId },
+                        { 'doctorProfile.doctorId': requestedDoctorId }
+                    ]
+                }).select('_id');
+
+                if (!doctor) {
+                    console.log('Doctor not found with string ID');
+                    return NextResponse.json({
+                        error: 'Invalid doctor',
+                        details: 'Doctor not found with the provided ID'
+                    }, { status: 400 });
+                }
+                doctorId = doctor._id;
+                console.log('Found doctor with ID:', doctorId);
+            } catch (idError) {
+                console.error('Error processing doctor ID:', idError);
+                return NextResponse.json({
+                    error: 'Invalid doctor ID format',
+                    details: 'The provided doctor ID is in an invalid format'
+                }, { status: 400 });
+            }
+        }
         // If it's a numeric ID (like from frontend)
         else if (!isNaN(requestedDoctorId)) {
             // Find doctor by their numeric ID (assuming it's stored in a field)
-            const doctor = await User.findOne({ 
+            console.log('Searching for doctor with numeric ID:', requestedDoctorId);
+            const doctor = await User.findOne({
                 role: 'doctor',
                 $or: [
-                    { doctorId: parseInt(requestedDoctorId) },
+                    { 'doctorProfile.doctorId': parseInt(requestedDoctorId) },
                     { _id: requestedDoctorId }
                 ]
             }).select('_id');
-            
+
             if (!doctor) {
+                console.log('Doctor not found with numeric ID');
                 return NextResponse.json({
                     error: 'Invalid doctor',
                     details: 'Doctor not found or inactive'
                 }, { status: 400 });
             }
             doctorId = doctor._id;
+            console.log('Found doctor with numeric ID:', doctorId);
         }
-        
+
         if (!doctorId) {
+            console.log('Could not resolve doctor ID');
             return NextResponse.json({
                 error: 'Invalid doctor',
                 details: 'Could not find doctor with the provided ID'
@@ -163,19 +246,21 @@ export async function POST(req) {
         }
 
         // Check if doctor exists and is active
-        const doctor = await User.findOne({ 
-            _id: doctorId, 
-            role: 'doctor', 
-            status: 'active' 
+        const doctor = await User.findOne({
+            _id: doctorId,
+            role: 'doctor',
+            isActive: true
         });
 
         if (!doctor) {
-            console.log('Doctor not found:', requestedDoctorId);
+            console.log('Doctor not found or not active:', doctorId);
             return NextResponse.json({
                 error: 'Invalid doctor',
                 details: 'Doctor not found or inactive'
             }, { status: 400 });
         }
+
+        console.log('Doctor found and validated:', doctor._id, doctor.name);
 
         // Check if patient has any existing appointments with this doctor
         const existingAppointment = await Appointment.findOne({
@@ -194,7 +279,7 @@ export async function POST(req) {
 
         // Create and save the appointment
         const appointment = new Appointment({
-            patientId,
+            patientId: new mongoose.Types.ObjectId(patientId),
             doctorId: doctorId,
             reason: reason,
             preferredTimeSlot: data.time_slot || data.timeSlot || 'any',
@@ -204,7 +289,7 @@ export async function POST(req) {
         });
 
         console.log('Created appointment object:', appointment);
-        
+
         await appointment.save();
         console.log('Appointment saved successfully');
         return NextResponse.json(appointment, { status: 201 });
@@ -212,7 +297,7 @@ export async function POST(req) {
         console.error('Error creating appointment:', error);
         let statusCode = 500;
         let errorMessage = 'Internal server error';
-        
+
         if (error.name === 'ValidationError') {
             statusCode = 400;
             errorMessage = error.message;
@@ -220,10 +305,10 @@ export async function POST(req) {
             statusCode = 409;
             errorMessage = 'Duplicate appointment request';
         }
-        
-        return NextResponse.json({ 
+
+        return NextResponse.json({
             error: errorMessage,
-            details: error.message 
+            details: error.message
         }, { status: statusCode });
     }
 }
