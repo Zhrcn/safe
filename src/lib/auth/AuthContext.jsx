@@ -108,13 +108,25 @@ export const AuthProvider = ({ children }) => {
     const handleLogin = async (email, password, role) => {
         setIsLoading(true);
         try {
+            console.log(`Logging in as ${email} with role ${role}...`);
             const response = await authService.login(email, password, role);
             const { token, user } = response;
 
-            // Store in localStorage for client-side auth
-            localStorage.setItem(TOKEN_STORAGE_KEY, token);
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+            console.log('Login successful, received token and user data');
 
+            // Store in localStorage for client-side auth
+            try {
+                localStorage.setItem(TOKEN_STORAGE_KEY, token);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+                console.log('Saved auth data to localStorage');
+            } catch (storageError) {
+                console.error('Failed to save to localStorage:', storageError);
+            }
+            
+            // Multi-layered approach to ensure cookie is set
+            await ensureAuthCookieIsSet(token);
+
+            // Set user state after everything is done
             setUser(user);
             notification.showNotification('Login successful', 'success');
             return true;
@@ -125,6 +137,63 @@ export const AuthProvider = ({ children }) => {
             return false;
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Helper function to ensure the auth cookie is set using multiple approaches
+    const ensureAuthCookieIsSet = async (token) => {
+        try {
+            console.log('Setting auth cookie...');
+            
+            // Approach 1: Direct document.cookie setting
+            const cookieOptions = [
+                `safe_auth_token=${encodeURIComponent(token)}`,
+                'path=/',
+                `max-age=${30 * 24 * 60 * 60}`, // 30 days
+                'SameSite=Lax'
+            ];
+            
+            // Don't add secure flag in development
+            if (window.location.protocol === 'https:') {
+                cookieOptions.push('secure');
+            }
+            
+            document.cookie = cookieOptions.join('; ');
+            console.log('Approach 1: Set cookie via document.cookie');
+            
+            // Approach 2: Use server endpoint to set the cookie
+            try {
+                console.log('Approach 2: Using server endpoint to set cookie');
+                const response = await fetch('/api/auth/refresh-cookie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include', // Important for cookies
+                    body: JSON.stringify({ token }) // Also include token in body
+                });
+                
+                console.log('Cookie refresh response:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Cookie set by server:', data);
+                }
+            } catch (fetchError) {
+                console.error('Failed to set cookie via server:', fetchError);
+            }
+            
+            // Verify cookie was set
+            setTimeout(() => {
+                const hasCookie = document.cookie.includes('safe_auth_token');
+                console.log('Auth cookie verification:', {
+                    'cookie_exists': hasCookie,
+                    'localStorage_has_token': !!localStorage.getItem(TOKEN_STORAGE_KEY)
+                });
+            }, 500);
+        } catch (error) {
+            console.error('Error setting auth cookie:', error);
         }
     };
 

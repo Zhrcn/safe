@@ -211,7 +211,9 @@ export default function Footer() {
                   style={{
                     flex: 1,
                     padding: '10px 12px',
-                    border: `1px solid ${theme.palette.divider}`,
+                    borderTop: `1px solid ${theme.palette.divider}`,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    borderLeft: `1px solid ${theme.palette.divider}`,
                     borderRight: 'none',
                     borderRadius: '4px 0 0 4px',
                     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'white',

@@ -18,11 +18,27 @@ export default class BaseService {
     
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+        // First try to get token from localStorage
+        let token = null;
+        try {
+          token = localStorage.getItem(TOKEN_STORAGE_KEY);
+          if (token) {
+            // Add token debugging info
+            console.log(`API Request to ${config.url}: Using token from localStorage`);
+          }
+        } catch (e) {
+          console.error('Error accessing localStorage:', e);
+        }
         
+        // If we have a token, add it to the Authorization header
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn(`API Request to ${config.url}: No token found in localStorage`);
         }
+        
+        // Always include credentials for cookie-based auth
+        config.withCredentials = true;
         
         return config;
       },

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Box, Typography, IconButton, Tooltip, Drawer, 
-  Avatar, Badge, Menu, MenuItem, ListItemIcon, Divider, useMediaQuery 
+  Avatar, Badge, Menu, MenuItem, ListItemIcon, Divider, useMediaQuery, useTheme as useMuiTheme
 } from '@mui/material';
 import { 
   Menu as MenuIcon, X, Sun, Moon, Bell, LogOut, Settings, User, ChevronRight
@@ -37,7 +37,7 @@ export default function GenericRoleLayout({
     const router = useRouter();
     const { mode, toggleTheme } = useTheme();
     const { logout } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false); // Start closed by default
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
     const [notificationsMenuAnchor, setNotificationsMenuAnchor] = useState(null);
@@ -52,28 +52,20 @@ export default function GenericRoleLayout({
     const isDesktop = useMediaQuery('(min-width: 1024px)');
     const unreadNotificationsCount = notifications.filter(n => !n.read).length;
     
+    const drawerWidth = 240;
+    
     useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 1024) {
-                setSidebarOpen(false);
-            } else {
-                setSidebarOpen(true);
-            }
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
+        // Set sidebar to open for desktop on initial load
+        if (isDesktop) {
+            setSidebarOpen(true);
+        }
+    }, [isDesktop]);
 
     const toggleSidebar = () => {
-        if (!isDesktop) {
-            setMobileOpen(!mobileOpen);
-        } else {
+        if (isDesktop) {
             setSidebarOpen(!sidebarOpen);
+        } else {
+            setMobileOpen(!mobileOpen);
         }
     };
     
@@ -154,174 +146,192 @@ export default function GenericRoleLayout({
         </>
     );
 
+    // Define outer return statement for the component
     return (
-        <Box className="flex h-screen bg-background">
-            {/* Desktop Sidebar */}
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            {/* Simple fixed width sidebar */}
             <Box 
-                className={`hidden lg:flex flex-col transition-all duration-300 ${sidebarBg} text-card-foreground shadow-lg`}
-                sx={{ 
-                    width: sidebarOpen ? 260 : 0,
-                    overflow: 'hidden',
-                    visibility: sidebarOpen ? 'visible' : 'hidden'
+                sx={{
+                    width: drawerWidth,
+                    height: '100%',
+                    position: 'fixed',
+                    left: isDesktop ? (sidebarOpen ? 0 : -drawerWidth) : -drawerWidth,
+                    top: 0,
+                    zIndex: 1200,
+                    bgcolor: 'background.paper',
+                    borderRight: '1px solid',
+                    borderColor: 'divider',
+                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: 3,
+                    display: isDesktop ? 'block' : 'none'
                 }}
+                className={sidebarBg}
             >
                 <SidebarContent />
             </Box>
-
-            {/* Mobile Sidebar */}
+            
+            {/* Mobile drawer */}
             <Drawer
-                anchor="left"
+                variant="temporary"
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
-                PaperProps={{
-                    className: `${sidebarBg} text-card-foreground w-[280px]`
-                }}
                 ModalProps={{
-                    keepMounted: true, 
+                    keepMounted: true, // Better mobile performance
                 }}
                 sx={{
                     display: { xs: 'block', lg: 'none' },
-                    '& .MuiDrawer-paper': { width: 280 },
+                    '& .MuiDrawer-paper': {
+                        boxSizing: 'border-box',
+                        width: drawerWidth,
+                    },
                 }}
             >
                 <SidebarContent />
             </Drawer>
-
-            <Box className="flex-1 flex flex-col overflow-hidden">
+            
+            {/* Main content with margin adjustment */}
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'auto',
+                    marginLeft: isDesktop && sidebarOpen ? `${drawerWidth}px` : 0,
+                    transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+            >
                 {/* Header */}
-                <Box className={`h-16 ${headerBg} text-primary-foreground flex items-center justify-between px-4 md:px-6 shadow-md transition-colors duration-300`}>
-                    <Box className="flex items-center">
-                        <IconButton 
-                            color="inherit" 
-                            edge="start" 
-                            onClick={toggleSidebar}
-                            className="text-white"
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" className="ml-4 font-bold hidden xs:block">
-                            {title}
-                        </Typography>
-                    </Box>
-                    <Box className="flex items-center space-x-2">
-                        <Tooltip title={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}>
-                            <IconButton onClick={toggleTheme} color="inherit" size="small">
-                                {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                <Box className={`${headerBg} text-white h-16 shadow-sm transition-colors duration-300`}>
+                    <Box className="flex items-center justify-between h-full px-4">
+                        <Box className="flex items-center">
+                            <IconButton color="inherit" onClick={toggleSidebar} className="mr-2">
+                                {mobileOpen || sidebarOpen ? <X /> : <MenuIcon />}
                             </IconButton>
-                        </Tooltip>
+                            <Typography variant="h6" className="font-bold hidden md:block">
+                                {title}
+                            </Typography>
+                        </Box>
                         
-                        {/* Notifications */}
-                        <Tooltip title="Notifications">
-                            <IconButton 
-                              color="inherit" 
-                              size="small"
-                              onClick={handleNotificationsMenuOpen}
-                            >
+                        <Box className="flex items-center gap-1">
+                            {/* Theme Toggle */}
+                            <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}>
+                                <IconButton color="inherit" onClick={toggleTheme}>
+                                    {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                                </IconButton>
+                            </Tooltip>
+                            
+                            {/* Notifications */}
+                            <IconButton color="inherit" onClick={handleNotificationsMenuOpen}>
                                 <Badge badgeContent={unreadNotificationsCount} color="error">
                                     <Bell size={20} />
                                 </Badge>
                             </IconButton>
-                        </Tooltip>
-                        <Menu
-                          anchorEl={notificationsMenuAnchor}
-                          open={Boolean(notificationsMenuAnchor)}
-                          onClose={handleNotificationsMenuClose}
-                          PaperProps={{
-                            className: "w-[320px] mt-2",
-                            sx: {
-                              boxShadow: 3,
-                              borderRadius: 2,
-                            }
-                          }}
-                        >
-                          <Box className="px-4 py-2 border-b">
-                            <Typography variant="subtitle1" className="font-medium">Notifications</Typography>
-                          </Box>
-                          {notifications.length === 0 ? (
-                            <Box className="p-4 text-center">
-                              <Typography variant="body2" color="text.secondary">No notifications</Typography>
-                            </Box>
-                          ) : (
-                            notifications.map((notification) => (
-                              <MenuItem 
-                                key={notification.id} 
-                                onClick={() => handleNotificationRead(notification.id)}
-                                sx={{ 
-                                  py: 1.5,
-                                  px: 2,
-                                  backgroundColor: notification.read ? 'transparent' : 'action.hover'
-                                }}
-                              >
-                                <Box>
-                                  <Typography variant="subtitle2" className="font-medium">
-                                    {notification.title}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary" className="mt-0.5">
-                                    {notification.message}
-                                  </Typography>
-                                </Box>
+                            <Menu
+                              anchorEl={notificationsMenuAnchor}
+                              open={Boolean(notificationsMenuAnchor)}
+                              onClose={handleNotificationsMenuClose}
+                              PaperProps={{
+                                sx: {
+                                  boxShadow: 3,
+                                  borderRadius: 2,
+                                }
+                              }}
+                            >
+                              <Box className="px-4 py-2 border-b">
+                                <Typography variant="subtitle1" className="font-medium">Notifications</Typography>
+                              </Box>
+                              {/* Use conditional rendering instead of returns */}
+                              {(() => {
+                                if (notifications.length === 0) {
+                                  return (
+                                    <Box className="p-4 text-center">
+                                      <Typography variant="body2" color="text.secondary">No notifications</Typography>
+                                    </Box>
+                                  );
+                                } else {
+                                  return notifications.map((notification) => (
+                                    <MenuItem 
+                                      key={notification.id} 
+                                      onClick={() => handleNotificationRead(notification.id)}
+                                      sx={{ 
+                                        py: 1.5,
+                                        px: 2,
+                                        backgroundColor: notification.read ? 'transparent' : 'action.hover'
+                                      }}
+                                    >
+                                      <Box>
+                                        <Typography variant="subtitle2" className="font-medium">
+                                          {notification.title}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" className="mt-0.5">
+                                          {notification.message}
+                                        </Typography>
+                                      </Box>
+                                    </MenuItem>
+                                  ));
+                                }
+                              })()}
+                              <Divider />
+                              <Box className="p-2 text-center">
+                                <Typography 
+                                  variant="body2" 
+                                  color="primary" 
+                                  className="cursor-pointer hover:underline"
+                                  onClick={handleNotificationsMenuClose}
+                                >
+                                  View all notifications
+                                </Typography>
+                              </Box>
+                            </Menu>
+                            
+                            {/* User Profile */}
+                            <IconButton color="inherit" onClick={handleProfileMenuOpen}>
+                                <Avatar 
+                                  sx={{ width: 32, height: 32 }}
+                                  className="bg-primary-dark text-white"
+                                >
+                                  S
+                                </Avatar>
+                            </IconButton>
+                            <Menu
+                              anchorEl={profileMenuAnchor}
+                              open={Boolean(profileMenuAnchor)}
+                              onClose={handleProfileMenuClose}
+                              PaperProps={{
+                                sx: {
+                                  boxShadow: 3,
+                                  width: 200,
+                                  borderRadius: 2,
+                                }
+                              }}
+                            >
+                              <Box className="px-4 py-3">
+                                <Typography variant="subtitle1" className="font-medium">Sarah Johnson</Typography>
+                                <Typography variant="body2" color="text.secondary">Patient</Typography>
+                              </Box>
+                              <Divider />
+                              <MenuItem onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                  <User size={18} />
+                                </ListItemIcon>
+                                Profile
                               </MenuItem>
-                            ))
-                          )}
-                          <Divider />
-                          <Box className="p-2 text-center">
-                            <Typography 
-                              variant="body2" 
-                              color="primary" 
-                              className="cursor-pointer hover:underline"
-                              onClick={handleNotificationsMenuClose}
-                            >
-                              View all notifications
-                            </Typography>
-                          </Box>
-                        </Menu>
-                        
-                        {/* User Profile */}
-                        <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-                            <Avatar 
-                              sx={{ width: 32, height: 32 }}
-                              className="bg-primary-dark text-white"
-                            >
-                              S
-                            </Avatar>
-                        </IconButton>
-                        <Menu
-                          anchorEl={profileMenuAnchor}
-                          open={Boolean(profileMenuAnchor)}
-                          onClose={handleProfileMenuClose}
-                          PaperProps={{
-                            sx: {
-                              boxShadow: 3,
-                              width: 200,
-                              borderRadius: 2,
-                            }
-                          }}
-                        >
-                          <Box className="px-4 py-3">
-                            <Typography variant="subtitle1" className="font-medium">Sarah Johnson</Typography>
-                            <Typography variant="body2" color="text.secondary">Patient</Typography>
-                          </Box>
-                          <Divider />
-                          <MenuItem onClick={handleProfileMenuClose}>
-                            <ListItemIcon>
-                              <User size={18} />
-                            </ListItemIcon>
-                            Profile
-                          </MenuItem>
-                          <MenuItem onClick={handleProfileMenuClose}>
-                            <ListItemIcon>
-                              <Settings size={18} />
-                            </ListItemIcon>
-                            Settings
-                          </MenuItem>
-                          <Divider />
-                          <MenuItem onClick={handleLogout}>
-                            <ListItemIcon>
-                              <LogOut size={18} />
-                            </ListItemIcon>
-                            Logout
-                          </MenuItem>
-                        </Menu>
+                              <MenuItem onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                  <Settings size={18} />
+                                </ListItemIcon>
+                                Settings
+                              </MenuItem>
+                              <Divider />
+                              <MenuItem onClick={handleLogout}>
+                                <ListItemIcon>
+                                  <LogOut size={18} />
+                                </ListItemIcon>
+                                Logout
+                              </MenuItem>
+                            </Menu>
+                        </Box>
                     </Box>
                 </Box>
                 
@@ -332,4 +342,4 @@ export default function GenericRoleLayout({
             </Box>
         </Box>
     );
-} 
+}

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const medicalFileSchema = new mongoose.Schema({
   patientId: {
@@ -90,4 +90,6 @@ const medicalFileSchema = new mongoose.Schema({
   collection: 'MedicalFiles'
 });
 
-export default mongoose.models.MedicalFile || mongoose.model('MedicalFile', medicalFileSchema); 
+const MedicalFile = mongoose.models.MedicalFile || mongoose.model('MedicalFile', medicalFileSchema);
+
+module.exports = MedicalFile;

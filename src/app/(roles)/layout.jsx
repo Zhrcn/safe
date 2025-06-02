@@ -16,46 +16,64 @@ export default function ProtectedLayout({ children }) {
     const token = localStorage.getItem('safe_auth_token');
     const userData = localStorage.getItem('safe_user_data');
     const hasLocalAuth = !!(token && userData);
+    
+    // Create timeout reference that can be cleared in cleanup
+    let redirectTimeout;
 
-    // Only redirect if the initial authentication check is complete
-    if (!loading) {
-      setInitialCheckDone(true);
-      
-      if (!isAuthenticated && !redirecting) {
-        console.log('Not authenticated, redirecting to login');
-        setRedirecting(true);
+    const initAuth = () => {
+      // Only proceed if initial authentication check is complete
+      if (!loading) {
+        setInitialCheckDone(true);
         
-        // Small delay to prevent redirect loops
-        const redirectTimeout = setTimeout(() => {
-          router.push('/login');
-        }, 100);
-        
-        return () => clearTimeout(redirectTimeout);
-      } else if (isAuthenticated) {
-        console.log('Authenticated as', user?.role);
-        setRedirecting(false);
+        if (!isAuthenticated && !redirecting) {
+          console.log('Not authenticated, redirecting to login');
+          setRedirecting(true);
+          
+          // Small delay to prevent redirect loops
+          redirectTimeout = setTimeout(() => {
+            router.push('/login');
+          }, 100);
+        } else if (isAuthenticated) {
+          console.log('Authenticated as', user?.role);
+          setRedirecting(false);
+        }
       }
-    }
+    };
+    
+    // Call the initialization function
+    initAuth();
+    
+    // Single cleanup function that handles all cases
+    return () => {
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout);
+      }
+    };
   }, [isAuthenticated, loading, router, user, redirecting]);
 
-  // Show loading state while checking authentication
-  if (loading || !initialCheckDone || redirecting) {
+  // Determine what to render based on authentication state
+  const renderContent = () => {
+    // Show loading state while checking authentication
+    if (loading || !initialCheckDone || redirecting) {
+      return (
+        <Box className="flex items-center justify-center min-h-screen">
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    // Don't render anything if not authenticated (will redirect)
+    if (!isAuthenticated) {
+      return null;
+    }
+
+    // Render children if authenticated
     return (
-      <Box className="flex items-center justify-center min-h-screen">
-        <CircularProgress />
-      </Box>
+      <div>
+        {children}
+      </div>
     );
-  }
+  };
 
-  // Don't render anything if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // Render children if authenticated
-  return (
-    <div>
-      {children}
-    </div>
-  );
-} 
+  return renderContent();
+}

@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // Define the schema
 const userSchema = new mongoose.Schema({
@@ -78,4 +78,6 @@ userSchema.pre('save', async function(next) {
 
 // Create and export the model
 // Use mongoose.models to prevent model recompilation error in Next.js
-export default mongoose.models.User || mongoose.model('User', userSchema); 
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+module.exports = User;

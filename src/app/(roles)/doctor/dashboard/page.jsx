@@ -334,6 +334,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tabValue, setTabValue] = useState(0);
+  const [recentPatients, setRecentPatients] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [pendingAppointments, setPendingAppointments] = useState(0);
 
   // Chart data
   const [chartData, setChartData] = useState({
@@ -378,14 +381,24 @@ export default function DashboardPage() {
     
     loadDashboardData();
   }, []);
-  
-  const recentPatients = patients.slice(0, 5);
-  
-  const upcomingAppointments = appointments
-    .filter(a => a.status !== 'Rejected')
-    .slice(0, 4);
-  
-  const pendingAppointments = appointments.filter(a => a.status === 'Pending').length;
+
+  useEffect(() => {
+    if (Array.isArray(patients)) {
+      setRecentPatients(patients.slice(0, 5));
+    }
+    
+    if (Array.isArray(appointments)) {
+      setUpcomingAppointments(
+        appointments
+          .filter(a => a.status !== 'Rejected')
+          .slice(0, 4)
+      );
+      
+      setPendingAppointments(
+        appointments.filter(a => a.status === 'Pending').length
+      );
+    }
+  }, [patients, appointments]);
 
   // Get today's date in YYYY-MM-DD format safely
   const getTodayDateString = () => {
@@ -399,15 +412,15 @@ export default function DashboardPage() {
   
   const todayDateString = getTodayDateString();
   
-  // Count today's appointments safely
-  const todayAppointmentsCount = appointments.filter(a => {
+  // Count today's appointments safely with array validation
+  const todayAppointmentsCount = Array.isArray(appointments) ? appointments.filter(a => {
     try {
-      return a.date === todayDateString;
+      return a && a.date === todayDateString;
     } catch (err) {
       console.error('Error comparing appointment date:', err);
       return false;
     }
-  }).length;
+  }).length : 0;
   
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -567,7 +580,11 @@ export default function DashboardPage() {
                     <PatientListItem key={patient.id} patient={patient} />
                   ))
                 ) : (
-                  patients.filter(p => p.isCritical).slice(0, 5).map((patient) => (
+                  // Triple check patients is an array before any operations
+                  (Array.isArray(patients) ? patients : [])
+                    .filter(p => p && typeof p === 'object' && p.isCritical === true)
+                    .slice(0, 5)
+                    .map((patient) => (
                     <PatientListItem key={patient.id} patient={patient} />
                   ))
                 )

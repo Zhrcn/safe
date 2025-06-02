@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const prescriptionSchema = new mongoose.Schema({
   patientId: {
@@ -78,4 +78,6 @@ const prescriptionSchema = new mongoose.Schema({
   collection: 'Prescriptions'
 });
 
-export default mongoose.models.Prescription || mongoose.model('Prescription', prescriptionSchema); 
+const Prescription = mongoose.models.Prescription || mongoose.model('Prescription', prescriptionSchema);
+
+module.exports = Prescription;

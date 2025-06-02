@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/db/mongodb';
-import Appointment from '@/models/Appointment';
-import { jwtDecode } from 'jwt-decode';
+// Use CommonJS imports for compatibility with Next.js 14.x
+const { NextResponse } = require('next/server');
+const { connectToDatabase } = require('@/lib/db/mongodb');
+const Appointment = require('@/models/Appointment');
+const { jwtDecode } = require('jwt-decode');
 
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];

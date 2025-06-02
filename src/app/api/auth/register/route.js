@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { connectToDatabase } from '@/lib/db/mongodb';
-import User from '@/models/User';
-import MedicalFile from '@/models/MedicalFile';
+// Use CommonJS imports for compatibility with Next.js 14.x
+const { NextResponse } = require('next/server');
+const { z } = require('zod');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { connectToDatabase } = require('@/lib/db/mongodb');
+const User = require('@/models/User');
+const MedicalFile = require('@/models/MedicalFile');
 
 // Define roles
 const ROLES = {
