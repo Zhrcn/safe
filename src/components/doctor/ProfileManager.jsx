@@ -23,7 +23,8 @@ import {
     List,
     ListItem,
     ListItemText,
-    ListItemSecondaryAction
+    ListItemSecondaryAction,
+    Input
 } from '@mui/material';
 import { 
     User, 
@@ -49,7 +50,8 @@ const personalInfoSchema = z.object({
     contact: z.object({
         email: z.string().email('Invalid email address'),
         phone: z.string().min(10, 'Phone number must be at least 10 characters')
-    })
+    }),
+    profileImage: z.string().optional()
 });
 
 const educationSchema = z.object({
@@ -65,15 +67,18 @@ const achievementSchema = z.object({
 });
 
 function PersonalInfoForm({ profile, onSave }) {
+    const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [previewUrl, setPreviewUrl] = useState('');
 
     const { 
         control, 
         handleSubmit, 
         formState: { errors },
-        reset
+        reset,
+        setValue
     } = useForm({
         resolver: zodResolver(personalInfoSchema),
         defaultValues: {
@@ -84,252 +89,312 @@ function PersonalInfoForm({ profile, onSave }) {
             contact: {
                 email: profile?.contact?.email || '',
                 phone: profile?.contact?.phone || ''
-            }
+            },
+            profileImage: profile?.profileImage || ''
         }
     });
 
     useEffect(() => {
         if (profile) {
             reset({
-                name: profile.name || '',
-                specialty: profile.specialty || '',
-                licenseNumber: profile.licenseNumber || '',
-                experience: profile.experience || '',
+                name: profile.name,
+                specialty: profile.specialty,
+                licenseNumber: profile.licenseNumber,
+                experience: profile.experience,
                 contact: {
-                    email: profile.contact?.email || '',
-                    phone: profile.contact?.phone || ''
-                }
+                    email: profile.contact?.email,
+                    phone: profile.contact?.phone
+                },
+                profileImage: profile.profileImage || ''
             });
+            if (profile.profileImage) {
+                setPreviewUrl(profile.profileImage);
+            }
         }
     }, [profile, reset]);
 
     const onSubmit = async (data) => {
+        setIsSubmitting(true);
+        setError('');
+        setSuccess('');
         try {
-            setIsSubmitting(true);
-            setError('');
-            setSuccess('');
-            
-            const result = await updateDoctorProfile(data);
-            
-            if (result.success) {
-                setSuccess('Profile updated successfully');
-                if (onSave) onSave(result.profile);
-            } else {
-                setError(result.message || 'Failed to update profile');
-            }
+            await onSave(data);
+            setSuccess('Personal information updated successfully!');
+            setIsEditing(false);
         } catch (err) {
-            setError('An error occurred while updating profile');
-            console.error(err);
+            setError(err.message || 'Failed to update personal information');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleCancel = () => {
+        reset();
+        setIsEditing(false);
+        setPreviewUrl(profile?.profileImage || '');
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result);
+                setValue('profileImage', reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Paper className="p-6 bg-card border border-border rounded-lg mb-6">
+            <Typography variant="h5" component="h2" className="font-bold text-foreground mb-6">
+                Personal Information
+            </Typography>
+            
             {error && (
                 <Alert severity="error" className="mb-4">
                     {error}
                 </Alert>
             )}
-
+            
             {success && (
                 <Alert severity="success" className="mb-4">
                     {success}
                 </Alert>
             )}
-
-            <Grid container spacing={3}>
-                <Grid item xs={12} className="flex items-center">
-                    <Avatar 
-                        sx={{ width: 100, height: 100, mr: 3 }}
-                        className="bg-primary text-primary-foreground"
-                    >
-                        {profile?.name?.charAt(0) || 'D'}
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h5" className="text-foreground font-bold">
-                            {profile?.name || 'Doctor Profile'}
-                        </Typography>
-                        <Typography variant="body1" className="text-muted-foreground">
-                            {profile?.specialty || 'Specialty'} • {profile?.licenseNumber || 'License #'}
-                        </Typography>
-                    </Box>
-                </Grid>
-
-                <Grid item xs={12}>
+            
+            {!isEditing ? (
+                <div>
+                    <div className="flex items-center mb-6">
+                        <Avatar 
+                            src={profile?.profileImage} 
+                            sx={{ width: 100, height: 100, mr: 3 }}
+                            className="bg-primary text-primary-foreground"
+                        />
+                        <Box>
+                            <Typography variant="h5" className="text-foreground font-bold">
+                                {profile?.name}
+                            </Typography>
+                            <Typography variant="body1" className="text-muted-foreground">
+                                {profile?.specialty}
+                            </Typography>
+                        </Box>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">Name</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.name}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">Specialty</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.specialty}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">Email</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.contact?.email}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">Phone</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.contact?.phone}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">License Number</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.licenseNumber}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="subtitle1" className="text-muted-foreground">Experience (Years)</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.experience}</Typography>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6">
+                        <Button 
+                            variant="contained"
+                            onClick={() => setIsEditing(true)}
+                        >
+                            Edit
+                        </Button>
+                    </div>
+                </div>
+            ) : (
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <div className="flex items-center mb-6">
+                        <Avatar 
+                            src={previewUrl || profile?.profileImage} 
+                            sx={{ width: 100, height: 100, mr: 3 }}
+                            className="bg-primary text-primary-foreground"
+                        />
+                        <div>
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
                     <Controller
-                        name="name"
+                        name="profileImage"
                         control={control}
                         render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Full Name"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.name}
-                                helperText={errors.name?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground",
-                                    startAdornment: <User size={18} className="mr-2 text-muted-foreground" />
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
+                            <Input type="hidden" {...field} />
                         )}
                     />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                    <Controller
-                        name="specialty"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Specialty"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.specialty}
-                                helperText={errors.specialty?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground"
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
-                        )}
-                    />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                    <Controller
-                        name="licenseNumber"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="License Number"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.licenseNumber}
-                                helperText={errors.licenseNumber?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground"
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
-                        )}
-                    />
-                </Grid>
-
-                <Grid item xs={12}>
-                    <Controller
-                        name="experience"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Years of Experience"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.experience}
-                                helperText={errors.experience?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground"
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
-                        )}
-                    />
-                </Grid>
-
-                <Grid item xs={12}>
-                    <Typography variant="h6" className="text-foreground font-medium mb-2">
-                        Contact Information
-                    </Typography>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                    <Controller
-                        name="contact.email"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Email"
-                                variant="outlined"
-                                fullWidth
-                                type="email"
-                                error={!!errors.contact?.email}
-                                helperText={errors.contact?.email?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground",
-                                    startAdornment: <Mail size={18} className="mr-2 text-muted-foreground" />
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
-                        )}
-                    />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                    <Controller
-                        name="contact.phone"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Phone Number"
-                                variant="outlined"
-                                fullWidth
-                                error={!!errors.contact?.phone}
-                                helperText={errors.contact?.phone?.message}
-                                disabled={isSubmitting}
-                                className="bg-background"
-                                InputProps={{
-                                    className: "text-foreground",
-                                    startAdornment: <Phone size={18} className="mr-2 text-muted-foreground" />
-                                }}
-                                InputLabelProps={{
-                                    className: "text-muted-foreground"
-                                }}
-                            />
-                        )}
-                    />
-                </Grid>
-
-                <Grid item xs={12} className="flex justify-end mt-4">
-                    <Button 
-                        type="submit" 
-                        variant="contained" 
-                        color="primary"
-                        disabled={isSubmitting}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                        {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                </Grid>
-            </Grid>
-        </form>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Controller
+                            name="name"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Name"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={!!errors.name}
+                                    helperText={errors.name?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                        
+                        <Controller
+                            name="specialty"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Specialty"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={!!errors.specialty}
+                                    helperText={errors.specialty?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                        
+                        <Controller
+                            name="contact.email"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Email"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={!!errors.contact?.email}
+                                    helperText={errors.contact?.email?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                        
+                        <Controller
+                            name="contact.phone"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Phone"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={!!errors.contact?.phone}
+                                    helperText={errors.contact?.phone?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                        
+                        <Controller
+                            name="licenseNumber"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="License Number"
+                                    variant="outlined"
+                                    fullWidth
+                                    error={!!errors.licenseNumber}
+                                    helperText={errors.licenseNumber?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                        
+                        <Controller
+                            name="experience"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Experience (Years)"
+                                    variant="outlined"
+                                    type="number"
+                                    fullWidth
+                                    error={!!errors.experience}
+                                    helperText={errors.experience?.message}
+                                    className="bg-background"
+                                    InputProps={{
+                                        className: "text-foreground"
+                                    }}
+                                    InputLabelProps={{
+                                        className: "text-muted-foreground"
+                                    }}
+                                />
+                            )}
+                        />
+                    </div>
+                    
+                    <div className="mt-6 flex space-x-4">
+                        <Button 
+                            type="submit"
+                            variant="contained"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                        <Button 
+                            variant="outlined"
+                            onClick={handleCancel}
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </form>
+            )}
+        </Paper>
     );
 }
 

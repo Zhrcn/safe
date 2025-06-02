@@ -2,7 +2,9 @@
 const { NextResponse } = require('next/server');
 const { connectToDatabase } = require('@/lib/db/mongodb');
 const Appointment = require('@/models/Appointment');
+const User = require('@/models/User'); // Import User model
 const { jwtDecode } = require('jwt-decode');
+const mongoose = require('mongoose'); // Import mongoose
 
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
@@ -94,85 +96,135 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
+        console.log('Starting appointment creation...');
         const user = await getAuthenticatedUser(req);
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        console.log('User authenticated:', user);
 
         await connectToDatabase();
         const data = await req.json();
+        console.log('Received appointment data:', data);
 
-        if (!data.date || !data.startTime || !data.endTime || !data.type || !data.reasonForVisit) {
+        // Handle both camelCase and snake_case
+        const requestedDoctorId = data.doctorId || data.doctor_id;
+        const reason = data.reason;
+
+        if (!requestedDoctorId || !reason) {
             return NextResponse.json({
                 error: 'Missing required fields',
-                details: 'date, startTime, endTime, type, and reasonForVisit are required'
+                details: 'doctorId and reason are required'
             }, { status: 400 });
         }
 
-        let { patientId, doctorId } = data;
-
-        if (user.role === 'patient') {
-            patientId = user.id;
-            if (!doctorId) {
-                return NextResponse.json({ error: 'Doctor ID is required' }, { status: 400 });
-            }
-        } else if (user.role === 'doctor') {
-            doctorId = user.id;
-            if (!patientId) {
-                return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 });
-            }
-        } else if (user.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized to create appointments' }, { status: 403 });
-        } else {
-            if (!patientId || !doctorId) {
-                return NextResponse.json({
-                    error: 'Missing required fields',
-                    details: 'patientId and doctorId are required for admin'
-                }, { status: 400 });
-            }
+        // Check if user is a patient
+        if (user.role !== 'patient') {
+            return NextResponse.json({
+                error: 'Unauthorized',
+                details: 'Only patients can create appointments'
+            }, { status: 403 });
         }
 
-        const conflictQuery = {
-            doctorId,
-            date: new Date(data.date),
-            $or: [
-                {
-                    startTime: { $lte: data.startTime },
-                    endTime: { $gt: data.startTime }
-                },
-                {
-                    startTime: { $lt: data.endTime },
-                    endTime: { $gte: data.endTime }
-                },
-                {
-                    startTime: { $gte: data.startTime },
-                    endTime: { $lte: data.endTime }
-                }
-            ]
-        };
+        const patientId = user._id;
 
-        const conflictingAppointment = await Appointment.findOne(conflictQuery);
-
-        if (conflictingAppointment) {
+        // Convert doctorId to ObjectId if needed
+        let doctorId;
+        
+        // If it's already a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(requestedDoctorId)) {
+            doctorId = new mongoose.Types.ObjectId(requestedDoctorId);
+        } 
+        // If it's a numeric ID (like from frontend)
+        else if (!isNaN(requestedDoctorId)) {
+            // Find doctor by their numeric ID (assuming it's stored in a field)
+            const doctor = await User.findOne({ 
+                role: 'doctor',
+                $or: [
+                    { doctorId: parseInt(requestedDoctorId) },
+                    { _id: requestedDoctorId }
+                ]
+            }).select('_id');
+            
+            if (!doctor) {
+                return NextResponse.json({
+                    error: 'Invalid doctor',
+                    details: 'Doctor not found or inactive'
+                }, { status: 400 });
+            }
+            doctorId = doctor._id;
+        }
+        
+        if (!doctorId) {
             return NextResponse.json({
-                error: 'Appointment time conflict',
-                details: 'The doctor already has an appointment during this time'
+                error: 'Invalid doctor',
+                details: 'Could not find doctor with the provided ID'
+            }, { status: 400 });
+        }
+
+        // Check if doctor exists and is active
+        const doctor = await User.findOne({ 
+            _id: doctorId, 
+            role: 'doctor', 
+            status: 'active' 
+        });
+
+        if (!doctor) {
+            console.log('Doctor not found:', requestedDoctorId);
+            return NextResponse.json({
+                error: 'Invalid doctor',
+                details: 'Doctor not found or inactive'
+            }, { status: 400 });
+        }
+
+        // Check if patient has any existing appointments with this doctor
+        const existingAppointment = await Appointment.findOne({
+            patientId,
+            doctorId: doctorId,
+            status: { $in: ['pending', 'scheduled'] }
+        });
+
+        if (existingAppointment) {
+            console.log('Existing appointment found:', existingAppointment);
+            return NextResponse.json({
+                error: 'Appointment exists',
+                details: 'You already have a pending or scheduled appointment with this doctor'
             }, { status: 409 });
         }
 
+        // Create and save the appointment
         const appointment = new Appointment({
-            ...data,
             patientId,
-            doctorId,
-            date: new Date(data.date)
+            doctorId: doctorId,
+            reason: reason,
+            preferredTimeSlot: data.time_slot || data.timeSlot || 'any',
+            status: 'pending',
+            notes: data.notes || '',
+            followUp: data.followUp || false
         });
 
+        console.log('Created appointment object:', appointment);
+        
         await appointment.save();
-
+        console.log('Appointment saved successfully');
         return NextResponse.json(appointment, { status: 201 });
     } catch (error) {
         console.error('Error creating appointment:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        let statusCode = 500;
+        let errorMessage = 'Internal server error';
+        
+        if (error.name === 'ValidationError') {
+            statusCode = 400;
+            errorMessage = error.message;
+        } else if (error.code === 11000) {
+            statusCode = 409;
+            errorMessage = 'Duplicate appointment request';
+        }
+        
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: error.message 
+        }, { status: statusCode });
     }
 }
 

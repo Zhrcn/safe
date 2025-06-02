@@ -120,36 +120,63 @@ export async function getConsultations() {
  */
 export async function scheduleAppointment(appointment) {
     try {
+        console.log('Full appointment data received:', appointment);
+        
+        // Handle both snake_case and camelCase field names
+        const doctorId = appointment.doctorId || appointment.doctor_id;
+        const reason = appointment.reason || appointment.reasonForVisit;
+        const timeSlot = appointment.timeSlot || appointment.time_slot;
+        const date = appointment.date || appointment.appointment_date;
+        
+        if (!doctorId) {
+            console.warn('Missing doctorId in appointment data:', appointment);
+            throw new Error('Please select a doctor');
+        }
+        if (!reason) {
+            throw new Error('Please provide a reason for the appointment');
+        }
+
         const token = getAuthToken();
         if (!token) {
             throw new Error('Authentication token not found');
         }
 
-        // Map time slot to actual time
-        let appointmentTime;
-        switch (appointment.timeSlot) {
-            case 'morning':
-                appointmentTime = '09:00 AM';
-                break;
-            case 'afternoon':
-                appointmentTime = '01:00 PM';
-                break;
-            case 'evening':
-                appointmentTime = '06:00 PM';
-                break;
-            default:
-                appointmentTime = '09:00 AM';
+        const patientId = getCurrentUserId();
+        if (!patientId) {
+            throw new Error('Could not determine patient ID from token');
         }
 
-        // Prepare the appointment data for the API
+        // Map time slot to actual time ranges
+        let startTime, endTime;
+        switch(timeSlot) {
+            case 'morning':
+                startTime = '09:00';
+                endTime = '12:00';
+                break;
+            case 'afternoon':
+                startTime = '13:00';
+                endTime = '17:00';
+                break;
+            case 'evening':
+                startTime = '18:00';
+                endTime = '21:00';
+                break;
+            default:
+                startTime = '09:00';
+                endTime = '12:00';
+        }
+
         const appointmentData = {
-            doctorId: appointment.doctorId,
-            date: appointment.date,
-            time: appointmentTime,
-            reasonForVisit: appointment.reason,
-            status: 'scheduled',
-            type: 'regular'
+            doctor_id: doctorId, // Using snake_case to match backend expectations
+            patient_id: patientId,
+            reason: reason,
+            status: 'pending',  // Initial status is pending until doctor accepts
+            time_slot: timeSlot || 'any',  // Patient's preferred time (morning/afternoon/evening)
+            notes: '',
+            follow_up: false
         };
+
+        console.log('Processed appointment data:', appointmentData);
 
         const response = await fetch('/api/appointments', {
             method: 'POST',
@@ -160,14 +187,24 @@ export async function scheduleAppointment(appointment) {
             body: JSON.stringify(appointmentData)
         });
 
+        const responseText = await response.text();
+        console.log('Response from server:', responseText);
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to schedule appointment');
+            try {
+                const errorData = JSON.parse(responseText);
+                console.error('Backend error details:', errorData);
+                throw new Error(errorData.error || errorData.message || `Server error: ${response.status}`);
+            } catch (parseError) {
+                console.error('Could not parse error response:', parseError);
+                console.error('Raw response:', responseText);
+                throw new Error(`Server error: ${response.status} - ${responseText}`);
+            }
         }
 
         return await response.json();
     } catch (error) {
-        console.error('Error scheduling appointment:', error);
+        console.error('Error in scheduleAppointment:', error);
         throw error;
     }
 }
@@ -797,11 +834,11 @@ export async function updatePatientProfile(profileData) {
  */
 export async function getDoctors() {
     try {
+        console.log('Fetching doctors...');
         const token = getAuthToken();
         if (!token) {
             throw new Error('Authentication token not found');
         }
-
         const response = await fetch('/api/doctors', {
             method: 'GET',
             headers: {
@@ -809,25 +846,16 @@ export async function getDoctors() {
                 'Authorization': `Bearer ${token}`
             }
         });
-
+        console.log('Response status:', response.status);
         if (!response.ok) {
-            // Handle 404 or other non-JSON responses gracefully
             if (response.status === 404) {
                 throw new Error('Doctors endpoint not found (404)');
             }
-            
-            // For other errors, try to parse JSON if possible
-            try {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Failed to fetch doctors: ${response.status}`);
-            } catch (jsonError) {
-                // If JSON parsing fails, throw a generic error with status code
-                throw new Error(`Failed to fetch doctors: ${response.status}`);
-            }
+            throw new Error(`Failed to fetch doctors: ${response.statusText}`);
         }
-
         const data = await response.json();
-        return data.doctors || [];
+        console.log('Doctors data:', data);
+        return data;
     } catch (error) {
         console.error('Error fetching doctors:', error);
         throw error;
@@ -848,6 +876,30 @@ function getAuthToken() {
         return null;
     } catch (error) {
         console.error('Error retrieving auth token:', error);
+        return null;
+    }
+}
+
+/**
+ * Utility function to get the current user ID from the authentication token
+ * @returns {string|null} The current user ID or null if not available
+ */
+export function getCurrentUserId() {
+    try {
+        const token = getAuthToken();
+        if (!token) {
+            console.warn('No auth token found');
+            return null;
+        }
+        
+        // Simple JWT decoding without external library
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        
+        return payload?.id || payload?.userId || payload?.sub;
+    } catch (error) {
+        console.error('Error decoding token:', error);
         return null;
     }
 }

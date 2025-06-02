@@ -26,8 +26,6 @@ export default function PatientAppointmentsPage() {
   // New appointment dialog
   const [newAppointmentDialog, setNewAppointmentDialog] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('');
   const [appointmentReason, setAppointmentReason] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
   
@@ -84,11 +82,11 @@ export default function PatientAppointmentsPage() {
   }, [appointments]);
 
   const loadAppointments = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      const appointments = await getAppointments();
+      setAppointments(appointments);
       setError(null);
-      const data = await getAppointments();
-      setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
       setError('Failed to load appointments. Please try again later.');
@@ -130,46 +128,37 @@ export default function PatientAppointmentsPage() {
     setCancelDialog(false);
     setSelectedDoctor(null);
     setSelectedAppointment(null);
-    setAppointmentDate('');
-    setAppointmentTime('');
     setAppointmentReason('');
-    setTimeSlot('');
     setNewDate('');
     setNewTime('');
     setNewTimeSlot('');
     setCancelReason('');
+    setTimeSlot('');
   };
 
   const handleScheduleAppointment = async () => {
-    try {
-      if (!selectedDoctor || !timeSlot || !appointmentReason) {
-        setError('Please fill in all required fields');
+    if (!selectedDoctor || !appointmentReason || !timeSlot) {
+        setError('Please fill in all fields');
         return;
-      }
+    }
 
-      // Simplified appointment data with just doctor, time slot and reason
-      const appointmentData = {
-        doctorId: selectedDoctor.id,
-        timeSlot: timeSlot,
-        reason: appointmentReason
-      };
+    try {
+        const appointmentData = {
+            doctor_id: selectedDoctor.id,
+            reason: appointmentReason,
+            time_slot: timeSlot,
+            appointment_date: '1111-11-11',
+        };
 
-      setError(null);
-      const newAppointment = await scheduleAppointment(appointmentData);
-      
-      // Refresh appointments list to get the latest data
-      await loadAppointments();
-      
-      setSuccess('Appointment scheduled successfully!');
-      handleDialogClose();
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(null);
-      }, 3000);
+        await scheduleAppointment(appointmentData);
+        setSuccess('Appointment scheduled successfully!');
+        setError('');
+        // Refresh appointments
+        loadAppointments();
+        // Close the dialog
+        handleDialogClose();
     } catch (error) {
-      console.error('Error scheduling appointment:', error);
-      setError(error.message || 'Failed to schedule appointment. Please try again later.');
+        setError(error.message);
     }
   };
 
@@ -183,10 +172,8 @@ export default function PatientAppointmentsPage() {
       // Check if the appointment is at least 3 days away
       const appointmentDate = new Date(selectedAppointment.date + 'T' + selectedAppointment.time);
       const today = new Date();
-      const diffTime = appointmentDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays < 3) {
+      const daysDifference = differenceInDays(appointmentDate, today);
+      if (daysDifference < 3) {
         setError('Appointments can only be rescheduled at least 3 days in advance');
         return;
       }
@@ -195,7 +182,6 @@ export default function PatientAppointmentsPage() {
       const newAppointmentDate = new Date(newDate);
       const newDiffTime = newAppointmentDate.getTime() - today.getTime();
       const newDiffDays = Math.ceil(newDiffTime / (1000 * 60 * 60 * 24));
-      
       if (newDiffDays < 3) {
         setError('New appointment date must be at least 3 days in the future');
         return;
@@ -204,7 +190,7 @@ export default function PatientAppointmentsPage() {
       // Prepare update data with timeSlot instead of time
       const updateData = {
         date: newDate,
-        timeSlot: newTimeSlot,
+        time_slot: newTimeSlot,
         status: 'Rescheduled'
       };
       
@@ -238,7 +224,6 @@ export default function PatientAppointmentsPage() {
       const today = new Date();
       const diffTime = appointmentDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
       if (diffDays < 3) {
         setError('Appointments can only be cancelled at least 3 days in advance');
         return;
@@ -333,6 +318,31 @@ export default function PatientAppointmentsPage() {
       </PatientCard>
     );
   };
+
+  if (loading) {
+    return (
+      <PatientPageContainer>
+        <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+          <CircularProgress />
+        </Box>
+      </PatientPageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PatientPageContainer>
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="80vh">
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Button variant="contained" onClick={loadAppointments} startIcon={<RefreshCw />}>
+            Retry
+          </Button>
+        </Box>
+      </PatientPageContainer>
+    );
+  }
 
   return (
     <PatientPageContainer
@@ -482,16 +492,16 @@ export default function PatientAppointmentsPage() {
                       onChange={(e) => setTimeSlot(e.target.value)}
                       label="Time Slot"
                     >
-                      <MenuItem value="morning">Morning (9:00 AM)</MenuItem>
-                      <MenuItem value="afternoon">Afternoon (1:00 PM)</MenuItem>
-                      <MenuItem value="evening">Evening (6:00 PM)</MenuItem>
+                      <MenuItem value="morning">Morning (9:00 AM - 12:00 PM)</MenuItem>
+                      <MenuItem value="afternoon">Afternoon (1:00 PM - 5:00 PM)</MenuItem>
+                      <MenuItem value="evening">Evening (6:00 PM - 9:00 PM)</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Reason for Visit"
+                    label="Reason for Appointment"
                     multiline
                     rows={4}
                     value={appointmentReason}
@@ -513,7 +523,7 @@ export default function PatientAppointmentsPage() {
             <Button 
               variant="contained"
               onClick={handleScheduleAppointment}
-              disabled={!timeSlot || !appointmentReason}
+              disabled={!appointmentReason || !timeSlot}
               className="bg-primary text-primary-foreground"
             >
               Schedule Appointment

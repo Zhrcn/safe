@@ -13,20 +13,25 @@ const appointmentSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: false // Only required when doctor accepts
   },
   time: {
     type: String,
-    required: true
+    required: false // Only required when doctor accepts
   },
   status: {
     type: String,
-    enum: ['scheduled', 'completed', 'cancelled', 'no-show'],
-    default: 'scheduled'
+    enum: ['pending', 'scheduled', 'completed', 'cancelled', 'no-show'],
+    default: 'pending'
   },
   reason: {
     type: String,
     required: true
+  },
+  preferredTimeSlot: {
+    type: String,
+    enum: ['morning', 'afternoon', 'evening', 'any'],
+    default: 'any'
   },
   notes: {
     type: String,

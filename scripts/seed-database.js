@@ -134,11 +134,77 @@ async function seedDatabase() {
     // Create multiple patients
     const patientPassword = await bcrypt.hash('patient123', salt);
     const patients = [
-      { name: 'Alice', email: 'patient1@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', isActive: true, dateOfBirth: new Date('1990-05-15'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Bob', email: 'patient2@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/44.jpg', isActive: true, dateOfBirth: new Date('1985-02-20'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Charlie', email: 'patient3@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/67.jpg', isActive: true, dateOfBirth: new Date('1995-08-10'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'David', email: 'patient4@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, dateOfBirth: new Date('1980-01-01'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
-      { name: 'Eve', email: 'patient5@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, dateOfBirth: new Date('1992-06-25'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() }
+      {
+        name: 'John Doe',
+        email: 'patient1@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1985, 0, 1),
+        gender: 'male',
+        address: '123 Main St, Anytown, USA',
+        phone: '555-1234',
+        emergencyContact: {
+          name: 'Jane Doe',
+          relationship: 'spouse',
+          phone: '555-5678'
+        },
+        insuranceInformation: {
+          provider: 'Health Insurance Inc.',
+          policyNumber: 'POL123456789',
+          validUntil: new Date(2025, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Jane Smith',
+        email: 'patient2@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1990, 5, 15),
+        gender: 'female',
+        address: '456 Oak Ave, Somewhere, USA',
+        phone: '555-8765',
+        emergencyContact: {
+          name: 'John Smith',
+          relationship: 'spouse',
+          phone: '555-4321'
+        },
+        insuranceInformation: {
+          provider: 'Care Insurance',
+          policyNumber: 'POL987654321',
+          validUntil: new Date(2024, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Test Patient',
+        email: 'patient@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1995, 2, 10),
+        gender: 'male',
+        address: '789 Pine Rd, Anywhere, USA',
+        phone: '555-1122',
+        emergencyContact: {
+          name: 'Test Contact',
+          relationship: 'parent',
+          phone: '555-3344'
+        },
+        insuranceInformation: {
+          provider: 'Test Insurance',
+          policyNumber: 'POL1122334455',
+          validUntil: new Date(2026, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      { name: 'Yomna', email: 'patient3@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', isActive: true, dateOfBirth: new Date('1990-05-15'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mohammed', email: 'patient4@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/44.jpg', isActive: true, dateOfBirth: new Date('1985-02-20'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'asmaa', email: 'patient5@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/67.jpg', isActive: true, dateOfBirth: new Date('1995-08-10'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'samer', email: 'patient6@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, dateOfBirth: new Date('1980-01-01'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mahmmod', email: 'patient7@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, dateOfBirth: new Date('1992-06-25'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() }
     ];
 
     console.log('Creating patients...');
