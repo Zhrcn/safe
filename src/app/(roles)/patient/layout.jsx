@@ -8,12 +8,16 @@ import SearchIcon from '@mui/icons-material/Search';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import FolderSharedIcon from '@mui/icons-material/FolderShared';
 import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const sidebarItems = [
     { name: 'Dashboard', icon: DashboardIcon, link: '/patient/dashboard' },
     { name: 'Profile', icon: PersonIcon, link: '/patient/profile' },
     { name: 'Messaging', icon: MessageIcon, link: '/patient/messaging' },
     { name: 'Providers', icon: SearchIcon, link: '/patient/providers' },
+    { name: 'Appointments', icon: EventNoteIcon, link: '/patient/appointments' },
+    { name: 'Consultations', icon: HelpOutlineIcon, link: '/patient/consultations' },
     { name: 'Medications', icon: MedicalServicesIcon, link: '/patient/medications' },
     { name: 'Medical File', icon: FolderSharedIcon, link: '/patient/medical-file' },
     { name: 'Prescriptions', icon: LocalPharmacyIcon, link: '/patient/prescriptions' },

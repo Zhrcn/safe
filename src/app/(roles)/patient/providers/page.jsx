@@ -30,7 +30,7 @@ export default function PatientProvidersPage() {
   const [selectedProvider, setSelectedProvider] = useState(null);
   
   const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
   const [appointmentReason, setAppointmentReason] = useState('');
   const [consultationReason, setConsultationReason] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
@@ -94,7 +94,7 @@ export default function PatientProvidersPage() {
     setConsultationDialog(false);
     setMedicineDialog(false);
     setAppointmentDate('');
-    setAppointmentTime('');
+    setAppointmentTimeSlot('');
     setAppointmentReason('');
     setConsultationReason('');
     setPreferredTime('');
@@ -119,25 +119,25 @@ export default function PatientProvidersPage() {
   };
 
   const handleScheduleAppointment = async () => {
-    if (!appointmentDate || !appointmentTime || !appointmentReason || !selectedProvider) return;
+    if (!appointmentTimeSlot || !appointmentReason || !selectedProvider) return;
     
     try {
-      const result = await scheduleAppointment({
+      const appointment = {
         doctorId: selectedProvider.id,
-        doctorName: selectedProvider.name,
-        doctorSpecialty: selectedProvider.specialty,
-        date: appointmentDate,
-        time: appointmentTime,
-        notes: appointmentReason
-      });
+        timeSlot: appointmentTimeSlot,
+        reason: appointmentReason
+      };
       
+      await scheduleAppointment(appointment);
       setAppointmentSuccess(true);
       
+      // Clear form after 3 seconds and close dialog
       setTimeout(() => {
         handleDialogClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error('Error scheduling appointment:', error);
+      setError('Failed to schedule appointment. Please try again later.');
     }
   };
 
@@ -145,19 +145,24 @@ export default function PatientProvidersPage() {
     if (!consultationReason || !preferredTime || !selectedProvider) return;
     
     try {
+      // Call the updated requestConsultation function with attachments
       const result = await requestConsultation(
         selectedProvider.id,
         consultationReason,
-        preferredTime
+        preferredTime,
+        [] // Empty array for attachments since we don't have file upload in this dialog
       );
       
       setConsultationSuccess(true);
       
+      // Clear form after 3 seconds and redirect to consultations page
       setTimeout(() => {
         handleDialogClose();
-      }, 2000);
+        window.location.href = '/patient/consultations';
+      }, 3000);
     } catch (error) {
       console.error('Error requesting consultation:', error);
+      setError('Failed to request consultation. Please try again later.');
     }
   };
 
@@ -331,27 +336,37 @@ export default function PatientProvidersPage() {
                           />
                         )}
                       </CardContent>
-                      <CardActions className="bg-muted/30 p-3 flex justify-between">
-                        <Box>
+                      <CardActions className="bg-muted/30 p-3 flex flex-wrap justify-between">
+                        <Box className="flex flex-wrap gap-2 mb-2 w-full">
+                          <Button 
+                            size="small" 
+                            variant="contained" 
+                            startIcon={<Calendar size={16} />}
+                            onClick={() => handleAppointmentOpen(provider)}
+                            className="bg-primary text-primary-foreground flex-grow"
+                          >
+                            Schedule Appointment
+                          </Button>
                           <Button 
                             size="small" 
                             variant="outlined" 
                             startIcon={<MessageCircle size={16} />}
-                            className="mr-2"
+                            onClick={() => handleConsultationOpen(provider)}
+                            className="text-primary border-primary hover:bg-primary/10 flex-grow"
+                          >
+                            Request Consultation
+                          </Button>
+                        </Box>
+                        <Box className="flex justify-between w-full">
+                          <Button 
+                            size="small" 
+                            variant="text" 
+                            startIcon={<MessageCircle size={16} />}
                             onClick={() => window.location.href = '/patient/messaging'}
+                            className="text-muted-foreground hover:text-foreground"
                           >
                             Chat
                           </Button>
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            startIcon={<Calendar size={16} />}
-                            onClick={() => handleAppointmentOpen(provider)}
-                          >
-                            Schedule
-                          </Button>
-                        </Box>
-                        <Box>
                           {!provider.isPrimary && (
                             <Button 
                               size="small" 
@@ -362,14 +377,6 @@ export default function PatientProvidersPage() {
                               Set as Primary
                             </Button>
                           )}
-                          <Button 
-                            size="small" 
-                            variant="text"
-                            onClick={() => handleConsultationOpen(provider)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            Consult
-                          </Button>
                         </Box>
                       </CardActions>
                     </Card>
@@ -469,30 +476,23 @@ export default function PatientProvidersPage() {
               ) : (
                 <>
                   <DialogContentText className="mb-4">
-                    Please select a date and time for your appointment with {selectedProvider?.name}.
+                    Please select a time slot and provide a reason for your appointment with {selectedProvider?.name}.
                   </DialogContentText>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="Date"
-                        type="date"
-                        value={appointmentDate}
-                        onChange={(e) => setAppointmentDate(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="Time"
-                        type="time"
-                        value={appointmentTime}
-                        onChange={(e) => setAppointmentTime(e.target.value)}
-                        InputLabelProps={{ shrink: true }}
-                        className="mb-4"
-                      />
+                    <Grid item xs={12}>
+                      <FormControl fullWidth className="mb-4">
+                        <InputLabel id="appointment-time-slot-label">Time Slot</InputLabel>
+                        <Select
+                          labelId="appointment-time-slot-label"
+                          value={appointmentTimeSlot}
+                          onChange={(e) => setAppointmentTimeSlot(e.target.value)}
+                          label="Time Slot"
+                        >
+                          <MenuItem value="morning">Morning (9:00 AM)</MenuItem>
+                          <MenuItem value="afternoon">Afternoon (1:00 PM)</MenuItem>
+                          <MenuItem value="evening">Evening (6:00 PM)</MenuItem>
+                        </Select>
+                      </FormControl>
                     </Grid>
                     <Grid item xs={12}>
                       <TextField
@@ -521,10 +521,10 @@ export default function PatientProvidersPage() {
                   <Button 
                     onClick={handleScheduleAppointment} 
                     variant="contained"
-                    disabled={!appointmentDate || !appointmentTime || !appointmentReason}
+                    disabled={!appointmentTimeSlot || !appointmentReason}
                     className="bg-primary text-primary-foreground"
                   >
-                    Schedule
+                    Schedule Appointment
                   </Button>
                 </>
               )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -22,36 +22,14 @@ import PatientCard from '@/components/doctor/PatientCard';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const loadPatients = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        const data = await getPatients();
-        setPatients(data);
-        setFilteredPatients(data);
-      } catch (err) {
-        setError('Failed to load patients');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadPatients();
-  }, []);
-  
-  useEffect(() => {
-    let filtered = patients;
-    
+  const filteredPatients = useMemo(() => {
+    let filtered = Array.isArray(patients) ? patients : [];
     
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
@@ -66,9 +44,49 @@ export default function PatientsPage() {
       filtered = filtered.filter(patient => patient.status.toLowerCase() === activeTab);
     }
     
-    setFilteredPatients(filtered);
+    return filtered;
   }, [searchTerm, activeTab, patients]);
-  
+
+  const statusCounts = useMemo(() => {
+    if (!Array.isArray(patients)) {
+      return { all: 0, active: 0, urgent: 0, inactive: 0 };
+    }
+    return {
+      all: patients.length,
+      active: patients.filter(p => p.status.toLowerCase() === 'active').length,
+      urgent: patients.filter(p => p.status.toLowerCase() === 'urgent').length,
+      inactive: patients.filter(p => p.status.toLowerCase() === 'inactive').length
+    };
+  }, [patients]);
+
+  const tabLabels = useMemo(() => {
+    return {
+      all: `All Patients (${statusCounts.all})`,
+      active: `Active (${statusCounts.active})`,
+      urgent: `Urgent (${statusCounts.urgent})`,
+      inactive: `Inactive (${statusCounts.inactive})`
+    };
+  }, [statusCounts]);
+
+  useEffect(() => {
+    const loadPatients = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const data = await getPatients();
+        setPatients(data);
+      } catch (err) {
+        setError('Failed to load patients');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPatients();
+  }, []);
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -144,22 +162,22 @@ export default function PatientsPage() {
           TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
         >
           <Tab 
-            label={`All Patients (${patients.length})`} 
+            label={tabLabels.all} 
             value="all" 
             className={activeTab === 'all' ? 'text-primary' : 'text-muted-foreground'}
           />
           <Tab 
-            label={`Active (${patients.filter(p => p.status.toLowerCase() === 'active').length})`} 
+            label={tabLabels.active} 
             value="active" 
             className={activeTab === 'active' ? 'text-primary' : 'text-muted-foreground'}
           />
           <Tab 
-            label={`Urgent (${patients.filter(p => p.status.toLowerCase() === 'urgent').length})`} 
+            label={tabLabels.urgent} 
             value="urgent" 
             className={activeTab === 'urgent' ? 'text-primary' : 'text-muted-foreground'}
           />
           <Tab 
-            label={`Inactive (${patients.filter(p => p.status.toLowerCase() === 'inactive').length})`} 
+            label={tabLabels.inactive} 
             value="inactive" 
             className={activeTab === 'inactive' ? 'text-primary' : 'text-muted-foreground'}
           />
@@ -191,7 +209,7 @@ export default function PatientsPage() {
           </Box>
         ) : (
           <Grid container spacing={3}>
-            {filteredPatients.map(patient => (
+            {(Array.isArray(filteredPatients) ? filteredPatients : []).map((patient) => (
               <Grid item xs={12} sm={6} md={4} key={patient.id}>
                 <PatientCard patient={patient} />
               </Grid>

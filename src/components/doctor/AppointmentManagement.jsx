@@ -732,13 +732,18 @@ export default function AppointmentManagement() {
         }
     };
 
-    const filteredAppointments = appointments.filter(appointment => {
+    const allCount = Array.isArray(appointments) ? appointments.length : 0;
+    const pendingCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Pending').length : 0;
+    const confirmedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Confirmed').length : 0;
+    const rejectedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Rejected').length : 0;
+
+    const filteredAppointments = Array.isArray(appointments) ? appointments.filter(appointment => {
         if (activeTab === 'all') return true;
         if (activeTab === 'pending') return appointment.status === 'Pending';
         if (activeTab === 'confirmed') return appointment.status === 'Confirmed';
         if (activeTab === 'rejected') return appointment.status === 'Rejected';
         return true;
-    });
+    }) : [];
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
@@ -837,24 +842,20 @@ export default function AppointmentManagement() {
                     TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
                 >
                     <Tab 
-                        label={`All (${appointments.length})`} 
+                        label={`All (${allCount})`} 
                         value="all" 
-                        className={activeTab === 'all' ? 'text-primary' : 'text-muted-foreground'}
                     />
                     <Tab 
-                        label={`Pending (${appointments.filter(a => a.status === 'Pending').length})`} 
+                        label={`Pending (${pendingCount})`} 
                         value="pending" 
-                        className={activeTab === 'pending' ? 'text-primary' : 'text-muted-foreground'}
                     />
                     <Tab 
-                        label={`Confirmed (${appointments.filter(a => a.status === 'Confirmed').length})`} 
+                        label={`Confirmed (${confirmedCount})`} 
                         value="confirmed" 
-                        className={activeTab === 'confirmed' ? 'text-primary' : 'text-muted-foreground'}
                     />
                     <Tab 
-                        label={`Rejected (${appointments.filter(a => a.status === 'Rejected').length})`} 
+                        label={`Rejected (${rejectedCount})`} 
                         value="rejected" 
-                        className={activeTab === 'rejected' ? 'text-primary' : 'text-muted-foreground'}
                     />
                 </Tabs>
 
