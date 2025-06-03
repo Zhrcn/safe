@@ -1,14 +1,14 @@
-// Fix for Next.js compatibility - use CommonJS for all imports
 const { NextResponse } = require('next/server');
 const jwt = require('jsonwebtoken');
-const { connectToDatabase } = require('@/lib/db/mongodb');
+const { connectToDatabase, withTimeout } = require('@/lib/db');
 const User = require('@/models/User');
+const Doctor = require('@/models/Doctor');
+const Patient = require('@/models/Patient');
+const Pharmacist = require('@/models/Pharmacist');
 const { corsHeaders, handleCorsOptions, addCorsHeaders } = require('@/lib/cors');
 
-// Use the same JWT secret as in the login route
 const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
-// Handle OPTIONS requests for CORS
 export async function OPTIONS() {
     return handleCorsOptions();
 }
@@ -16,7 +16,6 @@ export async function OPTIONS() {
 export async function GET(req) {
     console.log('Auth check API called');
     
-    // Initialize diagnostic info to help troubleshoot auth issues
     const diagnostics = {
         token_sources: [],
         cookie_present: false,
@@ -27,7 +26,6 @@ export async function GET(req) {
     };
 
     try {
-        // First check for token in cookie
         const tokenCookie = req.cookies.get('safe_auth_token')?.value;
         if (tokenCookie) {
             diagnostics.token_sources.push('cookie');
@@ -35,7 +33,6 @@ export async function GET(req) {
             console.log('Token found in cookie');
         }
         
-        // Then check Authorization header as fallback
         const authHeader = req.headers.get('Authorization');
         diagnostics.header_present = !!authHeader;
         
@@ -45,7 +42,6 @@ export async function GET(req) {
             console.log('Token found in Authorization header');
         }
         
-        // Use cookie token if available, otherwise use header token
         const token = tokenCookie || headerToken;
         diagnostics.token_found = !!token;
         
@@ -60,7 +56,6 @@ export async function GET(req) {
         }
         
         try {
-            // Verify the token
             const decoded = jwt.verify(token, JWT_SECRET);
             diagnostics.token_valid = true;
             diagnostics.token_expires = new Date(decoded.exp * 1000).toISOString();
@@ -69,23 +64,16 @@ export async function GET(req) {
             
             console.log(`Token verified for user ID: ${diagnostics.user_id}, role: ${diagnostics.role}`);
             
-            // Set a timeout for database operations to prevent hanging
-            const dbTimeout = 5000; // 5 seconds
+            const dbTimeout = 5000; 
             
             try {
-                // Check if user still exists in database with timeout protection
                 await connectToDatabase();
                 
-                // Create a promise that rejects after the timeout
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Database query timeout')), dbTimeout);
-                });
-                
-                // Race the user query against the timeout
-                const user = await Promise.race([
+                const user = await withTimeout(
                     User.findById(diagnostics.user_id),
-                    timeoutPromise
-                ]);
+                    dbTimeout,
+                    'User lookup timeout'
+                );
                 
                 if (!user) {
                     console.warn(`User not found in database: ${diagnostics.user_id}`);
@@ -100,15 +88,72 @@ export async function GET(req) {
                 diagnostics.user_found = true;
                 diagnostics.db_connected = true;
                 
+                let profileData = {};
+                try {
+                    if (user.role === 'doctor') {
+                        const doctorProfile = await withTimeout(
+                            Doctor.findOne({ user: user._id }),
+                            dbTimeout,
+                            'Doctor profile lookup timeout'
+                        );
+                        if (doctorProfile) {
+                            profileData = {
+                                specialty: doctorProfile.specialty || doctorProfile.specialization,
+                                licenseNumber: doctorProfile.medicalLicenseNumber || doctorProfile.licenseNumber,
+                                experience: doctorProfile.experienceYears || doctorProfile.experience,
+                                profileId: doctorProfile._id
+                            };
+                        }
+                    } else if (user.role === 'patient') {
+                        const patientProfile = await withTimeout(
+                            Patient.findOne({ user: user._id }),
+                            dbTimeout,
+                            'Patient profile lookup timeout'
+                        );
+                        if (patientProfile) {
+                            profileData = {
+                                bloodType: patientProfile.bloodType,
+                                medicalFileId: patientProfile.medicalFile,
+                                profileId: patientProfile._id
+                            };
+                        }
+                    } else if (user.role === 'pharmacist') {
+                        try {
+                            const pharmacistProfile = await withTimeout(
+                                Pharmacist.findOne({ user: user._id }),
+                                dbTimeout,
+                                'Pharmacist profile lookup timeout'
+                            );
+                            if (pharmacistProfile) {
+                                profileData = {
+                                    licenseNumber: pharmacistProfile.licenseNumber,
+                                    pharmacy: pharmacistProfile.pharmacy,
+                                    profileId: pharmacistProfile._id
+                                };
+                            }
+                        } catch (pharmacistError) {
+                            console.log('Pharmacist model not found or error fetching pharmacist profile, continuing with basic user data');
+                            // Continue without pharmacist profile data
+                        }
+                    }
+                } catch (profileError) {
+                    console.error(`Error fetching ${user.role} profile:`, profileError);
+                    // Continue without profile data if there's an error
+                }
+                
                 // Return user data and token for client-side storage
                 const response = NextResponse.json({
                     authenticated: true,
                     token: token, // Return the token so client can store it
                     user: {
                         id: user._id,
-                        name: user.name,
+                        name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
                         email: user.email,
-                        role: user.role
+                        role: user.role,
+                        profileImage: user.profileImage || user.avatar,
+                        ...profileData
                     }
                 });
                 

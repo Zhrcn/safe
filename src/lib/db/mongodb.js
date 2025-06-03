@@ -51,7 +51,7 @@ export async function connectToDatabase() {
     };
 
     // Use environment variable for connection string or fallback to local MongoDB
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safe_db';
+    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safe';
 
     // Create connection promise with timeout
     console.log('Connecting to MongoDB...');

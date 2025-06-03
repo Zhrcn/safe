@@ -12,6 +12,35 @@ const AuthContext = createContext(undefined);
 const TOKEN_STORAGE_KEY = 'safe_auth_token';
 const USER_STORAGE_KEY = 'safe_user_data';
 
+// Function to ensure the auth cookie is set
+const ensureAuthCookieIsSet = async (token) => {
+    try {
+        // This is a client-side only function, so we need to check if we're in a browser
+        if (typeof window !== 'undefined') {
+            // Only log in development environment
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('Setting auth cookie...');
+            }
+            // The actual cookie is set by the server in the response
+            // This is just a helper to ensure the cookie is set
+            await authService.setCookie(token);
+            
+            // Only log in development environment
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('Auth cookie set successfully');
+            }
+        }
+    } catch (error) {
+        // Always log errors, but with less detail in production
+        if (process.env.NODE_ENV !== 'production') {
+            console.error('Failed to set auth cookie:', error);
+        } else {
+            console.error('Failed to set auth cookie');
+        }
+        // Continue even if cookie setting fails, as we have localStorage as a backup
+    }
+};
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
@@ -26,10 +55,8 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter();
     const notification = useNotification();
 
-    // Synchronous initial check to prevent flash of unauthenticated content
     useEffect(() => {
         try {
-            // Immediately try to get user from localStorage to prevent flashing
             const token = localStorage.getItem(TOKEN_STORAGE_KEY);
             const userData = localStorage.getItem(USER_STORAGE_KEY);
 
@@ -46,28 +73,23 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    // Async check for full validation
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                // Check for token in localStorage
                 const token = localStorage.getItem(TOKEN_STORAGE_KEY);
                 const userData = localStorage.getItem(USER_STORAGE_KEY);
 
                 if (token && userData) {
                     try {
-                        // Decode and validate token
                         const decoded = jwtDecode(token);
                         const currentTime = Date.now() / 1000;
 
-                        // Check if token is expired
                         if (decoded.exp && decoded.exp < currentTime) {
                             console.log('Token expired, logging out');
                             await handleLogout();
                             return;
                         }
 
-                        // If token is valid, set the user
                         const user = JSON.parse(userData);
                         setUser(user);
                         console.log('User authenticated from localStorage:', user.email);
@@ -76,12 +98,10 @@ export const AuthProvider = ({ children }) => {
                         await handleLogout();
                     }
                 } else {
-                    // No token in localStorage, check if there's a cookie-based session
                     try {
                         const data = await authService.checkAuth();
                         if (data.authenticated && data.user) {
                             console.log('User authenticated from cookie:', data.user.email);
-                            // Save to localStorage for future use
                             const token = data.token || 'cookie-auth';
                             localStorage.setItem(TOKEN_STORAGE_KEY, token);
                             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
@@ -108,92 +128,92 @@ export const AuthProvider = ({ children }) => {
     const handleLogin = async (email, password, role) => {
         setIsLoading(true);
         try {
-            console.log(`Logging in as ${email} with role ${role}...`);
+            // Only log in development environment
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`Logging in as ${email} with role ${role}...`);
+            }
+            
+            // Add specific validation for patient role
+            if (role === 'patient') {
+                // Convert email to lowercase for case-insensitive comparison
+                const emailLower = email.toLowerCase();
+                
+                // Check if email matches expected format for patients (either @safe.com or @example.com)
+                if (!emailLower.includes('@safe.com') && !emailLower.includes('@example.com')) {
+                    throw new Error('Patient email must be from safe.com or example.com domain');
+                }
+                
+                // Check if email matches the expected pattern for patients
+                const patientExamplePattern = /^patient\d+@example\.com$/;
+                const patientSafePattern = /^patient\d+@safe\.com$/;
+                
+                if (!patientExamplePattern.test(emailLower) && 
+                    !patientSafePattern.test(emailLower) && 
+                    emailLower !== 'patient@example.com' && 
+                    emailLower !== 'patient@safe.com') {
+                    throw new Error('Invalid patient email format. Use patient1@safe.com or similar format.');
+                }
+            }
+            
             const response = await authService.login(email, password, role);
             const { token, user } = response;
 
-            console.log('Login successful, received token and user data');
+            // Only log in development environment
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('Login successful, received token and user data');
+            }
 
-            // Store in localStorage for client-side auth
             try {
                 localStorage.setItem(TOKEN_STORAGE_KEY, token);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-                console.log('Saved auth data to localStorage');
+                
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log('Saved auth data to localStorage');
+                }
             } catch (storageError) {
                 console.error('Failed to save to localStorage:', storageError);
             }
-            
-            // Multi-layered approach to ensure cookie is set
+        
             await ensureAuthCookieIsSet(token);
 
-            // Set user state after everything is done
             setUser(user);
             notification.showNotification('Login successful', 'success');
             return true;
         } catch (error) {
             console.error('Login error:', error);
-            const errorMessage = error.response?.data?.error || 'Login failed. Please try again.';
+        
+            // Enhanced error handling with specific messages
+            let errorMessage = 'Login failed. Please try again.';
+        
+            if (error.message) {
+                // Use custom error messages we defined above
+                errorMessage = error.message;
+            } else if (error.response?.data) {
+                // Extract error details from API response
+                const { error: apiError, message, type } = error.response.data;
+            
+                if (message) {
+                    errorMessage = message;
+                } else if (apiError) {
+                    errorMessage = apiError;
+                }
+            
+                // Add specific context for different error types
+                if (type === 'INVALID_CREDENTIALS' && role === 'patient') {
+                    errorMessage = 'Invalid patient credentials. For testing, try using "patient123" as the password.';
+                } else if (type === 'USER_NOT_FOUND' && role === 'patient') {
+                    errorMessage = 'Patient account not found. For testing, use patient1@safe.com with password patient123.';
+                } else if (type === 'INVALID_PATIENT_EMAIL_DOMAIN') {
+                    errorMessage = 'Patient email must be from safe.com or example.com domain. Try patient1@safe.com.';
+                } else if (type === 'INVALID_PATIENT_EMAIL_FORMAT') {
+                    errorMessage = 'Invalid patient email format. Use patient1@safe.com or similar format.';
+                }
+            }
+            
             notification.showNotification(errorMessage, 'error');
             return false;
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    // Helper function to ensure the auth cookie is set using multiple approaches
-    const ensureAuthCookieIsSet = async (token) => {
-        try {
-            console.log('Setting auth cookie...');
-            
-            // Approach 1: Direct document.cookie setting
-            const cookieOptions = [
-                `safe_auth_token=${encodeURIComponent(token)}`,
-                'path=/',
-                `max-age=${30 * 24 * 60 * 60}`, // 30 days
-                'SameSite=Lax'
-            ];
-            
-            // Don't add secure flag in development
-            if (window.location.protocol === 'https:') {
-                cookieOptions.push('secure');
-            }
-            
-            document.cookie = cookieOptions.join('; ');
-            console.log('Approach 1: Set cookie via document.cookie');
-            
-            // Approach 2: Use server endpoint to set the cookie
-            try {
-                console.log('Approach 2: Using server endpoint to set cookie');
-                const response = await fetch('/api/auth/refresh-cookie', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    credentials: 'include', // Important for cookies
-                    body: JSON.stringify({ token }) // Also include token in body
-                });
-                
-                console.log('Cookie refresh response:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Cookie set by server:', data);
-                }
-            } catch (fetchError) {
-                console.error('Failed to set cookie via server:', fetchError);
-            }
-            
-            // Verify cookie was set
-            setTimeout(() => {
-                const hasCookie = document.cookie.includes('safe_auth_token');
-                console.log('Auth cookie verification:', {
-                    'cookie_exists': hasCookie,
-                    'localStorage_has_token': !!localStorage.getItem(TOKEN_STORAGE_KEY)
-                });
-            }, 500);
-        } catch (error) {
-            console.error('Error setting auth cookie:', error);
         }
     };
 
@@ -241,19 +261,15 @@ export const AuthProvider = ({ children }) => {
 
     const handleLogout = async () => {
         try {
-            // Call the logout API to clear server-side cookies
             await authService.logout();
         } catch (error) {
             console.error('Logout API error:', error);
         } finally {
-            // Clear localStorage
             localStorage.removeItem(TOKEN_STORAGE_KEY);
             localStorage.removeItem(USER_STORAGE_KEY);
 
-            // Clear user state
             setUser(null);
 
-            // Redirect to home page
             router.push('/');
             notification.showNotification('Logged out successfully', 'info');
         }

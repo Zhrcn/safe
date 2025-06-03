@@ -1,29 +1,26 @@
-// Use CommonJS imports for compatibility with Next.js 14.x
 const { NextResponse } = require('next/server');
-const { connectToDatabase } = require('@/lib/db/mongodb');
+const { connectToDatabase, withTimeout } = require('@/lib/db');
 const Appointment = require('@/models/Appointment');
-const User = require('@/models/User'); // Import User model
-const { jwtDecode } = require('jwt-decode');
-const mongoose = require('mongoose'); // Import mongoose
+const User = require('@/models/User'); 
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose'); 
+
+const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
 
 async function getAuthenticatedUser(req) {
     const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
 
     if (!token) {
+        console.log('No token found in request');
         return null;
     }
 
     try {
-        const decoded = jwtDecode(token);
-
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp && decoded.exp < currentTime) {
-            return null;
-        }
-
+        const decoded = jwt.verify(token, JWT_SECRET);
+        console.log('Token verified successfully in appointments API:', JSON.stringify(decoded, null, 2));
         return decoded;
     } catch (error) {
-        console.error('Authentication error:', error);
+        console.error('Authentication error in appointments API:', error.message);
         return null;
     }
 }
@@ -40,14 +37,20 @@ export async function GET(req) {
 
         let query = {};
 
+        const userId = user.userId || user.id;
+        if (!userId) {
+            console.error('User ID not found in token');
+            return NextResponse.json({ error: 'Invalid token - missing user ID' }, { status: 401 });
+        }
+        
         if (user.role === 'patient') {
-            query.patientId = user.id;
+            query.patientId = userId;
         } else if (user.role === 'doctor') {
-            query.doctorId = user.id;
+            query.doctorId = userId;
 
             const patientId = url.searchParams.get('patientId');
             if (patientId) {
-                query = { patientId, doctorId: user.id };
+                query = { patientId, doctorId: userId };
             }
         } else if (user.role === 'admin') {
             const patientId = url.searchParams.get('patientId');
@@ -107,7 +110,6 @@ export async function POST(req) {
         const data = await req.json();
         console.log('Received appointment data:', data);
 
-        // Handle both camelCase and snake_case
         const requestedDoctorId = data.doctorId || data.doctor_id;
         const reason = data.reason;
 
@@ -118,7 +120,6 @@ export async function POST(req) {
             }, { status: 400 });
         }
 
-        // Check if user is a patient
         if (user.role !== 'patient') {
             return NextResponse.json({
                 error: 'Unauthorized',
@@ -128,16 +129,12 @@ export async function POST(req) {
 
         const patientId = user._id;
 
-        // Convert doctorId to ObjectId if needed
         let doctorId;
         
-        // If it's already a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(requestedDoctorId)) {
             doctorId = new mongoose.Types.ObjectId(requestedDoctorId);
         } 
-        // If it's a numeric ID (like from frontend)
         else if (!isNaN(requestedDoctorId)) {
-            // Find doctor by their numeric ID (assuming it's stored in a field)
             const doctor = await User.findOne({ 
                 role: 'doctor',
                 $or: [
@@ -161,8 +158,6 @@ export async function POST(req) {
                 details: 'Could not find doctor with the provided ID'
             }, { status: 400 });
         }
-
-        // Check if doctor exists and is active
         const doctor = await User.findOne({ 
             _id: doctorId, 
             role: 'doctor', 
@@ -177,7 +172,6 @@ export async function POST(req) {
             }, { status: 400 });
         }
 
-        // Check if patient has any existing appointments with this doctor
         const existingAppointment = await Appointment.findOne({
             patientId,
             doctorId: doctorId,
@@ -192,7 +186,6 @@ export async function POST(req) {
             }, { status: 409 });
         }
 
-        // Create and save the appointment
         const appointment = new Appointment({
             patientId,
             doctorId: doctorId,
