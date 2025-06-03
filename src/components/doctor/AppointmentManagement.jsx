@@ -1,25 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    Button, 
-    Grid, 
-    Tabs, 
-    Tab, 
-    Card, 
-    CardContent, 
-    Chip, 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    TextField, 
-    FormControl, 
-    InputLabel, 
-    Select, 
+import {
+    Box,
+    Typography,
+    Paper,
+    Button,
+    Grid,
+    Tabs,
+    Tab,
+    Card,
+    CardContent,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
     MenuItem,
     Alert,
     IconButton,
@@ -27,20 +27,20 @@ import {
 } from '@mui/material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { format, parseISO, addHours, isAfter } from 'date-fns';
-import { 
-    Calendar, 
-    Clock, 
-    User, 
-    FileText, 
-    Check, 
-    X, 
-    Edit, 
-    AlertCircle, 
-    CheckCircle2, 
+import {
+    Calendar,
+    Clock,
+    User,
+    FileText,
+    Check,
+    X,
+    Edit,
+    AlertCircle,
+    CheckCircle2,
     XCircle,
-    Plus 
+    Plus
 } from 'lucide-react';
-import { getAppointments, manageAppointment, updateAppointmentStatus } from '@/services/doctorService';
+import { getAppointments, manageAppointment, updateAppointmentStatus, acceptAppointment, rejectAppointment, updateAppointment } from '@/services/doctorService';
 
 const appointmentTypes = [
     'Annual Physical',
@@ -54,18 +54,21 @@ const appointmentTypes = [
 ];
 
 function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
-    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+    const appointmentDate = appointment.date ? new Date(`${appointment.date}T${appointment.time || '00:00'}`) : null;
     const now = new Date();
-    const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
+    const hoursDifference = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
     const canEdit = hoursDifference >= 24;
-    
+    const isPending = appointment.status === 'pending';
+
     const getStatusColor = (status) => {
-        switch(status) {
-            case 'Confirmed':
+        switch (status.toLowerCase()) {
+            case 'scheduled':
+            case 'confirmed':
                 return 'success';
-            case 'Pending':
+            case 'pending':
                 return 'warning';
-            case 'Rejected':
+            case 'cancelled':
+            case 'rejected':
                 return 'error';
             default:
                 return 'default';
@@ -80,25 +83,39 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                     <Typography variant="h6" component="div" className="font-semibold text-foreground">
                         {appointment.patientName}
                     </Typography>
-                    <Chip 
-                        label={appointment.status} 
-                        size="small" 
+                    <Chip
+                        label={appointment.status}
+                        size="small"
                         color={getStatusColor(appointment.status)}
                         className="ml-auto"
                     />
                 </Box>
                 <Box className="space-y-2 text-muted-foreground">
-                    <Typography variant="body2" className="flex items-center">
-                        <Calendar size={16} className="mr-2" />
-                        {appointment.date}
-                    </Typography>
-                    <Typography variant="body2" className="flex items-center">
-                        <Clock size={16} className="mr-2" />
-                        {appointment.time}
-                    </Typography>
+                    {isPending ? (
+                        <Typography variant="body2" className="flex items-center">
+                            <Calendar size={16} className="mr-2" />
+                            Awaiting scheduling
+                        </Typography>
+                    ) : (
+                        <Typography variant="body2" className="flex items-center">
+                            <Calendar size={16} className="mr-2" />
+                            {appointment.date || 'No date set'}
+                        </Typography>
+                    )}
+                    {isPending ? (
+                        <Typography variant="body2" className="flex items-center">
+                            <Clock size={16} className="mr-2" />
+                            Preferred: {appointment.preferredTimeSlot || 'Any time'}
+                        </Typography>
+                    ) : (
+                        <Typography variant="body2" className="flex items-center">
+                            <Clock size={16} className="mr-2" />
+                            {appointment.time || 'No time set'}
+                        </Typography>
+                    )}
                     <Typography variant="body2" className="flex items-center">
                         <FileText size={16} className="mr-2" />
-                        {appointment.type}
+                        {appointment.reason || appointment.type || 'General checkup'}
                     </Typography>
                 </Box>
                 <Box className="mt-4 flex justify-end gap-2">
@@ -110,14 +127,14 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                     >
                         View
                     </Button>
-                    
-                    {appointment.status === 'Pending' && (
+
+                    {isPending && (
                         <>
                             <Button
                                 variant="outlined"
                                 size="small"
                                 color="success"
-                                onClick={() => onAccept(appointment.id)}
+                                onClick={() => onAccept(appointment)}
                                 startIcon={<Check size={16} />}
                                 className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
                             >
@@ -127,7 +144,7 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                                 variant="outlined"
                                 size="small"
                                 color="error"
-                                onClick={() => onReject(appointment.id)}
+                                onClick={() => onReject(appointment)}
                                 startIcon={<X size={16} />}
                                 className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
@@ -135,11 +152,11 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                             </Button>
                         </>
                     )}
-                    
-                    {canEdit && appointment.status !== 'Rejected' && (
+
+                    {!isPending && canEdit && appointment.status !== 'cancelled' && (
                         <Tooltip title="Edit Appointment">
-                            <IconButton 
-                                size="small" 
+                            <IconButton
+                                size="small"
                                 onClick={() => onEdit(appointment)}
                                 className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                             >
@@ -147,12 +164,12 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                             </IconButton>
                         </Tooltip>
                     )}
-                    
-                    {!canEdit && appointment.status !== 'Rejected' && (
+
+                    {!isPending && !canEdit && appointment.status !== 'cancelled' && (
                         <Tooltip title="Cannot edit appointments within 24 hours">
                             <span>
-                                <IconButton 
-                                    size="small" 
+                                <IconButton
+                                    size="small"
                                     disabled
                                     className="text-gray-400"
                                 >
@@ -170,9 +187,11 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
 function AppointmentDetailDialog({ open, appointment, onClose }) {
     if (!appointment) return null;
 
+    const isPending = appointment.status === 'pending';
+
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="sm"
             fullWidth
@@ -191,12 +210,12 @@ function AppointmentDetailDialog({ open, appointment, onClose }) {
                             <Typography variant="h6" className="text-foreground">
                                 {appointment.patientName}
                             </Typography>
-                            <Chip 
-                                label={appointment.status} 
-                                size="small" 
+                            <Chip
+                                label={appointment.status}
+                                size="small"
                                 color={
-                                    appointment.status === 'Confirmed' ? 'success' : 
-                                    appointment.status === 'Pending' ? 'warning' : 'error'
+                                    appointment.status === 'scheduled' || appointment.status === 'confirmed' ? 'success' :
+                                        appointment.status === 'pending' ? 'warning' : 'error'
                                 }
                                 className="ml-auto"
                             />
@@ -206,20 +225,25 @@ function AppointmentDetailDialog({ open, appointment, onClose }) {
                         <Typography variant="body2" className="text-muted-foreground">Date</Typography>
                         <Typography variant="body1" className="text-foreground flex items-center">
                             <Calendar size={16} className="mr-2 text-primary" />
-                            {appointment.date}
+                            {isPending ? 'Awaiting scheduling' : (appointment.date || 'Not set')}
                         </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" className="text-muted-foreground">Time</Typography>
+                        <Typography variant="body2" className="text-muted-foreground">
+                            {isPending ? 'Preferred Time' : 'Time'}
+                        </Typography>
                         <Typography variant="body1" className="text-foreground flex items-center">
                             <Clock size={16} className="mr-2 text-primary" />
-                            {appointment.time}
+                            {isPending ?
+                                (appointment.preferredTimeSlot || 'Any time') :
+                                (appointment.time || 'Not set')
+                            }
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <Typography variant="body2" className="text-muted-foreground">Type</Typography>
+                        <Typography variant="body2" className="text-muted-foreground">Reason</Typography>
                         <Typography variant="body1" className="text-foreground">
-                            {appointment.type}
+                            {appointment.reason || appointment.type || 'General checkup'}
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
@@ -270,24 +294,24 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
         try {
             setIsSubmitting(true);
             setError('');
-            
+
             if (!date || !time || !type) {
                 setError('Please fill all required fields');
                 return;
             }
-            
+
             const formattedDate = format(date, 'yyyy-MM-dd');
             const formattedTime = format(time, 'h:mm a');
-            
+
             const appointmentDate = new Date(`${formattedDate}T${formattedTime}`);
             const now = new Date();
             const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
-            
+
             if (hoursDifference < 24) {
                 setError('Appointments can only be edited at least 24 hours in advance');
                 return;
             }
-            
+
             const updatedAppointment = {
                 ...appointment,
                 date: formattedDate,
@@ -295,9 +319,9 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
                 type,
                 notes
             };
-            
+
             const result = await manageAppointment(updatedAppointment);
-            
+
             if (result.success) {
                 if (onSave) onSave(result.appointment);
                 onClose();
@@ -313,8 +337,8 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
     };
 
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="sm"
             fullWidth
@@ -331,7 +355,7 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
                         {error}
                     </Alert>
                 )}
-                
+
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
                         <DatePicker
@@ -431,11 +455,9 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
 }
 
 function ConfirmationDialog({ open, type, onClose, onConfirm, isSubmitting }) {
-    const isAccept = type === 'accept';
-    
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="xs"
             fullWidth
@@ -443,43 +465,186 @@ function ConfirmationDialog({ open, type, onClose, onConfirm, isSubmitting }) {
                 className: "bg-card"
             }}
         >
-            <DialogTitle className="bg-card text-foreground font-bold">
-                <Box className="flex items-center">
-                    {isAccept ? (
-                        <CheckCircle2 size={24} className="mr-2 text-green-500" />
-                    ) : (
-                        <XCircle size={24} className="mr-2 text-red-500" />
-                    )}
-                    {isAccept ? 'Accept Appointment' : 'Reject Appointment'}
-                </Box>
+            <DialogTitle className="bg-card border-b border-border text-foreground font-bold">
+                {type === 'accept' ? 'Accept Appointment' : 'Reject Appointment'}
             </DialogTitle>
-            <DialogContent className="bg-card">
+            <DialogContent className="bg-card mt-4">
                 <Typography variant="body1" className="text-foreground">
-                    {isAccept 
-                        ? 'Are you sure you want to accept this appointment? The patient will be notified.'
-                        : 'Are you sure you want to reject this appointment? The patient will be notified.'
-                    }
+                    {type === 'accept'
+                        ? 'Are you sure you want to accept this appointment? You will need to set a date and time.'
+                        : 'Are you sure you want to reject this appointment?'}
                 </Typography>
             </DialogContent>
             <DialogActions className="bg-card border-t border-border p-3">
                 <Button
                     onClick={onClose}
-                    disabled={isSubmitting}
                     className="text-muted-foreground hover:bg-muted/50"
+                    disabled={isSubmitting}
                 >
                     Cancel
                 </Button>
                 <Button
                     onClick={onConfirm}
+                    color={type === 'accept' ? 'success' : 'error'}
                     variant="contained"
-                    color={isAccept ? 'success' : 'error'}
+                    className={type === 'accept'
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-red-600 text-white hover:bg-red-700"}
                     disabled={isSubmitting}
-                    className={isAccept 
-                        ? "bg-green-600 hover:bg-green-700 text-white" 
-                        : "bg-red-600 hover:bg-red-700 text-white"
-                    }
                 >
-                    {isSubmitting ? 'Processing...' : isAccept ? 'Accept' : 'Reject'}
+                    {isSubmitting ? 'Processing...' : type === 'accept' ? 'Accept' : 'Reject'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+function AcceptAppointmentDialog({ open, appointment, onClose, onAccept, isSubmitting }) {
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [notes, setNotes] = useState('');
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (open && appointment) {
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            setDate(format(tomorrow, 'yyyy-MM-dd'));
+
+            // Set default time based on preferred time slot if available
+            if (appointment.preferredTimeSlot) {
+                switch (appointment.preferredTimeSlot) {
+                    case 'morning':
+                        setTime('09:00');
+                        break;
+                    case 'afternoon':
+                        setTime('13:00');
+                        break;
+                    case 'evening':
+                        setTime('18:00');
+                        break;
+                    default:
+                        setTime('09:00');
+                }
+            } else {
+                setTime('09:00');
+            }
+
+            setNotes('');
+            setError('');
+        }
+    }, [open, appointment]);
+
+    const handleAccept = () => {
+        if (!date) {
+            setError('Please select a date');
+            return;
+        }
+
+        if (!time) {
+            setError('Please select a time');
+            return;
+        }
+
+        onAccept({
+            date,
+            time,
+            notes
+        });
+    };
+
+    if (!appointment) return null;
+
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+                className: "bg-card"
+            }}
+        >
+            <DialogTitle className="bg-card border-b border-border text-foreground font-bold">
+                Accept Appointment Request
+            </DialogTitle>
+            <DialogContent className="bg-card mt-4">
+                {error && (
+                    <Alert severity="error" className="mb-4">
+                        {error}
+                    </Alert>
+                )}
+
+                <Box className="mb-4">
+                    <Typography variant="subtitle1" className="font-medium">
+                        Patient Information
+                    </Typography>
+                    <Typography variant="body1">
+                        {appointment.patientName || 'Patient'}
+                    </Typography>
+                    <Typography variant="body2" className="text-muted-foreground">
+                        Reason: {appointment.reason || 'General checkup'}
+                    </Typography>
+                    {appointment.preferredTimeSlot && (
+                        <Typography variant="body2" className="text-muted-foreground">
+                            Preferred time: {appointment.preferredTimeSlot}
+                        </Typography>
+                    )}
+                </Box>
+
+                <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            label="Date"
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            required
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            label="Time"
+                            type="time"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            required
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Notes (Optional)"
+                            multiline
+                            rows={3}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Add any notes for the patient"
+                        />
+                    </Grid>
+                </Grid>
+            </DialogContent>
+            <DialogActions className="bg-card border-t border-border p-3">
+                <Button
+                    onClick={onClose}
+                    className="text-muted-foreground hover:bg-muted/50"
+                    disabled={isSubmitting}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleAccept}
+                    color="success"
+                    variant="contained"
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? 'Processing...' : 'Accept Appointment'}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -500,15 +665,15 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
         try {
             setIsSubmitting(true);
             setError('');
-            
+
             if (!date || !time || !type || !patientId) {
                 setError('Please fill all required fields');
                 return;
             }
-            
+
             const formattedDate = format(date, 'yyyy-MM-dd');
             const formattedTime = format(time, 'h:mm a');
-            
+
             const newAppointment = {
                 id: `app-${Date.now()}`,
                 patientId,
@@ -519,9 +684,9 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
                 notes,
                 status: 'Pending'
             };
-            
+
             const result = await manageAppointment(newAppointment);
-            
+
             if (result.success) {
                 if (onSave) onSave(result.appointment || newAppointment);
                 handleReset();
@@ -548,8 +713,8 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
     };
 
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={onClose}
             maxWidth="sm"
             fullWidth
@@ -566,7 +731,7 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
                         {error}
                     </Alert>
                 )}
-                
+
                 <Grid container spacing={3}>
                     <Grid item xs={12}>
                         <TextField
@@ -712,6 +877,9 @@ export default function AppointmentManagement() {
     const [confirmationId, setConfirmationId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
 
     useEffect(() => {
         loadAppointments();
@@ -721,27 +889,45 @@ export default function AppointmentManagement() {
         try {
             setLoading(true);
             setError('');
-            
+
             const data = await getAppointments();
-            setAppointments(data);
+            console.log('Loaded appointments:', data);
+
+            // Transform the data if needed to match the expected format
+            const formattedAppointments = Array.isArray(data) ? data.map(appointment => {
+                return {
+                    id: appointment._id || appointment.id,
+                    patientId: appointment.patientId?._id || appointment.patientId,
+                    patientName: appointment.patientId?.name || 'Patient',
+                    date: appointment.date ? new Date(appointment.date).toISOString().split('T')[0] : '',
+                    time: appointment.time || '',
+                    type: appointment.reason || 'General Checkup',
+                    notes: appointment.notes || '',
+                    status: appointment.status || 'Pending',
+                    preferredTimeSlot: appointment.preferredTimeSlot || appointment.time_slot || 'any',
+                    reason: appointment.reason || ''
+                };
+            }) : [];
+
+            setAppointments(formattedAppointments);
         } catch (err) {
-            setError('Failed to load appointments');
-            console.error(err);
+            setError('Failed to load appointments: ' + (err.message || 'Unknown error'));
+            console.error('Error loading appointments:', err);
         } finally {
             setLoading(false);
         }
     };
 
     const allCount = Array.isArray(appointments) ? appointments.length : 0;
-    const pendingCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Pending').length : 0;
-    const confirmedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Confirmed').length : 0;
-    const rejectedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'Rejected').length : 0;
+    const pendingCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'pending').length : 0;
+    const confirmedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'scheduled').length : 0;
+    const rejectedCount = Array.isArray(appointments) ? appointments.filter(a => a.status === 'cancelled').length : 0;
 
     const filteredAppointments = Array.isArray(appointments) ? appointments.filter(appointment => {
         if (activeTab === 'all') return true;
-        if (activeTab === 'pending') return appointment.status === 'Pending';
-        if (activeTab === 'confirmed') return appointment.status === 'Confirmed';
-        if (activeTab === 'rejected') return appointment.status === 'Rejected';
+        if (activeTab === 'pending') return appointment.status === 'pending';
+        if (activeTab === 'confirmed') return appointment.status === 'scheduled';
+        if (activeTab === 'rejected') return appointment.status === 'cancelled';
         return true;
     }) : [];
 
@@ -759,61 +945,125 @@ export default function AppointmentManagement() {
         setEditDialogOpen(true);
     };
 
-    const handleAcceptAppointment = (id) => {
-        setConfirmationType('accept');
-        setConfirmationId(id);
-        setConfirmDialogOpen(true);
+    const handleAcceptAppointment = (appointment) => {
+        setSelectedAppointment(appointment);
+        setAcceptDialogOpen(true);
     };
 
-    const handleRejectAppointment = (id) => {
-        setConfirmationType('reject');
-        setConfirmationId(id);
-        setConfirmDialogOpen(true);
+    const handleRejectAppointment = (appointment) => {
+        setSelectedAppointment(appointment);
+        setRejectReason('');
+        setRejectDialogOpen(true);
     };
 
-    const handleConfirmStatusChange = async () => {
+    const handleConfirmAccept = async (appointmentData) => {
+        if (!selectedAppointment) return;
+
         try {
             setIsSubmitting(true);
-            
-            const status = confirmationType === 'accept' ? 'Confirmed' : 'Rejected';
-            const result = await updateAppointmentStatus(confirmationId, status);
-            
-            if (result.success) {
-                setAppointments(appointments.map(appointment => 
-                    appointment.id === confirmationId 
-                        ? { ...appointment, status } 
-                        : appointment
-                ));
-                
-                setSuccessMessage(`Appointment ${status.toLowerCase()} successfully`);
-                
-                setTimeout(() => {
-                    setSuccessMessage('');
-                }, 3000);
-            } else {
-                setError(result.message || `Failed to ${confirmationType} appointment`);
-            }
+            setError('');
+
+            const result = await acceptAppointment(selectedAppointment.id, appointmentData);
+
+            // Update the appointment in the local state
+            const updatedAppointments = appointments.map(appointment =>
+                appointment.id === selectedAppointment.id
+                    ? {
+                        ...appointment,
+                        status: 'scheduled',
+                        date: appointmentData.date,
+                        time: appointmentData.time,
+                        notes: appointmentData.notes || selectedAppointment.notes
+                    }
+                    : appointment
+            );
+
+            setAppointments(updatedAppointments);
+            setSuccessMessage('Appointment accepted successfully');
+
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+            // Refresh appointments to get the latest data
+            loadAppointments();
         } catch (err) {
-            setError(`An error occurred while ${confirmationType}ing the appointment`);
-            console.error(err);
+            setError('Failed to accept appointment: ' + (err.message || 'Unknown error'));
+            console.error('Error accepting appointment:', err);
         } finally {
             setIsSubmitting(false);
-            setConfirmDialogOpen(false);
+            setAcceptDialogOpen(false);
         }
     };
 
-    const handleSaveAppointment = (updatedAppointment) => {
-        setAppointments(appointments.map(appointment => 
-            appointment.id === updatedAppointment.id 
-                ? updatedAppointment 
-                : appointment
-        ));
-        
-        setSuccessMessage('Appointment updated successfully');
-        
-        setTimeout(() => {
-            setSuccessMessage('');
-        }, 3000);
+    const handleConfirmReject = async () => {
+        if (!selectedAppointment) return;
+
+        try {
+            setIsSubmitting(true);
+            setError('');
+
+            const result = await rejectAppointment(selectedAppointment.id, rejectReason);
+
+            // Update the appointment in the local state
+            const updatedAppointments = appointments.map(appointment =>
+                appointment.id === selectedAppointment.id
+                    ? {
+                        ...appointment,
+                        status: 'cancelled',
+                        notes: rejectReason || selectedAppointment.notes
+                    }
+                    : appointment
+            );
+
+            setAppointments(updatedAppointments);
+            setSuccessMessage('Appointment rejected successfully');
+
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+            // Refresh appointments to get the latest data
+            loadAppointments();
+        } catch (err) {
+            setError('Failed to reject appointment: ' + (err.message || 'Unknown error'));
+            console.error('Error rejecting appointment:', err);
+        } finally {
+            setIsSubmitting(false);
+            setRejectDialogOpen(false);
+        }
+    };
+
+    const handleSaveAppointment = async (updatedAppointment) => {
+        try {
+            setIsSubmitting(true);
+            setError('');
+
+            const result = await updateAppointment(updatedAppointment.id, updatedAppointment);
+
+            // Update the appointment in the local state
+            const updatedAppointments = appointments.map(appointment =>
+                appointment.id === updatedAppointment.id
+                    ? updatedAppointment
+                    : appointment
+            );
+
+            setAppointments(updatedAppointments);
+            setSuccessMessage('Appointment updated successfully');
+
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+
+            // Refresh appointments to get the latest data
+            loadAppointments();
+        } catch (err) {
+            setError('Failed to update appointment: ' + (err.message || 'Unknown error'));
+            console.error('Error updating appointment:', err);
+        } finally {
+            setIsSubmitting(false);
+            setEditDialogOpen(false);
+        }
     };
 
     return (
@@ -824,16 +1074,27 @@ export default function AppointmentManagement() {
                 </Typography>
 
                 {error && (
-                    <Alert severity="error" className="mb-4">
+                    <Alert severity="error" className="mb-4" onClose={() => setError('')}>
                         {error}
                     </Alert>
                 )}
 
                 {successMessage && (
-                    <Alert severity="success" className="mb-4">
+                    <Alert severity="success" className="mb-4" onClose={() => setSuccessMessage('')}>
                         {successMessage}
                     </Alert>
                 )}
+
+                <Box className="mb-4">
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={loadAppointments}
+                        className="text-primary border-primary hover:bg-primary/10"
+                    >
+                        Refresh Appointments
+                    </Button>
+                </Box>
 
                 <Tabs
                     value={activeTab}
@@ -841,21 +1102,21 @@ export default function AppointmentManagement() {
                     className="mb-6"
                     TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
                 >
-                    <Tab 
-                        label={`All (${allCount})`} 
-                        value="all" 
+                    <Tab
+                        label={`All (${allCount})`}
+                        value="all"
                     />
-                    <Tab 
-                        label={`Pending (${pendingCount})`} 
-                        value="pending" 
+                    <Tab
+                        label={`Pending (${pendingCount})`}
+                        value="pending"
                     />
-                    <Tab 
-                        label={`Confirmed (${confirmedCount})`} 
-                        value="confirmed" 
+                    <Tab
+                        label={`Confirmed (${confirmedCount})`}
+                        value="confirmed"
                     />
-                    <Tab 
-                        label={`Rejected (${rejectedCount})`} 
-                        value="rejected" 
+                    <Tab
+                        label={`Rejected (${rejectedCount})`}
+                        value="rejected"
                     />
                 </Tabs>
 
@@ -875,8 +1136,8 @@ export default function AppointmentManagement() {
                                     appointment={appointment}
                                     onView={handleViewAppointment}
                                     onEdit={handleEditAppointment}
-                                    onAccept={handleAcceptAppointment}
-                                    onReject={handleRejectAppointment}
+                                    onAccept={() => handleAcceptAppointment(appointment)}
+                                    onReject={() => handleRejectAppointment(appointment)}
                                 />
                             </Grid>
                         ))}
@@ -897,13 +1158,59 @@ export default function AppointmentManagement() {
                 onSave={handleSaveAppointment}
             />
 
-            <ConfirmationDialog
-                open={confirmDialogOpen}
-                type={confirmationType}
-                onClose={() => setConfirmDialogOpen(false)}
-                onConfirm={handleConfirmStatusChange}
+            <AcceptAppointmentDialog
+                open={acceptDialogOpen}
+                appointment={selectedAppointment}
+                onClose={() => setAcceptDialogOpen(false)}
+                onAccept={handleConfirmAccept}
                 isSubmitting={isSubmitting}
             />
+
+            <Dialog
+                open={rejectDialogOpen}
+                onClose={() => setRejectDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    className: "bg-card"
+                }}
+            >
+                <DialogTitle className="bg-card border-b border-border text-foreground font-bold">
+                    Reject Appointment Request
+                </DialogTitle>
+                <DialogContent className="bg-card mt-4">
+                    <Typography variant="body1" className="text-foreground mb-4">
+                        Are you sure you want to reject this appointment request?
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        label="Reason for Rejection (Optional)"
+                        multiline
+                        rows={3}
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="Provide a reason for rejecting this appointment"
+                    />
+                </DialogContent>
+                <DialogActions className="bg-card border-t border-border p-3">
+                    <Button
+                        onClick={() => setRejectDialogOpen(false)}
+                        className="text-muted-foreground hover:bg-muted/50"
+                        disabled={isSubmitting}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleConfirmReject}
+                        color="error"
+                        variant="contained"
+                        className="bg-red-600 text-white hover:bg-red-700"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Processing...' : 'Reject Appointment'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Box className="fixed bottom-6 right-6 z-10">
                 <Button

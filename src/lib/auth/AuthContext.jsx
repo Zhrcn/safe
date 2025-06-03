@@ -76,6 +76,8 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
+                setIsLoading(true);
+                // Check for token in localStorage
                 const token = localStorage.getItem(TOKEN_STORAGE_KEY);
                 const userData = localStorage.getItem(USER_STORAGE_KEY);
 
@@ -93,6 +95,32 @@ export const AuthProvider = ({ children }) => {
                         const user = JSON.parse(userData);
                         setUser(user);
                         console.log('User authenticated from localStorage:', user.email);
+
+                        // Verify the token with the server
+                        try {
+                            const verifyResponse = await fetch('/api/auth/verify', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+
+                            if (!verifyResponse.ok) {
+                                // Only log out if it's a 401 (Unauthorized) or 403 (Forbidden)
+                                if (verifyResponse.status === 401 || verifyResponse.status === 403) {
+                                    console.warn('Token verification failed with status:', verifyResponse.status);
+                                    await handleLogout();
+                                    return;
+                                } else {
+                                    // For other errors (like 500), continue with local auth
+                                    console.warn('Token verification had server error:', verifyResponse.status);
+                                    // Continue with local auth
+                                }
+                            }
+                        } catch (verifyError) {
+                            console.error('Error verifying token:', verifyError);
+                            // Continue with local auth if server is unreachable
+                        }
                     } catch (error) {
                         console.error('Error decoding token:', error);
                         await handleLogout();
@@ -174,6 +202,7 @@ export const AuthProvider = ({ children }) => {
                 console.error('Failed to save to localStorage:', storageError);
             }
         
+            // Multi-layered approach to ensure cookie is set
             await ensureAuthCookieIsSet(token);
 
             setUser(user);

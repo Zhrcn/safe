@@ -472,7 +472,7 @@ export async function scheduleAppointment(appointment) {
 
         // Map time slot to actual time ranges
         let startTime, endTime;
-        switch(timeSlot) {
+        switch (timeSlot) {
             case 'morning':
                 startTime = '09:00';
                 endTime = '12:00';
@@ -490,9 +490,10 @@ export async function scheduleAppointment(appointment) {
                 endTime = '12:00';
         }
 
+        // Ensure doctorId is sent as a string and include patientId
         const appointmentData = {
-            doctor_id: doctorId, // Using snake_case to match backend expectations
-            patient_id: patientId,
+            doctorId: String(doctorId), // Ensure it's a string
+            patientId: String(patientId), // Ensure patient ID is a string
             reason: reason,
             status: 'pending',  // Initial status is pending until doctor accepts
             time_slot: timeSlot || 'any',  // Patient's preferred time (morning/afternoon/evening)

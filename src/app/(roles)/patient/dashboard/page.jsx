@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Box, Grid, CircularProgress, Button, Avatar, Typography, Chip, Skeleton
 } from '@mui/material';
-import { 
+import {
   CalendarClock, Calendar, Pill, UserPlus, FileText, ArrowUpRight,
   Activity, Heart, Weight, Droplets, Clock, MapPin
 } from 'lucide-react';
@@ -38,13 +38,13 @@ ChartJS.register(
 // Stat Card Component
 function EnhancedStatCard({ title, value, icon, color, loading }) {
   return (
-    <Card 
-      variant="elevated" 
+    <Card
+      variant="elevated"
       className="h-full"
       hoverable
     >
       <Box className="flex items-center">
-        <Box 
+        <Box
           className={`rounded-full p-3 mr-4 ${color}`}
         >
           {icon}
@@ -90,9 +90,9 @@ function AppointmentCard({ appointment, loading }) {
   }
 
   return (
-    <Card 
-      variant="outlined" 
-      bordered 
+    <Card
+      variant="outlined"
+      bordered
       hoverable
       className="transition-all"
     >
@@ -116,9 +116,9 @@ function AppointmentCard({ appointment, loading }) {
             <span>{appointment.location}</span>
           </Box>
         </Box>
-        <CustomButton 
-          variant="soft" 
-          color="primary" 
+        <CustomButton
+          variant="soft"
+          color="primary"
           size="small"
         >
           Details
@@ -156,10 +156,10 @@ function MedicationCard({ medication, loading }) {
             {medication.dosage}
           </Typography>
         </Box>
-        <Chip 
-          label={medication.frequency} 
-          color="primary" 
-          size="small" 
+        <Chip
+          label={medication.frequency}
+          color="primary"
+          size="small"
           variant="outlined"
         />
       </Box>
@@ -187,7 +187,7 @@ function HealthStatCard({ stat, icon, color, loading }) {
 
   return (
     <Card variant="outlined" bordered className="text-center">
-      <Box 
+      <Box
         className={`rounded-full p-3 mx-auto mb-3 inline-flex ${color}`}
       >
         {icon}
@@ -273,7 +273,7 @@ export default function PatientDashboardPage() {
         setLoading(true);
         const data = await getPatientDashboardData();
         setDashboardData(data);
-        
+
         // In a real app, you'd fetch this from an API
         // For now, we'll use mock data
         setHealthMetrics({
@@ -289,6 +289,36 @@ export default function PatientDashboardPage() {
       } catch (error) {
         console.error('Error loading dashboard data:', error);
         setError('Failed to load dashboard data. Please try again later.');
+
+        // Set fallback data if API fails
+        setDashboardData({
+          stats: {
+            upcomingAppointments: 0,
+            activeMedications: 0,
+            lastCheckup: 'N/A',
+            activeProviders: 0
+          },
+          upcomingAppointments: [],
+          medications: [],
+          healthStats: [
+            { name: 'Blood Pressure', value: 'N/A', date: 'N/A' },
+            { name: 'Heart Rate', value: 'N/A', date: 'N/A' },
+            { name: 'Weight', value: 'N/A', date: 'N/A' },
+            { name: 'Blood Glucose', value: 'N/A', date: 'N/A' }
+          ],
+          bloodPressure: []
+        });
+
+        setHealthMetrics({
+          bloodPressure: [
+            { date: '2024-01-15', systolic: 120, diastolic: 80 },
+            { date: '2024-02-15', systolic: 122, diastolic: 82 },
+            { date: '2024-03-15', systolic: 118, diastolic: 78 },
+            { date: '2024-04-15', systolic: 121, diastolic: 79 },
+            { date: '2024-05-15', systolic: 119, diastolic: 80 },
+            { date: '2024-06-15', systolic: 120, diastolic: 81 }
+          ],
+        });
       } finally {
         setLoading(false);
       }
@@ -311,7 +341,7 @@ export default function PatientDashboardPage() {
             </Grid>
           ))}
         </Grid>
-        
+
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Skeleton variant="rounded" height={400} />
@@ -334,9 +364,9 @@ export default function PatientDashboardPage() {
           <Typography variant="h6" color="error" gutterBottom>
             {error}
           </Typography>
-          <CustomButton 
-            variant="contained" 
-            color="primary" 
+          <CustomButton
+            variant="contained"
+            color="primary"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -400,9 +430,9 @@ export default function PatientDashboardPage() {
             subtitle="Your scheduled appointments"
             icon={<CalendarClock className="h-5 w-5 text-blue-500" />}
             actions={
-              <CustomButton 
-                variant="soft" 
-                color="primary" 
+              <CustomButton
+                variant="soft"
+                color="primary"
                 size="small"
                 href="/patient/appointments"
                 endIcon={<ArrowUpRight size={16} />}
@@ -421,10 +451,10 @@ export default function PatientDashboardPage() {
                 <Box className="text-center py-6 text-muted-foreground">
                   <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-2" />
                   <Typography color="text.secondary">No upcoming appointments</Typography>
-                  <CustomButton 
-                    variant="soft" 
-                    color="primary" 
-                    size="small" 
+                  <CustomButton
+                    variant="soft"
+                    color="primary"
+                    size="small"
                     className="mt-2"
                   >
                     Schedule New
@@ -446,9 +476,9 @@ export default function PatientDashboardPage() {
             subtitle="Your active prescriptions"
             icon={<Pill className="h-5 w-5 text-indigo-500" />}
             actions={
-              <CustomButton 
-                variant="soft" 
-                color="secondary" 
+              <CustomButton
+                variant="soft"
+                color="secondary"
                 size="small"
                 href="/patient/medications"
                 endIcon={<ArrowUpRight size={16} />}
@@ -500,8 +530,8 @@ export default function PatientDashboardPage() {
               ) : (
                 dashboardData.healthStats.map((stat, index) => {
                   let icon, color;
-                  
-                  switch(stat.name) {
+
+                  switch (stat.name) {
                     case 'Blood Pressure':
                       icon = <Activity className="h-5 w-5 text-white" />;
                       color = 'bg-red-500';
@@ -522,12 +552,12 @@ export default function PatientDashboardPage() {
                       icon = <Activity className="h-5 w-5 text-white" />;
                       color = 'bg-gray-500';
                   }
-                  
+
                   return (
                     <Grid item xs={6} key={index}>
-                      <HealthStatCard 
-                        stat={stat} 
-                        icon={icon} 
+                      <HealthStatCard
+                        stat={stat}
+                        icon={icon}
                         color={color}
                       />
                     </Grid>

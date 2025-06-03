@@ -218,42 +218,42 @@ const MOCK_PATIENTS = [
 ];
 
 const MOCK_APPOINTMENTS = [
-    { 
-        id: 1, 
-        patientId: 1, 
-        patientName: 'Sarah Johnson', 
-        time: '9:00 AM', 
-        type: 'Annual Physical', 
-        date: '2023-04-25', 
+    {
+        id: 1,
+        patientId: 1,
+        patientName: 'Sarah Johnson',
+        time: '9:00 AM',
+        type: 'Annual Physical',
+        date: '2023-04-25',
         status: 'Confirmed',
         notes: 'Annual check-up appointment'
     },
-    { 
-        id: 2, 
-        patientId: 4, 
-        patientName: 'Robert Wilson', 
-        time: '11:30 AM', 
-        type: 'Follow-up', 
+    {
+        id: 2,
+        patientId: 4,
+        patientName: 'Robert Wilson',
+        time: '11:30 AM',
+        type: 'Follow-up',
         date: '2023-04-25',
         status: 'Confirmed',
         notes: 'Follow-up on arthritis treatment'
     },
-    { 
-        id: 3, 
-        patientId: 3, 
-        patientName: 'Emma Davis', 
-        time: '2:00 PM', 
-        type: 'Prenatal Checkup', 
+    {
+        id: 3,
+        patientId: 3,
+        patientName: 'Emma Davis',
+        time: '2:00 PM',
+        type: 'Prenatal Checkup',
         date: '2023-04-25',
         status: 'Pending',
         notes: 'Regular prenatal check-up'
     },
-    { 
-        id: 4, 
-        patientId: 2, 
-        patientName: 'John Smith', 
-        time: '4:30 PM', 
-        type: 'Diabetes Review', 
+    {
+        id: 4,
+        patientId: 2,
+        patientName: 'John Smith',
+        time: '4:30 PM',
+        type: 'Diabetes Review',
         date: '2023-04-25',
         status: 'Confirmed',
         notes: 'Review of diabetes management plan'
@@ -442,12 +442,12 @@ export async function getDoctorDashboardData() {
 export async function getPatients(options = {}) {
     try {
         const { page = 1, limit = 10, search = '' } = options;
-        
+
         let url = `/api/doctor/patients?page=${page}&limit=${limit}`;
         if (search) {
             url += `&search=${encodeURIComponent(search)}`;
         }
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -469,26 +469,20 @@ export async function getPatients(options = {}) {
 }
 
 /**
- * Fetches appointments for the doctor
+ * Gets appointments for the doctor
  * @param {Object} options - Query options
- * @param {number} options.page - Page number
- * @param {number} options.limit - Number of items per page
- * @param {string} options.status - Filter by status
- * @param {string} options.patientId - Filter by patient ID
- * @param {string} options.startDate - Filter by start date
- * @param {string} options.endDate - Filter by end date
  * @returns {Promise<Object>} Appointments data
  */
 export async function getAppointments(options = {}) {
     try {
-        const { page = 1, limit = 10, status, patientId, startDate, endDate } = options;
-        
+        const { page = 1, limit = 50, status, patientId, startDate, endDate } = options;
+
         let url = `/api/appointments?page=${page}&limit=${limit}`;
         if (status) url += `&status=${encodeURIComponent(status)}`;
         if (patientId) url += `&patientId=${encodeURIComponent(patientId)}`;
         if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
         if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -502,7 +496,9 @@ export async function getAppointments(options = {}) {
             throw new Error(errorData.error || 'Failed to fetch appointments');
         }
 
-        return await response.json();
+        const data = await response.json();
+        console.log('Fetched appointments:', data);
+        return data;
     } catch (error) {
         console.error('Error fetching appointments:', error);
         throw error;
@@ -625,21 +621,21 @@ export async function updateMedicalFile(patientId, medicalData) {
 
 export async function getDoctorProfile() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return MOCK_DOCTOR_PROFILE;
 }
 
 
 export async function getAnalyticsData() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return MOCK_ANALYTICS;
 }
 
 
 export async function updatePatientStatus(id, status) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return { success: true, message: `Patient status updated to ${status}` };
 }
 
@@ -648,10 +644,10 @@ export async function updatePatientStatus(id, status) {
  */
 export async function addPatient(patientData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const newId = Math.max(...MOCK_PATIENTS.map(p => p.id)) + 1;
     const newMedicalId = `MID${10000 + newId}`;
-    
+
     const newPatient = {
         id: newId,
         medicalId: newMedicalId,
@@ -669,13 +665,13 @@ export async function addPatient(patientData) {
         referrals: [],
         ...patientData
     };
-    
+
     MOCK_PATIENTS.push(newPatient);
-    
-    return { 
-        success: true, 
-        message: 'Patient added successfully', 
-        patient: newPatient 
+
+    return {
+        success: true,
+        message: 'Patient added successfully',
+        patient: newPatient
     };
 }
 
@@ -685,24 +681,24 @@ export async function addPatient(patientData) {
  */
 export async function createPatientPrescription(patientId, prescriptionData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
-    
+
     if (!patient) {
         return { success: false, message: 'Patient not found' };
     }
-    
+
     const prescriptionId = `P${patientId}${String(patient.prescriptions.length + 1).padStart(3, '0')}`;
-    
+
     const newPrescription = {
         id: prescriptionId,
         date: new Date().toISOString().split('T')[0],
         status: 'Active',
         ...prescriptionData
     };
-    
+
     patient.prescriptions.push(newPrescription);
-    
+
     return {
         success: true,
         message: 'Prescription created successfully',
@@ -716,20 +712,20 @@ export async function createPatientPrescription(patientId, prescriptionData) {
  */
 export async function addConditionUpdate(patientId, updateData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
-    
+
     if (!patient) {
         return { success: false, message: 'Patient not found' };
     }
-    
+
     const newUpdate = {
         date: new Date().toISOString().split('T')[0],
         ...updateData
     };
-    
+
     patient.conditionUpdates.push(newUpdate);
-    
+
     return {
         success: true,
         message: 'Condition update added successfully',
@@ -742,13 +738,13 @@ export async function addConditionUpdate(patientId, updateData) {
  */
 export async function getPatientHistory(patientId) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
-    
+
     if (!patient) {
         return { success: false, message: 'Patient not found' };
     }
-    
+
     const history = {
         medicalHistory: patient.medicalHistory,
         prescriptions: patient.prescriptions,
@@ -756,7 +752,7 @@ export async function getPatientHistory(patientId) {
         appointments: MOCK_APPOINTMENTS.filter(a => a.patientId === patientId),
         referrals: patient.referrals
     };
-    
+
     return {
         success: true,
         history
@@ -768,30 +764,30 @@ export async function getPatientHistory(patientId) {
  */
 export async function manageAppointment(appointmentData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     if (appointmentData.id) {
         const appointmentIndex = MOCK_APPOINTMENTS.findIndex(a => a.id === appointmentData.id);
-        
+
         if (appointmentIndex === -1) {
             return { success: false, message: 'Appointment not found' };
         }
-        
+
         const appointmentDate = new Date(`${MOCK_APPOINTMENTS[appointmentIndex].date}T${MOCK_APPOINTMENTS[appointmentIndex].time}`);
         const now = new Date();
         const hoursDifference = (appointmentDate - now) / (1000 * 60 * 60);
-        
+
         if (hoursDifference < 24) {
-            return { 
-                success: false, 
-                message: 'Appointments can only be edited at least 24 hours in advance' 
+            return {
+                success: false,
+                message: 'Appointments can only be edited at least 24 hours in advance'
             };
         }
-        
+
         MOCK_APPOINTMENTS[appointmentIndex] = {
             ...MOCK_APPOINTMENTS[appointmentIndex],
             ...appointmentData
         };
-        
+
         return {
             success: true,
             message: 'Appointment updated successfully',
@@ -799,15 +795,15 @@ export async function manageAppointment(appointmentData) {
         };
     } else {
         const newId = Math.max(...MOCK_APPOINTMENTS.map(a => a.id)) + 1;
-        
+
         const newAppointment = {
             id: newId,
             status: 'Pending',
             ...appointmentData
         };
-        
+
         MOCK_APPOINTMENTS.push(newAppointment);
-        
+
         return {
             success: true,
             message: 'Appointment created successfully',
@@ -823,16 +819,16 @@ export async function manageAppointment(appointmentData) {
  */
 export async function updateAppointmentStatus(appointmentId, status) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const appointmentIndex = MOCK_APPOINTMENTS.findIndex(a => a.id === appointmentId);
-    
+
     if (appointmentIndex === -1) {
         return { success: false, message: 'Appointment not found' };
     }
-    
+
     MOCK_APPOINTMENTS[appointmentIndex].status = status;
-    
-    
+
+
     return {
         success: true,
         message: `Appointment ${status.toLowerCase()} successfully`,
@@ -845,27 +841,27 @@ export async function updateAppointmentStatus(appointmentId, status) {
  */
 export async function queryMedicineAvailability(medicineName) {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const medicine = MOCK_MEDICINES.find(
         m => m.name.toLowerCase() === medicineName.toLowerCase()
     );
-    
+
     if (!medicine) {
-        return { 
-            success: false, 
+        return {
+            success: false,
             message: 'Medicine not found in database',
             availability: false,
             alternatives: []
         };
     }
-    
+
     return {
         success: true,
         medicine: medicine.name,
         availability: medicine.availability,
         alternatives: medicine.availability ? [] : medicine.alternatives,
-        message: medicine.availability 
-            ? `${medicine.name} is available` 
+        message: medicine.availability
+            ? `${medicine.name} is available`
             : `${medicine.name} is currently out of stock`
     };
 }
@@ -875,9 +871,9 @@ export async function queryMedicineAvailability(medicineName) {
  */
 export async function updateDoctorProfile(profileData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     Object.assign(MOCK_DOCTOR_PROFILE, profileData);
-    
+
     return {
         success: true,
         message: 'Profile updated successfully',
@@ -891,7 +887,7 @@ export async function updateDoctorProfile(profileData) {
  */
 export async function addProfileItem(type, data) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     if (type === 'education') {
         MOCK_DOCTOR_PROFILE.education.push(data);
     } else if (type === 'achievement') {
@@ -899,7 +895,7 @@ export async function addProfileItem(type, data) {
     } else {
         return { success: false, message: 'Invalid item type' };
     }
-    
+
     return {
         success: true,
         message: `${type} added successfully`,
@@ -910,7 +906,7 @@ export async function addProfileItem(type, data) {
 
 export async function getAvailableDoctors() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return MOCK_DOCTORS;
 }
 
@@ -920,22 +916,22 @@ export async function getAvailableDoctors() {
  */
 export async function createReferral(patientId, referralData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const patient = MOCK_PATIENTS.find(p => p.id === patientId);
-    
+
     if (!patient) {
         return { success: false, message: 'Patient not found' };
     }
-    
+
     const newReferral = {
         id: `R${patientId}${String(patient.referrals.length + 1).padStart(3, '0')}`,
         date: new Date().toISOString().split('T')[0],
         status: 'Pending',
         ...referralData
     };
-    
+
     patient.referrals.push(newReferral);
-    
+
     return {
         success: true,
         message: 'Referral created successfully',
@@ -946,7 +942,7 @@ export async function createReferral(patientId, referralData) {
 
 export async function getConversations() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return MOCK_CONVERSATIONS;
 }
 
@@ -955,7 +951,7 @@ export async function getConversations() {
  */
 export async function getMessages(conversationId) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return MOCK_MESSAGES.filter(m => m.conversationId === conversationId);
 }
 
@@ -964,16 +960,16 @@ export async function getMessages(conversationId) {
  */
 export async function sendMessage(messageData) {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     const newMessage = {
         id: MOCK_MESSAGES.length + 1,
         timestamp: new Date().toISOString(),
         read: false,
         ...messageData
     };
-    
+
     MOCK_MESSAGES.push(newMessage);
-    
+
     const conversationIndex = MOCK_CONVERSATIONS.findIndex(c => c.id === messageData.conversationId);
     if (conversationIndex !== -1) {
         MOCK_CONVERSATIONS[conversationIndex].lastMessage = {
@@ -982,7 +978,7 @@ export async function sendMessage(messageData) {
             sender: messageData.sender
         };
     }
-    
+
     return {
         success: true,
         message: 'Message sent successfully',
@@ -995,7 +991,7 @@ export async function sendMessage(messageData) {
  */
 export async function getPatientStatistics() {
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return {
         totalPatients: MOCK_PATIENTS.length,
         activePatients: MOCK_PATIENTS.filter(p => p.status === 'Active').length,
@@ -1005,12 +1001,14 @@ export async function getPatientStatistics() {
             { condition: 'Diabetes', count: MOCK_PATIENTS.filter(p => p.condition.includes('Diabetes')).length },
             { condition: 'Arthritis', count: MOCK_PATIENTS.filter(p => p.condition.includes('Arthritis')).length },
             { condition: 'Asthma', count: MOCK_PATIENTS.filter(p => p.condition.includes('Asthma')).length },
-            { condition: 'Other', count: MOCK_PATIENTS.filter(p => 
-                !p.condition.includes('Hypertension') && 
-                !p.condition.includes('Diabetes') && 
-                !p.condition.includes('Arthritis') && 
-                !p.condition.includes('Asthma')
-            ).length }
+            {
+                condition: 'Other', count: MOCK_PATIENTS.filter(p =>
+                    !p.condition.includes('Hypertension') &&
+                    !p.condition.includes('Diabetes') &&
+                    !p.condition.includes('Arthritis') &&
+                    !p.condition.includes('Asthma')
+                ).length
+            }
         ]
     };
 }
@@ -1024,10 +1022,10 @@ export async function getPatientById(id) {
         setTimeout(() => {
             try {
                 const patientId = isNaN(id) ? id : Number(id);
-                
+
                 const patient = MOCK_PATIENTS.find(p => p.id === patientId || p.medicalId === id);
-                
-            if (patient) {
+
+                if (patient) {
                     resolve({
                         success: true,
                         patient: { ...patient }
@@ -1045,6 +1043,84 @@ export async function getPatientById(id) {
                     message: 'An error occurred while searching for the patient'
                 });
             }
-        }, 800); 
+        }, 800);
     });
+}
+
+/**
+ * Accepts a pending appointment and sets date and time
+ * @param {string} appointmentId - Appointment ID
+ * @param {Object} appointmentData - Appointment data with date and time
+ * @returns {Promise<Object>} Updated appointment
+ */
+export async function acceptAppointment(appointmentId, appointmentData) {
+    try {
+        const { date, time, notes } = appointmentData;
+
+        if (!date || !time) {
+            throw new Error('Date and time are required');
+        }
+
+        const updateData = {
+            date,
+            time,
+            notes,
+            status: 'scheduled'
+        };
+
+        console.log('Accepting appointment with data:', updateData);
+
+        const response = await fetch(`/api/appointments/${appointmentId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to accept appointment');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error accepting appointment:', error);
+        throw error;
+    }
+}
+
+/**
+ * Rejects a pending appointment
+ * @param {string} appointmentId - Appointment ID
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<Object>} Updated appointment
+ */
+export async function rejectAppointment(appointmentId, reason) {
+    try {
+        const updateData = {
+            status: 'cancelled',
+            notes: reason || 'Rejected by doctor'
+        };
+
+        const response = await fetch(`/api/appointments/${appointmentId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('safe_auth_token')}`
+            },
+            body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to reject appointment');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error rejecting appointment:', error);
+        throw error;
+    }
 } 

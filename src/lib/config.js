@@ -1,3 +1,10 @@
+/**
+ * Application Configuration
+ * 
+ * This file contains configuration settings for the application,
+ * including flags to enable/disable features like mock database mode.
+ */
+
 export const APP_NAME = 'S.A.F.E';
 export const APP_DESCRIPTION = 'Secure, Accessible, Fast, Efficient Medical Service Platform';
 
@@ -101,4 +108,47 @@ export const THEME = {
             paper: '#1f2937',
         },
     },
-}; 
+};
+
+// Use mock database by default for local development
+export const USE_MOCK_DB = process.env.USE_MOCK_DB !== 'false';
+
+// Debug mode - enables additional logging
+export const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
+
+// Log database operations when in debug mode
+export const LOG_DB_OPS = DEBUG_MODE || process.env.LOG_DB_OPS === 'true';
+
+/**
+ * Logs a message with a consistent format if debug mode is enabled
+ * @param {string} component - The component or module name
+ * @param {string} message - The message to log
+ * @param {any} data - Optional data to log
+ */
+export function debugLog(component, message, data) {
+    if (DEBUG_MODE) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] [${component}] ${message}`);
+        if (data !== undefined) {
+            console.log(JSON.stringify(data, null, 2));
+        }
+    }
+}
+
+/**
+ * Logs database operations if logging is enabled
+ * @param {string} operation - The database operation being performed
+ * @param {string} collection - The collection being accessed
+ * @param {any} query - The query or data involved
+ * @param {any} result - The operation result
+ */
+export function logDbOp(operation, collection, query, result) {
+    if (LOG_DB_OPS) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] [DB:${collection}] ${operation}`);
+        console.log('Query:', JSON.stringify(query, null, 2));
+        if (result) {
+            console.log('Result:', JSON.stringify(result, null, 2));
+        }
+    }
+} 
