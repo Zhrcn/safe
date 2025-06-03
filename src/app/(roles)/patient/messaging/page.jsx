@@ -136,26 +136,28 @@ export default function PatientMessagingPage() {
                         className="mr-3"
                       >
                         <Avatar
-                          src={conversation.participantPhoto}
-                          alt={conversation.participantName}
-                          className={`${conversation.participantRole === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}
+                          src={conversation.participant?.avatar || conversation.participantPhoto}
+                          alt={conversation.participant?.name || conversation.participantName}
+                          className={`${conversation.participant?.role === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}
                         >
-                          {conversation.participantName.charAt(0)}
+                          {(conversation.participant?.name || conversation.participantName || 'U').charAt(0)}
                         </Avatar>
                       </Badge>
                       <ListItemText
+                        primaryTypographyProps={{ component: 'div' }}
                         primary={
                           <Box className="flex justify-between">
-                            <Typography variant="body1" className="font-semibold">
-                              {conversation.participantName}
+                            <Typography variant="body1" component="div" className="font-semibold">
+                              {conversation.participant?.name || conversation.participantName}
                             </Typography>
-                            <Typography variant="caption" className="text-muted-foreground">
+                            <Typography variant="caption" component="div" className="text-muted-foreground">
                               {formatTime(conversation.lastMessageDate)}
                             </Typography>
                           </Box>
                         }
+                        secondaryTypographyProps={{ component: 'div' }}
                         secondary={
-                          <Typography variant="body2" className="text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
+                          <Typography variant="body2" component="div" className="text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
                             {conversation.lastMessage}
                           </Typography>
                         }
@@ -173,17 +175,17 @@ export default function PatientMessagingPage() {
                 <Box className="p-4 border-b border-border bg-muted/50 flex justify-between items-center">
                   <Box className="flex items-center">
                     <Avatar
-                      src={selectedConversation.participantPhoto}
-                      className={`${selectedConversation.participantRole === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'} mr-3`}
+                      src={selectedConversation.participant?.avatar || selectedConversation.participantPhoto}
+                      className={`${(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'} mr-3`}
                     >
-                      {selectedConversation.participantName.charAt(0)}
+                      {(selectedConversation.participant?.name || selectedConversation.participantName || 'U').charAt(0)}
                     </Avatar>
                     <Box>
-                      <Typography variant="h6" className="font-semibold">
-                        {selectedConversation.participantName}
+                      <Typography variant="h6" component="div" className="font-semibold">
+                        {selectedConversation.participant?.name || selectedConversation.participantName}
                       </Typography>
-                      <Typography variant="caption" className="text-muted-foreground">
-                        {selectedConversation.participantRole === 'doctor' ? 'Doctor' : 'Pharmacist'}
+                      <Typography variant="caption" component="div" className="text-muted-foreground">
+                        {(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' ? 'Doctor' : 'Pharmacist'}
                       </Typography>
                     </Box>
                   </Box>
@@ -198,7 +200,7 @@ export default function PatientMessagingPage() {
                         <Phone size={20} />
                       </IconButton>
                     </Tooltip>
-                    {selectedConversation.participantRole === 'doctor' && (
+                    {(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' && (
                       <Tooltip title="Schedule appointment">
                         <IconButton className="text-muted-foreground hover:text-foreground">
                           <Calendar size={20} />
@@ -213,11 +215,11 @@ export default function PatientMessagingPage() {
                     <Box key={message.id} className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}>
                       {message.sender !== 'patient' && (
                         <Avatar
-                          src={selectedConversation.participantPhoto}
-                          alt={selectedConversation.participantName}
+                          src={selectedConversation.participant?.avatar || selectedConversation.participantPhoto}
+                          alt={selectedConversation.participant?.name || selectedConversation.participantName}
                           className="h-8 w-8 mr-2 mt-1"
                         >
-                          {selectedConversation.participantName.charAt(0)}
+                          {(selectedConversation.participant?.name || selectedConversation.participantName || 'U').charAt(0)}
                         </Avatar>
                       )}
                       <Box className={`rounded-lg p-3 max-w-[70%] ${
@@ -225,9 +227,10 @@ export default function PatientMessagingPage() {
                           ? 'bg-primary text-primary-foreground' 
                           : 'bg-muted text-foreground'
                       }`}>
-                        <Typography variant="body2">{message.content}</Typography>
+                        <Typography variant="body2" component="div">{message.content}</Typography>
                         <Typography 
                           variant="caption" 
+                          component="div"
                           className={`mt-1 block ${
                             message.sender === 'patient' 
                               ? 'text-primary-foreground/70' 

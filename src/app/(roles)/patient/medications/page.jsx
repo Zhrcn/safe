@@ -314,22 +314,24 @@ export default function PatientMedicationsPage() {
                         }
                       >
                         <ListItemText
+                          primaryTypographyProps={{ component: 'div' }}
                           primary={
                             <Box className="flex items-center">
-                              <Typography variant="body1" className="font-semibold">
+                              <Typography variant="body1" component="div" className="font-semibold">
                                 {prescription.medication}
                               </Typography>
-                              <Typography variant="body2" className="ml-2 text-muted-foreground">
+                              <Typography variant="body2" component="div" className="ml-2 text-muted-foreground">
                                 ({prescription.dosage})
                               </Typography>
                             </Box>
                           }
+                          secondaryTypographyProps={{ component: 'div' }}
                           secondary={
                             <Box className="flex flex-col mt-1">
-                              <Typography variant="body2" className="text-muted-foreground">
+                              <Typography variant="body2" component="div" className="text-muted-foreground">
                                 {formatDate(prescription.startDate)} - {formatDate(prescription.endDate)}
                               </Typography>
-                              <Typography variant="body2" className="text-muted-foreground">
+                              <Typography variant="body2" component="div" className="text-muted-foreground">
                                 Prescribed by {prescription.prescribedBy}
                               </Typography>
                             </Box>
@@ -522,6 +524,8 @@ export default function PatientMedicationsPage() {
                 <List disablePadding>
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Dosage"
                       secondary={selectedPrescription.dosage}
                     />
@@ -529,6 +533,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Frequency"
                       secondary={selectedPrescription.frequency}
                     />
@@ -536,6 +542,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Start Date"
                       secondary={formatDate(selectedPrescription.startDate)}
                     />
@@ -543,6 +551,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="End Date"
                       secondary={formatDate(selectedPrescription.endDate)}
                     />
@@ -550,6 +560,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Prescribed By"
                       secondary={selectedPrescription.prescribedBy}
                     />
@@ -557,6 +569,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Status"
                       secondary={selectedPrescription.status}
                     />
@@ -564,6 +578,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Pharmacy"
                       secondary={selectedPrescription.pharmacy}
                     />
@@ -571,6 +587,8 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
+                      primaryTypographyProps={{ component: 'div' }}
+                      secondaryTypographyProps={{ component: 'div' }}
                       primary="Refills Remaining"
                       secondary={selectedPrescription.refillsRemaining}
                     />
@@ -578,11 +596,13 @@ export default function PatientMedicationsPage() {
                   <Divider />
                   <ListItem>
                     <ListItemText
-                      primary="Instructions"
-                      secondary={selectedPrescription.instructions}
+                      primaryTypographyProps={{ component: 'div' }}
                       secondaryTypographyProps={{ 
+                        component: 'div',
                         style: { whiteSpace: 'pre-wrap' } 
                       }}
+                      primary="Instructions"
+                      secondary={selectedPrescription.instructions}
                     />
                   </ListItem>
                 </List>

@@ -40,13 +40,15 @@ export default function PatientPrescriptionsPage() {
                   <React.Fragment key={prescription.id}>
                     <ListItem className="hover:bg-muted transition-colors duration-200">
                       <ListItemText
-                        primary={<Typography variant="body1" className="font-semibold text-foreground">{prescription.medication}</Typography>}
+                        primaryTypographyProps={{ component: 'div' }}
+                        primary={<Typography variant="body1" component="div" className="font-semibold text-foreground">{prescription.medication}</Typography>}
+                        secondaryTypographyProps={{ component: 'div' }}
                         secondary={
                           <Box className="flex flex-col mt-1 text-muted-foreground">
-                            <Typography variant="body2"><strong>Dosage:</strong> {prescription.dosage}</Typography>
-                            <Typography variant="body2"><strong>Frequency:</strong> {prescription.frequency}</Typography>
-                            <Typography variant="body2" className="flex items-center"><CalendarDays size={16} className="mr-1 text-muted-foreground" /><strong>Issue Date:</strong> {prescription.issueDate}</Typography>
-                            <Typography variant="body2" className="flex items-center"><User size={16} className="mr-1 text-muted-foreground" /><strong>Prescribed By:</strong> {prescription.prescribingDoctor}</Typography>
+                            <Typography variant="body2" component="div"><strong>Dosage:</strong> {prescription.dosage}</Typography>
+                            <Typography variant="body2" component="div"><strong>Frequency:</strong> {prescription.frequency}</Typography>
+                            <Typography variant="body2" component="div" className="flex items-center"><CalendarDays size={16} className="mr-1 text-muted-foreground" /><strong>Issue Date:</strong> {prescription.issueDate}</Typography>
+                            <Typography variant="body2" component="div" className="flex items-center"><User size={16} className="mr-1 text-muted-foreground" /><strong>Prescribed By:</strong> {prescription.prescribingDoctor}</Typography>
                           </Box>
                         }
                       />

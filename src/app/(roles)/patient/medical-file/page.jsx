@@ -219,21 +219,24 @@ export default function PatientMedicalFilePage() {
                               {record.results.map((result, idx) => (
                                 <ListItem key={idx} className="px-0 py-1">
                                   <ListItemText
+                                    primaryTypographyProps={{ component: 'div' }}
                                     primary={
                                       <Box className="flex justify-between">
-                                        <Typography variant="body2" className="font-semibold">
+                                        <Typography variant="body2" component="div" className="font-semibold">
                                           {result.name}
                                         </Typography>
                                         <Typography 
                                           variant="body2" 
+                                          component="div"
                                           className={`font-semibold`}
                                         >
                                           {result.value} {result.unit}
                                         </Typography>
                                       </Box>
                                     }
+                                    secondaryTypographyProps={{ component: 'div' }}
                                     secondary={
-                                      <Typography variant="caption" className="text-muted-foreground">
+                                      <Typography variant="caption" component="div" className="text-muted-foreground">
                                         Normal Range: {result.normalRange}
                                       </Typography>
                                     }

@@ -43,8 +43,8 @@ async function ensureCollection(db, collectionName) {
   }
 }
 
-// MongoDB connection string - using direct value to ensure it works
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safe';
+// MongoDB connection string - using direct value since .env.local might not be loaded correctly
+const MONGODB_URI = 'mongodb://localhost:27017/safe';
 
 console.log('Using MongoDB URI:', MONGODB_URI);
 

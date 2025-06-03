@@ -101,12 +101,14 @@ export default function PatientAppointmentsPage() {
   const loadAppointments = async () => {
     setLoading(true);
     try {
-      const appointments = await getAppointments();
-      setAppointments(appointments);
+      const appointmentsData = await getAppointments();
+      // Ensure appointments is always an array
+      const safeAppointments = Array.isArray(appointmentsData) ? appointmentsData : [];
+      setAppointments(safeAppointments);
       setError(null);
 
       // Debug appointments data
-      debugAppointments(appointments);
+      debugAppointments(safeAppointments);
     } catch (error) {
       console.error('Error loading appointments:', error);
       setError('Failed to load appointments. Please try again later.');
@@ -127,15 +129,26 @@ export default function PatientAppointmentsPage() {
   };
 
   const debugAppointments = (appointments) => {
+    // Safely handle null/undefined appointments
+    if (!appointments || !Array.isArray(appointments)) {
+      console.log('No appointments data available or invalid format');
+      return;
+    }
+    
     console.log('Current appointments:', appointments.length);
     appointments.forEach((appointment, index) => {
-      console.log(`Appointment ${index + 1}:`, {
-        id: appointment._id || appointment.id,
-        status: appointment.status,
-        doctorId: appointment.doctorId,
-        doctorName: appointment.doctorName || appointment.doctorId?.name,
-        date: appointment.date
-      });
+      // Check if appointment is a valid object before accessing properties
+      if (appointment && typeof appointment === 'object') {
+        console.log(`Appointment ${index + 1}:`, {
+          id: appointment._id || appointment.id,
+          status: appointment.status,
+          doctorId: appointment.doctorId,
+          doctorName: appointment.doctorName || appointment.doctorId?.name,
+          date: appointment.date
+        });
+      } else {
+        console.log(`Appointment ${index + 1}: Invalid appointment data`, appointment);
+      }
     });
   };
 

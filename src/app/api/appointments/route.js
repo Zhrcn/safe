@@ -1,92 +1,91 @@
-const { NextResponse } = require('next/server');
-const { connectToDatabase, withTimeout } = require('@/lib/db');
-const Appointment = require('@/models/Appointment');
-<<<<<<< HEAD
-const User = require('@/models/User'); 
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose'); 
+import { NextResponse } from 'next/server';
+import { verifyToken, connectToDatabase, getCorsHeaders } from '../utils/db';
+import { ObjectId } from 'mongodb';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'safe-medical-app-secret-key-for-development';
-=======
-const User = require('@/models/User');
-const { jwtDecode } = require('jwt-decode');
-const mongoose = require('mongoose');
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
+// Standard headers for all responses
+const headers = {
+  ...getCorsHeaders(),
+  'X-API-Source': 'api/appointments',
+};
 
-async function getAuthenticatedUser(req) {
-    const token = req.cookies.get('safe_auth_token')?.value || req.headers.get('Authorization')?.split('Bearer ')[1];
-
-    if (!token) {
-        console.log('No token found in request');
-        return null;
+export async function GET(request) {
+    // Handle OPTIONS request for CORS
+    if (request.method === 'OPTIONS') {
+        return NextResponse.json({}, { status: 200, headers });
     }
-
+    
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        console.log('Token verified successfully in appointments API:', JSON.stringify(decoded, null, 2));
-        return decoded;
-    } catch (error) {
-        console.error('Authentication error in appointments API:', error.message);
-        return null;
-    }
-}
-
-export async function GET(req) {
-    try {
-        const user = await getAuthenticatedUser(req);
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Verify authentication token
+        const decoded = verifyToken(request);
+        if (!decoded) {
+            return NextResponse.json(
+                { error: 'Unauthorized', message: 'Invalid or missing authentication token' },
+                { status: 401, headers: { ...headers, 'X-Auth-Status': 'invalid-token' } }
+            );
         }
+        
+        // Add auth info to headers for debugging
+        const responseHeaders = {
+            ...headers,
+            'X-Auth-User-Id': decoded.userId,
+            'X-Auth-Role': decoded.role
+        };
 
+        // Connect to database
+        let client;
         try {
-            await connectToDatabase();
+            client = await connectToDatabase();
             console.log('Connected to database for appointments fetch');
         } catch (dbError) {
-            console.error('MongoDB Atlas connection error in appointments API:', dbError);
-
-
-            if (dbError.message.includes('IP address is not whitelisted') ||
-                dbError.message.includes('Could not connect to any servers')) {
-                return NextResponse.json({
-                    error: 'MongoDB Atlas IP whitelist error',
-                    details: 'Your IP address is not whitelisted in MongoDB Atlas',
-                    solution: 'Go to MongoDB Atlas dashboard > Network Access and add your current IP address'
-                }, { status: 503 });
-            }
-
+            console.error('Database connection error in appointments API:', dbError.message);
+            
             return NextResponse.json({
                 error: 'Database connection failed',
-                details: dbError.message,
-                solution: 'Please check your MongoDB Atlas connection string in .env.local file'
-            }, { status: 503 });
+                message: 'Unable to connect to the database. Please try again later.'
+            }, { 
+                status: 503, 
+                headers: { 
+                    ...responseHeaders, 
+                    'X-Error-Type': dbError.name,
+                    'X-Error-Message': dbError.message.substring(0, 100)
+                } 
+            });
         }
 
-        const url = new URL(req.url);
+        const url = new URL(request.url);
+        const db = client.db();
+        const appointmentsCollection = db.collection('appointments');
 
         let query = {};
 
-        const userId = user.userId || user.id;
+        const userId = decoded.userId;
         if (!userId) {
-            console.error('User ID not found in token');
-            return NextResponse.json({ error: 'Invalid token - missing user ID' }, { status: 401 });
+            await client.close();
+            return NextResponse.json(
+                { error: 'Invalid token', message: 'Missing user ID in token' },
+                { status: 401, headers: responseHeaders }
+            );
         }
         
-        if (user.role === 'patient') {
-            query.patientId = userId;
-        } else if (user.role === 'doctor') {
-            query.doctorId = userId;
+        if (decoded.role === 'patient') {
+            query.patientId = new ObjectId(userId);
+        } else if (decoded.role === 'doctor') {
+            query.doctorId = new ObjectId(userId);
 
             const patientId = url.searchParams.get('patientId');
             if (patientId) {
-                query = { patientId, doctorId: userId };
+                query = { 
+                    patientId: new ObjectId(patientId), 
+                    doctorId: new ObjectId(userId) 
+                };
             }
-        } else if (user.role === 'admin') {
+        } else if (decoded.role === 'admin') {
             const patientId = url.searchParams.get('patientId');
             const doctorId = url.searchParams.get('doctorId');
             const status = url.searchParams.get('status');
 
-            if (patientId) query.patientId = patientId;
-            if (doctorId) query.doctorId = doctorId;
+            if (patientId) query.patientId = new ObjectId(patientId);
+            if (doctorId) query.doctorId = new ObjectId(doctorId);
             if (status) query.status = status;
         }
 
@@ -105,324 +104,449 @@ export async function GET(req) {
 
         try {
             console.log('Querying appointments with:', JSON.stringify(query));
-            const total = await Appointment.countDocuments(query);
+            
+            // Get total count of matching appointments
+            const total = await appointmentsCollection.countDocuments(query);
             console.log(`Found ${total} appointments matching query`);
 
-            const appointments = await Appointment.find(query)
-                .populate('patientId', 'name')
-                .populate('doctorId', 'name')
+            // Get appointments with pagination
+            const appointmentsCursor = appointmentsCollection.find(query)
                 .sort({ date: 1, startTime: 1 })
                 .skip(skip)
                 .limit(limit);
+                
+            const appointments = await appointmentsCursor.toArray();
+            
+            // Populate patient and doctor names
+            const usersCollection = db.collection('users');
+            const populatedAppointments = await Promise.all(appointments.map(async (appointment) => {
+                let patientName = 'Unknown Patient';
+                let doctorName = 'Unknown Doctor';
+                
+                if (appointment.patientId) {
+                    const patient = await usersCollection.findOne({ _id: appointment.patientId });
+                    if (patient) patientName = patient.name;
+                }
+                
+                if (appointment.doctorId) {
+                    const doctor = await usersCollection.findOne({ _id: appointment.doctorId });
+                    if (doctor) doctorName = doctor.name;
+                }
+                
+                return {
+                    ...appointment,
+                    patientName,
+                    doctorName
+                };
+            }));
 
-            console.log(`Retrieved ${appointments.length} appointments`);
+            const hasMore = total > page * limit;
+            
+            // Close database connection
+            await client.close();
 
             return NextResponse.json({
-                appointments,
+                appointments: populatedAppointments,
                 pagination: {
                     total,
                     page,
                     limit,
-                    pages: Math.ceil(total / limit)
+                    hasMore
                 }
+            }, { 
+                status: 200, 
+                headers: { 
+                    ...responseHeaders, 
+                    'X-Records-Count': total,
+                    'X-Data-Source': 'database'
+                } 
             });
-        } catch (queryError) {
-            console.error('Error querying appointments:', queryError);
-            return NextResponse.json({
-                error: 'Failed to query appointments',
-                details: queryError.message
-            }, { status: 500 });
-        }
-    } catch (error) {
-        console.error('Error fetching appointments:', error);
-        return NextResponse.json({
-            error: 'Internal server error',
-            details: error.message
-        }, { status: 500 });
-    }
-}
-
-export async function POST(req) {
-    try {
-        console.log('Starting appointment creation...');
-        const user = await getAuthenticatedUser(req);
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-        console.log('User authenticated:', user);
-
-        await connectToDatabase();
-        const data = await req.json();
-        console.log('Received appointment data:', data);
-
-        const requestedDoctorId = data.doctorId || data.doctor_id;
-        const reason = data.reason;
-
-        if (!requestedDoctorId || !reason) {
-            return NextResponse.json({
-                error: 'Missing required fields',
-                details: 'doctorId and reason are required'
-            }, { status: 400 });
-        }
-
-        if (user.role !== 'patient') {
-            return NextResponse.json({
-                error: 'Unauthorized',
-                details: 'Only patients can create appointments'
-            }, { status: 403 });
-        }
-
-        // Get patient ID from authenticated user
-        const patientId = user._id || user.id;
-        console.log('Patient ID from token:', patientId);
-
-        // For debugging: log the patient ID from request body if provided
-        if (data.patientId) {
-            console.log('Patient ID from request body:', data.patientId);
-        }
-
-        let doctorId;
-<<<<<<< HEAD
-        
-        if (mongoose.Types.ObjectId.isValid(requestedDoctorId)) {
-            doctorId = new mongoose.Types.ObjectId(requestedDoctorId);
-        } 
-        else if (!isNaN(requestedDoctorId)) {
-            const doctor = await User.findOne({ 
-=======
-
-        // Log the received doctor ID for debugging
-        console.log('Requested doctor ID:', requestedDoctorId, 'Type:', typeof requestedDoctorId);
-
-        // If it's already a valid ObjectId
-        if (mongoose.Types.ObjectId.isValid(requestedDoctorId)) {
-            doctorId = new mongoose.Types.ObjectId(requestedDoctorId);
-            console.log('Using valid ObjectId:', doctorId);
-        }
-        // If it's a string that might be convertible to ObjectId
-        else if (typeof requestedDoctorId === 'string') {
-            try {
-                // Find doctor by their ID
-                console.log('Searching for doctor with string ID:', requestedDoctorId);
-                const doctor = await User.findOne({
-                    role: 'doctor',
-                    $or: [
-                        { _id: requestedDoctorId },
-                        { 'doctorProfile.doctorId': requestedDoctorId }
-                    ]
-                }).select('_id');
-
-                if (!doctor) {
-                    console.log('Doctor not found with string ID');
-                    return NextResponse.json({
-                        error: 'Invalid doctor',
-                        details: 'Doctor not found with the provided ID'
-                    }, { status: 400 });
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+            await client.close();
+            
+            return NextResponse.json(
+                { error: 'Database error', message: 'Error fetching appointments' },
+                { 
+                    status: 500, 
+                    headers: { 
+                        ...responseHeaders, 
+                        'X-Error-Type': error.name,
+                        'X-Error-Message': error.message.substring(0, 100)
+                    } 
                 }
-                doctorId = doctor._id;
-                console.log('Found doctor with ID:', doctorId);
-            } catch (idError) {
-                console.error('Error processing doctor ID:', idError);
-                return NextResponse.json({
-                    error: 'Invalid doctor ID format',
-                    details: 'The provided doctor ID is in an invalid format'
-                }, { status: 400 });
-            }
+            );
         }
-        // If it's a numeric ID (like from frontend)
-        else if (!isNaN(requestedDoctorId)) {
-            // Find doctor by their numeric ID (assuming it's stored in a field)
-            console.log('Searching for doctor with numeric ID:', requestedDoctorId);
-            const doctor = await User.findOne({
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
-                role: 'doctor',
-                $or: [
-                    { 'doctorProfile.doctorId': parseInt(requestedDoctorId) },
-                    { _id: requestedDoctorId }
-                ]
-            }).select('_id');
-
-            if (!doctor) {
-                console.log('Doctor not found with numeric ID');
-                return NextResponse.json({
-                    error: 'Invalid doctor',
-                    details: 'Doctor not found or inactive'
-                }, { status: 400 });
-            }
-            doctorId = doctor._id;
-            console.log('Found doctor with numeric ID:', doctorId);
-        }
-
-        if (!doctorId) {
-            console.log('Could not resolve doctor ID');
-            return NextResponse.json({
-                error: 'Invalid doctor',
-                details: 'Could not find doctor with the provided ID'
-            }, { status: 400 });
-        }
-<<<<<<< HEAD
-        const doctor = await User.findOne({ 
-            _id: doctorId, 
-            role: 'doctor', 
-            status: 'active' 
-=======
-
-        // Check if doctor exists and is active
-        const doctor = await User.findOne({
-            _id: doctorId,
-            role: 'doctor',
-            isActive: true
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
-        });
-
-        if (!doctor) {
-            console.log('Doctor not found or not active:', doctorId);
-            return NextResponse.json({
-                error: 'Invalid doctor',
-                details: 'Doctor not found or inactive'
-            }, { status: 400 });
-        }
-
-<<<<<<< HEAD
-=======
-        console.log('Doctor found and validated:', doctor._id, doctor.name);
-
-        // Check if patient has any existing appointments with this doctor
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
-        const existingAppointment = await Appointment.findOne({
-            patientId,
-            doctorId: doctorId,
-            status: { $in: ['pending', 'scheduled'] }
-        });
-
-        if (existingAppointment) {
-            console.log('Existing appointment found:', existingAppointment);
-            return NextResponse.json({
-                error: 'Appointment exists',
-                details: 'You already have a pending or scheduled appointment with this doctor'
-            }, { status: 409 });
-        }
-
-        const appointment = new Appointment({
-            patientId: new mongoose.Types.ObjectId(patientId),
-            doctorId: doctorId,
-            reason: reason,
-            preferredTimeSlot: data.time_slot || data.timeSlot || 'any',
-            status: 'pending',
-            notes: data.notes || '',
-            followUp: data.followUp || false
-        });
-
-        console.log('Created appointment object:', appointment);
-
-        await appointment.save();
-        console.log('Appointment saved successfully');
-        return NextResponse.json(appointment, { status: 201 });
     } catch (error) {
-        console.error('Error creating appointment:', error);
-        let statusCode = 500;
-        let errorMessage = 'Internal server error';
-
-        if (error.name === 'ValidationError') {
-            statusCode = 400;
-            errorMessage = error.message;
-        } else if (error.code === 11000) {
-            statusCode = 409;
-            errorMessage = 'Duplicate appointment request';
-        }
-
-        return NextResponse.json({
-            error: errorMessage,
-            details: error.message
-        }, { status: statusCode });
+        console.error('Unexpected error in appointments API:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error', message: 'An unexpected error occurred' },
+            { 
+                status: 500, 
+                headers: { 
+                    ...headers, 
+                    'X-Error-Type': error.name,
+                    'X-Error-Message': error.message.substring(0, 100)
+                } 
+            }
+        );
     }
 }
 
-export async function PATCH(req) {
+export async function POST(request) {
+    // Handle OPTIONS request for CORS
+    if (request.method === 'OPTIONS') {
+        return NextResponse.json({}, { status: 200, headers });
+    }
+    
     try {
-        const user = await getAuthenticatedUser(req);
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Verify authentication token
+        const decoded = verifyToken(request);
+        if (!decoded) {
+            return NextResponse.json(
+                { error: 'Unauthorized', message: 'Invalid or missing authentication token' },
+                { status: 401, headers: { ...headers, 'X-Auth-Status': 'invalid-token' } }
+            );
         }
+        
+        // Add auth info to headers for debugging
+        const responseHeaders = {
+            ...headers,
+            'X-Auth-User-Id': decoded.userId,
+            'X-Auth-Role': decoded.role
+        };
 
-        const url = new URL(req.url);
+        // Connect to database
+        let client;
+        try {
+            client = await connectToDatabase();
+            console.log('Connected to database for appointment creation');
+        } catch (dbError) {
+            console.error('Database connection error in appointments API:', dbError.message);
+            
+            return NextResponse.json({
+                error: 'Database connection failed',
+                message: 'Unable to connect to the database. Please try again later.'
+            }, { 
+                status: 503, 
+                headers: { 
+                    ...responseHeaders, 
+                    'X-Error-Type': dbError.name,
+                    'X-Error-Message': dbError.message.substring(0, 100)
+                } 
+            });
+        }
+        
+        try {
+            const data = await request.json();
+            const db = client.db();
+            const appointmentsCollection = db.collection('appointments');
+            
+            // Create new appointment document
+            const appointment = {
+                patientId: new ObjectId(data.patientId || decoded.userId),
+                doctorId: new ObjectId(data.doctorId),
+                date: new Date(data.date),
+                startTime: data.startTime,
+                endTime: data.endTime,
+                status: 'Scheduled',
+                reasonForVisit: data.reasonForVisit,
+                notes: {
+                    patient: data.notes?.patient || ''
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            
+            // Insert appointment into database
+            const result = await appointmentsCollection.insertOne(appointment);
+            
+            // Close database connection
+            await client.close();
+            
+            console.log('Appointment saved successfully');
+            return NextResponse.json(
+                { ...appointment, _id: result.insertedId },
+                { status: 201, headers: responseHeaders }
+            );
+        } catch (error) {
+            console.error('Error creating appointment:', error);
+            
+            // Close database connection if it was opened
+            if (client) await client.close();
+            
+            let statusCode = 500;
+            let errorMessage = 'Internal server error';
+    
+            if (error.name === 'ValidationError') {
+                statusCode = 400;
+                errorMessage = error.message;
+            } else if (error.code === 11000) {
+                statusCode = 409;
+                errorMessage = 'Duplicate appointment request';
+            }
+    
+            return NextResponse.json({
+                error: errorMessage,
+                message: error.message
+            }, { 
+                status: statusCode, 
+                headers: { 
+                    ...responseHeaders, 
+                    'X-Error-Type': error.name,
+                    'X-Error-Message': error.message.substring(0, 100)
+                } 
+            });
+        }
+    } catch (error) {
+        console.error('Unexpected error in appointments API:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error', message: 'An unexpected error occurred' },
+            { 
+                status: 500, 
+                headers: { 
+                    ...headers, 
+                    'X-Error-Type': error.name,
+                    'X-Error-Message': error.message.substring(0, 100)
+                } 
+            }
+        );
+    }
+}
+
+export async function PATCH(request) {
+    // Handle OPTIONS request for CORS
+    if (request.method === 'OPTIONS') {
+        return NextResponse.json({}, { status: 200, headers });
+    }
+    
+    try {
+        // Verify authentication token
+        const decoded = verifyToken(request);
+        if (!decoded) {
+            return NextResponse.json(
+                { error: 'Unauthorized', message: 'Invalid or missing authentication token' },
+                { status: 401, headers: { ...headers, 'X-Auth-Status': 'invalid-token' } }
+            );
+        }
+        
+        // Add auth info to headers for debugging
+        const responseHeaders = {
+            ...headers,
+            'X-Auth-User-Id': decoded.userId,
+            'X-Auth-Role': decoded.role
+        };
+
+        const url = new URL(request.url);
         const paths = url.pathname.split('/');
         const appointmentId = paths[paths.length - 1];
 
         if (!appointmentId || appointmentId === 'appointments') {
-            return NextResponse.json({ error: 'Appointment ID is required' }, { status: 400 });
+            return NextResponse.json(
+                { error: 'Bad Request', message: 'Appointment ID is required' },
+                { status: 400, headers: responseHeaders }
+            );
         }
-
-        await connectToDatabase();
-        const data = await req.json();
-
-        const appointment = await Appointment.findById(appointmentId);
-        if (!appointment) {
-            return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+        
+        // Connect to database
+        let client;
+        try {
+            client = await connectToDatabase();
+            console.log('Connected to database for appointment update');
+        } catch (dbError) {
+            console.error('Database connection error in appointments API:', dbError.message);
+            
+            return NextResponse.json({
+                error: 'Database connection failed',
+                message: 'Unable to connect to the database. Please try again later.'
+            }, { 
+                status: 503, 
+                headers: { 
+                    ...responseHeaders, 
+                    'X-Error-Type': dbError.name,
+                    'X-Error-Message': dbError.message.substring(0, 100)
+                } 
+            });
         }
-
-        if (user.role === 'patient') {
-            if (appointment.patientId.toString() !== user.id) {
-                return NextResponse.json({ error: 'Unauthorized to modify this appointment' }, { status: 403 });
-            }
-
-            if (data.status === 'Cancelled') {
-                await appointment.cancel(data.notes?.patient || 'Cancelled by patient');
-            } else {
-                if (data.notes?.patient) appointment.notes.patient = data.notes.patient;
-                if (data.reasonForVisit) appointment.reasonForVisit = data.reasonForVisit;
-                await appointment.save();
-            }
-        } else if (user.role === 'doctor') {
-            if (appointment.doctorId.toString() !== user.id) {
-                return NextResponse.json({ error: 'Unauthorized to modify this appointment' }, { status: 403 });
-            }
-
-            if (data.status === 'Completed') {
-                await appointment.complete(
-                    data.diagnosis,
-                    data.vitals,
-                    data.followUp
+        
+        try {
+            const data = await request.json();
+            const db = client.db();
+            const appointmentsCollection = db.collection('appointments');
+            
+            // Convert appointmentId string to ObjectId
+            let appointmentObjectId;
+            try {
+                appointmentObjectId = new ObjectId(appointmentId);
+            } catch (error) {
+                await client.close();
+                return NextResponse.json(
+                    { error: 'Invalid ID', message: 'The appointment ID format is invalid' },
+                    { status: 400, headers: responseHeaders }
                 );
-            } else if (data.status === 'Cancelled') {
-                await appointment.cancel(data.notes?.doctor || 'Cancelled by doctor');
+            }
+            
+            // Find the appointment
+            const appointment = await appointmentsCollection.findOne({ _id: appointmentObjectId });
+            if (!appointment) {
+                await client.close();
+                return NextResponse.json(
+                    { error: 'Not Found', message: 'Appointment not found' },
+                    { status: 404, headers: responseHeaders }
+                );
+            }
+
+            // Check authorization
+            if (decoded.role === 'patient') {
+                if (appointment.patientId.toString() !== decoded.userId) {
+                    await client.close();
+                    return NextResponse.json(
+                        { error: 'Forbidden', message: 'You are not authorized to modify this appointment' },
+                        { status: 403, headers: responseHeaders }
+                    );
+                }
+                
+                // Handle patient updates
+                let updateData = {};
+                
+                if (data.status === 'Cancelled') {
+                    updateData = {
+                        status: 'Cancelled',
+                        'notes.patient': data.notes?.patient || 'Cancelled by patient',
+                        updatedAt: new Date()
+                    };
+                } else {
+                    updateData = { updatedAt: new Date() };
+                    
+                    if (data.notes?.patient) updateData['notes.patient'] = data.notes.patient;
+                    if (data.reasonForVisit) updateData.reasonForVisit = data.reasonForVisit;
+                }
+                
+                // Update the appointment
+                await appointmentsCollection.updateOne(
+                    { _id: appointmentObjectId },
+                    { $set: updateData }
+                );
+            } else if (decoded.role === 'doctor') {
+                if (appointment.doctorId.toString() !== decoded.userId) {
+                    await client.close();
+                    return NextResponse.json(
+                        { error: 'Forbidden', message: 'You are not authorized to modify this appointment' },
+                        { status: 403, headers: responseHeaders }
+                    );
+                }
+                
+                // Handle doctor updates
+                let updateData = { updatedAt: new Date() };
+                
+                if (data.status === 'Completed') {
+                    updateData = {
+                        status: 'Completed',
+                        diagnosis: data.diagnosis || {},
+                        vitals: data.vitals || {},
+                        followUp: data.followUp || {},
+                        updatedAt: new Date()
+                    };
+                } else if (data.status === 'Cancelled') {
+                    updateData = {
+                        status: 'Cancelled',
+                        'notes.doctor': data.notes?.doctor || 'Cancelled by doctor',
+                        updatedAt: new Date()
+                    };
+                } else {
+                    const { notes, ...restData } = data;
+                    Object.assign(updateData, restData);
+                    
+                    if (notes?.doctor) updateData['notes.doctor'] = notes.doctor;
+                }
+                
+                // Update the appointment
+                await appointmentsCollection.updateOne(
+                    { _id: appointmentObjectId },
+                    { $set: updateData }
+                );
+            } else if (decoded.role !== 'admin') {
+                await client.close();
+                return NextResponse.json(
+                    { error: 'Forbidden', message: 'You are not authorized to modify appointments' },
+                    { status: 403, headers: responseHeaders }
+                );
             } else {
-                const { notes, ...restData } = data;
-                Object.assign(appointment, restData);
-
-                if (notes?.doctor) appointment.notes.doctor = notes.doctor;
-
-                await appointment.save();
+                // Handle admin updates
+                const { notes, diagnosis, vitals, followUp, ...restData } = data;
+                let updateData = { ...restData, updatedAt: new Date() };
+                
+                if (notes) {
+                    Object.keys(notes).forEach(key => {
+                        updateData[`notes.${key}`] = notes[key];
+                    });
+                }
+                
+                if (diagnosis) {
+                    Object.keys(diagnosis).forEach(key => {
+                        updateData[`diagnosis.${key}`] = diagnosis[key];
+                    });
+                }
+                
+                if (vitals) {
+                    Object.keys(vitals).forEach(key => {
+                        updateData[`vitals.${key}`] = vitals[key];
+                    });
+                }
+                
+                if (followUp) {
+                    Object.keys(followUp).forEach(key => {
+                        updateData[`followUp.${key}`] = followUp[key];
+                    });
+                }
+                
+                // Update the appointment
+                await appointmentsCollection.updateOne(
+                    { _id: appointmentObjectId },
+                    { $set: updateData }
+                );
             }
-        } else if (user.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized to modify appointments' }, { status: 403 });
-        } else {
-            const { notes, diagnosis, vitals, followUp, ...restData } = data;
-
-            Object.assign(appointment, restData);
-
-            if (notes) {
-                appointment.notes = { ...appointment.notes, ...notes };
-            }
-
-            if (diagnosis) {
-                appointment.diagnosis = { ...appointment.diagnosis, ...diagnosis };
-            }
-
-            if (vitals) {
-                appointment.vitals = { ...appointment.vitals, ...vitals };
-            }
-
-            if (followUp) {
-                appointment.followUp = { ...appointment.followUp, ...followUp };
-            }
-
-            await appointment.save();
+            
+            // Get the updated appointment
+            const updatedAppointment = await appointmentsCollection.findOne({ _id: appointmentObjectId });
+            
+            // Close database connection
+            await client.close();
+            
+            return NextResponse.json(updatedAppointment, { 
+                status: 200, 
+                headers: responseHeaders 
+            });
+        } catch (error) {
+            console.error('Error updating appointment:', error);
+            
+            // Close database connection if it was opened
+            if (client) await client.close();
+            
+            return NextResponse.json(
+                { error: 'Database error', message: 'Error updating appointment' },
+                { 
+                    status: 500, 
+                    headers: { 
+                        ...responseHeaders, 
+                        'X-Error-Type': error.name,
+                        'X-Error-Message': error.message.substring(0, 100)
+                    } 
+                }
+            );
         }
-
-        return NextResponse.json(appointment);
     } catch (error) {
-        console.error('Error updating appointment:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Unexpected error in appointments API:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error', message: 'An unexpected error occurred' },
+            { 
+                status: 500, 
+                headers: { 
+                    ...headers, 
+                    'X-Error-Type': error.name,
+                    'X-Error-Message': error.message.substring(0, 100)
+                } 
+            }
+        );
     }
-} 
+}

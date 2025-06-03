@@ -440,32 +440,6 @@ async function seedDatabase() {
     const appointmentResults = await db.collection('Appointments').insertMany(appointments);
     console.log(`Created ${appointmentResults.insertedCount} appointments`);
 
-    // Create a prescription
-    const prescription = {
-      patientId: patientUserId,
-      doctorId: doctorUserId,
-      date: new Date(now.getFullYear(), now.getMonth() - 1, 15), // Last month
-      expiryDate: new Date(now.getFullYear(), now.getMonth() + 5, 15), // 6 months validity
-      medications: [
-        {
-          name: 'Lisinopril',
-          dosage: '10mg',
-          frequency: 'Once daily',
-          duration: '6 months',
-          instructions: 'Take in the morning with food'
-        }
-      ],
-      diagnosis: 'Hypertension',
-      notes: 'Monitor blood pressure weekly. Report if consistently above 140/90.',
-      status: 'active',
-      createdAt: new Date(now.getFullYear(), now.getMonth() - 1, 15),
-      updatedAt: new Date(now.getFullYear(), now.getMonth() - 1, 15)
-    };
-
-    console.log('Creating prescription...');
-    const prescriptionResult = await db.collection('Prescriptions').insertOne(prescription);
-    console.log('Prescription created with ID:', prescriptionResult.insertedId);
-
     // Create a conversation between the doctor and patient
     const conversation = {
       participants: [
@@ -519,6 +493,239 @@ async function seedDatabase() {
     const conversationResult = await db.collection('Conversations').insertOne(conversation);
     console.log('Conversation created with ID:', conversationResult.insertedId);
 
+    // Create patient profile with emergency contact and insurance information
+    const patientProfile = {
+      name: 'Dr. John Doe',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'doctor@example.com',
+      password: doctorPassword,
+      role: 'doctor',
+      specialization: 'Cardiologist',
+      licenseNumber: 'MD12345678',
+      yearsOfExperience: 10,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    const doctors = [
+      { name: 'Dr. Ahmad Ali', email: 'doctor@example.com', password: doctorPassword, role: 'doctor', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, specialization: 'Cardiologist', licenseNumber: 'MD12345678', yearsOfExperience: 10, createdAt: new Date(), updatedAt: new Date() },
+      { name: 'Dr. Mohammed Kanaan', email: 'doctor2@example.com', password: doctorPassword, role: 'doctor', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, specialization: 'Neurologist', licenseNumber: 'MD98765432', yearsOfExperience: 8, createdAt: new Date(), updatedAt: new Date() },
+      { name: 'Dr. Laila Al-hassan', email: 'doctor3@example.com', password: doctorPassword, role: 'doctor', avatar: 'https://randomuser.me/api/portraits/men/67.jpg', isActive: true, specialization: 'Oncologist', licenseNumber: 'MD11111111', yearsOfExperience: 12, createdAt: new Date(), updatedAt: new Date() }
+    ];
+
+    console.log('Creating doctors...');
+    const doctorResults = await db.collection('Users').insertMany(doctors);
+    const doctorIds = Object.values(doctorResults.insertedIds);
+    console.log(`Created ${doctorResults.insertedCount} doctors`);
+
+    const patientPassword = await bcrypt.hash('patient123', salt);
+    const patients = [
+      {
+        name: 'Samer moussa',
+        email: 'patient1@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1985, 0, 1),
+        gender: 'male',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
+        emergencyContact: {
+          name: 'Laila moussa',
+          relationship: 'mother',
+          phone: '+963943681617'
+        },
+        insuranceInformation: {
+          provider: 'Health Insurance Inc.',
+          policyNumber: 'POL123456789',
+          validUntil: new Date(2027, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: ' Sally youssef ',
+        email: 'patient2@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1990, 5, 15),
+        gender: 'female',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
+        emergencyContact: {
+          name: 'Mohammed youssef',
+          relationship: 'spouse',
+          phone: '+963943681617'
+        },
+        insuranceInformation: {
+          provider: 'Care Insurance',
+          policyNumber: 'POL987654321',
+          validUntil: new Date(2027, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Ahmed youssef',
+        email: 'patient@example.com',
+        password: await bcrypt.hash('password123', 10),
+        role: 'patient',
+        dateOfBirth: new Date(1995, 2, 10),
+        gender: 'male',
+        address: 'Damascus, Syria',
+        phone: '+963943681617',
+        emergencyContact: {
+          name: 'Laila youssef',
+          relationship: 'parent',
+          phone: '+963943681617'
+        },
+        insuranceInformation: {
+          provider: 'Test Insurance',
+          policyNumber: 'POL1122334455',
+          validUntil: new Date(2027, 11, 31)
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      { name: 'Yomna youssef', email: 'patient3@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', isActive: true, dateOfBirth: new Date('1990-05-15'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mohammed youssef', email: 'patient4@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/44.jpg', isActive: true, dateOfBirth: new Date('1985-02-20'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'asmaa youssef', email: 'patient5@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/67.jpg', isActive: true, dateOfBirth: new Date('1995-08-10'), gender: 'Female', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'samer youssef', email: 'patient6@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', isActive: true, dateOfBirth: new Date('1980-01-01'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() },
+      { name: 'mahmmod youssef', email: 'patient7@example.com', password: patientPassword, role: 'patient', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', isActive: true, dateOfBirth: new Date('1992-06-25'), gender: 'Male', createdAt: new Date(), updatedAt: new Date() }
+    ];
+
+    console.log('Creating patients...');
+    const patientResults = await db.collection('Users').insertMany(patients);
+    const patientIds = Object.values(patientResults.insertedIds);
+    console.log(`Created ${patientResults.insertedCount} patients`);
+
+    // Create appointments
+    const appointments = [];
+    for (let i = 0; i < 10; i++) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + i);
+      tomorrow.setHours(10, 0, 0, 0);
+      appointments.push({
+        patientId: patientIds[i % patientIds.length],
+        doctorId: doctorIds[i % doctorIds.length],
+        date: tomorrow,
+        time: '10:00 AM',
+        status: 'scheduled',
+        reason: 'Annual checkup',
+        notes: 'Patient has reported mild headaches',
+        followUp: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+
+    console.log('Creating appointments...');
+    const appointmentResults = await db.collection('Appointments').insertMany(appointments);
+    console.log(`Created ${appointmentResults.insertedCount} appointments`);
+
+    // Create prescriptions
+    const prescriptions = [];
+    for (let i = 0; i < 10; i++) {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 30);
+      prescriptions.push({
+        patientId: patientIds[i % patientIds.length],
+        doctorId: doctorIds[i % doctorIds.length],
+        date: new Date(),
+        expiryDate: expiryDate,
+        medications: [
+          {
+            name: 'Amoxicillin',
+            dosage: '500mg',
+            frequency: 'Three times daily',
+            duration: '7 days',
+            instructions: 'Take with food'
+          }
+        ],
+        diagnosis: 'Bacterial infection',
+        notes: 'Patient should complete the full course',
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+
+    console.log('Creating prescriptions...');
+    const prescriptionResults = await db.collection('Prescriptions').insertMany(prescriptions);
+    console.log(`Created ${prescriptionResults.insertedCount} prescriptions`);
+
+    // Create consultations
+    const consultations = [];
+    for (let i = 0; i < 10; i++) {
+      consultations.push({
+        patientId: patientIds[i % patientIds.length],
+        doctorId: doctorIds[i % doctorIds.length],
+        subject: 'Skin rash concern',
+        message: 'I have developed a rash on my arm that is itchy and red. It started about 3 days ago.',
+        status: 'pending',
+        preferredResponseTime: 'within_24_hours',
+        attachments: [
+          {
+            name: 'rash_photo.jpg',
+            type: 'image/jpeg',
+            url: 'https://example.com/placeholder-image.jpg',
+            uploadedAt: new Date()
+          }
+        ],
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+
+    console.log('Creating consultations...');
+    const consultationResults = await db.collection('Consultations').insertMany(consultations);
+    console.log(`Created ${consultationResults.insertedCount} consultations`);
+
+    // Create conversations
+    const conversations = [];
+    for (let i = 0; i < 10; i++) {
+      conversations.push({
+        participants: [
+          { userId: patientIds[i % patientIds.length], role: 'patient' },
+          { userId: doctorIds[i % doctorIds.length], role: 'doctor' }
+        ],
+        messages: [
+          {
+            senderId: patientIds[i % patientIds.length],
+            content: 'Hello Dr. Smith, I have a question about my prescription.',
+            timestamp: new Date(Date.now() - 86400000), // 1 day ago
+            read: true
+          },
+          {
+            senderId: doctorIds[i % doctorIds.length],
+            content: 'Hello Sarah, how can I help you today?',
+            timestamp: new Date(Date.now() - 82800000), // 23 hours ago
+            read: true
+          },
+          {
+            senderId: patientIds[i % patientIds.length],
+            content: 'Is it normal to feel a bit dizzy after taking the medication?',
+            timestamp: new Date(Date.now() - 79200000), // 22 hours ago
+            read: true
+          },
+          {
+            senderId: doctorIds[i % doctorIds.length],
+            content: 'A little dizziness can be a side effect. Try taking it with food. If it persists or gets worse, please let me know right away.',
+            timestamp: new Date(Date.now() - 75600000), // 21 hours ago
+            read: false
+          }
+        ],
+        createdAt: new Date(Date.now() - 86400000),
+        updatedAt: new Date(Date.now() - 75600000),
+        lastMessageAt: new Date(Date.now() - 75600000)
+      });
+    }
+
+    console.log('Creating conversations...');
+    const conversationResults = await db.collection('Conversations').insertMany(conversations);
+    console.log(`Created ${conversationResults.insertedCount} conversations`);
+
     console.log('Database seeded successfully!');
 
   } catch (error) {
@@ -541,4 +748,4 @@ async function seedDatabase() {
 }
 
 // Run the seed function
-seedDatabase();
+seedDatabase(); 

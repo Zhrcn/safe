@@ -221,7 +221,42 @@ export async function getPrescriptions() {
 
         try {
             const data = await response.json();
-            return data.prescriptions || [];
+            const prescriptions = data.prescriptions || [];
+            
+            // Transform the data structure to match what the frontend expects
+            const transformedPrescriptions = prescriptions.flatMap(prescription => {
+                // If there's no medications array or it's empty, return an empty array
+                if (!prescription.medications || !Array.isArray(prescription.medications) || prescription.medications.length === 0) {
+                    console.warn(`Prescription ${prescription._id} has no medications array or it's empty`);
+                    return [];
+                }
+                
+                // Map each medication in the array to a separate prescription object
+                return prescription.medications.map(med => ({
+                    id: `${prescription._id}-${med.name}`,
+                    medication: med.name,
+                    dosage: med.dosage,
+                    frequency: med.frequency,
+                    startDate: new Date(prescription.date).toISOString().split('T')[0],
+                    endDate: new Date(prescription.expiryDate).toISOString().split('T')[0],
+                    doctorName: prescription.doctorId?.name || 'Unknown Doctor',
+                    doctorSpecialty: 'Not specified',
+                    instructions: med.instructions || 'No specific instructions',
+                    status: prescription.status || 'Active',
+                    refills: 0, // Default value as it's not in the DB schema
+                    issueDate: new Date(prescription.date).toISOString().split('T')[0],
+                    pharmacy: prescription.filledBy?.pharmacistId?.name || 'Not filled yet',
+                    refillsRemaining: 0, // Default value
+                    prescribedBy: prescription.doctorId?.name || 'Unknown Doctor'
+                }));
+            });
+            
+            if (transformedPrescriptions.length === 0) {
+                console.warn('No valid prescriptions found in API response, using mock data');
+                return getMockPrescriptions();
+            }
+            
+            return transformedPrescriptions;
         } catch (jsonError) {
             console.error('Error parsing prescriptions response:', jsonError);
             return getMockPrescriptions();
@@ -784,7 +819,11 @@ export async function getPatientProfile() {
         }
 
         try {
-            const data = await response.json();
+            const responseData = await response.json();
+            
+            // Extract profile data from the response structure
+            // The API returns { success: true, profile: {...} }
+            const data = responseData.profile || responseData;
             
             // Ensure the data has the expected structure
             if (!data.contact) {
@@ -795,14 +834,14 @@ export async function getPatientProfile() {
                 return {
                     ...data,
                     contact: {
-                        email: data.email || mockData.contact.email,
-                        phone: data.phone || mockData.contact.phone,
-                        address: data.address || mockData.contact.address
+                        email: data.user?.email || mockData.contact.email,
+                        phone: data.user?.phoneNumber || mockData.contact.phone,
+                        address: data.user?.address || mockData.contact.address
                     },
                     // Ensure other required fields are present
-                    emergencyContact: data.emergencyContact || mockData.emergencyContact,
+                    emergencyContact: data.medicalInfo?.emergencyContact || mockData.emergencyContact,
                     insurance: data.insurance || mockData.insurance,
-                    allergies: data.allergies || mockData.allergies,
+                    allergies: data.medicalInfo?.allergies || mockData.allergies,
                     chronicConditions: data.chronicConditions || mockData.chronicConditions
                 };
             }
@@ -1614,7 +1653,8 @@ export async function getConversation(conversationId) {
 
         try {
             const data = await response.json();
-            return data;
+            // Validate and standardize the conversation structure before returning
+            return validateConversationStructure(data);
         } catch (jsonError) {
             console.error('Error parsing conversation response:', jsonError);
             return getMockConversation(conversationId);
@@ -1661,7 +1701,8 @@ export function getMockConversation(conversationId) {
         });
     }
     
-    return {
+    // Create a validated conversation structure with both nested and top-level fields
+    return validateConversationStructure({
         id: conversation.id,
         participant: {
             id: conversation.participantId,
@@ -1669,10 +1710,75 @@ export function getMockConversation(conversationId) {
             role: conversation.participantRole,
             avatar: conversation.avatar
         },
+        // Include top-level fields for backward compatibility
+        participantId: conversation.participantId,
+        participantName: conversation.participantName,
+        participantRole: conversation.participantRole,
+        participantPhoto: conversation.avatar,
         messages: messages,
         canCall: true,
         canVideoCall: conversation.participantRole !== 'Support'
+    });
+};
+
+/**
+ * Validates and ensures a conversation has the correct structure
+ * @param {Object} conversation - The conversation object to validate
+ * @returns {Object} A validated conversation object with all required fields
+ */
+function validateConversationStructure(conversation) {
+    if (!conversation) {
+        console.warn('Received null or undefined conversation, creating empty structure');
+        return createEmptyConversation();
+    }
+    
+    // Ensure both nested and top-level participant data exists
+    if (conversation.participant && !conversation.participantName) {
+        // Copy nested fields to top level
+        conversation.participantId = conversation.participant.id;
+        conversation.participantName = conversation.participant.name;
+        conversation.participantRole = conversation.participant.role;
+        conversation.participantPhoto = conversation.participant.avatar;
+    } else if (!conversation.participant && conversation.participantName) {
+        // Create nested participant object from top-level fields
+        conversation.participant = {
+            id: conversation.participantId,
+            name: conversation.participantName,
+            role: conversation.participantRole,
+            avatar: conversation.participantPhoto
+        };
+    }
+    
+    // Ensure messages array exists
+    if (!conversation.messages || !Array.isArray(conversation.messages)) {
+        conversation.messages = [];
+    }
+    
+    return conversation;
+}
+
+/**
+ * Creates an empty conversation structure for fallback
+ * @returns {Object} An empty conversation structure
+ */
+function createEmptyConversation() {
+    return {
+        id: 'empty-' + Date.now(),
+        participant: {
+            id: 'unknown',
+            name: 'Unknown Provider',
+            role: 'Support',
+            avatar: null
+        },
+        participantId: 'unknown',
+        participantName: 'Unknown Provider',
+        participantRole: 'Support',
+        participantPhoto: null,
+        messages: [],
+        canCall: false,
+        canVideoCall: false
     };
+
 }
 
 /**
@@ -2435,6 +2541,139 @@ export function getMockMedicineAvailability(medicineName) {
             available: false,
             expectedRestock: addDays(new Date(), 2).toISOString(),
             hours: '8:00 AM - 10:00 PM'
+        }
+    ];
+}
+
+/**
+ * Get medical records for the current patient
+ * @returns {Promise<Array>} Medical records data or mock data on error
+ */
+export async function getMedicalRecords() {
+    try {
+        const token = getAuthToken();
+        if (!token) {
+            console.warn('Authentication token not found, using mock medical records data');
+            return getMockMedicalRecords();
+        }
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('Fetching patient medical records...');
+        }
+
+        const response = await fetch('/api/patient/medical-records', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('Medical records response status:', response.status);
+        }
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.warn('Medical records endpoint not found (404), using mock data');
+                return getMockMedicalRecords();
+            }
+            
+            try {
+                const errorData = await response.json();
+                console.error(`API error: ${errorData.error || response.statusText}`);
+                return getMockMedicalRecords();
+            } catch (jsonError) {
+                console.error(`Failed to parse error response: ${jsonError.message}`);
+                return getMockMedicalRecords();
+            }
+        }
+
+        try {
+            const data = await response.json();
+            return data;
+        } catch (jsonError) {
+            console.error('Error parsing medical records response:', jsonError);
+            return getMockMedicalRecords();
+        }
+    } catch (error) {
+        console.error('Error fetching medical records:', error);
+        return getMockMedicalRecords();
+    }
+}
+
+/**
+ * Get mock medical records data for fallback
+ * @returns {Array} Mock medical records data
+ */
+export function getMockMedicalRecords() {
+    const today = new Date();
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const twoMonthsAgo = new Date(today);
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const threeMonthsAgo = new Date(today);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    
+    return [
+        {
+            id: 1001,
+            date: lastMonth.toISOString().split('T')[0],
+            type: 'Diagnosis',
+            description: 'Annual Physical Examination',
+            doctor: 'Dr. Sarah Johnson',
+            notes: 'Patient is in good health overall. Recommended regular exercise and balanced diet.',
+            details: [
+                { label: 'Blood Pressure', value: '120/80 mmHg' },
+                { label: 'Heart Rate', value: '72 bpm' },
+                { label: 'Weight', value: '70 kg' },
+                { label: 'BMI', value: '24.5' },
+                { label: 'Recommendations', value: 'Continue regular exercise, maintain balanced diet' }
+            ]
+        },
+        {
+            id: 1002,
+            date: twoMonthsAgo.toISOString().split('T')[0],
+            type: 'Lab Test',
+            description: 'Complete Blood Count',
+            doctor: 'Dr. Michael Chen',
+            notes: 'All blood parameters within normal range.',
+            details: [
+                { label: 'Hemoglobin', value: '14.2 g/dL' },
+                { label: 'White Blood Cells', value: '7.5 x10^9/L' },
+                { label: 'Platelets', value: '250 x10^9/L' },
+                { label: 'Hematocrit', value: '42%' },
+                { label: 'Red Blood Cells', value: '5.0 x10^12/L' }
+            ]
+        },
+        {
+            id: 1003,
+            date: threeMonthsAgo.toISOString().split('T')[0],
+            type: 'Imaging',
+            description: 'Chest X-Ray',
+            doctor: 'Dr. Emily Rodriguez',
+            notes: 'No abnormalities detected in lung fields. Heart size normal.',
+            imageUrl: 'https://www.researchgate.net/publication/343949968/figure/fig1/AS:931822731223040@1599458356128/Normal-chest-X-ray-of-a-healthy-individual.png',
+            details: [
+                { label: 'Procedure', value: 'Posterior-Anterior and Lateral Chest X-Ray' },
+                { label: 'Findings', value: 'Clear lung fields bilaterally' },
+                { label: 'Heart Size', value: 'Normal' },
+                { label: 'Conclusion', value: 'No acute cardiopulmonary process' }
+            ]
+        },
+        {
+            id: 1004,
+            date: threeMonthsAgo.toISOString().split('T')[0],
+            type: 'Follow-up',
+            description: 'Post-Treatment Evaluation',
+            doctor: 'Dr. Sarah Johnson',
+            notes: 'Patient has recovered well from previous upper respiratory infection. Symptoms have resolved.',
+            details: [
+                { label: 'Previous Condition', value: 'Upper Respiratory Infection' },
+                { label: 'Current Status', value: 'Resolved' },
+                { label: 'Medications', value: 'Completed course of antibiotics' },
+                { label: 'Recommendations', value: 'No further treatment needed' }
+            ]
         }
     ];
 }

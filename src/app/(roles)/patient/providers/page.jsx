@@ -266,7 +266,7 @@ export default function PatientProvidersPage() {
               <Typography variant="h6" className="font-semibold">
                 No providers found
               </Typography>
-              <Typography variant="body2" className="text-muted-foreground">
+              <Typography variant="body2" component="div" className="text-muted-foreground">
                 Try adjusting your search or browse all providers
               </Typography>
             </Box>
@@ -290,7 +290,7 @@ export default function PatientProvidersPage() {
                               <Typography variant="h6" className="font-semibold">
                                 {provider.name}
                               </Typography>
-                              <Typography variant="body2" className="text-muted-foreground">
+                              <Typography variant="body2" component="div" className="text-muted-foreground">
                                 {provider.specialty}
                               </Typography>
                             </Box>
@@ -308,11 +308,11 @@ export default function PatientProvidersPage() {
                         <Box className="mb-4">
                           <Box className="flex items-center mb-2">
                             <MapPin size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2">{provider.hospital}</Typography>
+                            <Typography variant="body2" component="span">{provider.hospital}</Typography>
                           </Box>
                           <Box className="flex items-center mb-2">
                             <Award size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2">{provider.yearsExperience} years experience</Typography>
+                            <Typography variant="body2" component="span">{provider.yearsExperience} years experience</Typography>
                           </Box>
                           <Box className="flex items-center">
                             <Rating 
@@ -321,7 +321,7 @@ export default function PatientProvidersPage() {
                               precision={0.1} 
                               size="small"
                             />
-                            <Typography variant="body2" className="ml-1">
+                            <Typography variant="body2" component="span" className="ml-1">
                               ({provider.rating})
                             </Typography>
                           </Box>
@@ -395,7 +395,7 @@ export default function PatientProvidersPage() {
                             <Typography variant="h6" className="font-semibold">
                               {provider.name}
                             </Typography>
-                            <Typography variant="body2" className="text-muted-foreground">
+                            <Typography variant="body2" component="div" className="text-muted-foreground">
                               {provider.pharmacy}
                             </Typography>
                           </Box>
@@ -404,11 +404,11 @@ export default function PatientProvidersPage() {
                         <Box className="mb-4">
                           <Box className="flex items-center mb-2">
                             <Phone size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2">+963 11 123 4567</Typography>
+                            <Typography variant="body2" component="span">+963 11 123 4567</Typography>
                           </Box>
                           <Box className="flex items-center mb-2">
                             <Mail size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2">contact@{provider.pharmacy.toLowerCase().replace(/\s+/g, '')}.sy</Typography>
+                            <Typography variant="body2" component="span">contact@{provider.pharmacy.toLowerCase().replace(/\s+/g, '')}.sy</Typography>
                           </Box>
                           <Box className="flex items-center">
                             <Rating 
@@ -417,13 +417,13 @@ export default function PatientProvidersPage() {
                               precision={0.1} 
                               size="small"
                             />
-                            <Typography variant="body2" className="ml-1">
+                            <Typography variant="body2" component="span" className="ml-1">
                               ({provider.rating})
                             </Typography>
                           </Box>
                           <Box className="flex items-center mt-2">
                             <Award size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2">{provider.yearsExperience} years experience</Typography>
+                            <Typography variant="body2" component="span">{provider.yearsExperience} years experience</Typography>
                           </Box>
                         </Box>
                       </CardContent>
@@ -654,7 +654,7 @@ export default function PatientProvidersPage() {
                     {availabilityResult.medication} is {availabilityResult.isAvailable ? 'in stock' : 'out of stock'} at {availabilityResult.pharmacy}.
                   </Typography>
                   {availabilityResult.isAvailable && (
-                    <Typography variant="body2" className="mt-1 flex items-center text-green-600">
+                    <Typography variant="body2" component="div" className="mt-1 flex items-center text-green-600">
                       <Clock size={16} className="mr-1" /> 
                       Current stock: {availabilityResult.quantity} units
                     </Typography>

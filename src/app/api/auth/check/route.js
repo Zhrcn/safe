@@ -15,12 +15,8 @@ export async function OPTIONS() {
 
 export async function GET(req) {
     console.log('Auth check API called');
-<<<<<<< HEAD
-    
-=======
 
     // Initialize diagnostic info to help troubleshoot auth issues
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
     const diagnostics = {
         token_sources: [],
         cookie_present: false,
@@ -37,12 +33,8 @@ export async function GET(req) {
             diagnostics.cookie_present = true;
             console.log('Token found in cookie');
         }
-<<<<<<< HEAD
-        
-=======
 
         // Then check Authorization header as fallback
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
         const authHeader = req.headers.get('Authorization');
         diagnostics.header_present = !!authHeader;
 
@@ -51,12 +43,8 @@ export async function GET(req) {
             diagnostics.token_sources.push('header');
             console.log('Token found in Authorization header');
         }
-<<<<<<< HEAD
-        
-=======
 
         // Use cookie token if available, otherwise use header token
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
         const token = tokenCookie || headerToken;
         diagnostics.token_found = !!token;
 
@@ -78,40 +66,17 @@ export async function GET(req) {
             diagnostics.role = decoded.role;
 
             console.log(`Token verified for user ID: ${diagnostics.user_id}, role: ${diagnostics.role}`);
-<<<<<<< HEAD
-            
-            const dbTimeout = 5000; 
-            
-=======
 
             // Set a timeout for database operations to prevent hanging
             const dbTimeout = 5000; // 5 seconds
-
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
             try {
                 await connectToDatabase();
-<<<<<<< HEAD
-                
+
                 const user = await withTimeout(
                     User.findById(diagnostics.user_id),
                     dbTimeout,
                     'User lookup timeout'
                 );
-                
-=======
-
-                // Create a promise that rejects after the timeout
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Database query timeout')), dbTimeout);
-                });
-
-                // Race the user query against the timeout
-                const user = await Promise.race([
-                    User.findById(diagnostics.user_id),
-                    timeoutPromise
-                ]);
-
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
                 if (!user) {
                     console.warn(`User not found in database: ${diagnostics.user_id}`);
                     const response = NextResponse.json({
@@ -136,8 +101,7 @@ export async function GET(req) {
 
                 diagnostics.user_found = true;
                 diagnostics.db_connected = true;
-<<<<<<< HEAD
-                
+
                 let profileData = {};
                 try {
                     if (user.role === 'doctor') {
@@ -190,10 +154,7 @@ export async function GET(req) {
                     console.error(`Error fetching ${user.role} profile:`, profileError);
                     // Continue without profile data if there's an error
                 }
-                
-=======
 
->>>>>>> 74f7c7b293c98eceffe8125840281c637782687e
                 // Return user data and token for client-side storage
                 const response = NextResponse.json({
                     authenticated: true,

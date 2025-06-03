@@ -96,6 +96,12 @@ async function getPatientProfile(token) {
         profileImage: user.profileImage,
         dateOfBirth: user.dateOfBirth
       },
+      // Add contact field structure that the frontend expects
+      contact: {
+        email: user.email,
+        phone: user.phoneNumber,
+        address: user.address
+      },
       medicalInfo: {
         medicalHistory: patientProfile.medicalHistory || [],
         allergies: patientProfile.allergies || [],
@@ -103,7 +109,14 @@ async function getPatientProfile(token) {
         height: patientProfile.height,
         weight: patientProfile.weight,
         emergencyContact: patientProfile.emergencyContact
-      }
+      },
+      // Add other expected fields that might be missing
+      insurance: patientProfile.insurance || {
+        provider: 'Unknown',
+        policyNumber: 'Unknown',
+        expiryDate: null
+      },
+      chronicConditions: patientProfile.chronicConditions || []
     };
 
     return {
@@ -257,6 +270,12 @@ async function updatePatientProfile(token, requestData) {
         profileImage: updatedUser.profileImage,
         dateOfBirth: updatedUser.dateOfBirth
       },
+      // Add contact field structure that the frontend expects
+      contact: {
+        email: updatedUser.email,
+        phone: updatedUser.phoneNumber,
+        address: updatedUser.address
+      },
       medicalInfo: {
         medicalHistory: updatedPatientProfile.medicalHistory || [],
         allergies: updatedPatientProfile.allergies || [],
@@ -264,7 +283,14 @@ async function updatePatientProfile(token, requestData) {
         height: updatedPatientProfile.height,
         weight: updatedPatientProfile.weight,
         emergencyContact: updatedPatientProfile.emergencyContact
-      }
+      },
+      // Add other expected fields that might be missing
+      insurance: updatedPatientProfile.insurance || {
+        provider: 'Unknown',
+        policyNumber: 'Unknown',
+        expiryDate: null
+      },
+      chronicConditions: updatedPatientProfile.chronicConditions || []
     };
 
     return {
