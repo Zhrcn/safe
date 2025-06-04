@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   Box, Grid, CircularProgress, Button, Avatar, Typography, Chip, Skeleton
 } from '@mui/material';
@@ -8,7 +8,8 @@ import {
   CalendarClock, Calendar, Pill, UserPlus, FileText, ArrowUpRight,
   Activity, Heart, Weight, Droplets, Clock, MapPin
 } from 'lucide-react';
-import { getPatientDashboardData } from '@/services/patientService';
+import { useDispatch, useSelector } from 'react-redux';
+import { getPatientData } from '@/store/patientSlice';
 import { PageContainer } from '@/components/common';
 import Card from '@/components/ui/Card';
 import CustomButton from '@/components/ui/Button';
@@ -24,10 +25,8 @@ import {
   Legend,
 } from 'chart.js';
 
-// Register Chart.js components
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
+  CategoryScale, 
   PointElement,
   LineElement,
   Title,
@@ -35,7 +34,6 @@ ChartJS.register(
   Legend
 );
 
-// Stat Card Component
 function EnhancedStatCard({ title, value, icon, color, loading }) {
   return (
     <Card
@@ -71,7 +69,6 @@ function EnhancedStatCard({ title, value, icon, color, loading }) {
   );
 }
 
-// Appointment Card Component
 function AppointmentCard({ appointment, loading }) {
   if (loading) {
     return (
@@ -128,7 +125,6 @@ function AppointmentCard({ appointment, loading }) {
   );
 }
 
-// Medication Card Component
 function MedicationCard({ medication, loading }) {
   if (loading) {
     return (
@@ -173,7 +169,6 @@ function MedicationCard({ medication, loading }) {
   );
 }
 
-// Health Stat Card Component
 function HealthStatCard({ stat, icon, color, loading }) {
   if (loading) {
     return (
@@ -205,7 +200,6 @@ function HealthStatCard({ stat, icon, color, loading }) {
   );
 }
 
-// Blood Pressure Chart Component
 function BloodPressureChart({ data, loading }) {
   const chartData = {
     labels: data?.bloodPressure?.map(item => item.date) || [],
@@ -262,312 +256,67 @@ function BloodPressureChart({ data, loading }) {
 }
 
 export default function PatientDashboardPage() {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [healthMetrics, setHealthMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const {
+    data: patientData,
+    loading,
+    error
+  } = useSelector((state) => state.patient);
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoading(true);
-        const data = await getPatientDashboardData();
-        setDashboardData(data);
+    dispatch(getPatientData());
+  }, [dispatch]);
 
-        // In a real app, you'd fetch this from an API
-        // For now, we'll use mock data
-        setHealthMetrics({
-          bloodPressure: [
-            { date: '2024-01-15', systolic: 145, diastolic: 95 },
-            { date: '2024-02-15', systolic: 140, diastolic: 90 },
-            { date: '2024-03-15', systolic: 135, diastolic: 88 },
-            { date: '2024-04-15', systolic: 130, diastolic: 85 },
-            { date: '2024-05-15', systolic: 128, diastolic: 84 },
-            { date: '2024-06-15', systolic: 125, diastolic: 82 }
-          ],
-        });
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        setError('Failed to load dashboard data. Please try again later.');
+  if (loading) return <div className="p-4 text-center">Loading dashboard...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
-        // Set fallback data if API fails
-        setDashboardData({
-          stats: {
-            upcomingAppointments: 0,
-            activeMedications: 0,
-            lastCheckup: 'N/A',
-            activeProviders: 0
-          },
-          upcomingAppointments: [],
-          medications: [],
-          healthStats: [
-            { name: 'Blood Pressure', value: 'N/A', date: 'N/A' },
-            { name: 'Heart Rate', value: 'N/A', date: 'N/A' },
-            { name: 'Weight', value: 'N/A', date: 'N/A' },
-            { name: 'Blood Glucose', value: 'N/A', date: 'N/A' }
-          ],
-          bloodPressure: []
-        });
-
-        setHealthMetrics({
-          bloodPressure: [
-            { date: '2024-01-15', systolic: 120, diastolic: 80 },
-            { date: '2024-02-15', systolic: 122, diastolic: 82 },
-            { date: '2024-03-15', systolic: 118, diastolic: 78 },
-            { date: '2024-04-15', systolic: 121, diastolic: 79 },
-            { date: '2024-05-15', systolic: 119, diastolic: 80 },
-            { date: '2024-06-15', systolic: 120, diastolic: 81 }
-          ],
-        });
-      } finally {
-        setLoading(false);
+  const dashboardData = {
+    healthStats: [
+      { 
+        name: 'Blood Pressure', 
+        value: patientData?.healthMetrics?.bloodPressure || '--/--' 
+      },
+      { 
+        name: 'Heart Rate', 
+        value: patientData?.healthMetrics?.heartRate ? `${patientData.healthMetrics.heartRate} bpm` : '--' 
+      },
+      { 
+        name: 'Weight', 
+        value: patientData?.healthMetrics?.weight ? `${patientData.healthMetrics.weight} kg` : '--' 
+      },
+      { 
+        name: 'Blood Glucose', 
+        value: patientData?.healthMetrics?.bloodGlucose ? `${patientData.healthMetrics.bloodGlucose} mg/dL` : '--' 
       }
-    }
-
-    loadDashboardData();
-  }, []);
-
-  // Loading skeletons
-  if (loading && !dashboardData) {
-    return (
-      <PageContainer
-        title="Dashboard"
-        description="Welcome back to your health dashboard"
-      >
-        <Grid container spacing={3} className="mb-6">
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Skeleton variant="rounded" height={100} />
-            </Grid>
-          ))}
-        </Grid>
-
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Skeleton variant="rounded" height={400} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Skeleton variant="rounded" height={400} />
-          </Grid>
-          <Grid item xs={12}>
-            <Skeleton variant="rounded" height={300} />
-          </Grid>
-        </Grid>
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box className="flex justify-center items-center h-64">
-        <Box className="text-center">
-          <Typography variant="h6" color="error" gutterBottom>
-            {error}
-          </Typography>
-          <CustomButton
-            variant="contained"
-            color="primary"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </CustomButton>
-        </Box>
-      </Box>
-    );
-  }
+    ],
+    upcomingAppointments: patientData?.appointments?.slice(0, 3) || [],
+    medications: patientData?.prescriptions?.slice(0, 3) || []
+  };
 
   return (
     <PageContainer
       title="Dashboard"
       description="Welcome back to your health dashboard"
     >
-      {/* Stats Cards */}
       <Grid container spacing={3} className="mb-6">
-        <Grid item xs={12} sm={6} md={3}>
-          <EnhancedStatCard
-            title="Upcoming Appointments"
-            value={dashboardData?.stats.upcomingAppointments}
-            icon={<Calendar className="h-5 w-5 text-white" />}
-            color="bg-blue-500"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <EnhancedStatCard
-            title="Active Medications"
-            value={dashboardData?.stats.activeMedications}
-            icon={<Pill className="h-5 w-5 text-white" />}
-            color="bg-indigo-500"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <EnhancedStatCard
-            title="Last Checkup"
-            value={dashboardData?.stats.lastCheckup}
-            icon={<FileText className="h-5 w-5 text-white" />}
-            color="bg-emerald-500"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <EnhancedStatCard
-            title="Active Providers"
-            value={dashboardData?.stats.activeProviders}
-            icon={<UserPlus className="h-5 w-5 text-white" />}
-            color="bg-purple-500"
-            loading={loading}
-          />
-        </Grid>
+        {[...Array(4)].map((_, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Skeleton variant="rounded" height={100} />
+          </Grid>
+        ))}
       </Grid>
 
-      {/* Main Content */}
       <Grid container spacing={3}>
-        {/* Upcoming Appointments */}
         <Grid item xs={12} md={6}>
-          <Card
-            title="Upcoming Appointments"
-            subtitle="Your scheduled appointments"
-            icon={<CalendarClock className="h-5 w-5 text-blue-500" />}
-            actions={
-              <CustomButton
-                variant="soft"
-                color="primary"
-                size="small"
-                href="/patient/appointments"
-                endIcon={<ArrowUpRight size={16} />}
-              >
-                View All
-              </CustomButton>
-            }
-            variant="elevated"
-          >
-            <Box className="space-y-4">
-              {loading ? (
-                [...Array(3)].map((_, index) => (
-                  <AppointmentCard key={index} loading={true} />
-                ))
-              ) : dashboardData.upcomingAppointments.length === 0 ? (
-                <Box className="text-center py-6 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <Typography color="text.secondary">No upcoming appointments</Typography>
-                  <CustomButton
-                    variant="soft"
-                    color="primary"
-                    size="small"
-                    className="mt-2"
-                  >
-                    Schedule New
-                  </CustomButton>
-                </Box>
-              ) : (
-                dashboardData.upcomingAppointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
-                ))
-              )}
-            </Box>
-          </Card>
+          <Skeleton variant="rounded" height={400} />
         </Grid>
-
-        {/* Current Medications */}
         <Grid item xs={12} md={6}>
-          <Card
-            title="Current Medications"
-            subtitle="Your active prescriptions"
-            icon={<Pill className="h-5 w-5 text-indigo-500" />}
-            actions={
-              <CustomButton
-                variant="soft"
-                color="secondary"
-                size="small"
-                href="/patient/medications"
-                endIcon={<ArrowUpRight size={16} />}
-              >
-                View All
-              </CustomButton>
-            }
-            variant="elevated"
-          >
-            <Box className="space-y-4">
-              {loading ? (
-                [...Array(3)].map((_, index) => (
-                  <MedicationCard key={index} loading={true} />
-                ))
-              ) : dashboardData.medications.length === 0 ? (
-                <Box className="text-center py-6 text-muted-foreground">
-                  <Pill className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <Typography color="text.secondary">No active medications</Typography>
-                </Box>
-              ) : (
-                dashboardData.medications.map((medication) => (
-                  <MedicationCard key={medication.id} medication={medication} />
-                ))
-              )}
-            </Box>
-          </Card>
+          <Skeleton variant="rounded" height={400} />
         </Grid>
-
-        {/* Health Stats */}
-        <Grid item xs={12} md={8}>
-          <BloodPressureChart data={healthMetrics} loading={loading} />
-        </Grid>
-
-        {/* Health Stats Summary */}
-        <Grid item xs={12} md={4}>
-          <Card
-            title="Health Metrics"
-            subtitle="Your latest measurements"
-            icon={<Activity className="h-5 w-5 text-emerald-500" />}
-            variant="elevated"
-          >
-            <Grid container spacing={2}>
-              {loading ? (
-                [...Array(4)].map((_, index) => (
-                  <Grid item xs={6} key={index}>
-                    <HealthStatCard loading={true} />
-                  </Grid>
-                ))
-              ) : (
-                dashboardData.healthStats.map((stat, index) => {
-                  let icon, color;
-
-                  switch (stat.name) {
-                    case 'Blood Pressure':
-                      icon = <Activity className="h-5 w-5 text-white" />;
-                      color = 'bg-red-500';
-                      break;
-                    case 'Heart Rate':
-                      icon = <Heart className="h-5 w-5 text-white" />;
-                      color = 'bg-pink-500';
-                      break;
-                    case 'Weight':
-                      icon = <Weight className="h-5 w-5 text-white" />;
-                      color = 'bg-blue-500';
-                      break;
-                    case 'Blood Glucose':
-                      icon = <Droplets className="h-5 w-5 text-white" />;
-                      color = 'bg-amber-500';
-                      break;
-                    default:
-                      icon = <Activity className="h-5 w-5 text-white" />;
-                      color = 'bg-gray-500';
-                  }
-
-                  return (
-                    <Grid item xs={6} key={index}>
-                      <HealthStatCard
-                        stat={stat}
-                        icon={icon}
-                        color={color}
-                      />
-                    </Grid>
-                  );
-                })
-              )}
-            </Grid>
-          </Card>
+        <Grid item xs={12}>
+          <Skeleton variant="rounded" height={300} />
         </Grid>
       </Grid>
     </PageContainer>
   );
-} 
+}

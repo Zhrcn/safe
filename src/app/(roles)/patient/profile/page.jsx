@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePatient } from '@/hooks/usePatient';
 import { 
   Typography, Box, Grid, Card, CardContent, TextField, InputAdornment, 
   Avatar, Button, CircularProgress, Snackbar, Alert, Chip
@@ -10,12 +11,16 @@ import {
   DropletIcon, Edit, Save, X, AlertCircle, Check
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { getPatientProfile, updatePatientProfile } from '@/services/patientService';
 
-export default function PatientProfilePage() {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function PatientProfilePage() {
+  const {
+    profile,
+    loading,
+    error,
+    updatePatientProfile,
+    fetchPatientData
+  } = usePatient();
+
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
@@ -28,35 +33,27 @@ export default function PatientProfilePage() {
   });
 
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        setLoading(true);
-        const data = await getPatientProfile();
-        setProfile(data);
-        setFormData({
-          name: data.name,
-          email: data.contact.email,
-          phone: data.contact.phone,
-          address: data.contact?.address || data.address || ''
-        });
-      } catch (error) {
-        console.error('Error loading profile:', error);
-        setError('Failed to load profile. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
+    if (!loading && !error && profile) {
+      setFormData({
+        name: profile.user?.firstName + ' ' + profile.user?.lastName,
+        email: profile.user?.email,
+        phone: profile.patient?.phone || '',
+        address: profile.patient?.address || ''
+      });
     }
+  }, [loading, error, profile]);
 
-    loadProfile();
-  }, []);
+  const handleRefresh = () => {
+    fetchPatientData();
+  };
 
   const handleEditToggle = () => {
     if (editMode) {
       setFormData({
-        name: profile.name,
-        email: profile.contact.email,
-        phone: profile.contact.phone,
-        address: profile.contact?.address || profile.address || ''
+        name: profile.user?.firstName + ' ' + profile.user?.lastName,
+        email: profile.user?.email,
+        phone: profile.patient?.phone || '',
+        address: profile.patient?.address || ''
       });
     }
     setEditMode(!editMode);
@@ -77,7 +74,6 @@ export default function PatientProfilePage() {
       const updatedProfile = {
         name: formData.name,
         contact: {
-          ...profile.contact,
           email: formData.email,
           phone: formData.phone
         },
@@ -85,17 +81,6 @@ export default function PatientProfilePage() {
       };
       
       const result = await updatePatientProfile(updatedProfile);
-      
-      setProfile(prev => ({
-        ...prev,
-        name: formData.name,
-        contact: {
-          ...prev.contact,
-          email: formData.email,
-          phone: formData.phone
-        },
-        address: formData.address
-      }));
       
       setNotification({
         open: true,
@@ -129,361 +114,310 @@ export default function PatientProfilePage() {
     );
   };
 
+  if (loading) {
+    return (
+      <PatientPageContainer title="Profile" description="Loading your profile...">
+        <Box display="flex" justifyContent="center" mt={4}>
+          <CircularProgress />
+        </Box>
+      </PatientPageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PatientPageContainer title="Profile" description="Error loading profile">
+        <Box mt={2}>
+          <Alert severity="error" action={
+            <Button color="inherit" size="small" onClick={handleRefresh}>
+              Retry
+            </Button>
+          }>
+            {error}
+          </Alert>
+        </Box>
+      </PatientPageContainer>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <PatientPageContainer title="Profile" description="No profile data available">
+        <Box mt={2}>
+          <Alert severity="warning">
+            No profile data available. 
+            <Button color="inherit" size="small" onClick={fetchPatientData} sx={{ ml: 1 }}>
+              Refresh
+            </Button>
+          </Alert>
+        </Box>
+      </PatientPageContainer>
+    );
+  }
+
   return (
     <PatientPageContainer
       title="Profile"
       description="View and manage your personal information"
     >
-      {loading ? (
-        <Box className="flex justify-center items-center h-64">
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Box className="flex justify-center items-center h-64">
-          <Typography color="error">{error}</Typography>
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Card className="h-full border border-border bg-card shadow-sm">
-              <CardContent className="flex flex-col items-center text-center">
-                <Avatar 
-                  sx={{ width: 100, height: 100 }} 
-                  className="bg-primary/10 text-primary mb-4"
-                >
-                  <User size={50} />
-                </Avatar>
-                <Typography variant="h5" className="font-bold mb-1">
-                  {editMode ? formData.name : profile.name}
-                </Typography>
-                <Typography variant="body1" className="text-muted-foreground">
-                  Age: {profile.age}
-                </Typography>
-                <Typography variant="body1" className="text-muted-foreground mb-4">
-                  Gender: {profile.gender}
-                </Typography>
-                
-                <Box className="flex gap-2 mt-2">
-                  <Chip 
-                    icon={<DropletIcon size={16} />} 
-                    label={`Blood Type: ${profile.bloodType}`}
-                    className="bg-red-50 text-red-600 border-red-100"
-                  />
-                </Box>
-                
-                <Box className="mt-6 w-full">
-                  <Button
-                    variant={editMode ? "outlined" : "contained"}
-                    startIcon={editMode ? <X size={16} /> : <Edit size={16} />}
-                    onClick={handleEditToggle}
-                    fullWidth
-                    className={
-                      editMode 
-                        ? "border-red-500 text-red-500 hover:bg-red-50" 
-                        : "bg-primary text-primary-foreground"
-                    }
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Card className="h-full border border-border bg-card shadow-sm">
+            <CardContent className="flex flex-col items-center p-6">
+              <Avatar 
+                className="w-24 h-24 mb-4"
+                src={profile.user?.profileImage}
+              />
+              <Typography variant="h6" className="font-semibold">
+                {profile.user?.firstName} {profile.user?.lastName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" className="mb-2">
+                Patient ID: {profile.user?.id}
+              </Typography>
+              <Chip 
+                label="Patient" 
+                color="primary" 
+                size="small" 
+                className="mb-4" 
+              />
+              
+              {editMode ? (
+                <Box className="flex gap-2 mt-4">
+                  <Button 
+                    variant="contained" 
+                    startIcon={<Save size={16} />}
+                    onClick={handleSave}
+                    disabled={saving || !isFormValid()}
                   >
-                    {editMode ? "Cancel" : "Edit Profile"}
+                    {saving ? <CircularProgress size={20} /> : 'Save'}
                   </Button>
-                  
-                  {editMode && (
-                    <Button
-                      variant="contained"
-                      startIcon={saving ? <CircularProgress size={16} /> : <Save size={16} />}
-                      onClick={handleSave}
-                      disabled={saving || !isFormValid()}
-                      className="mt-2 bg-green-600 text-white"
-                      fullWidth
-                    >
-                      {saving ? "Saving..." : "Save Changes"}
-                    </Button>
-                  )}
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<X size={16} />}
+                    onClick={handleEditToggle}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={8}>
-            <Card className="h-full border border-border bg-card shadow-sm">
-              <CardContent>
-                <Typography variant="h6" className="font-semibold mb-4 flex items-center">
-                  <User size={20} className="mr-2" />
-                  Personal Information
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Name"
-                      name="name"
-                      value={editMode ? formData.name : profile.name}
-                      onChange={handleInputChange}
-                      fullWidth
-                      InputProps={{ 
-                        readOnly: !editMode,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <User size={20} className="text-muted-foreground" />
-                          </InputAdornment>
-                        ) 
-                      }}
-                      className="mb-4"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Date of Birth"
-                      value={new Date(profile.dob || profile.dateOfBirth).toLocaleDateString()}
-                      fullWidth
-                      InputProps={{ 
-                        readOnly: true,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CalendarDays size={20} className="text-muted-foreground" />
-                          </InputAdornment>
-                        ) 
-                      }}
-                      className="mb-4"
-                      disabled
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Email"
-                      name="email"
-                      value={editMode ? formData.email : profile.contact.email}
-                      onChange={handleInputChange}
-                      fullWidth
-                      InputProps={{ 
-                        readOnly: !editMode,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Mail size={20} className="text-muted-foreground" />
-                          </InputAdornment>
-                        ) 
-                      }}
-                      className="mb-4"
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Phone"
-                      name="phone"
-                      value={editMode ? formData.phone : profile.contact.phone}
-                      onChange={handleInputChange}
-                      fullWidth
-                      InputProps={{ 
-                        readOnly: !editMode,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Phone size={20} className="text-muted-foreground" />
-                          </InputAdornment>
-                        ) 
-                      }}
-                      className="mb-4"
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Address"
-                      name="address"
-                      value={editMode ? formData.address : profile.contact?.address || profile.address || ''}
-                      onChange={handleInputChange}
-                      fullWidth
-                      InputProps={{ 
-                        readOnly: !editMode,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Home size={20} className="text-muted-foreground" />
-                          </InputAdornment>
-                        ) 
-                      }}
-                      className="mb-4"
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card className="h-full border border-border bg-card shadow-sm">
-              <CardContent>
-                <Typography variant="h6" className="font-semibold mb-4 flex items-center">
-                  <HeartPulse size={20} className="mr-2" />
-                  Medical Information
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Box className="p-3 rounded-md bg-muted/50 mb-3">
-                      <Typography variant="subtitle2" className="font-semibold mb-1">
-                        Chronic Conditions
-                      </Typography>
-                      <Box className="flex flex-wrap gap-1">
-                        {profile.chronicConditions && profile.chronicConditions.length > 0 ? (
-                          profile.chronicConditions.map((condition, idx) => (
-                            <Chip 
-                              key={idx} 
-                              label={condition} 
-                              size="small" 
-                              className="bg-blue-50 text-blue-600 border-blue-100"
-                            />
-                          ))
-                        ) : (
-                          <Typography variant="body2" className="text-muted-foreground">
-                            No chronic conditions recorded
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box className="p-3 rounded-md bg-muted/50">
-                      <Typography variant="subtitle2" className="font-semibold mb-1">
-                        Allergies
-                      </Typography>
-                      <Box className="flex flex-wrap gap-1">
-                        {profile.allergies && profile.allergies.length > 0 ? (
-                          profile.allergies.map((allergy, idx) => (
-                            <Chip 
-                              key={idx} 
-                              label={allergy} 
-                              size="small" 
-                              className="bg-red-50 text-red-600 border-red-100"
-                            />
-                          ))
-                        ) : (
-                          <Typography variant="body2" className="text-muted-foreground">
-                            No allergies recorded
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card className="h-full border border-border bg-card shadow-sm">
-              <CardContent>
-                <Typography variant="h6" className="font-semibold mb-4 flex items-center">
-                  <AlertCircle size={20} className="mr-2" />
-                  Emergency Contact
-                </Typography>
-                {profile.emergencyContact ? (
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="Name"
-                        value={profile.emergencyContact.name}
-                        fullWidth
-                        InputProps={{ 
-                          readOnly: true,
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <User size={20} className="text-muted-foreground" />
-                            </InputAdornment>
-                          ) 
-                        }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="Relationship"
-                        value={profile.emergencyContact.relationship}
-                        fullWidth
-                        InputProps={{ 
-                          readOnly: true,
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <User size={20} className="text-muted-foreground" />
-                            </InputAdornment>
-                          ) 
-                        }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Phone"
-                        value={profile.emergencyContact.phone}
-                        fullWidth
-                        InputProps={{ 
-                          readOnly: true,
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Phone size={20} className="text-muted-foreground" />
-                            </InputAdornment>
-                          ) 
-                        }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                  </Grid>
-                ) : (
-                  <Box className="text-center p-4">
-                    <AlertCircle size={32} className="mx-auto text-muted-foreground mb-2" />
-                    <Typography variant="body1" className="text-muted-foreground">
-                      No emergency contact information available
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Card className="border border-border bg-card shadow-sm">
-              <CardContent>
-                <Typography variant="h6" className="font-semibold mb-4 flex items-center">
-                  <FileText size={20} className="mr-2" />
-                  Insurance Information
-                </Typography>
-                {profile.insurance ? (
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6} md={4}>
-                      <TextField
-                        label="Insurance Provider"
-                        value={profile.insurance.provider}
-                        fullWidth
-                        InputProps={{ readOnly: true }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                      <TextField
-                        label="Policy Number"
-                        value={profile.insurance.policyNumber}
-                        fullWidth
-                        InputProps={{ readOnly: true }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                      <TextField
-                        label="Expiry Date"
-                        value={new Date(profile.insurance.expiryDate).toLocaleDateString()}
-                        fullWidth
-                        InputProps={{ readOnly: true }}
-                        className="mb-4"
-                      />
-                    </Grid>
-                  </Grid>
-                ) : (
-                  <Box className="text-center p-4">
-                    <AlertCircle size={32} className="mx-auto text-muted-foreground mb-2" />
-                    <Typography variant="body1" className="text-muted-foreground">
-                      No insurance information available
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+              ) : (
+                <Button 
+                  variant="outlined" 
+                  startIcon={<Edit size={16} />}
+                  onClick={handleEditToggle}
+                >
+                  Edit Profile
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
-      )}
+
+        <Grid item xs={12} md={8}>
+          <Card className="border border-border bg-card shadow-sm">
+            <CardContent className="p-6">
+              <Typography variant="h6" className="font-semibold mb-4">
+                Personal Information
+              </Typography>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Full Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    fullWidth
+                    InputProps={{
+                      readOnly: !editMode,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <User size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    fullWidth
+                    InputProps={{
+                      readOnly: !editMode,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Mail size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    fullWidth
+                    InputProps={{
+                      readOnly: !editMode,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    fullWidth
+                    InputProps={{
+                      readOnly: !editMode,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Home size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+              </Grid>
+
+              <Typography variant="h6" className="font-semibold mt-6 mb-4">
+                Medical Information
+              </Typography>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Date of Birth"
+                    value={profile.patient?.dateOfBirth || 'Not specified'}
+                    fullWidth
+                    InputProps={{ 
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CalendarDays size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Blood Type"
+                    value={profile.patient?.bloodType || 'Not specified'}
+                    fullWidth
+                    InputProps={{ 
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <DropletIcon size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Medical Conditions"
+                    value={profile.patient?.medicalConditions?.join(', ') || 'None'}
+                    fullWidth
+                    InputProps={{ 
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <HeartPulse size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Allergies"
+                    value={profile.patient?.allergies?.join(', ') || 'None'}
+                    fullWidth
+                    InputProps={{ 
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AlertCircle size={20} className="text-muted-foreground" />
+                        </InputAdornment>
+                      ) 
+                    }}
+                    className="mb-4"
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Card className="border border-border bg-card shadow-sm">
+          <CardContent>
+            <Typography variant="h6" className="font-semibold mb-4 flex items-center">
+              <FileText size={20} className="mr-2" />
+              Insurance Information
+            </Typography>
+            {profile.patient?.insurance ? (
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Insurance Provider"
+                    value={profile.patient?.insurance.provider}
+                    fullWidth
+                    InputProps={{ readOnly: true }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Policy Number"
+                    value={profile.patient?.insurance.policyNumber}
+                    fullWidth
+                    InputProps={{ readOnly: true }}
+                    className="mb-4"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Expiry Date"
+                    value={new Date(profile.patient?.insurance.expiryDate).toLocaleDateString()}
+                    fullWidth
+                    InputProps={{ readOnly: true }}
+                    className="mb-4"
+                  />
+                </Grid>
+              </Grid>
+            ) : (
+              <Box className="text-center p-4">
+                <AlertCircle size={32} className="mx-auto text-muted-foreground mb-2" />
+                <Typography variant="body1" className="text-muted-foreground">
+                  No insurance information available
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Grid>
       
       <Snackbar 
         open={notification.open} 
@@ -503,3 +437,5 @@ export default function PatientProfilePage() {
     </PatientPageContainer>
   );
 }
+
+export default PatientProfilePage;

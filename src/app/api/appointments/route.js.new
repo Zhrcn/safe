@@ -18,6 +18,7 @@ export async function GET(request) {
   log.time('request-total');
   
   try {
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -28,14 +29,17 @@ export async function GET(request) {
     const { userId, role } = authResult.user;
     log.debug(`Authenticated ${role} with ID: ${userId}`);
 
+    // Extract query parameters
     const url = new URL(request.url);
     const params = {};
     
+    // Extract all relevant query parameters
     for (const [key, value] of url.searchParams.entries()) {
       params[key] = value;
     }
     
     try {
+      // Get appointments using the service layer
       const result = await getAppointments(params, userId, role);
       log.timeEnd('request-total');
       return createApiResponse(result);
@@ -43,6 +47,7 @@ export async function GET(request) {
       log.error(`Error in appointments service: ${error.message}`, error);
       log.timeEnd('request-total');
       
+      // Fallback to mock data on error
       log.info('Falling back to mock appointments data');
       const mockResult = getMockAppointments(params, userId, role);
       return createApiResponse({

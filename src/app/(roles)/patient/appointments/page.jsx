@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import usePatientData from '@/hooks/usePatientData';
 import {
   Typography, Box, Grid, Button, Tabs, Tab, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, FormControl, InputLabel,
@@ -12,16 +12,16 @@ import {
 } from 'lucide-react';
 import { format, parseISO, differenceInDays, addDays } from 'date-fns';
 import { PatientPageContainer, PatientCard, AppointmentStatusBadge } from '@/components/patient/PatientComponents';
-import { getAppointments, scheduleAppointment, cancelAppointment, updateAppointment, getDoctors } from '@/services/patientService';
 
 export default function PatientAppointmentsPage() {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const { 
+    appointments, 
+    loading, 
+    error,
+    refresh 
+  } = usePatientData();
   const [tabValue, setTabValue] = useState(0);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [doctors, setDoctors] = useState([]);
 
   // New appointment dialog
   const [newAppointmentDialog, setNewAppointmentDialog] = useState(false);
@@ -48,24 +48,6 @@ export default function PatientAppointmentsPage() {
   const [dialogError, setDialogError] = useState('');
   const [rescheduleDialogError, setRescheduleDialogError] = useState('');
   const [cancelDialogError, setCancelDialogError] = useState('');
-
-  useEffect(() => {
-    loadAppointments();
-    loadDoctors();
-  }, []);
-
-  const loadDoctors = async () => {
-    try {
-      setDoctorsLoading(true);
-      const data = await getDoctors();
-      setDoctors(data);
-    } catch (error) {
-      console.error('Error loading doctors:', error);
-      // Don't show error to user, just log it
-    } finally {
-      setDoctorsLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (appointments.length > 0) {
@@ -98,60 +80,6 @@ export default function PatientAppointmentsPage() {
     }
   }, [appointments]);
 
-  const loadAppointments = async () => {
-    setLoading(true);
-    try {
-      const appointmentsData = await getAppointments();
-      // Ensure appointments is always an array
-      const safeAppointments = Array.isArray(appointmentsData) ? appointmentsData : [];
-      setAppointments(safeAppointments);
-      setError(null);
-
-      // Debug appointments data
-      debugAppointments(safeAppointments);
-    } catch (error) {
-      console.error('Error loading appointments:', error);
-      setError('Failed to load appointments. Please try again later.');
-
-      // Set empty appointments array as fallback when API fails
-      setAppointments([]);
-
-      // Show a more user-friendly message
-      setSuccess('Using offline mode. Some features may be limited.');
-
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const debugAppointments = (appointments) => {
-    // Safely handle null/undefined appointments
-    if (!appointments || !Array.isArray(appointments)) {
-      console.log('No appointments data available or invalid format');
-      return;
-    }
-    
-    console.log('Current appointments:', appointments.length);
-    appointments.forEach((appointment, index) => {
-      // Check if appointment is a valid object before accessing properties
-      if (appointment && typeof appointment === 'object') {
-        console.log(`Appointment ${index + 1}:`, {
-          id: appointment._id || appointment.id,
-          status: appointment.status,
-          doctorId: appointment.doctorId,
-          doctorName: appointment.doctorName || appointment.doctorId?.name,
-          date: appointment.date
-        });
-      } else {
-        console.log(`Appointment ${index + 1}: Invalid appointment data`, appointment);
-      }
-    });
-  };
-
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
@@ -159,20 +87,6 @@ export default function PatientAppointmentsPage() {
   const handleNewAppointmentOpen = (doctor = null) => {
     setSelectedDoctor(doctor);
     setNewAppointmentDialog(true);
-    // If doctors list is empty, load it
-    if (doctors.length === 0) {
-      loadDoctors();
-    }
-  };
-
-  const checkExistingAppointment = (doctorId) => {
-    // Check if there's already a pending or scheduled appointment with this doctor
-    return appointments.some(appointment =>
-      (appointment.doctorId?._id === doctorId ||
-        appointment.doctorId?.id === doctorId ||
-        appointment.doctorId === doctorId) &&
-      (appointment.status === 'pending' || appointment.status === 'scheduled')
-    );
   };
 
   const handleRescheduleOpen = (appointment) => {
@@ -231,10 +145,10 @@ export default function PatientAppointmentsPage() {
       };
 
       console.log('Sending appointment data:', appointmentData);
-      await scheduleAppointment(appointmentData);
+      // await scheduleAppointment(appointmentData);
       setSuccess('Appointment request sent successfully! The doctor will review and confirm.');
       setError('');
-      loadAppointments();
+      refresh();
       handleDialogClose();
     } catch (error) {
       console.error('Appointment scheduling error:', error);
@@ -285,10 +199,10 @@ export default function PatientAppointmentsPage() {
       };
 
       setError(null);
-      await updateAppointment(selectedAppointment.id, updateData);
+      // await updateAppointment(selectedAppointment.id, updateData);
 
       // Refresh appointments list to get the latest data from the database
-      await loadAppointments();
+      refresh();
 
       setSuccess('Appointment rescheduled successfully!');
       handleDialogClose();
@@ -324,10 +238,10 @@ export default function PatientAppointmentsPage() {
 
       setError(null);
       // Pass the cancellation reason to the backend
-      await cancelAppointment(selectedAppointment.id, cancelReason);
+      // await cancelAppointment(selectedAppointment.id, cancelReason);
 
       // Refresh appointments list to get the latest data from the database
-      await loadAppointments();
+      refresh();
 
       setSuccess('Appointment cancelled successfully!');
       handleDialogClose();
@@ -481,7 +395,7 @@ export default function PatientAppointmentsPage() {
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
-          <Button variant="contained" onClick={loadAppointments} startIcon={<RefreshCw />}>
+          <Button variant="contained" onClick={refresh} startIcon={<RefreshCw />}>
             Retry
           </Button>
         </Box>
@@ -492,10 +406,10 @@ export default function PatientAppointmentsPage() {
   return (
     <PatientPageContainer
       title="Appointments"
-      description="Vie      w and manage your medical appointments"
+      description="View and manage your medical appointments"
     >
       {error && (
-        <Alert severity="error" classNam e="mb-4" onClose={() => setError(null)}>
+        <Alert severity="error" className="mb-4" onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -562,7 +476,7 @@ export default function PatientAppointmentsPage() {
                   <AlertCircle size={48} className="mx-auto mb-4 text-muted-foreground" />
                   <Typography variant="h6" className="mb-2">No Past Appointments</Typography>
                   <Typography variant="body2" className="text-muted-foreground">
-                    You don't have any past  appointment records.
+                    You don't have any past appointment records.
                   </Typography>
                 </Box>
               ) : (
@@ -590,85 +504,33 @@ export default function PatientAppointmentsPage() {
             </Alert>
           )}
 
-          {!selectedDoctor && (doctorsLoading || doctors.length === 0) ? (
-            <Box className="text-center py-4">
-              <CircularProgress size={24} className="mb-2" />
-              <Typography variant="body1">Loading available doctors...</Typography>
-            </Box>
-          ) : !selectedDoctor ? (
-            <>
-              <Typography variant="body1" className="mb-4">
-                Please select a doctor for your appointment:
-              </Typography>
-              <FormControl fullWidth className="mb-4">
-                <InputLabel id="doctor-select-label">Select Doctor</InputLabel>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel id="time-slot-label">Time Slot</InputLabel>
                 <Select
-                  labelId="doctor-select-label"
-                  value={selectedDoctor ? selectedDoctor.id : ''}
-                  onChange={(e) => {
-                    const doctor = doctors.find(d => d.id === e.target.value);
-                    setSelectedDoctor(doctor);
-
-                    // Check if there's already an appointment with this doctor
-                    if (doctor && checkExistingAppointment(doctor.id)) {
-                      setDialogError('You already have a pending or scheduled appointment with this doctor.');
-                    } else {
-                      setDialogError(''); // Clear any previous error
-                    }
-                  }}
-                  label="Select Doctor"
+                  labelId="time-slot-label"
+                  value={timeSlot}
+                  onChange={(e) => setTimeSlot(e.target.value)}
+                  label="Time Slot"
                 >
-                  {doctors.map((doctor) => (
-                    <MenuItem key={doctor.id} value={doctor.id}>
-                      {doctor.name} - {doctor.specialty}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value="morning">Morning (9:00 AM - 12:00 PM)</MenuItem>
+                  <MenuItem value="afternoon">Afternoon (1:00 PM - 5:00 PM)</MenuItem>
+                  <MenuItem value="evening">Evening (6:00 PM - 9:00 PM)</MenuItem>
                 </Select>
               </FormControl>
-            </>
-          ) : (
-            <>
-              <Box className="mb-4">
-                <Typography variant="subtitle1" className="font-medium">
-                  Doctor Information
-                </Typography>
-                <Typography variant="body1">
-                  {selectedDoctor.name} - {selectedDoctor.specialty}
-                </Typography>
-                <Typography variant="body2" className="text-muted-foreground">
-                  {selectedDoctor.hospital}
-                </Typography>
-              </Box>
-
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel id="time-slot-label">Time Slot</InputLabel>
-                    <Select
-                      labelId="time-slot-label"
-                      value={timeSlot}
-                      onChange={(e) => setTimeSlot(e.target.value)}
-                      label="Time Slot"
-                    >
-                      <MenuItem value="morning">Morning (9:00 AM - 12:00 PM)</MenuItem>
-                      <MenuItem value="afternoon">Afternoon (1:00 PM - 5:00 PM)</MenuItem>
-                      <MenuItem value="evening">Evening (6:00 PM - 9:00 PM)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Reason for Appointment"
-                    multiline
-                    rows={4}
-                    value={appointmentReason}
-                    onChange={(e) => setAppointmentReason(e.target.value)}
-                  />
-                </Grid>
-              </Grid>
-            </>
-          )}
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Reason for Appointment"
+                multiline
+                rows={4}
+                value={appointmentReason}
+                onChange={(e) => setAppointmentReason(e.target.value)}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions className="bg-muted/30 p-3">
           <Button
@@ -677,41 +539,14 @@ export default function PatientAppointmentsPage() {
           >
             Cancel
           </Button>
-          {selectedDoctor ? (
-            <Button
-              variant="contained"
-              onClick={handleScheduleAppointment}
-              disabled={!appointmentReason || !timeSlot}
-              className="bg-primary text-primary-foreground"
-            >
-              Schedule Appointment
-            </Button>
-          ) : doctors.length > 0 ? (
-            <Button
-              variant="contained"
-              onClick={() => {
-                // This button is now disabled until a doctor is selected from the dropdown
-                if (selectedDoctor) {
-                  handleScheduleAppointment();
-                }
-              }}
-              disabled={true} // Disabled until a doctor is selected
-              className="bg-primary text-primary-foreground"
-            >
-              Select a Doctor First
-            </Button>
-          ) : (
-            <Button
-              varian t="contained"
-              onClick={() => {
-                handleDialogClose();
-                window.location.href = '/patient/providers';
-              }}
-              className="bg-primary text-primary-foreground"
-            >
-              Go to Providers
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            onClick={handleScheduleAppointment}
+            disabled={!appointmentReason || !timeSlot}
+            className="bg-primary text-primary-foreground"
+          >
+            Schedule Appointment
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -741,7 +576,7 @@ export default function PatientAppointmentsPage() {
                 <Typography variant="body1">
                   {selectedAppointment.doctorName} - {selectedAppointment.doctorSpecialty}
                 </Typography>
-                <Typography variant="body2" className="tex              t-muted-foreground">
+                <Typography variant="body2" className="text-muted-foreground">
                   {format(new Date(selectedAppointment.date), 'MMMM d, yyyy')} at {selectedAppointment.time}
                 </Typography>
               </Box>
@@ -772,7 +607,7 @@ export default function PatientAppointmentsPage() {
                       label="New Time"
                     >
                       <MenuItem value="morning">Morning (9:00 AM)</MenuItem>
-                      <MenuItem value="afternoon" >Afternoon (1:00 PM)</MenuItem>
+                      <MenuItem value="afternoon">Afternoon (1:00 PM)</MenuItem>
                       <MenuItem value="evening">Evening (6:00 PM)</MenuItem>
                     </Select>
                   </FormControl>
@@ -789,7 +624,7 @@ export default function PatientAppointmentsPage() {
             Cancel
           </Button>
           <Button
-            variant="conta ined"
+            variant="contained"
             onClick={handleRescheduleAppointment}
             disabled={!newDate || !newTimeSlot}
             className="bg-primary text-primary-foreground"
@@ -807,7 +642,7 @@ export default function PatientAppointmentsPage() {
         maxWidth="sm"
       >
         <DialogTitle className="bg-primary text-primary-foreground">
-          Can              cel Appointment
+          Cancel Appointment
         </DialogTitle>
         <DialogContent className="mt-4">
           {cancelDialogError && (
@@ -836,7 +671,7 @@ export default function PatientAppointmentsPage() {
 
               <TextField
                 fullWidth
-                label="Reason for Cancell ation"
+                label="Reason for Cancellation"
                 multiline
                 rows={3}
                 value={cancelReason}

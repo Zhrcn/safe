@@ -1,55 +1,30 @@
-import { NextResponse } from 'next/server';
 import { connectToDatabase, withTimeout } from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+import { createApiResponse } from '@/lib/apiResponse';
+import { logger } from '@/lib/logger';
 import User from '@/models/User';
 import Patient from '@/models/Patient';
 
-function createApiResponse(data, status = 200, headers = {}) {
-  const responseHeaders = {
-    'x-api-version': '1.0',
-    'x-data-source': 'mongodb',
-    ...headers
-  };
-  
-  return NextResponse.json(data, { 
-    status, 
-    headers: responseHeaders 
-  });
-}
+const log = logger('PatientProfileController');
 
-async function getPatientProfile(token) {
+/**
+ * Get patient profile by user ID
+ * @param {string} userId - The user ID of the patient
+ * @returns {Object} Result object with success flag, profile data or error, status code, and headers
+ */
+async function getPatientProfile(userId) {
   try {
-    let decodedToken;
-    try {
-      decodedToken = await verifyToken(token);
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Unauthorized - Invalid token',
-        status: 401,
-        headers: { 'x-error-type': 'auth_error' }
-      };
-    }
-
-    if (decodedToken.role !== 'patient') {
-      return {
-        success: false,
-        error: 'Forbidden - Only patients can access this endpoint',
-        status: 403,
-        headers: { 'x-error-type': 'permission_error' }
-      };
-    }
-
+    log.debug(`Getting profile for patient with ID: ${userId}`);
+    log.time('db-profile-lookup');
+    
     await connectToDatabase();
-
-    // Handle both id and userId in token payload for backward compatibility
-    const userId = decodedToken.userId || decodedToken.id;
+    
     if (!userId) {
+      log.warn('Missing user ID in request');
       return {
         success: false,
-        error: 'Invalid token - missing user ID',
-        status: 401,
-        headers: { 'x-error-type': 'auth_error' }
+        error: 'Invalid request - missing user ID',
+        status: 400,
+        headers: { 'x-error-type': 'validation_error' }
       };
     }
 
@@ -127,7 +102,8 @@ async function getPatientProfile(token) {
     };
 
   } catch (error) {
-    console.error('Error retrieving patient profile:', error);
+    log.error(`Error retrieving patient profile: ${error.message}`, error);
+    log.timeEnd('db-profile-lookup');
     
     return {
       success: false,
@@ -139,62 +115,71 @@ async function getPatientProfile(token) {
   }
 }
 
-async function updatePatientProfile(token, requestData) {
+/**
+ * Update patient profile by user ID
+ * @param {string} userId - The user ID of the patient
+ * @param {Object} requestData - The profile data to update
+ * @returns {Object} Result object with success flag, updated profile data or error, status code, and headers
+ */
+async function updatePatientProfile(userId, requestData) {
   try {
-    let decodedToken;
-    try {
-      decodedToken = await verifyToken(token);
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Unauthorized - Invalid token',
-        status: 401,
-        headers: { 'x-error-type': 'auth_error' }
-      };
-    }
-
-    if (decodedToken.role !== 'patient') {
-      return {
-        success: false,
-        error: 'Forbidden - Only patients can update their profile',
-        status: 403,
-        headers: { 'x-error-type': 'permission_error' }
-      };
-    }
-
+    log.debug(`Updating profile for patient with ID: ${userId}`);
+    log.time('db-profile-update');
+    
     await connectToDatabase();
+    
+    if (!userId) {
+      log.warn('Missing user ID in request');
+      return {
+        success: false,
+        error: 'Invalid request - missing user ID',
+        status: 400,
+        headers: { 'x-error-type': 'validation_error' }
+      };
+    }
+    
+    if (!requestData || Object.keys(requestData).length === 0) {
+      log.warn('Empty update data received');
+      return {
+        success: false,
+        error: 'Invalid request - no data provided',
+        status: 400,
+        headers: { 'x-error-type': 'validation_error' }
+      };
+    }
 
-    if (requestData.user) {
-      const allowedUserFields = [
-        'firstName', 
-        'lastName', 
-        'phoneNumber', 
-        'gender', 
-        'address', 
-        'profileImage',
-        'dateOfBirth'
-      ];
-      
-      const userUpdateData = {};
-      
+    const allowedUserFields = [
+      'firstName', 
+      'lastName', 
+      'phoneNumber', 
+      'gender', 
+      'address', 
+      'profileImage',
+      'dateOfBirth'
+    ];
+    
+    const userUpdateData = {};
+    
+    // Check if user data exists in the request
+    if (requestData.user && typeof requestData.user === 'object') {
       for (const field of allowedUserFields) {
         if (requestData.user[field] !== undefined) {
           userUpdateData[field] = requestData.user[field];
         }
       }
-      
-      if (Object.keys(userUpdateData).length > 0) {
-        await withTimeout(
-          User.findByIdAndUpdate(decodedToken.userId, userUpdateData),
-          5000,
-          'User update timed out'
-        );
-      }
+    }
+    
+    if (Object.keys(userUpdateData).length > 0) {
+      await withTimeout(
+        User.findByIdAndUpdate(userId, userUpdateData),
+        5000,
+        'User update timed out'
+      );
     }
 
     if (requestData.medicalInfo) {
       const patientProfile = await withTimeout(
-        Patient.findOne({ user: decodedToken.userId }),
+        Patient.findOne({ user: userId }),
         5000,
         'Patient profile lookup timed out'
       );
@@ -227,23 +212,28 @@ async function updatePatientProfile(token, requestData) {
       
       if (Object.keys(medicalUpdateData).length > 0) {
         await withTimeout(
-          Patient.findByIdAndUpdate(patientProfile._id, medicalUpdateData),
+          Patient.findOneAndUpdate(
+            { user: userId }, 
+            { $set: medicalUpdateData }
+          ),
           5000,
-          'Patient profile update timed out'
+          'Patient medical info update timed out'
         );
       }
     }
 
-    // Handle both id and userId in token payload for backward compatibility
-    const userId = decodedToken.userId || decodedToken.id;
-    if (!userId) {
-      return {
-        success: false,
-        error: 'Invalid token - missing user ID',
-        status: 401,
-        headers: { 'x-error-type': 'auth_error' }
-      };
+    if (requestData.insurance) {
+      await withTimeout(
+        Patient.findOneAndUpdate(
+          { user: userId }, 
+          { $set: { insurance: requestData.insurance } }
+        ),
+        5000,
+        'Patient insurance update timed out'
+      );
     }
+
+    // Get updated profile data
 
     const updatedUser = await withTimeout(
       User.findById(userId).select('-password'),
@@ -251,7 +241,7 @@ async function updatePatientProfile(token, requestData) {
       'User lookup timed out'
     );
 
-    const updatedPatientProfile = await withTimeout(
+    const updatedPatient = await withTimeout(
       Patient.findOne({ user: userId }),
       5000,
       'Patient profile lookup timed out'
@@ -277,20 +267,20 @@ async function updatePatientProfile(token, requestData) {
         address: updatedUser.address
       },
       medicalInfo: {
-        medicalHistory: updatedPatientProfile.medicalHistory || [],
-        allergies: updatedPatientProfile.allergies || [],
-        bloodType: updatedPatientProfile.bloodType,
-        height: updatedPatientProfile.height,
-        weight: updatedPatientProfile.weight,
-        emergencyContact: updatedPatientProfile.emergencyContact
+        medicalHistory: updatedPatient.medicalHistory || [],
+        allergies: updatedPatient.allergies || [],
+        bloodType: updatedPatient.bloodType,
+        height: updatedPatient.height,
+        weight: updatedPatient.weight,
+        emergencyContact: updatedPatient.emergencyContact
       },
       // Add other expected fields that might be missing
-      insurance: updatedPatientProfile.insurance || {
+      insurance: updatedPatient.insurance || {
         provider: 'Unknown',
         policyNumber: 'Unknown',
         expiryDate: null
       },
-      chronicConditions: updatedPatientProfile.chronicConditions || []
+      chronicConditions: updatedPatient.chronicConditions || []
     };
 
     return {
@@ -302,7 +292,8 @@ async function updatePatientProfile(token, requestData) {
     };
 
   } catch (error) {
-    console.error('Error updating patient profile:', error);
+    log.error(`Error updating patient profile: ${error.message}`, error);
+    log.timeEnd('db-profile-update');
     
     return {
       success: false,
@@ -316,6 +307,5 @@ async function updatePatientProfile(token, requestData) {
 
 export {
   getPatientProfile,
-  updatePatientProfile,
-  createApiResponse
+  updatePatientProfile
 };

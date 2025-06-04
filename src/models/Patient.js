@@ -4,7 +4,8 @@ const PatientSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   chatsList: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -14,20 +15,6 @@ const PatientSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
   }],
-  emergencyContact: {
-    name: {
-      type: String,
-      trim: true
-    },
-    relationship: {
-      type: String,
-      trim: true
-    },
-    phoneNumber: {
-      type: String,
-      trim: true
-    }
-  },
   consultations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Consultation'
@@ -44,24 +31,47 @@ const PatientSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MedicalFile'
   },
-  // Keep these fields for backward compatibility
+
+  emergencyContact: {
+    name: { type: String, trim: true },
+    relationship: { type: String, trim: true },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      match: [/^\+?[1-9]\d{1,14}$/, 'Enter a valid phone number']
+    }
+  },
+
   medicalHistory: [{
-    condition: String,
-    diagnosedDate: Date,
-    notes: String
+    condition: { type: String, trim: true },
+    diagnosedDate: { type: Date },
+    notes: { type: String, trim: true }
   }],
+
   allergies: [{
-    allergen: String,
-    severity: String,
-    reaction: String
+    allergen: { type: String, trim: true },
+    severity: { type: String, enum: ['mild', 'moderate', 'severe'] },
+    reaction: { type: String, trim: true }
   }],
+
   bloodType: {
     type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'],
     default: 'Unknown'
   },
-  height: Number,
-  weight: Number
+
+  height: {
+    type: Number,
+    min: 60, 
+    max: 220
+  },
+
+  weight: {
+    type: Number,
+    min: 20, 
+    max: 220
+  }
+
 }, {
   timestamps: true,
   collection: 'Patients'

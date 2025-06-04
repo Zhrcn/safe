@@ -59,6 +59,14 @@ const medicineSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  availableStock: {
+    type: Number,
+    default: 0
+  },
+  usageInstructions: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     enum: ['active', 'inactive', 'discontinued'],
@@ -69,7 +77,6 @@ const medicineSchema = new mongoose.Schema({
   collection: 'Medicines'
 });
 
-// Create and export the model
 const Medicine = mongoose.models.Medicine || mongoose.model('Medicine', medicineSchema);
 
 module.exports = Medicine;

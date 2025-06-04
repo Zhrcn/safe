@@ -23,7 +23,7 @@ export async function GET(request) {
   log.time('request-total');
   
   try {
-
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -34,17 +34,17 @@ export async function GET(request) {
     const { userId, role } = authResult.user;
     log.debug(`Authenticated ${role} with ID: ${userId}`);
 
-
+    // Extract query parameters
     const url = new URL(request.url);
     const params = {};
     
-
+    // Extract all relevant query parameters
     for (const [key, value] of url.searchParams.entries()) {
       params[key] = value;
     }
     
     try {
-
+      // Get consultations using the service layer
       const result = await getConsultations(params, userId, role);
       log.timeEnd('request-total');
       return createApiResponse(result);
@@ -52,7 +52,7 @@ export async function GET(request) {
       log.error(`Error in consultations service: ${error.message}`, error);
       log.timeEnd('request-total');
       
-
+      // Fallback to mock data on error
       log.info('Falling back to mock consultations data');
       const mockResult = getMockConsultations(params, userId, role);
       return createApiResponse({
@@ -82,7 +82,7 @@ export async function POST(request) {
   log.time('request-total');
   
   try {
-
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -94,10 +94,10 @@ export async function POST(request) {
     log.debug(`Authenticated ${role} with ID: ${userId}`);
     
     try {
-
+      // Parse request body
       const data = await request.json();
       
-
+      // Create consultation using the service layer
       const result = await createConsultation(data, userId, role);
       log.timeEnd('request-total');
       return createApiResponse(result);
@@ -132,7 +132,7 @@ export async function PATCH(request) {
   log.time('request-total');
   
   try {
-
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -144,7 +144,7 @@ export async function PATCH(request) {
     log.debug(`Authenticated ${role} with ID: ${userId}`);
     
     try {
-
+      // Extract consultation ID from URL
       const url = new URL(request.url);
       const paths = url.pathname.split('/');
       const consultationId = paths[paths.length - 1];
@@ -160,10 +160,10 @@ export async function PATCH(request) {
         });
       }
       
-
+      // Parse request body
       const data = await request.json();
       
-
+      // Update consultation using the service layer
       const result = await updateConsultation(consultationId, data, userId, role);
       log.timeEnd('request-total');
       return createApiResponse(result);

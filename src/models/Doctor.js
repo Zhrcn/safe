@@ -22,17 +22,12 @@ const DoctorSchema = new mongoose.Schema({
     min: 0
   },
   education: [{
-    
-    degree: {
-      type: String,
-      trim: true
-    },
-    institution: {
-      type: String,
-      trim: true
-    },
+    degree: { type: String, trim: true },
+    institution: { type: String, trim: true },
     yearCompleted: {
-      type: Number
+      type: Number,
+      min: 1900,
+      max: new Date().getFullYear()
     }
   }],
   achievements: [{
@@ -59,33 +54,31 @@ const DoctorSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'
   }],
-  // Keep these fields for backward compatibility
-  specialization: {
-    type: String,
-    trim: true
-  },
-  licenseNumber: {
-    type: String,
-    trim: true
-  },
   experience: [{
     title: String,
-    hospital: String,
+    institution: {
+      name: String,
+      address: String
+    },
     years: Number
   }],
-  hospital: {
+  currentHospital: {
     name: String,
     address: String,
     phoneNumber: String
   },
-  consultationFee: Number,
   rating: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0,
+    max: 5
   }
 }, {
   timestamps: true,
   collection: 'Doctors'
 });
+
+DoctorSchema.index({ user: 1 });
+DoctorSchema.index({ specialty: 1 });
 
 module.exports = mongoose.models.Doctor || mongoose.model('Doctor', DoctorSchema);

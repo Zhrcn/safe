@@ -26,7 +26,9 @@ export default function RootLayout({
           <ReduxProvider>
             <NotificationProvider>
               <AuthProvider>
-                <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
+                <ThemeProviderWrapper>
+                  {children}
+                </ThemeProviderWrapper>
               </AuthProvider>
             </NotificationProvider>
           </ReduxProvider>

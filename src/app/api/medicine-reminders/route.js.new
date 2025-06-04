@@ -22,6 +22,7 @@ export async function GET(request) {
   log.time('request-total');
   
   try {
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -31,6 +32,8 @@ export async function GET(request) {
     
     const { userId, role } = authResult.user;
     log.debug(`Authenticated ${role} with ID: ${userId}`);
+
+    // Only patients and admins can access medicine reminders
     if (role !== 'patient' && role !== 'admin') {
       log.warn(`Unauthorized role: ${role}`);
       log.timeEnd('request-total');
@@ -42,7 +45,7 @@ export async function GET(request) {
       });
     }
     
-
+    // Determine the patient ID (for admin users, it comes from query params)
     let patientId = userId;
     if (role === 'admin') {
       const url = new URL(request.url);
@@ -61,6 +64,7 @@ export async function GET(request) {
     }
     
     try {
+      // Get medicine reminders using the service layer
       const result = await getMedicineReminders(patientId);
       log.timeEnd('request-total');
       return createApiResponse(result);
@@ -68,7 +72,7 @@ export async function GET(request) {
       log.error(`Error in medicine reminders service: ${error.message}`, error);
       log.timeEnd('request-total');
       
-
+      // Fallback to mock data on error
       log.info('Falling back to mock medicine reminders data');
       const mockResult = getMockMedicineReminders(patientId);
       return createApiResponse({
@@ -98,6 +102,7 @@ export async function PATCH(request) {
   log.time('request-total');
   
   try {
+    // Authenticate the user
     const authResult = await authenticateUser(request);
     if (!authResult.success) {
       log.warn(`Authentication failed: ${authResult.error}`);
@@ -107,6 +112,8 @@ export async function PATCH(request) {
     
     const { userId, role } = authResult.user;
     log.debug(`Authenticated ${role} with ID: ${userId}`);
+
+    // Only patients can update their medicine reminders
     if (role !== 'patient') {
       log.warn(`Unauthorized role: ${role}`);
       log.timeEnd('request-total');
@@ -119,9 +126,10 @@ export async function PATCH(request) {
     }
     
     try {
+      // Parse request body
       const data = await request.json();
       
-
+      // Update medicine reminder using the service layer
       const result = await updateMedicineReminder(userId, data);
       log.timeEnd('request-total');
       return createApiResponse(result);
