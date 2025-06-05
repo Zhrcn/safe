@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { usePatient } from '@/hooks/usePatient';
+import usePatient from '@/hooks/usePatient';
 import { 
   Typography, Box, Grid, Card, CardContent, TextField, InputAdornment, 
   Avatar, Button, CircularProgress, Snackbar, Alert, Chip

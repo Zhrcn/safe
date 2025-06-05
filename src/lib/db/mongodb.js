@@ -1,12 +1,7 @@
 import mongoose from 'mongoose';
-import { USE_MOCK_DB, debugLog } from '../config';
-import { isMockMode, setMockMode } from '../mockdb/mockData';
+import {debugLog } from '../config';
 
-// Set initial mock mode based on configuration
-if (USE_MOCK_DB) {
-  setMockMode(true);
-  debugLog('MongoDB', 'Mock database mode enabled via configuration');
-}
+
 
 let cached = global.mongoose;
 
@@ -39,12 +34,6 @@ export function withTimeout(promise, timeoutMs, errorMessage = 'Operation timed 
  * @returns {Promise<Mongoose>} Mongoose connection
  */
 export async function connectToDatabase() {
-  // If mock mode is enabled, return a mock connection
-  if (isMockMode()) {
-    debugLog('MongoDB', 'Using mock database connection');
-    return createMockConnection();
-  }
-
   // If connection exists, return it
   if (cached.conn) {
     return cached.conn;
@@ -64,12 +53,11 @@ export async function connectToDatabase() {
       retryReads: true,
     };
 
-    const MONGODB_URI = process.env.MONGODB_URI;
+    const MONGODB_URI = process.env.MONGODB_URI|| 'mongodb://localhost:27017/safe';
 
     if (!MONGODB_URI) {
-      debugLog('MongoDB', 'MONGODB_URI environment variable is not defined. Falling back to mock database.');
-      setMockMode(true);
-      return createMockConnection();
+      debugLog('MongoDB', 'MONGODB_URI environment variable is not defined. Cannot connect to database.');
+      throw new Error('MONGODB_URI environment variable is not defined. Cannot connect to database.');
     }
 
     const redactedURI = MONGODB_URI.replace(
@@ -104,10 +92,10 @@ export async function connectToDatabase() {
       return mongoose;
     }).catch(err => {
       console.error('Error connecting to MongoDB Atlas:', err);
-      debugLog('MongoDB', 'Falling back to mock database due to connection error');
+      debugLog('MongoDB', 'MongoDB connection error occurred.');
       cached.promise = null;
-      setMockMode(true);
-      return createMockConnection();
+      // Propagate the error so the caller knows connection failed
+      throw new Error(`MongoDB connection error: ${err.message}`);
     });
   }
 
@@ -139,9 +127,9 @@ export async function connectToDatabase() {
       e.diagnostic = 'Check MongoDB Atlas connection string format, network connectivity, and credentials';
     }
 
-    debugLog('MongoDB', `Falling back to mock database due to error: ${e.message}`);
-    setMockMode(true);
-    return createMockConnection();
+    debugLog('MongoDB', `Failed to initialize database connection: ${e.message}`);
+    // Propagate the error so the caller knows connection failed
+    throw new Error(`Failed to initialize database connection: ${e.message}`);
   }
 }
 

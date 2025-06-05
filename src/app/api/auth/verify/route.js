@@ -1,109 +1,56 @@
 import { NextResponse } from 'next/server';
-import { jwtDecode } from 'jwt-decode';
-import { connectToDatabase } from '@/lib/db/mongodb';
-import User from '@/models/User';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
-export const dynamic = 'force-dynamic';
+export async function GET(request) {
+  try {
+    let token;
+    const authHeader = request.headers.get('authorization');
 
-/**
- * Verify a JWT token and return user information
- */
-export async function GET(req) {
-    try {
-        // Extract token from Authorization header
-        const token = req.cookies.get('safe_auth_token')?.value ||
-            req.headers.get('Authorization')?.split('Bearer ')[1];
-
-        if (!token) {
-            return NextResponse.json({
-                authenticated: false,
-                error: 'No authentication token provided'
-            }, { status: 401 });
-        }
-
-        // Decode and verify token
-        try {
-            const decoded = jwtDecode(token);
-
-            // Check if token is expired
-            const currentTime = Date.now() / 1000;
-            if (decoded.exp && decoded.exp < currentTime) {
-                return NextResponse.json({
-                    authenticated: false,
-                    error: 'Token expired'
-                }, { status: 401 });
-            }
-
-            // Connect to database and verify user exists
-            try {
-                await connectToDatabase();
-
-                const userId = decoded.id || decoded.userId || decoded.sub;
-                if (!userId) {
-                    return NextResponse.json({
-                        authenticated: false,
-                        error: 'Invalid token: missing user ID'
-                    }, { status: 401 });
-                }
-
-                // Check if user exists in database
-                const user = await User.findById(userId).select('-password');
-                if (!user) {
-                    return NextResponse.json({
-                        authenticated: false,
-                        error: 'User not found'
-                    }, { status: 401 });
-                }
-
-                // Check user status - handle both status and isActive fields
-                // Some models use status='active', others use isActive=true
-                if ((user.status !== undefined && user.status !== 'active') ||
-                    (user.isActive !== undefined && !user.isActive)) {
-                    return NextResponse.json({
-                        authenticated: false,
-                        error: 'User account is not active'
-                    }, { status: 403 });
-                }
-
-                // Token is valid and user exists
-                return NextResponse.json({
-                    authenticated: true,
-                    user: {
-                        id: user._id,
-                        email: user.email,
-                        name: user.name,
-                        role: user.role
-                    }
-                });
-
-            } catch (dbError) {
-                console.error('MongoDB Atlas connection error during token verification:', dbError);
-
-                // If database is down, consider the token valid if not expired
-                // This allows offline functionality
-                return NextResponse.json({
-                    authenticated: true,
-                    warning: 'MongoDB Atlas unavailable, token accepted based on expiry only',
-                    solution: 'Please check your MongoDB Atlas connection string in .env.local file',
-                    user: {
-                        id: decoded.id || decoded.userId || decoded.sub,
-                        role: decoded.role
-                    }
-                });
-            }
-
-        } catch (decodeError) {
-            console.error('Token decode error:', decodeError);
-            return NextResponse.json({
-                authenticated: false,
-                error: 'Invalid token format'
-            }, { status: 401 });
-        }
-    } catch (error) {
-        console.error('Token verification error:', error);
-        return NextResponse.json({
-            authenticated: false,
-            error: 'Authentication error'
-        }, { status: 500 });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7, authHeader.length); // Extract token from Bearer header
+    } else {
+      // Fallback to checking cookies if no Bearer token
+      const cookieStore = cookies();
+      const tokenCookie = cookieStore.get('safe_auth_token');
+      if (tokenCookie) {
+        token = tokenCookie.value;
+      }
     }
-} 
+
+    if (!token) {
+      console.log('Auth verify: Token not found in header or cookies');
+      return NextResponse.json({ message: 'Authentication token not found.' }, { status: 401 });
+    }
+
+    console.log('Auth verify: Attempting to verify token:', token.substring(0, 20) + '...'); // Log a truncated token for security
+    if (!process.env.JWT_SECRET) {
+      console.error('Auth verify: JWT_SECRET is NOT loaded in /api/auth/verify!');
+      // Potentially throw an error here or handle it, but for now, logging is key
+    } else {
+      console.log('Auth verify: JWT_SECRET is loaded.');
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Auth verify: Token decoded successfully:', decoded);
+
+    // Token is valid, return user information from token
+    return NextResponse.json({ 
+      message: 'Token verified successfully.', 
+      user: {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+        name: decoded.name
+      },
+      source: 'token_verification'
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Auth verify: Token verification error:', error.message, 'Token used:', token ? token.substring(0, 20) + '...' : 'N/A');
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return NextResponse.json({ message: 'Invalid or expired token.', error: error.message }, { status: 401 });
+    }
+    return NextResponse.json({ message: 'Internal server error during token verification.', error: error.message }, { status: 500 });
+  }
+}

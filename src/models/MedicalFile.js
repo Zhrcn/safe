@@ -179,6 +179,33 @@ const chronicDiseaseSchema = {
   trim: true
 };
 
+const vitalSignSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    default: Date.now
+  },
+  bloodPressure: { // e.g., '120/80'
+    type: String,
+    trim: true
+  },
+  heartRate: { // beats per minute
+    type: Number
+  },
+  temperature: { // Celsius
+    type: Number
+  },
+  weight: { // kg
+    type: Number
+  },
+  height: { // cm
+    type: Number
+  },
+  notes: {
+    type: String,
+    trim: true
+  }
+}, { _id: false });
+
 const medicalFileSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -199,6 +226,7 @@ const medicalFileSchema = new mongoose.Schema({
   conditions: [conditionSchema],
   labResults: [labResultSchema],
   imaging: [imagingSchema],
+  vitalSigns: [vitalSignSchema],
   prescriptionsList: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'

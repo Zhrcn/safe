@@ -1,45 +1,18 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../slices/userSlice'; // Adjusted path
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import { useNotification } from '@/components/ui/Notification';
 import { ROLES, ROLE_ROUTES } from '@/lib/config';
-import { authService } from '@/services';
+
 
 const AuthContext = createContext(undefined);
 
 const TOKEN_STORAGE_KEY = 'safe_auth_token';
 const USER_STORAGE_KEY = 'safe_user_data';
-
-// Function to ensure the auth cookie is set
-const ensureAuthCookieIsSet = async (token) => {
-    try {
-        // This is a client-side only function, so we need to check if we're in a browser
-        if (typeof window !== 'undefined') {
-            // Only log in development environment
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('Setting auth cookie...');
-            }
-            // The actual cookie is set by the server in the response
-            // This is just a helper to ensure the cookie is set
-            await authService.setCookie(token);
-            
-            // Only log in development environment
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('Auth cookie set successfully');
-            }
-        }
-    } catch (error) {
-        // Always log errors, but with less detail in production
-        if (process.env.NODE_ENV !== 'production') {
-            console.error('Failed to set auth cookie:', error);
-        } else {
-            console.error('Failed to set auth cookie');
-        }
-        // Continue even if cookie setting fails, as we have localStorage as a backup
-    }
-};
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -50,6 +23,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+    const dispatch = useDispatch();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
@@ -126,21 +100,9 @@ export const AuthProvider = ({ children }) => {
                         await handleLogout();
                     }
                 } else {
-                    try {
-                        const data = await authService.checkAuth();
-                        if (data.authenticated && data.user) {
-                            console.log('User authenticated from cookie:', data.user.email);
-                            const token = data.token || 'cookie-auth';
-                            localStorage.setItem(TOKEN_STORAGE_KEY, token);
-                            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
-                            setUser(data.user);
-                        } else {
-                            setUser(null);
-                        }
-                    } catch (error) {
-                        console.error('Error checking cookie auth:', error);
-                        setUser(null);
-                    }
+                    // If no token in localStorage, user is considered not logged in initially.
+                    // They will need to login through the form.
+                    setUser(null);
                 }
             } catch (error) {
                 console.error('Auth check error:', error);
@@ -183,36 +145,90 @@ export const AuthProvider = ({ children }) => {
                 }
             }
             
-            const response = await authService.login(email, password, role);
-            const { token, user } = response;
+            const resultAction = await dispatch(loginUser({ email, password, role }));
 
-            // Only log in development environment
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('Login successful, received token and user data');
-            }
+            if (loginUser.fulfilled.match(resultAction)) {
+                const responsePayload = resultAction.payload; // Contains { message, token, user, source }
 
-            try {
-                localStorage.setItem(TOKEN_STORAGE_KEY, token);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-                
                 if (process.env.NODE_ENV !== 'production') {
-                    console.log('Saved auth data to localStorage');
+                    console.log('Login successful, received payload:', responsePayload);
                 }
-            } catch (storageError) {
-                console.error('Failed to save to localStorage:', storageError);
-            }
-        
-            // Multi-layered approach to ensure cookie is set
-            await ensureAuthCookieIsSet(token);
 
-            setUser(user);
-            notification.showNotification('Login successful', 'success');
-            return true;
+                if (responsePayload && responsePayload.token && responsePayload.user) {
+                    try {
+                        localStorage.setItem(TOKEN_STORAGE_KEY, responsePayload.token);
+                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(responsePayload.user));
+                        if (process.env.NODE_ENV !== 'production') {
+                            console.log('Saved token and user data to localStorage');
+                        }
+                        setUser(responsePayload.user);
+                        notification.showNotification('Login successful', 'success');
+
+                        // ---- START NAVIGATION LOGIC ----
+                        const currentUser = responsePayload.user;
+                        if (currentUser && currentUser.role) {
+                            const dashboardPath = ROLE_ROUTES[currentUser.role]?.dashboard;
+                            if (dashboardPath) {
+                                router.push(dashboardPath);
+                                if (process.env.NODE_ENV !== 'production') {
+                                    console.log(`Navigating to ${currentUser.role} dashboard: ${dashboardPath}`); // Fixed user.role to currentUser.role
+                                }
+                            } else { // else for if(dashboardPath)
+                                console.error(`No dashboard route defined for role: ${currentUser.role}. Navigating to home.`);
+                                router.push('/');
+                            }
+                        } else { // else for if(currentUser && currentUser.role)
+                            console.error('User data or role missing after login, cannot navigate.');
+                            router.push('/'); // Fallback to home
+                        } // Closes: else for if(currentUser && currentUser.role)
+                        // ---- END NAVIGATION LOGIC ----
+                    } // THIS IS THE CLOSING BRACE FOR THE TRY BLOCK (started line ~157)
+                    catch (error) { // Catch for the try block that started at line ~157
+                        console.error('Error during login success handling (payload processing/navigation):', error);
+                        notification.showNotification('An error occurred while processing login.', 'error');
+                        setUser(null);
+                        localStorage.removeItem(TOKEN_STORAGE_KEY);
+                        localStorage.removeItem(USER_STORAGE_KEY);
+                        router.push('/'); // Fallback to home or login page
+                    }
+                } else { // This 'else' corresponds to 'if (responsePayload && responsePayload.token && responsePayload.user)'
+                    console.error('Login successful, but token or user details are missing in the response payload.');
+                    notification.showNotification('Login error: Essential authentication data not received.', 'error');
+                    setUser(null); // Clear any partial user state
+                    // Optionally, clear localStorage items if partially set
+                    localStorage.removeItem(TOKEN_STORAGE_KEY);
+                    localStorage.removeItem(USER_STORAGE_KEY);
+                }
+                setIsLoading(false);
+                return true; // Still true because loginUser thunk was fulfilled
+            } else {
+                // Handle login failure (rejected thunk)
+                let errorMessage = 'Login failed. Please try again.';
+                if (resultAction.payload) { // Error message from rejectWithValue
+                    errorMessage = resultAction.payload;
+                } else if (resultAction.error && resultAction.error.message) {
+                    errorMessage = resultAction.error.message;
+                }
+                console.error('Login error in AuthContext:', errorMessage);
+                notification.showNotification(errorMessage, 'error');
+                setUser(null);
+                setIsLoading(false);
+                throw new Error(errorMessage);
+            }
         } catch (error) {
-            console.error('Login error:', error);
+            // This catch block handles errors from dispatching or other synchronous errors before/after dispatch
+            console.error('Login error in handleLogin catch block:', error.message);
+            setUser(null);
+            setIsLoading(false);
+            // Show notification for errors not caught by the thunk's rejection
+            if (!loginUser.rejected.match(error)) { // Avoid double notification if thunk already handled it
+                 notification.showNotification(error.message || 'An unexpected login error occurred.', 'error');
+            }
+            throw error; // Re-throw to allow LoginForm to handle it if needed
         
-            // Enhanced error handling with specific messages
-            let errorMessage = 'Login failed. Please try again.';
+            // The 'Enhanced error handling' part below seems unreachable due to 'throw error' above it.
+            // Consider removing or refactoring if it was intended for a different purpose.
+            // let errorMessage = 'Login failed. Please try again.';
         
             if (error.message) {
                 // Use custom error messages we defined above
