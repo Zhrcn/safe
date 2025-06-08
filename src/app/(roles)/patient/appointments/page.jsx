@@ -4,21 +4,23 @@ import usePatientData from '@/hooks/usePatientData';
 import {
   Typography, Box, Grid, Button, Tabs, Tab, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, FormControl, InputLabel,
-  Select, MenuItem, Divider, IconButton, Tooltip, Alert, CircularProgress
+  Select, MenuItem, Divider, IconButton, Tooltip, Alert, CircularProgress, Avatar
 } from '@mui/material';
 import {
   Calendar, Clock, MapPin, FileText, AlertCircle, RefreshCw,
-  Plus, X, Check, ChevronRight
+  Plus, X, Check, ChevronRight, User
 } from 'lucide-react';
 import { format, parseISO, differenceInDays, addDays } from 'date-fns';
 import { PatientPageContainer, PatientCard, AppointmentStatusBadge } from '@/components/patient/PatientComponents';
+import { useState, useEffect } from 'react';
 
 export default function PatientAppointmentsPage() {
   const { 
     appointments, 
     loading, 
     error,
-    refresh 
+    refresh, 
+    doctors // Assuming doctors data is available from usePatientData
   } = usePatientData();
   const [tabValue, setTabValue] = useState(0);
   const [success, setSuccess] = useState(null);
@@ -147,7 +149,7 @@ export default function PatientAppointmentsPage() {
       console.log('Sending appointment data:', appointmentData);
       // await scheduleAppointment(appointmentData);
       setSuccess('Appointment request sent successfully! The doctor will review and confirm.');
-      setError('');
+      // setError('');
       refresh();
       handleDialogClose();
     } catch (error) {
@@ -198,7 +200,7 @@ export default function PatientAppointmentsPage() {
         status: 'Rescheduled'
       };
 
-      setError(null);
+      // setError(null);
       // await updateAppointment(selectedAppointment.id, updateData);
 
       // Refresh appointments list to get the latest data from the database
@@ -236,7 +238,7 @@ export default function PatientAppointmentsPage() {
         return;
       }
 
-      setError(null);
+      // setError(null);
       // Pass the cancellation reason to the backend
       // await cancelAppointment(selectedAppointment.id, cancelReason);
 
@@ -252,447 +254,304 @@ export default function PatientAppointmentsPage() {
       }, 3000);
     } catch (error) {
       console.error('Error cancelling appointment:', error);
-      setCancelDialogError('Failed to cancel appointment: ' + (error.message || 'Please try again later.'));
+      setCancelDialogError('Failed to cancel appointment. ' + (error.message || 'Please try again later.'));
     }
+  };
+
+  const checkExistingAppointment = (doctorId) => {
+    return upcomingAppointments.some(appt => 
+      appt.doctorId === doctorId && 
+      (appt.status === 'pending' || appt.status === 'scheduled')
+    );
   };
 
   const canReschedule = (appointment) => {
-    // Can't reschedule pending appointments
-    if (appointment.status === 'pending') return false;
-
-    // Can't reschedule completed or cancelled appointments
-    if (appointment.status === 'completed' || appointment.status === 'cancelled') return false;
-
-    // If there's no date set, can't reschedule
-    if (!appointment.date) return false;
-
-    // Check if appointment is at least 3 days away
-    const appointmentDate = new Date(appointment.date);
+    const appointmentDate = new Date(appointment.date + 'T' + appointment.time);
     const today = new Date();
-    const daysDifference = differenceInDays(appointmentDate, today);
+    return differenceInDays(appointmentDate, today) >= 3;
+  };
 
-    return daysDifference >= 3;
+  const canCancel = (appointment) => {
+    const appointmentDate = new Date(appointment.date + 'T' + appointment.time);
+    const today = new Date();
+    return differenceInDays(appointmentDate, today) >= 3;
   };
 
   const renderAppointmentCard = (appointment) => {
-    // Handle pending appointments that don't have a date yet
-    const isPending = appointment.status === 'pending';
-    const hasDate = !!appointment.date;
+    const doctor = doctors.find(doc => doc.user && doc.user._id === appointment.doctorId);
 
-    // Format date if available, otherwise show pending status
-    let dateDisplay = 'Awaiting doctor confirmation';
-    let timeDisplay = 'To be scheduled';
-    let locationDisplay = 'To be determined';
+    const doctorName = doctor ? 
+      (doctor.user.name || `${doctor.user.firstName || ''} ${doctor.user.lastName || ''}`.trim() || `Dr. (ID: ${doctor.user._id.slice(-4)})`) :
+      `Doctor (ID: ${appointment.doctorId.slice(-4)})`;
 
-    if (hasDate) {
-      const appointmentDate = new Date(appointment.date);
-      dateDisplay = format(appointmentDate, 'MMMM d, yyyy');
-      timeDisplay = appointment.time || 'To be scheduled';
-      locationDisplay = appointment.location || 'To be determined';
-    }
-
-    // Get doctor name and specialty
-    const doctorName = appointment.doctorId?.name || appointment.doctorName || 'Doctor';
-    const doctorSpecialty = appointment.doctorId?.doctorProfile?.specialization ||
-      appointment.doctorSpecialty || 'Specialist';
+    const specialty = doctor ? doctor.specialty : 'N/A';
 
     return (
-      <PatientCard
-        key={appointment._id || appointment.id}
-        className="mb-4"
-        title={`Appointment with ${doctorName}`}
-        subtitle={doctorSpecialty}
-        actions={<AppointmentStatusBadge status={appointment.status} />}
-      >
-        <Grid container spacing={2} className="mt-2">
-          <Grid item xs={12} sm={6}>
-            <Box className="flex items-center mb-2">
-              <Calendar size={16} className="mr-2 text-muted-foreground" />
-              <Typography variant="body2">{dateDisplay}</Typography>
-            </Box>
-            <Box className="flex items-center mb-2">
-              <Clock size={16} className="mr-2 text-muted-foreground" />
-              <Typography variant="body2">{timeDisplay}</Typography>
-            </Box>
-            <Box className="flex items-center">
-              <MapPin size={16} className="mr-2 text-muted-foreground" />
-              <Typography variant="body2">{locationDisplay}</Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Box className="flex items-start mb-2">
-              <FileText size={16} className="mr-2 mt-1 text-muted-foreground" />
-              <Typography variant="body2">
-                {isPending ? 'Reason: ' + (appointment.reason || 'General checkup') : (appointment.notes || 'No notes')}
-              </Typography>
-            </Box>
-            {isPending && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                Waiting for doctor to confirm this appointment
-              </Typography>
-            )}
-          </Grid>
-          {!isPending && canReschedule(appointment) && (
-            <Grid item xs={12}>
-              <Divider className="my-2" />
-              <Box className="flex justify-end space-x-2">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  startIcon={<X size={16} />}
-                  onClick={() => handleCancelOpen(appointment)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<RefreshCw size={16} />}
-                  onClick={() => handleRescheduleOpen(appointment)}
-                >
-                  Reschedule
-                </Button>
-              </Box>
-            </Grid>
-          )}
-          {isPending && (
-            <Grid item xs={12}>
-              <Divider className="my-2" />
-              <Box className="flex justify-end space-x-2">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  startIcon={<X size={16} />}
-                  onClick={() => handleCancelOpen(appointment)}
-                >
-                  Cancel Request
-                </Button>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
-      </PatientCard>
+      <Box key={appointment._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4 flex items-center space-x-4">
+        <Box className="flex-shrink-0 text-primary-500">
+          <Calendar size={24} />
+        </Box>
+        <Box className="flex-grow">
+          <Typography variant="h6" className="font-semibold">
+            Appointment with {doctorName}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" className="mb-1">
+            {specialty}
+          </Typography>
+          <Box className="flex items-center text-sm text-gray-500 mb-1">
+            <Clock size={16} className="mr-2" />
+            <span>{format(parseISO(appointment.date), 'PPP')} at {appointment.time}</span>
+          </Box>
+          <Box className="flex items-center text-sm text-gray-500">
+            <MapPin size={16} className="mr-2" />
+            <span>{appointment.location || 'Virtual Consultation'}</span>
+          </Box>
+        </Box>
+        <AppointmentStatusBadge status={appointment.status} />
+        <Box className="flex flex-col space-y-2">
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => console.log('View details for', appointment._id)}
+            startIcon={<FileText size={16} />}
+          >
+            Details
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="primary"
+            onClick={() => handleRescheduleOpen(appointment)}
+            disabled={!canReschedule(appointment)}
+            startIcon={<RefreshCw size={16} />}
+          >
+            Reschedule
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="error"
+            onClick={() => handleCancelOpen(appointment)}
+            disabled={!canCancel(appointment)}
+            startIcon={<X size={16} />}
+          >
+            Cancel
+          </Button>
+        </Box>
+      </Box>
     );
   };
 
-  if (loading) {
-    return (
-      <PatientPageContainer>
-        <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
-          <CircularProgress />
-        </Box>
-      </PatientPageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PatientPageContainer>
-        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="80vh">
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-          <Button variant="contained" onClick={refresh} startIcon={<RefreshCw />}>
-            Retry
-          </Button>
-        </Box>
-      </PatientPageContainer>
-    );
-  }
-
   return (
-    <PatientPageContainer
-      title="Appointments"
-      description="View and manage your medical appointments"
-    >
-      {error && (
-        <Alert severity="error" className="mb-4" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" className="mb-4" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      <Box className="flex justify-between items-center mb-6">
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          className="bg-background"
-        >
-          <Tab label="Upcoming" />
-          <Tab label="Past" />
-        </Tabs>
-
+    <PatientPageContainer>
+      <Box className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <Box className="mb-4 md:mb-0">
+          <Typography variant="h4" className="font-bold mb-2">My Appointments</Typography>
+          <Typography color="text.secondary">View and manage your upcoming and past medical appointments.</Typography>
+        </Box>
         <Button
           variant="contained"
-          startIcon={<Plus size={16} />}
-          className="bg-primary text-primary-foreground"
+          color="primary"
+          startIcon={<Plus size={20} />}
           onClick={() => handleNewAppointmentOpen()}
+          className="bg-primary-500 hover:bg-primary-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
         >
-          New Appointment
+          Schedule New Appointment
         </Button>
       </Box>
 
+      {success && (
+        <Alert severity="success" className="mb-4">{success}</Alert>
+      )}
+
+      {error && (
+        <Alert severity="error" className="mb-4">
+          Error: {error}
+          <Button onClick={refresh} className="ml-4">Retry</Button>
+        </Alert>
+      )}
+
       {loading ? (
-        <Box className="flex justify-center items-center py-12">
-          <Typography variant="body1">Loading appointments...</Typography>
+        <Box className="flex justify-center items-center h-64">
+          <CircularProgress />
         </Box>
       ) : (
         <Box>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            aria-label="appointment tabs"
+            className="mb-4"
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            <Tab label={`Upcoming (${upcomingAppointments.length})`} />
+            <Tab label={`Past (${pastAppointments.length})`} />
+          </Tabs>
+
           {tabValue === 0 && (
-            <>
-              {upcomingAppointments.length === 0 ? (
-                <Box className="text-center py-8">
-                  <AlertCircle size={48} className="mx-auto mb-4 text-muted-foreground" />
-                  <Typography variant="h6" className="mb-2">No Upcoming Appointments</Typography>
-                  <Typography variant="body2" className="text-muted-foreground mb-4">
-                    You don't have any upcoming appointments scheduled.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleNewAppointmentOpen()}
-                    className="mx-auto"
-                  >
-                    Schedule an Appointment
-                  </Button>
-                </Box>
+            <Box className="space-y-4">
+              {upcomingAppointments.length > 0 ? (
+                upcomingAppointments.map(renderAppointmentCard)
               ) : (
-                upcomingAppointments.map(appointment => renderAppointmentCard(appointment))
+                <Box className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                  <Typography color="text.secondary">No upcoming appointments.</Typography>
+                </Box>
               )}
-            </>
+            </Box>
           )}
 
           {tabValue === 1 && (
-            <>
-              {pastAppointments.length === 0 ? (
-                <Box className="text-center py-8">
-                  <AlertCircle size={48} className="mx-auto mb-4 text-muted-foreground" />
-                  <Typography variant="h6" className="mb-2">No Past Appointments</Typography>
-                  <Typography variant="body2" className="text-muted-foreground">
-                    You don't have any past appointment records.
-                  </Typography>
-                </Box>
+            <Box className="space-y-4">
+              {pastAppointments.length > 0 ? (
+                pastAppointments.map(renderAppointmentCard)
               ) : (
-                pastAppointments.map(appointment => renderAppointmentCard(appointment))
+                <Box className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                  <Typography color="text.secondary">No past appointments.</Typography>
+                </Box>
               )}
-            </>
+            </Box>
           )}
         </Box>
       )}
 
       {/* New Appointment Dialog */}
-      <Dialog
-        open={newAppointmentDialog}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle className="bg-primary text-primary-foreground">
-          Schedule New Appointment
-        </DialogTitle>
-        <DialogContent className="mt-4">
+      <Dialog open={newAppointmentDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle className="text-xl font-bold py-4 px-6 bg-gray-100 dark:bg-gray-700">Schedule New Appointment</DialogTitle>
+        <DialogContent className="p-6 space-y-4">
           {dialogError && (
-            <Alert severity="error" className="mb-4" onClose={() => setDialogError('')}>
-              {dialogError}
-            </Alert>
+            <Alert severity="error" className="mb-4">{dialogError}</Alert>
           )}
-
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id="time-slot-label">Time Slot</InputLabel>
-                <Select
-                  labelId="time-slot-label"
-                  value={timeSlot}
-                  onChange={(e) => setTimeSlot(e.target.value)}
-                  label="Time Slot"
-                >
-                  <MenuItem value="morning">Morning (9:00 AM - 12:00 PM)</MenuItem>
-                  <MenuItem value="afternoon">Afternoon (1:00 PM - 5:00 PM)</MenuItem>
-                  <MenuItem value="evening">Evening (6:00 PM - 9:00 PM)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Reason for Appointment"
-                multiline
-                rows={4}
-                value={appointmentReason}
-                onChange={(e) => setAppointmentReason(e.target.value)}
-              />
-            </Grid>
-          </Grid>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Select Doctor</InputLabel>
+            <Select
+              value={selectedDoctor ? selectedDoctor._id : ''}
+              onChange={(e) => setSelectedDoctor(doctors.find(doc => doc._id === e.target.value))}
+              label="Select Doctor"
+            >
+              {doctors && doctors.map((doctor) => (
+                <MenuItem key={doctor._id} value={doctor._id}>
+                  <Box className="flex items-center">
+                    <Avatar sx={{ width: 24, height: 24, mr: 1 }}>
+                      <User size={16} />
+                    </Avatar>
+                    {doctor.name || `${doctor.firstName} ${doctor.lastName}`}
+                    <Typography variant="body2" color="text.secondary" className="ml-2">
+                      ({doctor.specialty})
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            margin="normal"
+            fullWidth
+            label="Reason for Appointment"
+            value={appointmentReason}
+            onChange={(e) => setAppointmentReason(e.target.value)}
+            multiline
+            rows={3}
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Preferred Time Slot</InputLabel>
+            <Select
+              value={timeSlot}
+              onChange={(e) => setTimeSlot(e.target.value)}
+              label="Preferred Time Slot"
+            >
+              <MenuItem value="morning">Morning (9 AM - 12 PM)</MenuItem>
+              <MenuItem value="afternoon">Afternoon (1 PM - 5 PM)</MenuItem>
+              <MenuItem value="evening">Evening (6 PM - 9 PM)</MenuItem>
+              <MenuItem value="any">Any (Flexible)</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
-        <DialogActions className="bg-muted/30 p-3">
-          <Button
-            onClick={handleDialogClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleScheduleAppointment}
-            disabled={!appointmentReason || !timeSlot}
-            className="bg-primary text-primary-foreground"
-          >
-            Schedule Appointment
-          </Button>
+        <DialogActions className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <Button onClick={handleDialogClose} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Cancel</Button>
+          <Button onClick={handleScheduleAppointment} variant="contained" color="primary" className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Schedule</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Reschedule Appointment Dialog */}
-      <Dialog
-        open={rescheduleDialog}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle className="bg-primary text-primary-foreground">
-          Reschedule Appointment
-        </DialogTitle>
-        <DialogContent className="mt-4">
+      {/* Reschedule Dialog */}
+      <Dialog open={rescheduleDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Reschedule Appointment</DialogTitle>
+        <DialogContent dividers>
           {rescheduleDialogError && (
-            <Alert severity="error" className="mb-4" onClose={() => setRescheduleDialogError('')}>
-              {rescheduleDialogError}
-            </Alert>
+            <Alert severity="error" className="mb-4">{rescheduleDialogError}</Alert>
           )}
-
+          <Typography variant="subtitle1" className="mb-2">Current Appointment Details:</Typography>
           {selectedAppointment && (
-            <>
-              <Box className="mb-4">
-                <Typography variant="subtitle1" className="font-medium">
-                  Current Appointment
-                </Typography>
-                <Typography variant="body1">
-                  {selectedAppointment.doctorName} - {selectedAppointment.doctorSpecialty}
-                </Typography>
-                <Typography variant="body2" className="text-muted-foreground">
-                  {format(new Date(selectedAppointment.date), 'MMMM d, yyyy')} at {selectedAppointment.time}
-                </Typography>
-              </Box>
-
-              <Alert severity="info" className="mb-4">
-                Appointments can only be rescheduled at least 3 days in advance.
-              </Alert>
-
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="New Date"
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: format(addDays(new Date(), 3), 'yyyy-MM-dd') }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel id="new-time-slot-label">New Time</InputLabel>
-                    <Select
-                      labelId="new-time-slot-label"
-                      value={newTimeSlot}
-                      onChange={(e) => setNewTimeSlot(e.target.value)}
-                      label="New Time"
-                    >
-                      <MenuItem value="morning">Morning (9:00 AM)</MenuItem>
-                      <MenuItem value="afternoon">Afternoon (1:00 PM)</MenuItem>
-                      <MenuItem value="evening">Evening (6:00 PM)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </>
+            <Box className="mb-4 p-3 border border-gray-200 dark:border-gray-700 rounded-md">
+              <Typography variant="body2">Doctor: {selectedAppointment.doctorName}</Typography>
+              <Typography variant="body2">Date: {format(parseISO(selectedAppointment.date), 'PPP')}</Typography>
+              <Typography variant="body2">Time: {selectedAppointment.time}</Typography>
+              <Typography variant="body2">Reason: {selectedAppointment.reason}</Typography>
+            </Box>
           )}
+
+          <TextField
+            margin="normal"
+            fullWidth
+            type="date"
+            label="New Date"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>New Preferred Time Slot</InputLabel>
+            <Select
+              value={newTimeSlot}
+              onChange={(e) => setNewTimeSlot(e.target.value)}
+              label="New Preferred Time Slot"
+            >
+              <MenuItem value="morning">Morning (9 AM - 12 PM)</MenuItem>
+              <MenuItem value="afternoon">Afternoon (1 PM - 5 PM)</MenuItem>
+              <MenuItem value="evening">Evening (6 PM - 9 PM)</MenuItem>
+              <MenuItem value="any">Any (Flexible)</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
-        <DialogActions className="bg-muted/30 p-3">
-          <Button
-            onClick={handleDialogClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleRescheduleAppointment}
-            disabled={!newDate || !newTimeSlot}
-            className="bg-primary text-primary-foreground"
-          >
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleRescheduleAppointment} variant="contained" color="primary">
             Reschedule
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Cancel Appointment Dialog */}
-      <Dialog
-        open={cancelDialog}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle className="bg-primary text-primary-foreground">
-          Cancel Appointment
-        </DialogTitle>
-        <DialogContent className="mt-4">
+      <Dialog open={cancelDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Cancel Appointment</DialogTitle>
+        <DialogContent dividers>
           {cancelDialogError && (
-            <Alert severity="error" className="mb-4" onClose={() => setCancelDialogError('')}>
-              {cancelDialogError}
-            </Alert>
+            <Alert severity="error" className="mb-4">{cancelDialogError}</Alert>
           )}
-
+          <Typography variant="subtitle1" className="mb-2">Confirm Cancellation:</Typography>
           {selectedAppointment && (
-            <>
-              <Alert severity="warning" className="mb-4">
-                Are you sure you want to cancel this appointment? Appointments can only be cancelled at least 3 days in advance.
-              </Alert>
-
-              <Box className="mb-4">
-                <Typography variant="subtitle1" className="font-medium">
-                  Appointment Details
-                </Typography>
-                <Typography variant="body1">
-                  {selectedAppointment.doctorName} - {selectedAppointment.doctorSpecialty}
-                </Typography>
-                <Typography variant="body2" className="text-muted-foreground">
-                  {format(new Date(selectedAppointment.date), 'MMMM d, yyyy')} at {selectedAppointment.time}
-                </Typography>
-              </Box>
-
-              <TextField
-                fullWidth
-                label="Reason for Cancellation"
-                multiline
-                rows={3}
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-              />
-            </>
+            <Box className="mb-4 p-3 border border-gray-200 dark:border-gray-700 rounded-md">
+              <Typography variant="body2">Doctor: {selectedAppointment.doctorName}</Typography>
+              <Typography variant="body2">Date: {format(parseISO(selectedAppointment.date), 'PPP')}</Typography>
+              <Typography variant="body2">Time: {selectedAppointment.time}</Typography>
+              <Typography variant="body2">Reason: {selectedAppointment.reason}</Typography>
+            </Box>
           )}
+          <TextField
+            margin="normal"
+            fullWidth
+            label="Reason for Cancellation (Optional)"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            multiline
+            rows={3}
+          />
         </DialogContent>
-        <DialogActions className="bg-muted/30 p-3">
-          <Button
-            onClick={handleDialogClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Back
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleCancelAppointment}
-            className="bg-red-600 text-white hover:bg-red-700"
-          >
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Back</Button>
+          <Button onClick={handleCancelAppointment} variant="contained" color="error">
             Confirm Cancellation
           </Button>
         </DialogActions>

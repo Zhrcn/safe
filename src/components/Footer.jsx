@@ -2,7 +2,7 @@
 
 import { Box, Container, Grid, Typography, Link, IconButton, Divider, useTheme } from '@mui/material';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
-import { APP_NAME } from '@/lib/config';
+import { APP_NAME } from '@/app-config';
 
 const socialLinks = [
   { icon: Facebook, href: '#', label: 'Facebook' },
@@ -46,8 +46,7 @@ export default function Footer() {
     >
       <Container maxWidth="lg">
         <Grid container spacing={6}>
-          {/* Company Info */}
-          <Grid item xs={12} md={4}>
+          <Grid columns={{ xs: 12, md: 4 }}>
             <Box sx={{ mb: 3 }}>
               <Typography 
                 variant="h5" 
@@ -111,14 +110,13 @@ export default function Footer() {
             </Box>
           </Grid>
           
-          {/* Quick Links */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid columns={{ xs: 12, sm: 6, md: 4 }}>
             <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
               Quick Links
             </Typography>
             
             <Grid container spacing={2}>
-              <Grid item xs={6}>
+              <Grid columns={{ xs: 6 }}>
                 {quickLinks.slice(0, Math.ceil(quickLinks.length / 2)).map((link) => (
                   <Box key={link.name} sx={{ mb: 1.5 }}>
                     <Link 
@@ -138,7 +136,7 @@ export default function Footer() {
                   </Box>
                 ))}
               </Grid>
-              <Grid item xs={6}>
+              <Grid columns={{ xs: 6 }}>
                 {quickLinks.slice(Math.ceil(quickLinks.length / 2)).map((link) => (
                   <Box key={link.name} sx={{ mb: 1.5 }}>
                     <Link 
@@ -161,8 +159,7 @@ export default function Footer() {
             </Grid>
           </Grid>
           
-          {/* Legal */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid columns={{ xs: 12, sm: 6, md: 4 }}>
             <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
               Legal
             </Typography>
@@ -243,7 +240,7 @@ export default function Footer() {
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <Typography variant="body2" color="text.secondary">
-            © {currentYear} {APP_NAME}. All rights reserved.
+            {currentYear} {APP_NAME}. All rights reserved.
           </Typography>
           <Box>
             <Typography variant="body2" color="text.secondary">

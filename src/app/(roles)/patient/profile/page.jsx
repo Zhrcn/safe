@@ -68,32 +68,44 @@ function PatientProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!isFormValid()) {
+      setNotification({
+        open: true,
+        message: 'Please fill in all required fields.',
+        severity: 'warning',
+      });
+      return;
+    }
     try {
       setSaving(true);
       
-      const updatedProfile = {
-        name: formData.name,
-        contact: {
-          email: formData.email,
-          phone: formData.phone
-        },
-        address: formData.address
+      const nameParts = formData.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const payload = {
+        firstName: firstName,
+        lastName: lastName,
+        email: formData.email,
+        contactNumber: formData.phone, // Assumes backend Patient model uses contactNumber
+        address: formData.address,
       };
       
-      const result = await updatePatientProfile(updatedProfile);
+      await updatePatientProfile(payload);
       
       setNotification({
         open: true,
-        message: 'Profile updated successfully',
+        message: 'Profile updated successfully!',
         severity: 'success'
       });
       
       setEditMode(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      const errorMessage = err.data?.message || err.message || 'Failed to update profile. Please try again.';
       setNotification({
         open: true,
-        message: 'Failed to update profile',
+        message: errorMessage,
         severity: 'error'
       });
     } finally {

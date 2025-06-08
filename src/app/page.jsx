@@ -11,14 +11,16 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <Box className="min-h-screen">
-      <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <AboutSection />
-      <RolesSection />
-      <TestimonialsSection />
-      <Footer />
-    </Box>
+    <div>
+      <Box component="main" className='w-full' sx={{ minHeight: '100vh' }}>
+        <Navbar />
+        <HeroSection />
+        <FeaturesSection />
+        <AboutSection />
+        <RolesSection />
+        <TestimonialsSection />
+        <Footer />  
+      </Box>
+    </div>
   );
 }

@@ -4,7 +4,6 @@ import React from 'react';
 import { Button as MuiButton, CircularProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-// Define styled MUI Button with enhanced variants
 const StyledButton = styled(MuiButton)(({ theme, variant, color, size }) => ({
   borderRadius: '0.5rem',
   textTransform: 'none',
@@ -67,21 +66,7 @@ const StyledButton = styled(MuiButton)(({ theme, variant, color, size }) => ({
   }),
 }));
 
-/**
- * Enhanced Button component with additional variants and loading state
- * 
- * @param {Object} props - Component props
- * @param {string} [props.variant='contained'] - Button variant: 'contained', 'outlined', 'text', or 'soft'
- * @param {string} [props.color='primary'] - Button color
- * @param {string} [props.size='medium'] - Button size: 'small', 'medium', 'large', or 'xs'
- * @param {boolean} [props.fullWidth=false] - Whether the button should take full width
- * @param {boolean} [props.loading=false] - Whether to show loading spinner
- * @param {boolean} [props.disabled=false] - Whether the button is disabled
- * @param {React.ReactNode} props.children - Button content
- * @param {Function} [props.onClick] - Click handler
- * @param {string} [props.className] - Additional CSS classes
- * @param {string} [props.type='button'] - Button type
- */
+
 export default function Button({
   variant = 'contained',
   color = 'primary',
@@ -95,7 +80,6 @@ export default function Button({
   type = 'button',
   ...rest
 }) {
-  // Map our custom variant 'soft' to MUI's 'contained' but with custom styling
   const muiVariant = variant === 'soft' ? 'contained' : variant;
   
   return (

@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/app-config';
 import { jwtDecode } from 'jwt-decode';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -79,7 +80,7 @@ export const authApi = {
 
 export const medicalFilesApi = {
     getPatientFile: (patientId) =>
-        api.get(patientId ? `/medical-file?patientId=${patientId}` : '/medical-file'),
+        api.get(`/medicalfiles/${patientId}`),
 
     createMedicalFile: (data) =>
         api.post('/medical-file', data),
@@ -98,11 +99,11 @@ export const appointmentsApi = {
     createAppointment: (data) =>
         api.post('/appointments', data),
 
-    updateAppointment: (id, data) =>
+    updateAppointmentDetails: (id, data) => 
         api.patch(`/appointments/${id}`, data),
 
-    cancelAppointment: (id, reason) =>
-        api.patch(`/appointments/${id}`, { status: 'Cancelled', notes: { doctor: reason } }),
+    updateAppointmentStatus: (id, status) => 
+        api.patch(`/appointments/${id}/status`, { status }),
 };
 
 export const prescriptionsApi = {
@@ -120,6 +121,21 @@ export const prescriptionsApi = {
 
     fillPrescription: (id, notes) =>
         api.patch(`/prescriptions/${id}`, { status: 'Filled', notes }),
+};
+
+export const notificationsApi = {
+    // Get notifications for the logged-in user
+    // params can include: page, limit, readStatus ('all', 'read', 'unread')
+    getUserNotifications: (params) => 
+        api.get('/notifications', { params }),
+
+    // Mark a specific notification as read
+    markNotificationAsRead: (notificationId) => 
+        api.patch(`/notifications/${notificationId}/read`),
+
+    // Mark all unread notifications as read for the logged-in user
+    markAllNotificationsAsRead: () => 
+        api.patch('/notifications/read-all'),
 };
 
 export const usersApi = {

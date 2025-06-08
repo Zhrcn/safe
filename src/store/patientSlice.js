@@ -1,55 +1,41 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { medicalFilesApi } from '../lib/services/api'; // Assuming api.js is in src/lib/services/
-import { getMedicalFileById } from '../lib/api/medicalFile'; // Import the new function
+// No longer importing medicalFilesApi
+import { patientApi } from '../lib/redux/services/patientApi'; // Import the new patientApi
 
 const initialState = {
-  vitalSigns: [],
-  vitalSignsLoading: false,
-  vitalSignsError: null,
-  data: null,
+  data: null, // This will store the patient profile data
+  vitalSigns: [], // Initialize vitalSigns
   loading: false,
   error: null
 };
 
+// Fetches the logged-in patient's own profile data
 export const getPatientData = createAsyncThunk(
   'patient/fetchData',
-  async (patientId, { rejectWithValue }) => {
-    if (!patientId) return rejectWithValue('Patient ID is required to fetch data.');
+  async (_, { dispatch, rejectWithValue }) => { // No patientId needed as argument
     try {
-      const response = await medicalFilesApi.getPatientFile(patientId);
-      return response.data; // Assuming API returns { data: patientProfile }
+      // Dispatch the RTK Query endpoint for getting patient profile
+      const response = await dispatch(patientApi.endpoints.getPatientProfile.initiate()).unwrap();
+      // Assuming the backend ApiResponse wraps the actual data in a 'data' field
+      return response.data; 
     } catch (error) {
-      const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+      const message = error.data?.message || error.message || 'Failed to fetch patient profile';
       return rejectWithValue(message);
     }
   }
 );
 
+// Updates the logged-in patient's own profile data
 export const updatePatientData = createAsyncThunk(
   'patient/updateData',
-  async ({ patientId, data }, { rejectWithValue }) => { // Expects an object { patientId, data }
-    if (!patientId) return rejectWithValue('Patient ID is required to update data.');
+  async (profileData, { dispatch, rejectWithValue }) => { // Takes profileData directly
     try {
-      const response = await medicalFilesApi.updateMedicalFile(data, patientId);
-      return response.data; // Assuming API returns { data: updatedPatientProfile }
+      // Dispatch the RTK Query endpoint for updating patient profile
+      const response = await dispatch(patientApi.endpoints.updatePatientProfile.initiate(profileData)).unwrap();
+      // Assuming the backend ApiResponse wraps the actual data in a 'data' field
+      return response.data;
     } catch (error) {
-      const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
-      return rejectWithValue(message);
-    }
-  }
-);
-
-export const fetchVitalSignsByMedicalFileId = createAsyncThunk(
-  'patient/fetchVitalSigns',
-  async (medicalFileId, { rejectWithValue }) => {
-    if (!medicalFileId) return rejectWithValue('Medical File ID is required to fetch vital signs.');
-    try {
-      const medicalFile = await getMedicalFileById(medicalFileId);
-      // Assuming medicalFile contains a vitalSigns array directly
-      // If it's nested like medicalFile.data.vitalSigns, adjust here
-      return medicalFile.vitalSigns || []; 
-    } catch (error) {
-      const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+      const message = error.data?.message || error.message || 'Failed to update patient profile';
       return rejectWithValue(message);
     }
   }
@@ -64,7 +50,8 @@ const patientSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    setFetchedPatientData: (state, action) => {
+    // setFetchedPatientData might still be useful if you want to manually set data elsewhere
+    setFetchedPatientData: (state, action) => { 
       state.data = action.payload;
       state.loading = false;
       state.error = null;
@@ -78,37 +65,31 @@ const patientSlice = createSlice({
       })
       .addCase(getPatientData.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.data = action.payload; // action.payload is the ActualPatientData from the thunk
+        state.vitalSigns = action.payload?.healthMetrics?.vitalSignsHistory || 
+                           action.payload?.vitalSigns || 
+                           [];
+        state.error = null; // Clear error on successful fetch
       })
       .addCase(getPatientData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       .addCase(updatePatientData.pending, (state) => {
-        state.loading = true;
+        state.loading = true; // Or a specific 'updating' state: state.updating = true;
         state.error = null;
       })
       .addCase(updatePatientData.fulfilled, (state, action) => {
-        state.loading = false;
-        state.data = action.payload;
+        state.loading = false; // state.updating = false;
+        state.data = action.payload; // action.payload is the ActualPatientData (updated) from the thunk
+        state.vitalSigns = action.payload?.healthMetrics?.vitalSignsHistory || 
+                           action.payload?.vitalSigns || 
+                           state.vitalSigns; // Fallback to existing vital signs
+        state.error = null; // Clear error on successful update
       })
       .addCase(updatePatientData.rejected, (state, action) => {
-        state.loading = false;
+        state.loading = false; // state.updating = false;
         state.error = action.payload;
-      })
-      // Reducers for fetchVitalSignsByMedicalFileId
-      .addCase(fetchVitalSignsByMedicalFileId.pending, (state) => {
-        state.vitalSignsLoading = true;
-        state.vitalSignsError = null;
-      })
-      .addCase(fetchVitalSignsByMedicalFileId.fulfilled, (state, action) => {
-        state.vitalSignsLoading = false;
-        state.vitalSigns = action.payload;
-      })
-      .addCase(fetchVitalSignsByMedicalFileId.rejected, (state, action) => {
-        state.vitalSignsLoading = false;
-        state.vitalSignsError = action.payload;
-        state.vitalSigns = []; // Optionally clear or keep stale data
       });
   }
 });

@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { lightTheme, darkTheme } from '@/lib/theme/theme';
+import { lightTheme, darkTheme } from '@/lib/theme/app-theme';
 
 const ThemeContext = createContext(undefined);
 

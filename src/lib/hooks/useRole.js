@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { ROLES, ROLE_ROUTES } from '@/lib/config';
+import { ROLES, ROLE_ROUTES } from '@/app-config';
 
 export function useRole() {
   const { user } = useAuth();

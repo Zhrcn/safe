@@ -27,7 +27,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { motion } from 'framer-motion';
-import { ROLES, ROLE_ROUTES } from '@/lib/config';
+import { ROLES, ROLE_ROUTES } from '@/app-config';
 
 const baseSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),

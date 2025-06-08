@@ -17,7 +17,7 @@ import {
 import { Menu as MenuIcon, X } from 'lucide-react';
 import { useTheme } from './ThemeProviderWrapper';
 import Link from 'next/link';
-import { APP_NAME } from '@/lib/config';
+import { APP_NAME } from '@/app-config';
 
 const pages = [
   { name: 'Features', href: '#features' },

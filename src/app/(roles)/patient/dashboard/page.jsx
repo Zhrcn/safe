@@ -3,14 +3,14 @@
 import React, { useEffect } from 'react';
 import {
   Box, Grid, CircularProgress, Button, Avatar, Typography, Chip, Skeleton,
-  CardHeader, CardContent
+  CardHeader, CardContent, Container, Paper
 } from '@mui/material';
 import { 
   User, Calendar, MapPin, Activity, Heart, Droplets, Weight, Pill, Clock, Edit3, PlusCircle, Search, Filter, ChevronDown, ChevronUp, AlertCircle, 
   CalendarClock, ArrowUpRight, FileText
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getPatientData, setFetchedPatientData, fetchVitalSignsByMedicalFileId } from '@/store/patientSlice';
+import { getPatientData } from '@/store/patientSlice';
 import { PageContainer } from '@/components/common';
 import Card from '@/components/ui/Card';
 import CustomButton from '@/components/ui/Button';
@@ -29,6 +29,7 @@ import { blue } from '@mui/material/colors';
 
 ChartJS.register(
   CategoryScale, 
+  LinearScale, 
   PointElement,
   LineElement,
   Title,
@@ -40,12 +41,15 @@ function EnhancedStatCard({ title, value, icon, color, loading }) {
   return (
     <Card
       variant="elevated"
-      className="h-full"
-      hoverable
+      className="h-full transition-all duration-200 ease-in-out shadow-md hover:shadow-xl hover:translate-y-[-4px]"
     >
-      <Box className="flex items-center">
+      <Box className="flex items-center p-4">
         <Box
           className={`rounded-full p-3 mr-4 ${color}`}
+          sx={{
+            backgroundColor: (theme) => `${color}15`,
+            color: color,
+          }}
         >
           {icon}
         </Box>
@@ -98,7 +102,7 @@ function AppointmentCard({ appointment, loading, doctorsList }) {
 
   let displayDoctorName = 'Unknown Doctor';
   let displaySpecialty = 'N/A';
-  let displayLocation = 'Virtual Consultation'; // Default location
+  let displayLocation = 'Virtual Consultation';
   let displayDate = 'Date TBD';
   let displayTime = 'Time TBD';
 
@@ -109,17 +113,15 @@ function AppointmentCard({ appointment, loading, doctorsList }) {
     if (doctorProfile && doctorProfile.user) {
       displayDoctorName = doctorProfile.user.name || 
                           `${doctorProfile.user.firstName || ''} ${doctorProfile.user.lastName || ''}`.trim();
-      if (!displayDoctorName || displayDoctorName === 'Unknown Doctor') { // Ensure a fallback if name parts are empty
-           displayDoctorName = `Dr. ${doctorProfile.user.lastName || `(ID: ${doctorProfile.user._id ? doctorProfile.user._id.toString().slice(-4) : 'N/A'})`}`;
+      if (!displayDoctorName || displayDoctorName === 'Unknown Doctor') {
+        displayDoctorName = `Dr. ${doctorProfile.user.lastName || `(ID: ${doctorProfile.user._id ? doctorProfile.user._id.toString().slice(-4) : 'N/A'})`}`;
       }
       displaySpecialty = doctorProfile.specialty || 'N/A';
     } else if (appointment.doctorId) {
-      // Fallback if doctor not found in populated list, but we have an ID
       displayDoctorName = `Doctor (ID: ${appointment.doctorId.toString().slice(-4)})`;
     }
   }
   
-  // Allow direct properties on appointment to override, if they exist (e.g. API might provide them directly later)
   if (appointment.doctorName) displayDoctorName = appointment.doctorName;
   if (appointment.specialty) displaySpecialty = appointment.specialty;
   if (appointment.location) displayLocation = appointment.location;
@@ -131,18 +133,22 @@ function AppointmentCard({ appointment, loading, doctorsList }) {
       });
     } catch (e) { 
       console.warn("Invalid date format for appointment:", appointment.date, e);
-      displayDate = String(appointment.date); // Show raw date if formatting fails
+      displayDate = String(appointment.date);
     }
   }
   displayTime = appointment.time || 'Time TBD';
   
-  const avatarColor = blue[500]; // Use imported blue color
+  const avatarColor = blue[500];
 
   return (
-    <Card variant="outlined" bordered>
+    <Card 
+      variant="outlined" 
+      bordered
+      className="transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-md"
+    >
       <Box className="flex p-4 items-center">
         <Avatar sx={{ bgcolor: avatarColor, width: 40, height: 40 }} className="mr-3">
-          <User size={20} /> {/* User icon from lucide-react */}
+          <User size={20} />
         </Avatar>
         <Box className="flex-1">
           <Typography variant="subtitle1" className="font-medium">
@@ -160,19 +166,19 @@ function AppointmentCard({ appointment, loading, doctorsList }) {
             <span>{displayLocation}</span>
           </Box>
           {appointment.status && (
-             <Chip 
-                label={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)} 
-                size="small" 
-                color={appointment.status === 'completed' ? 'success' : appointment.status === 'scheduled' ? 'primary' : 'default'}
-                sx={{ mt: 1 }}
-              />
-           )}
+            <Chip 
+              label={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)} 
+              size="small" 
+              color={appointment.status === 'completed' ? 'success' : appointment.status === 'scheduled' ? 'primary' : 'default'}
+              sx={{ mt: 1 }}
+            />
+          )}
         </Box>
         <CustomButton
           variant="soft"
           color="primary"
           size="small"
-          onClick={() => console.log('Clicked appointment details:', appointment)} // Example action
+          onClick={() => console.log('Clicked appointment details:', appointment)}
         >
           Details
         </CustomButton>
@@ -198,8 +204,12 @@ function MedicationCard({ medication, loading }) {
   }
 
   return (
-    <Card variant="outlined" bordered hoverable>
-      <Box className="flex justify-between items-start">
+    <Card 
+      variant="outlined" 
+      bordered 
+      className="transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-md"
+    >
+      <Box className="flex justify-between items-start p-4">
         <Box>
           <Typography variant="subtitle1" className="font-medium">
             {medication.name}
@@ -215,7 +225,7 @@ function MedicationCard({ medication, loading }) {
           variant="outlined"
         />
       </Box>
-      <Box className="mt-2 flex items-center">
+      <Box className="mt-2 flex items-center px-4 pb-4">
         <Clock size={14} className="mr-1 text-gray-500" />
         <Typography variant="body2" color="text.secondary">
           Prescribed by Dr. {medication.prescribedBy}
@@ -237,9 +247,17 @@ function HealthStatCard({ stat, icon, color, loading }) {
   }
 
   return (
-    <Card variant="outlined" bordered className="text-center">
+    <Card 
+      variant="outlined" 
+      bordered 
+      className="text-center transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-md"
+    >
       <Box
         className={`rounded-full p-3 mx-auto mb-3 inline-flex ${color}`}
+        sx={{
+          backgroundColor: (theme) => `${color}15`,
+          color: color,
+        }}
       >
         {icon}
       </Box>
@@ -249,202 +267,297 @@ function HealthStatCard({ stat, icon, color, loading }) {
       <Typography variant="body2" color="text.secondary">
         {stat.name}
       </Typography>
-      <Typography variant="caption" color="text.secondary" className="mt-1 block">
-        Last updated: {stat.date}
-      </Typography>
     </Card>
   );
 }
 
 function BloodPressureChart({ data, loading }) {
+  if (loading) {
+    return (
+      <Card variant="outlined" bordered className="p-4">
+        <Skeleton variant="rectangular" height={300} />
+      </Card>
+    );
+  }
+
   const chartData = {
-    labels: data?.bloodPressure?.map(item => item.date) || [],
+    labels: data?.labels || [],
     datasets: [
       {
         label: 'Systolic',
-        data: data?.bloodPressure?.map(item => item.systolic) || [],
-        borderColor: 'rgb(239, 68, 68)',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        tension: 0.3,
+        data: data?.systolic || [],
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
       },
       {
         label: 'Diastolic',
-        data: data?.bloodPressure?.map(item => item.diastolic) || [],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.3,
+        data: data?.diastolic || [],
+        borderColor: 'rgb(255, 99, 132)',
+        tension: 0.1,
       },
     ],
   };
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
       },
       title: {
-        display: false,
+        display: true,
+        text: 'Blood Pressure History',
       },
     },
     scales: {
       y: {
-        min: 60,
-        max: 160,
+        beginAtZero: false,
       },
     },
   };
 
   return (
-    <Card title="Blood Pressure History" variant="elevated">
-      {loading ? (
-        <Box className="h-[300px] flex items-center justify-center">
-          <CircularProgress size={40} />
-        </Box>
-      ) : (
-        <Box className="h-[300px] pt-4">
-          <Line data={chartData} options={options} />
-        </Box>
-      )}
+    <Card 
+      variant="outlined" 
+      bordered
+      className="transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-md"
+    >
+      <Box className="p-4">
+        <Line key={JSON.stringify(chartData)} data={chartData} options={options} />
+      </Box>
     </Card>
   );
 }
 
 export default function PatientDashboardPage() {
   const dispatch = useDispatch();
-  const { data: patientData, loading: patientLoading, error: patientError,
-    vitalSigns, vitalSignsLoading, vitalSignsError 
-  } = useSelector((state) => state.patient);
-  const { currentUser } = useSelector((state) => state.user); // Get currentUser
+  const { data: patientData, loading, error } = useSelector((state) => state.patient);
 
   useEffect(() => {
-    if (currentUser && currentUser.id) { // Check for currentUser.id
-      // Assumed: patient-specific data from login is in 'currentUser.patientDetails'
-      // Assumed: patient ID for API call is 'currentUser.id'
-      if (currentUser.roleDetails && !patientData) {
-        console.log('PatientDashboard: Populating from currentUser.roleDetails (and ID exists)');
-        dispatch(setFetchedPatientData(currentUser.roleDetails));
-      } else if (!patientData) { // If not in currentUser or patientData is still null, fetch from API
-        console.log('PatientDashboard: Fetching data via getPatientData API for user ID:', currentUser.id);
-        dispatch(getPatientData(currentUser.id)); // Pass patientId
-      }
-    } else {
-      if (currentUser && !currentUser.id) {
-        console.log('PatientDashboard: currentUser exists but currentUser.id is missing. Waiting for ID.');
-      } else {
-        console.log('PatientDashboard: No currentUser, cannot fetch patient data yet.');
-      }
-      // Optionally, handle case where currentUser is not yet available (e.g., show loading or redirect)
-    }
-  }, [dispatch, currentUser, patientData]);
+    dispatch(getPatientData());
+  }, [dispatch]);
 
-  useEffect(() => {
-    if (patientData && patientData.medicalFile && !vitalSigns.length && !vitalSignsLoading) {
-      // patientData.medicalFile should be the ID of the medical file
-      dispatch(fetchVitalSignsByMedicalFileId(patientData.medicalFile));
-    }
-  }, [dispatch, patientData, vitalSigns, vitalSignsLoading]);
+  console.log('PatientDashboardPage RENDER - loading:', loading, 'error:', error, 'patientData:', patientData);
 
-  console.log('PatientDashboardPage RENDER - loading:', patientLoading, 'error:', patientError, 'patientData:', patientData);
-  if (patientLoading) return <div className="p-4 text-center">Loading dashboard...</div>;
-  if (patientError) return <div className="p-4 text-red-500">Error: {patientError}</div>;
-
-  if (!patientData) {
+  if (loading) {
     return (
-      <PageContainer title="Dashboard" description="Welcome back to your health dashboard">
-        <Grid container spacing={3} className="mb-6">
-          {[...Array(4)].map((_, index) => (
-            <Grid item xs={12} sm={6} md={3} key={`skel-stat-${index}`}>
-              <Skeleton variant="rounded" height={100} />
-            </Grid>
-          ))}
-        </Grid>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}><Skeleton variant="rounded" height={400} /></Grid>
-          <Grid item xs={12} md={6}><Skeleton variant="rounded" height={400} /></Grid>
-          <Grid item xs={12}><Skeleton variant="rounded" height={300} /></Grid>
-        </Grid>
+      <PageContainer>
+        <Box className="flex justify-center items-center min-h-[60vh]">
+          <CircularProgress />
+        </Box>
       </PageContainer>
     );
   }
 
-  // Derive healthStats from the latest vital signs entry
-  const latestVitalSign = vitalSigns && vitalSigns.length > 0 ? vitalSigns[vitalSigns.length - 1] : null;
-
-  const healthStats = latestVitalSign ? [
-    { title: 'Heart Rate', value: latestVitalSign.heartRate ? `${latestVitalSign.heartRate} bpm` : 'N/A', icon: <Activity size={24} />, color: 'bg-red-100 text-red-600' },
-    { title: 'Blood Pressure', value: latestVitalSign.bloodPressure || 'N/A', icon: <Heart size={24} />, color: 'bg-blue-100 text-blue-600' },
-    { title: 'Temperature', value: latestVitalSign.temperature ? `${latestVitalSign.temperature}°C` : 'N/A', icon: <Droplets size={24} />, color: 'bg-green-100 text-green-600' }, // Changed Blood Sugar to Temperature
-    { title: 'Weight', value: latestVitalSign.weight ? `${latestVitalSign.weight} kg` : 'N/A', icon: <Weight size={24} />, color: 'bg-yellow-100 text-yellow-600' },
-    // You can add height here if needed, or other stats from latestVitalSign
-  ] : Array(4).fill({}); 
-
-  const upcomingAppointments = patientData?.appointments?.slice(0, 3) || [];
-  const medications = patientData?.prescriptions?.slice(0, 3) || [];
-  const bloodPressureData = patientData?.healthMetrics?.bloodPressureHistory || [];
+  if (error) {
+    return (
+      <PageContainer>
+        <Box className="flex flex-col items-center justify-center min-h-[60vh]">
+          <AlertCircle size={48} className="text-red-500 mb-4" />
+          <Typography variant="h5" color="error" gutterBottom>
+            Error Loading Dashboard
+          </Typography>
+          <Typography color="text.secondary">
+            {error}
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => dispatch(getPatientData())}
+            sx={{ mt: 2 }}
+          >
+            Retry
+          </Button>
+        </Box>
+      </PageContainer>
+    );
+  }
 
   return (
-    <PageContainer
-      title="Dashboard"
-      description="Welcome back to your health dashboard"
-    >
-      <Grid container spacing={3} className="mb-6">
-        {healthStats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <EnhancedStatCard 
-              loading={patientLoading || vitalSignsLoading || !latestVitalSign} // Show loading if patient/vitals are loading OR if no latestVitalSign yet
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon} // stat.icon is already a JSX element e.g. <Activity size={24} />
-              color={stat.color}
+    <PageContainer>
+      <Container maxWidth="xl">
+        <Box className="mb-8">
+          <Typography variant="h4" className="font-bold mb-2">
+            Welcome back, {patientData?.firstName || 'Patient'}!
+          </Typography>
+          <Typography color="text.secondary">
+            Here's an overview of your health status and upcoming appointments.
+          </Typography>
+        </Box>
+
+        <div className="flex flex-wrap -mx-3 mb-6">
+          {/* Quick Stats */}
+          <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6">
+            <EnhancedStatCard
+              title="Upcoming Appointments"
+              value={patientData?.upcomingAppointments?.length || 0}
+              icon={<CalendarClock size={24} />}
+              color="#3b82f6"
+              loading={loading}
             />
-          </Grid>
-        ))}
-      </Grid>
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6">
+            <EnhancedStatCard
+              title="Active Medications"
+              value={patientData?.activeMedications?.length || 0}
+              icon={<Pill size={24} />}
+              color="#10b981"
+              loading={loading}
+            />
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6">
+            <EnhancedStatCard
+              title="Recent Tests"
+              value={patientData?.recentTests?.length || 0}
+              icon={<Activity size={24} />}
+              color="#8b5cf6"
+              loading={loading}
+            />
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6">
+            <EnhancedStatCard
+              title="Health Score"
+              value={patientData?.healthScore || 'N/A'}
+              icon={<Heart size={24} />}
+              color="#ef4444"
+              loading={loading}
+            />
+          </div>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Upcoming Appointments" />
-            <CardContent>
-              {upcomingAppointments.length > 0 ? (
-                upcomingAppointments.map((appt, index) => (
-                  <AppointmentCard key={appt._id || index} appointment={appt} loading={patientLoading} doctorsList={patientData?.doctorsList || []} />
-                ))
-              ) : (
-                <Typography>No upcoming appointments.</Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+          {/* Health Stats */}
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+            <HealthStatCard
+              stat={{ name: 'Heart Rate', value: patientData?.vitalSigns?.heartRate || 'N/A' }}
+              icon={<Heart size={24} />}
+              color="#ef4444"
+              loading={loading}
+            />
+          </div>
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+            <HealthStatCard
+              stat={{ name: 'Blood Pressure', value: patientData?.vitalSigns?.bloodPressure || 'N/A' }}
+              icon={<Droplets size={24} />}
+              color="#3b82f6"
+              loading={loading}
+            />
+          </div>
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+            <HealthStatCard
+              stat={{ name: 'Weight', value: patientData?.vitalSigns?.weight || 'N/A' }}
+              icon={<Weight size={24} />}
+              color="#10b981"
+              loading={loading}
+            />
+          </div>
 
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Current Medications" />
-            <CardContent>
-              {medications.length > 0 ? (
-                medications.map((med, index) => (
-                  <MedicationCard key={med._id || index} medication={med} loading={!patientData} />
-                ))
-              ) : (
-                <Typography>No current medications.</Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+          {/* Blood Pressure Chart */}
+          <div className="w-full lg:w-2/3 px-3 mb-6">
+            <BloodPressureChart
+              data={patientData?.vitalSigns?.bloodPressureHistory}
+              loading={loading}
+            />
+          </div>
 
-        {patientData?.healthMetrics?.bloodPressureHistory && bloodPressureData.length > 0 && (
-          <Grid item xs={12}>
-            <Card>
-              <CardHeader title="Blood Pressure Trend" />
+          {/* Upcoming Appointments */}
+          <div className="w-full lg:w-1/3 px-3 mb-6">
+            <Card variant="outlined" bordered>
+              <CardHeader
+                title="Upcoming Appointments"
+                action={
+                  <CustomButton
+                    variant="soft"
+                    color="primary"
+                    size="small"
+                    startIcon={<PlusCircle size={16} />}
+                  >
+                    New
+                  </CustomButton>
+                }
+              />
               <CardContent>
-                <BloodPressureChart data={bloodPressureData} loading={!patientData} />
+                <Box className="space-y-4">
+                  {loading ? (
+                    Array(3).fill(0).map((_, index) => (
+                      <AppointmentCard
+                        key={index}
+                        loading={true}
+                      />
+                    ))
+                  ) : patientData?.upcomingAppointments?.length > 0 ? (
+                    patientData.upcomingAppointments.map((appointment, index) => (
+                      <AppointmentCard
+                        key={index}
+                        appointment={appointment}
+                        doctorsList={patientData.doctorsList}
+                      />
+                    ))
+                  ) : (
+                    <Box className="text-center py-4">
+                      <Typography color="text.secondary">
+                        No upcoming appointments
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
               </CardContent>
             </Card>
-          </Grid>
-        )}
-      </Grid>
+          </div>
+
+          {/* Active Medications */}
+          <div className="w-full px-3 mb-6">
+            <Card variant="outlined" bordered>
+              <CardHeader
+                title="Active Medications"
+                action={
+                  <Box className="flex items-center space-x-2">
+                    <CustomButton
+                      variant="soft"
+                      color="primary"
+                      size="small"
+                      startIcon={<Search size={16} />}
+                    >
+                      Search
+                    </CustomButton>
+                    <CustomButton
+                      variant="soft"
+                      color="primary"
+                      size="small"
+                      startIcon={<Filter size={16} />}
+                    >
+                      Filter
+                    </CustomButton>
+                  </Box>
+                }
+              />
+              <CardContent>
+                <div className="flex flex-wrap -mx-3">
+                  {loading ? (
+                    Array(4).fill(0).map((_, index) => (
+                      <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6" key={index}>
+                        <MedicationCard loading={true} />
+                      </div>
+                    ))
+                  ) : patientData?.activeMedications?.length > 0 ? (
+                    patientData.activeMedications.map((medication, index) => (
+                      <div className="w-full sm:w-1/2 md:w-1/4 px-3 mb-6" key={index}>
+                        <MedicationCard medication={medication} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="w-full px-3">
+                      <Box className="text-center py-4">
+                        <Typography color="text.secondary">
+                          No active medications
+                        </Typography>
+                      </Box>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Container>
     </PageContainer>
   );
 }

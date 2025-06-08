@@ -11,7 +11,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/components/ThemeProviderWrapper';
-import { APP_NAME } from '@/lib/config';
+import { APP_NAME } from '@/app-config';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 /**

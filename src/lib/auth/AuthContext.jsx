@@ -1,122 +1,183 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { loginUser } from '../slices/userSlice'; // Adjusted path
+import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, registerUser, setCurrentUser, setIsLoading, logoutUser } from '../../store/userSlice';
+import { getPatientData } from '../../store/patientSlice'; // Import for fetching patient details
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import { useNotification } from '@/components/ui/Notification';
-import { ROLES, ROLE_ROUTES } from '@/lib/config';
-
-
-const AuthContext = createContext(undefined);
+import { ROLES, ROLE_ROUTES } from '@/app-config';
+import { authApi } from '../../lib/redux/services/authApi'; // Import authApi for RTK Query
 
 const TOKEN_STORAGE_KEY = 'safe_auth_token';
 const USER_STORAGE_KEY = 'safe_user_data';
 
+const AuthContext = createContext(null);
+
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 export const AuthProvider = ({ children }) => {
-    const dispatch = useDispatch();
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
-    const notification = useNotification();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated, isLoading, error: authError } = useSelector(state => state.user);
+  const { data: patientProfileData } = useSelector(state => state.patient); // To check if patient data exists
+  const router = useRouter();
+  const notification = useNotification();
+  const authCheckRef = useRef(false); 
 
-    useEffect(() => {
+  useEffect(() => {
+    if (isAuthenticated && user && !patientProfileData) {
+      dispatch(getPatientData());
+    }
+  }, [isAuthenticated, user, patientProfileData, dispatch]);
+
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await dispatch(logoutUser());
+    } catch (error) {
+      console.error('Logout API error:', error);
+    } finally {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(USER_STORAGE_KEY);
+      dispatch(setCurrentUser(null));
+      dispatch(setIsLoading(false)); 
+      router.push('/');
+      notification.showNotification('Logged out successfully', 'info');
+    }
+  }, [dispatch, router, notification, setCurrentUser, setIsLoading]);
+
+  const checkAuth = useCallback(async () => {
+    if (authCheckRef.current) {
+      console.log('AuthContext: Auth check already in progress, skipping this run.');
+      return;
+    }
+    authCheckRef.current = true;
+    dispatch(setIsLoading(true));
+
+    try {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+      const userDataString = localStorage.getItem(USER_STORAGE_KEY);
+
+      if (token && userDataString) {
+        let userFromStorage;
         try {
-            const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-            const userData = localStorage.getItem(USER_STORAGE_KEY);
-
-            if (token && userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    setUser(user);
-                } catch (e) {
-                    console.error('Error parsing user data:', e);
-                }
-            }
+          userFromStorage = JSON.parse(userDataString);
         } catch (e) {
-            console.error('Error in sync auth check:', e);
+          console.error('Error parsing user data from localStorage:', e);
+          console.log('AuthContext: Triggering logout due to localStorage parsing error.');
+          await handleLogout();
+          return;
         }
-    }, []);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                setIsLoading(true);
-                // Check for token in localStorage
-                const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-                const userData = localStorage.getItem(USER_STORAGE_KEY);
+        try {
+          const decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
 
-                if (token && userData) {
-                    try {
-                        const decoded = jwtDecode(token);
-                        const currentTime = Date.now() / 1000;
+          if (decoded.exp && decoded.exp < currentTime) {
+            console.log('AuthContext: Token expired based on local check, logging out.');
+            console.log('AuthContext: Triggering logout due to expired token.');
+            await handleLogout();
+            return;
+          }
 
-                        if (decoded.exp && decoded.exp < currentTime) {
-                            console.log('Token expired, logging out');
-                            await handleLogout();
-                            return;
-                        }
+          dispatch(setCurrentUser({ user: userFromStorage, token })); 
+          console.log('AuthContext: User provisionally authenticated from localStorage:', userFromStorage.email);
 
-                        const user = JSON.parse(userData);
-                        setUser(user);
-                        console.log('User authenticated from localStorage:', user.email);
+          await new Promise(resolve => setTimeout(resolve, 0));
 
-                        // Verify the token with the server
-                        try {
-                            const verifyResponse = await fetch('/api/auth/verify', {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`
-                                }
-                            });
+          
+          const verifyResultAction = await dispatch(authApi.endpoints.verifyToken.initiate(null, { forceRefetch: true }));
 
-                            if (!verifyResponse.ok) {
-                                // Only log out if it's a 401 (Unauthorized) or 403 (Forbidden)
-                                if (verifyResponse.status === 401 || verifyResponse.status === 403) {
-                                    console.warn('Token verification failed with status:', verifyResponse.status);
-                                    await handleLogout();
-                                    return;
-                                } else {
-                                    // For other errors (like 500), continue with local auth
-                                    console.warn('Token verification had server error:', verifyResponse.status);
-                                    // Continue with local auth
-                                }
-                            }
-                        } catch (verifyError) {
-                            console.error('Error verifying token:', verifyError);
-                            // Continue with local auth if server is unreachable
-                        }
-                    } catch (error) {
-                        console.error('Error decoding token:', error);
-                        await handleLogout();
-                    }
-                } else {
-                    // If no token in localStorage, user is considered not logged in initially.
-                    // They will need to login through the form.
-                    setUser(null);
-                }
-            } catch (error) {
-                console.error('Auth check error:', error);
-                setUser(null);
-            } finally {
-                setIsLoading(false);
+          if (verifyResultAction.isError) {
+            const status = verifyResultAction.error?.status;
+            const errorName = verifyResultAction.error?.name;
+            const errorMessage = verifyResultAction.error?.message;
+
+            console.log('AuthContext: Token verification details:', {
+              status,
+              errorName,
+              errorMessage,
+              fullError: verifyResultAction.error
+            });
+
+            // Only logout for specific error conditions
+            if (status === 401 || status === 403) {
+              console.warn('AuthContext: Token verification failed with 401/403, logging out.');
+              await handleLogout();
+              return;
+            } else if (errorName === 'ParsingError') {
+              // For parsing errors, try to keep the user logged in with local data
+              console.warn('AuthContext: Parsing error during token verification, keeping local auth.');
+              return;
+            } else {
+              // For other errors (network, server down), keep the user logged in
+              console.warn('AuthContext: Non-critical error during token verification, keeping local auth:', errorMessage);
+              return;
             }
-        };
+          } else if (verifyResultAction.isSuccess && verifyResultAction.data) {
+            const verifiedData = verifyResultAction.data;
+            if (verifiedData && verifiedData.user) {
+              // Update Redux state and localStorage with potentially newer data from server
+              dispatch(setCurrentUser({ user: verifiedData.user, token })); 
+              localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(verifiedData.user));
+              console.log('AuthContext: Token successfully verified with server. User updated.', verifiedData.user);
+              
+              // Ensure we're on the correct route for the user's role
+              const currentPath = window.location.pathname;
+              const dashboardPath = ROLE_ROUTES[verifiedData.user.role]?.dashboard;
+              
+              if (dashboardPath && !currentPath.startsWith(dashboardPath)) {
+                console.log(`AuthContext: Redirecting to correct dashboard path: ${dashboardPath}`);
+                try {
+                  await router.push(dashboardPath);
+                  console.log('AuthContext: Successfully redirected to dashboard');
+                } catch (navError) {
+                  console.error('AuthContext: Navigation error during redirect:', navError);
+                }
+              }
+            } else {
+              // Token valid, but no new user data from server, keep local user data
+              console.log('AuthContext: Token verified with server, but user data in response was not as expected. Keeping local data.');
+            }
+          } else {
+            // Handle cases where the query might not be an error but also not a success with data
+            console.log('AuthContext: Token verification returned unexpected response format. Keeping local auth.');
+          }
+        } catch (error) { // Catches jwtDecode errors or fetch errors during verification
+          console.error('AuthContext: Error during token processing or server verification:', error.message, error.stack);
+          console.log('AuthContext: Triggering logout due to general error during token processing/verification.');
+          await handleLogout();
+        }
+      } else {
+        // No token or user data in localStorage
+        if (isAuthenticated) { // Only dispatch if Redux state is out of sync
+            dispatch(setCurrentUser(null));
+        }
+        console.log('AuthContext: No token/user found in localStorage. User needs to login.');
+      }
+    } catch (error) { // Outer catch for any unexpected errors in checkAuth logic
+      console.error('AuthContext: Unexpected error in checkAuth logic:', error.message, error.stack);
+      console.log('AuthContext: Triggering logout due to unexpected error in checkAuth logic.');
+      await handleLogout(); // Ensure logout on unexpected error
+    } finally {
+      dispatch(setIsLoading(false));
+      authCheckRef.current = false; // Reset the ref once check is complete
+    }
+  }, [dispatch, handleLogout, isAuthenticated, setIsLoading, setCurrentUser, jwtDecode]); // Added dependencies
 
-        checkAuth();
-    }, []);
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]); // Dependency is the memoized checkAuth function
 
-    const handleLogin = async (email, password, role) => {
-        setIsLoading(true);
+    const handleLogin = useCallback(async (email, password, role) => {
+        dispatch(setIsLoading(true));
         try {
             // Only log in development environment
             if (process.env.NODE_ENV !== 'production') {
@@ -161,7 +222,7 @@ export const AuthProvider = ({ children }) => {
                         if (process.env.NODE_ENV !== 'production') {
                             console.log('Saved token and user data to localStorage');
                         }
-                        setUser(responsePayload.user);
+                        dispatch(setCurrentUser(responsePayload)); // responsePayload is { token, user }
                         notification.showNotification('Login successful', 'success');
 
                         // ---- START NAVIGATION LOGIC ----
@@ -169,24 +230,29 @@ export const AuthProvider = ({ children }) => {
                         if (currentUser && currentUser.role) {
                             const dashboardPath = ROLE_ROUTES[currentUser.role]?.dashboard;
                             if (dashboardPath) {
-                                router.push(dashboardPath);
-                                if (process.env.NODE_ENV !== 'production') {
-                                    console.log(`Navigating to ${currentUser.role} dashboard: ${dashboardPath}`); // Fixed user.role to currentUser.role
+                                console.log(`AuthContext: Attempting navigation to ${dashboardPath} for role ${currentUser.role}`);
+                                try {
+                                    await router.push(dashboardPath);
+                                    console.log(`AuthContext: Successfully navigated to ${dashboardPath}`);
+                                } catch (navError) {
+                                    console.error('AuthContext: Navigation error:', navError);
+                                    // Fallback to home if navigation fails
+                                    await router.push('/');
                                 }
-                            } else { // else for if(dashboardPath)
+                            } else {
                                 console.error(`No dashboard route defined for role: ${currentUser.role}. Navigating to home.`);
-                                router.push('/');
+                                await router.push('/');
                             }
-                        } else { // else for if(currentUser && currentUser.role)
+                        } else {
                             console.error('User data or role missing after login, cannot navigate.');
-                            router.push('/'); // Fallback to home
-                        } // Closes: else for if(currentUser && currentUser.role)
+                            await router.push('/'); // Fallback to home
+                        }
                         // ---- END NAVIGATION LOGIC ----
                     } // THIS IS THE CLOSING BRACE FOR THE TRY BLOCK (started line ~157)
                     catch (error) { // Catch for the try block that started at line ~157
                         console.error('Error during login success handling (payload processing/navigation):', error);
                         notification.showNotification('An error occurred while processing login.', 'error');
-                        setUser(null);
+                        dispatch(setCurrentUser(null));
                         localStorage.removeItem(TOKEN_STORAGE_KEY);
                         localStorage.removeItem(USER_STORAGE_KEY);
                         router.push('/'); // Fallback to home or login page
@@ -194,12 +260,12 @@ export const AuthProvider = ({ children }) => {
                 } else { // This 'else' corresponds to 'if (responsePayload && responsePayload.token && responsePayload.user)'
                     console.error('Login successful, but token or user details are missing in the response payload.');
                     notification.showNotification('Login error: Essential authentication data not received.', 'error');
-                    setUser(null); // Clear any partial user state
+                    dispatch(setCurrentUser(null)); // Clear any partial user state
                     // Optionally, clear localStorage items if partially set
                     localStorage.removeItem(TOKEN_STORAGE_KEY);
                     localStorage.removeItem(USER_STORAGE_KEY);
                 }
-                setIsLoading(false);
+                dispatch(setIsLoading(false));
                 return true; // Still true because loginUser thunk was fulfilled
             } else {
                 // Handle login failure (rejected thunk)
@@ -211,67 +277,34 @@ export const AuthProvider = ({ children }) => {
                 }
                 console.error('Login error in AuthContext:', errorMessage);
                 notification.showNotification(errorMessage, 'error');
-                setUser(null);
-                setIsLoading(false);
+                dispatch(setCurrentUser(null));
+                dispatch(setIsLoading(false));
                 throw new Error(errorMessage);
             }
         } catch (error) {
             // This catch block handles errors from dispatching or other synchronous errors before/after dispatch
             console.error('Login error in handleLogin catch block:', error.message);
-            setUser(null);
-            setIsLoading(false);
+            dispatch(setCurrentUser(null));
+            dispatch(setIsLoading(false));
             // Show notification for errors not caught by the thunk's rejection
             if (!loginUser.rejected.match(error)) { // Avoid double notification if thunk already handled it
                  notification.showNotification(error.message || 'An unexpected login error occurred.', 'error');
             }
             throw error; // Re-throw to allow LoginForm to handle it if needed
-        
-            // The 'Enhanced error handling' part below seems unreachable due to 'throw error' above it.
-            // Consider removing or refactoring if it was intended for a different purpose.
-            // let errorMessage = 'Login failed. Please try again.';
-        
-            if (error.message) {
-                // Use custom error messages we defined above
-                errorMessage = error.message;
-            } else if (error.response?.data) {
-                // Extract error details from API response
-                const { error: apiError, message, type } = error.response.data;
-            
-                if (message) {
-                    errorMessage = message;
-                } else if (apiError) {
-                    errorMessage = apiError;
-                }
-            
-                // Add specific context for different error types
-                if (type === 'INVALID_CREDENTIALS' && role === 'patient') {
-                    errorMessage = 'Invalid patient credentials. For testing, try using "patient123" as the password.';
-                } else if (type === 'USER_NOT_FOUND' && role === 'patient') {
-                    errorMessage = 'Patient account not found. For testing, use patient1@safe.com with password patient123.';
-                } else if (type === 'INVALID_PATIENT_EMAIL_DOMAIN') {
-                    errorMessage = 'Patient email must be from safe.com or example.com domain. Try patient1@safe.com.';
-                } else if (type === 'INVALID_PATIENT_EMAIL_FORMAT') {
-                    errorMessage = 'Invalid patient email format. Use patient1@safe.com or similar format.';
-                }
-            }
-            
-            notification.showNotification(errorMessage, 'error');
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        // The 'Enhanced error handling' part below is unreachable and can be removed.
+        } 
+    }, [dispatch, router, notification, setIsLoading, setCurrentUser, loginUser]);
 
-    const handleRegister = async (userData) => {
-        setIsLoading(true);
+    const handleRegister = useCallback(async (userData) => {
+        dispatch(setIsLoading(true));
         try {
-            const response = await authService.register(userData);
-            const { token, user } = response;
+            const response = await dispatch(registerUser(userData));
+            const { token, user } = response.payload;
 
             localStorage.setItem(TOKEN_STORAGE_KEY, token);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 
-            setUser(user);
+            dispatch(setCurrentUser(response.payload)); // response.payload should be { token, user }
             notification.showNotification('Registration successful', 'success');
             return true;
         } catch (error) {
@@ -300,47 +333,32 @@ export const AuthProvider = ({ children }) => {
             notification.showNotification(errorMessage, 'error');
             return false;
         } finally {
-            setIsLoading(false);
-        }
-    };
+            dispatch(setIsLoading(false));
+        } // Closing the 'finally' block
+    }, [dispatch, notification, router, setIsLoading, setCurrentUser, registerUser]); // Closing useCallback with dependencies
 
-    const handleLogout = async () => {
-        try {
-            await authService.logout();
-        } catch (error) {
-            console.error('Logout API error:', error);
-        } finally {
-            localStorage.removeItem(TOKEN_STORAGE_KEY);
-            localStorage.removeItem(USER_STORAGE_KEY);
+    // handleLogout is now defined before checkAuth, so this definition will be replaced by the first chunk.
 
-            setUser(null);
 
-            router.push('/');
-            notification.showNotification('Logged out successfully', 'info');
-        }
-    };
-
-    const updateUserData = (data) => {
+    const updateUserData = useCallback((data) => {
         if (user) {
             const updatedUser = { ...user, ...data };
-            setUser(updatedUser);
+            dispatch(setCurrentUser(updatedUser));
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
         }
+    }, [dispatch, user, setCurrentUser]);
+
+    const contextValue = {
+        user,
+        isAuthenticated,
+        isLoading,
+        authError,
+        login: handleLogin,
+        logout: handleLogout,
+        register: handleRegister,
+        checkAuthStatus: checkAuth, // Renamed for clarity in context
+        updateCurrentUserData: updateUserData
     };
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                isLoading,
-                isAuthenticated: !!user,
-                login: handleLogin,
-                register: handleRegister,
-                logout: handleLogout,
-                updateUserData,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }; 

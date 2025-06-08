@@ -2,43 +2,42 @@
   "name": "safe-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "frontend": "next dev",
+    "backend": "node backend/server.js",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test-mongodb": "node --experimental-vm-modules scripts/test-mongodb.js",
-    "test-mongodb-simple": "node scripts/test-mongodb-simple.js",
-    "seed-database": "node scripts/seed-database.js",
-    "update-passwords": "node scripts/update-passwords.js",
-    "fix-collections": "node scripts/fix-collections.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
-    "@mui/icons-material": "^5.17.1",
-    "@mui/material": "^5.17.1",
-    "@mui/x-date-pickers": "^8.5.0",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/material": "^7.1.1",
+    "@mui/x-date-pickers": "^8.5.1",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "canvas": "^3.1.0",
     "chart.js": "^4.4.9",
+    "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "framer-motion": "^11.18.2",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
-    "lucide-react": "^0.344.0",
+    "lucide-react": "^0.513.0",
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.1",
     "next": "^14.2.29",
     "next-auth": "^4.24.11",
-    "react": "18.2.0",
+    "react": "^18.3.1",
     "react-chartjs-2": "^5.3.0",
-    "react-dom": "18.2.0",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.56.4",
     "react-pdf": "^9.2.1",
     "react-query": "^3.39.3",
@@ -48,6 +47,7 @@
     "zod": "^3.25.36"
   },
   "devDependencies": {
+    "@next/swc-win32-x64-msvc": "^15.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
@@ -61,5 +61,17 @@
     "eslint-config-next": "14.1.0",
     "postcss": "^8.4.35",
     "typescript": "^5.8.3"
-  }
+  },
+  "description": "SAFE Medical Service Platform",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zhrcn/saf.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zhrcn/saf/issues"
+  },
+  "homepage": "https://github.com/Zhrcn/saf#readme"
 }
