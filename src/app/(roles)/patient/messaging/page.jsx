@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Paper, List, ListItem, ListItemText, TextField, Button, Avatar, CircularProgress, Badge, IconButton, Tooltip } from '@mui/material';
 import { Send, User, Phone, Calendar, RefreshCw, Video } from 'lucide-react';
-import { getConversations, getConversation, sendMessage } from '@/services/patientService';
+import { api } from '@/lib/services/api';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -19,7 +19,7 @@ export default function PatientMessagingPage() {
     async function loadConversations() {
       try {
         setLoading(true);
-        const data = await getConversations();
+        const data = await api.get('/conversations');
         setConversations(data);
         if (data.length > 0) {
           await selectConversation(data[0].id);
@@ -37,7 +37,7 @@ export default function PatientMessagingPage() {
 
   const selectConversation = async (conversationId) => {
     try {
-      const conversation = await getConversation(conversationId);
+      const conversation = await api.get(`/conversations/${conversationId}`);
       setSelectedConversation(conversation);
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -50,7 +50,10 @@ export default function PatientMessagingPage() {
 
     try {
       setSendingMessage(true);
-      const newMessage = await sendMessage(selectedConversation.id, messageInput);
+      const newMessage = await api.post('/messages', {
+        conversationId: selectedConversation.id,
+        content: messageInput
+      });
       
       setSelectedConversation(prev => ({
         ...prev,

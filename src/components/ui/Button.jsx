@@ -1,108 +1,62 @@
 'use client';
 
 import React from 'react';
-import { Button as MuiButton, CircularProgress } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Button as MuiButton } from '@mui/material';
+import { cn } from '@/lib/utils';
 
-const StyledButton = styled(MuiButton)(({ theme, variant, color, size }) => ({
-  borderRadius: '0.5rem',
-  textTransform: 'none',
-  fontWeight: 500,
-  boxShadow: variant === 'contained' ? theme.shadows[1] : 'none',
-  transition: 'all 0.2s ease-in-out',
-  
-  '&:hover': {
-    boxShadow: variant === 'contained' ? theme.shadows[2] : 'none',
-    transform: 'translateY(-1px)',
-  },
-  
-  ...(variant === 'soft' && {
-    backgroundColor: color === 'primary' 
-      ? theme.palette.primary.light 
-      : color === 'secondary'
-        ? theme.palette.secondary.light
-        : color === 'error'
-          ? theme.palette.error.light
-          : color === 'warning'
-            ? theme.palette.warning.light
-            : color === 'info'
-              ? theme.palette.info.light
-              : color === 'success'
-                ? theme.palette.success.light
-                : theme.palette.grey[200],
-    color: color === 'primary' 
-      ? theme.palette.primary.main 
-      : color === 'secondary'
-        ? theme.palette.secondary.main
-        : color === 'error'
-          ? theme.palette.error.main
-          : color === 'warning'
-            ? theme.palette.warning.main
-            : color === 'info'
-              ? theme.palette.info.main
-              : color === 'success'
-                ? theme.palette.success.main
-                : theme.palette.grey[800],
-    '&:hover': {
-      backgroundColor: color === 'primary' 
-        ? theme.palette.primary.light 
-        : color === 'secondary'
-          ? theme.palette.secondary.light
-          : color === 'error'
-            ? theme.palette.error.light
-            : color === 'warning'
-              ? theme.palette.warning.light
-              : color === 'info'
-                ? theme.palette.info.light
-                : color === 'success'
-                  ? theme.palette.success.light
-                  : theme.palette.grey[300],
-    },
-  }),
-  
-  ...(size === 'xs' && {
-    padding: '0.25rem 0.5rem',
-    fontSize: '0.75rem',
-  }),
-}));
+const Button = React.forwardRef(({
+    className,
+    variant = 'default',
+    size = 'default',
+    loading = false,
+    disabled = false,
+    startIcon,
+    endIcon,
+    children,
+    ...props
+}, ref) => {
+    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background';
+    
+    const variantStyles = {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        outline: 'border border-input hover:bg-accent hover:text-accent-foreground',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        link: 'underline-offset-4 hover:underline text-primary',
+        soft: 'bg-primary/10 text-primary hover:bg-primary/20',
+    };
+    
+    const sizeStyles = {
+        default: 'h-10 py-2 px-4',
+        sm: 'h-9 px-3 rounded-md',
+        lg: 'h-11 px-8 rounded-md',
+        icon: 'h-10 w-10',
+    };
 
+    return (
+        <MuiButton
+            ref={ref}
+            className={cn(
+                baseStyles,
+                variantStyles[variant],
+                sizeStyles[size],
+                loading && 'opacity-70 cursor-not-allowed',
+                className
+            )}
+            disabled={disabled || loading}
+            startIcon={startIcon}
+            endIcon={endIcon}
+            {...props}
+        >
+            {loading ? (
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : null}
+            {children}
+        </MuiButton>
+    );
+});
 
-export default function Button({
-  variant = 'contained',
-  color = 'primary',
-  size = 'medium',
-  fullWidth = false,
-  loading = false,
-  disabled = false,
-  children,
-  onClick,
-  className = '',
-  type = 'button',
-  ...rest
-}) {
-  const muiVariant = variant === 'soft' ? 'contained' : variant;
-  
-  return (
-    <StyledButton
-      variant={muiVariant}
-      color={color}
-      size={size}
-      fullWidth={fullWidth}
-      disabled={disabled || loading}
-      onClick={onClick}
-      className={`${className} ${loading ? 'opacity-80' : ''}`}
-      type={type}
-      disableElevation={variant === 'soft'}
-      {...rest}
-    >
-      {loading && (
-        <CircularProgress
-          size={size === 'small' ? 16 : size === 'xs' ? 14 : 20}
-          color="inherit"
-          className="mr-2"
-        />
-      )}
-      {children}
-    </StyledButton>
-  );
-} 
+Button.displayName = 'Button';
+
+export default Button; 

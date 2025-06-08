@@ -1,6 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/apiResponse');
-const Appointment = require('../models/Appointment'); 
+const Appointment = require('../models/appointment'); 
 const User = require('../models/User'); 
 const Doctor = require('../models/Doctor'); 
 const { createNotification } = require('../utils/notification.utils'); 

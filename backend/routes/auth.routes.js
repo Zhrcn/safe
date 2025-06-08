@@ -13,6 +13,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 router.get('/me', protect, getMe);
+router.get('/verify', protect, getMe);
 
 // /forget password, /reset password, /logout
 

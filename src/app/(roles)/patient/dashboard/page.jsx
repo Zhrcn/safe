@@ -26,6 +26,7 @@ import {
   Legend,
 } from 'chart.js';
 import { blue } from '@mui/material/colors';
+import { api } from '@/lib/services/api';
 
 ChartJS.register(
   CategoryScale, 

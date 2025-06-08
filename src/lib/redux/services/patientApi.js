@@ -34,7 +34,7 @@ export const patientApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['PatientProfile'], // For cache invalidation
+    tagTypes: ['PatientProfile', 'Appointments', 'Medications', 'VitalSigns'],
     endpoints: (builder) => ({
         getPatientProfile: builder.query({
             query: () => 'patients/profile', // GET /api/v1/patients/profile
@@ -50,10 +50,36 @@ export const patientApi = createApi({
             invalidatesTags: ['PatientProfile'], // Invalidate cache on update
             // transformResponse: (response) => response.data, // If backend wraps in { data: ... }
         }),
+        // Dashboard specific endpoints
+        getDashboardData: builder.query({
+            query: () => 'patients/dashboard',
+            providesTags: ['PatientProfile', 'Appointments', 'Medications', 'VitalSigns'],
+        }),
+        getUpcomingAppointments: builder.query({
+            query: () => 'patients/appointments/upcoming',
+            providesTags: ['Appointments'],
+        }),
+        getActiveMedications: builder.query({
+            query: () => 'patients/medications/active',
+            providesTags: ['Medications'],
+        }),
+        getVitalSigns: builder.query({
+            query: () => 'patients/vital-signs',
+            providesTags: ['VitalSigns'],
+        }),
+        getHealthMetrics: builder.query({
+            query: () => 'patients/health-metrics',
+            providesTags: ['PatientProfile'],
+        }),
     }),
 });
 
 export const {
     useGetPatientProfileQuery,
     useUpdatePatientProfileMutation,
+    useGetDashboardDataQuery,
+    useGetUpcomingAppointmentsQuery,
+    useGetActiveMedicationsQuery,
+    useGetVitalSignsQuery,
+    useGetHealthMetricsQuery,
 } = patientApi;

@@ -1,54 +1,54 @@
 const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema({
-  patient: { 
+  patient: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Patient',
     required: true
   },
-  doctor: { 
+  doctor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Doctor',
     required: true
   },
-  appointmentDate: { 
+  date: {
     type: Date,
-    required: true ,
-    default: new Date('1111-01-11')
+    required: true
   },
-  appointmentTime: {
-    type: String, 
-    required: true, 
-    default:"TBD"
+  time: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['checkup', 'consultation', 'follow-up', 'emergency'],
+    required: true
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'completed', 'cancelled'], 
+    enum: ['scheduled', 'completed', 'cancelled', 'rescheduled'],
+    default: 'scheduled'
   },
   reason: {
     type: String,
-    required: true,
-    trim: true
-  },
-  preferredTimeSlot: {
-    type: String,
-    enum: ['morning', 'afternoon', 'evening', 'any'],
-    default: 'any'
+    required: true
   },
   notes: {
-    type: String,
-    trim: true,
-    default: ''
+    type: String
   },
-  followUp: {
-    type: Boolean,
-    default: false
+  createdAt: {
+    type: Date,
+    default: Date.now
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 }, {
-  timestamps: true,
-  collection: 'Appointments'
+  timestamps: true
 });
 
-const Appointment = mongoose.model('Appointment', appointmentSchema);
+appointmentSchema.index({ patient: 1, date: 1 });
+appointmentSchema.index({ doctor: 1, date: 1 });
 
-module.exports = Appointment;
+module.exports = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);

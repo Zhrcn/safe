@@ -65,9 +65,7 @@ const DoctorSchema = new mongoose.Schema({
   collection: 'Doctors'
 });
 
-DoctorSchema.index({ user: 1 });
 DoctorSchema.index({ specialty: 1 });
-DoctorSchema.index({ medicalLicenseNumber: 1 }); 
 
 const Doctor = mongoose.model('Doctor', DoctorSchema);
 

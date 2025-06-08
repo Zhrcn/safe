@@ -12,10 +12,7 @@ import {
   Clock, AlertCircle, Check, X
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { 
-  getMedicalProviders, scheduleAppointment, updateDoctorAccess, 
-  setPrimaryDoctor, requestConsultation, checkMedicineAvailability 
-} from '@/services/patientService';
+import { api } from '@/lib/services/api';
 
 export default function PatientProvidersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +42,7 @@ export default function PatientProvidersPage() {
     async function loadProviders() {
       try {
         setLoading(true);
-        const data = await getMedicalProviders();
+        const data = await api.get('/providers');
         setProviders(data);
       } catch (error) {
         console.error('Error loading providers:', error);
@@ -109,7 +106,7 @@ export default function PatientProvidersPage() {
     
     try {
       setCheckingAvailability(true);
-      const result = await checkMedicineAvailability(medicationName, selectedProvider.id);
+      const result = await api.get(`/pharmacies/${selectedProvider.id}/availability`, { params: { medication: medicationName } });
       setAvailabilityResult(result);
     } catch (error) {
       console.error('Error checking medicine availability:', error);
@@ -128,7 +125,7 @@ export default function PatientProvidersPage() {
         reason: appointmentReason
       };
       
-      await scheduleAppointment(appointment);
+      await api.post('/appointments', appointment);
       setAppointmentSuccess(true);
       
       // Clear form after 3 seconds and close dialog
@@ -145,13 +142,12 @@ export default function PatientProvidersPage() {
     if (!consultationReason || !preferredTime || !selectedProvider) return;
     
     try {
-      // Call the updated requestConsultation function with attachments
-      const result = await requestConsultation(
-        selectedProvider.id,
-        consultationReason,
-        preferredTime,
-        [] // Empty array for attachments since we don't have file upload in this dialog
-      );
+      await api.post('/consultations', {
+        doctorId: selectedProvider.id,
+        reason: consultationReason,
+        preferredTime: preferredTime,
+        attachments: []
+      });
       
       setConsultationSuccess(true);
       
@@ -168,8 +164,8 @@ export default function PatientProvidersPage() {
 
   const toggleDoctorAccess = async (doctorId, currentAccess) => {
     try {
-      await updateDoctorAccess(doctorId, !currentAccess);
-            setProviders(prev => ({
+      await api.patch(`/doctors/${doctorId}/access`, { hasAccess: !currentAccess });
+      setProviders(prev => ({
         ...prev,
         doctors: prev.doctors.map(doctor => 
           doctor.id === doctorId 
@@ -184,7 +180,7 @@ export default function PatientProvidersPage() {
 
   const makePrimaryDoctor = async (doctorId) => {
     try {
-      const updatedDoctors = await setPrimaryDoctor(doctorId);
+      await api.patch(`/doctors/${doctorId}/primary`);
       
     } catch (error) {
       console.error('Error setting primary doctor:', error);
@@ -636,7 +632,7 @@ export default function PatientProvidersPage() {
                     'Check'
                   )}
                 </Button>
-        </Box>
+              </Box>
 
               {availabilityResult && (
                 <Box className={`p-4 rounded-md ${availabilityResult.isAvailable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
@@ -659,7 +655,7 @@ export default function PatientProvidersPage() {
                       Current stock: {availabilityResult.quantity} units
                     </Typography>
                   )}
-    </Box>
+                </Box>
               )}
             </DialogContent>
             <DialogActions className="bg-muted/30 p-3">

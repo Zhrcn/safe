@@ -14,7 +14,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { getMedicalRecords } from '@/services/patientService';
+import { api } from '@/lib/services/api';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -36,7 +36,7 @@ export default function PatientMedicalFilePage() {
     async function fetchMedicalRecords() {
       try {
         setLoading(true);
-        const data = await getMedicalRecords();
+        const data = await api.get('/medicalfiles');
         setMedicalRecords(data);
       } catch (err) {
         setError('Failed to load medical records. Please try again later.');

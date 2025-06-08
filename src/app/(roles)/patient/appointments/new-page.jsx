@@ -19,6 +19,7 @@ import {
   useCancelAppointmentMutation,
   useGetAvailableTimeSlotsQuery
 } from '@/lib/redux/services/appointmentApi';
+import { appointmentsApi } from '@/lib/services/api';
 
 export default function PatientAppointmentsPage() {
   const { 

@@ -2,16 +2,23 @@
 
 import { Typography, Box, Paper, Card, CardContent, List, ListItem, ListItemText, Divider } from '@mui/material';
 import { Pill, CalendarDays, User } from 'lucide-react';
-import React from 'react';
-
-const mockPrescriptions = [
-  { id: 1, medication: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily', issueDate: '2023-01-10', prescribingDoctor: 'Dr. Ahmad Al-Ali' },
-  { id: 2, medication: 'Amoxicillin', dosage: '500 mg', frequency: 'Three times a day for 10 days', issueDate: '2024-06-15', prescribingDoctor: 'Dr. Maria Garcia' },
-  { id: 3, medication: 'Ibuprofen', dosage: '200 mg', frequency: 'As needed for pain', issueDate: '2024-05-01', prescribingDoctor: 'Dr. Ahmad Al-Ali' },
-];
+import React, { useEffect, useState } from 'react';
+import { api } from '@/lib/services/api';
 
 export default function PatientPrescriptionsPage() {
-  const prescriptions = mockPrescriptions;
+  const [prescriptions, setPrescriptions] = useState([]);
+
+  useEffect(() => {
+    async function fetchPrescriptions() {
+      try {
+        const data = await api.get('/prescriptions');
+        setPrescriptions(data);
+      } catch (error) {
+        setPrescriptions([]);
+      }
+    }
+    fetchPrescriptions();
+  }, []);
 
   return (
     <Box>

@@ -92,8 +92,9 @@ export const AuthProvider = ({ children }) => {
 
           await new Promise(resolve => setTimeout(resolve, 0));
 
-          
+          console.log('AuthContext: Attempting token verification...');
           const verifyResultAction = await dispatch(authApi.endpoints.verifyToken.initiate(null, { forceRefetch: true }));
+          console.log('AuthContext: Token verification result:', verifyResultAction);
 
           if (verifyResultAction.isError) {
             const status = verifyResultAction.error?.status;
@@ -112,17 +113,18 @@ export const AuthProvider = ({ children }) => {
               console.warn('AuthContext: Token verification failed with 401/403, logging out.');
               await handleLogout();
               return;
-            } else if (errorName === 'ParsingError') {
-              // For parsing errors, try to keep the user logged in with local data
-              console.warn('AuthContext: Parsing error during token verification, keeping local auth.');
-              return;
             } else {
-              // For other errors (network, server down), keep the user logged in
+              // For other errors (network, server down, parsing), keep the user logged in with local data
               console.warn('AuthContext: Non-critical error during token verification, keeping local auth:', errorMessage);
+              // Keep the user logged in with local data
+              dispatch(setCurrentUser({ user: userFromStorage, token }));
               return;
             }
-          } else if (verifyResultAction.isSuccess && verifyResultAction.data) {
-            const verifiedData = verifyResultAction.data;
+          } else if (verifyResultAction.isSuccess) {
+            // Handle both direct data and nested data structure
+            const verifiedData = verifyResultAction.data?.data || verifyResultAction.data;
+            console.log('AuthContext: Verified data:', verifiedData);
+
             if (verifiedData && verifiedData.user) {
               // Update Redux state and localStorage with potentially newer data from server
               dispatch(setCurrentUser({ user: verifiedData.user, token })); 
@@ -145,10 +147,12 @@ export const AuthProvider = ({ children }) => {
             } else {
               // Token valid, but no new user data from server, keep local user data
               console.log('AuthContext: Token verified with server, but user data in response was not as expected. Keeping local data.');
+              dispatch(setCurrentUser({ user: userFromStorage, token }));
             }
           } else {
             // Handle cases where the query might not be an error but also not a success with data
             console.log('AuthContext: Token verification returned unexpected response format. Keeping local auth.');
+            dispatch(setCurrentUser({ user: userFromStorage, token }));
           }
         } catch (error) { // Catches jwtDecode errors or fetch errors during verification
           console.error('AuthContext: Error during token processing or server verification:', error.message, error.stack);

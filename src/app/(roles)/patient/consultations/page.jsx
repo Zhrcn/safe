@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { PatientPageContainer, PatientCard } from '@/components/patient/PatientComponents';
-import { getConsultations, requestConsultation } from '@/services/patientService';
+import { api } from '@/lib/services/api';
 
 export default function PatientConsultationsPage() {
   const [consultations, setConsultations] = useState([]);
@@ -56,8 +56,7 @@ export default function PatientConsultationsPage() {
     try {
       setLoading(true);
       setError(null);
-      // This function needs to be implemented in patientService.js
-      const data = await getConsultations();
+      const data = await api.get('/consultations');
       setConsultations(data || []);
     } catch (error) {
       console.error('Error loading consultations:', error);
@@ -109,12 +108,11 @@ export default function PatientConsultationsPage() {
         return;
       }
 
-      // This function is already implemented in patientService.js
-      const newConsultation = await requestConsultation(
-        selectedDoctor.id, 
-        consultationReason, 
-        preferredTime
-      );
+      const newConsultation = await api.post('/consultations', {
+        doctorId: selectedDoctor.id,
+        reason: consultationReason,
+        preferredTime: preferredTime
+      });
       
       // In a real app, we would upload the attachments here
       // For now, we'll just simulate it

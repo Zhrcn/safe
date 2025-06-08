@@ -12,7 +12,7 @@ import {
   AlarmClock, Timer, Bell, BellOff, Plus, Info, Edit3, Clipboard
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { getPrescriptions, getMedicineReminders, updateMedicineReminder } from '@/services/patientService';
+import { api } from '@/lib/services/api';
 
 export default function PatientMedicationsPage() {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -34,8 +34,8 @@ export default function PatientMedicationsPage() {
       try {
         setLoading(true);
         const [prescriptionsData, remindersData] = await Promise.all([
-          getPrescriptions(),
-          getMedicineReminders()
+          api.get('/prescriptions'),
+          api.get('/reminders')
         ]);
         setPrescriptions(prescriptionsData);
         setReminders(remindersData);
@@ -56,7 +56,7 @@ export default function PatientMedicationsPage() {
 
   const toggleReminderEnabled = async (reminder) => {
     try {
-      const updatedReminder = await updateMedicineReminder(reminder.id, {
+      const updatedReminder = await api.put(`/reminders/${reminder.id}`, {
         ...reminder,
         enabled: !reminder.enabled
       });
@@ -82,7 +82,7 @@ export default function PatientMedicationsPage() {
     if (!selectedReminder || !reminderTime) return;
     
     try {
-      const updatedReminder = await updateMedicineReminder(selectedReminder.id, {
+      const updatedReminder = await api.put(`/reminders/${selectedReminder.id}`, {
         ...selectedReminder,
         time: reminderTime,
         days: reminderDays

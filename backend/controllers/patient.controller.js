@@ -4,13 +4,14 @@ const ApiResponse = require('../utils/apiResponse');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const MedicalFile = require('../models/MedicalFile');
+const Appointment = require('../models/Appointment');
+const Medication = require('../models/medication');
+const VitalSign = require('../models/vitalSign.model');
+const HealthMetric = require('../models/healthMetric.model');
+const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Get current patient's profile
-// @route   GET /api/v1/patients/profile
-// @access  Private (Patient only)
 exports.getPatientProfile = asyncHandler(async (req, res, next) => {
-  // req.user is attached by 'protect' middleware. We also need to ensure role is 'patient'.
-  // This role check will be done in the route definition using 'authorize' middleware.
+
   
   const patientUser = await User.findById(req.user.id).select('-password');
   if (!patientUser) {
@@ -24,8 +25,7 @@ exports.getPatientProfile = asyncHandler(async (req, res, next) => {
 
   const medicalFile = await MedicalFile.findOne({ patientId: req.user.id });
   if (!medicalFile) {
-    // This case should ideally not happen if registration creates a medical file.
-    // Consider creating one if it doesn't exist, or return an error.
+
     return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
   }
 
@@ -138,4 +138,110 @@ exports.updatePatientProfile = asyncHandler(async (req, res, next) => {
   };
 
   res.status(200).json(new ApiResponse(200, profile, 'Patient profile updated successfully.'));
+});
+
+// @desc    Get dashboard data
+// @route   GET /api/v1/patients/dashboard
+// @access  Private (Patient only)
+exports.getDashboardData = asyncHandler(async (req, res, next) => {
+  const patientId = req.user.id;
+
+  // Get upcoming appointments
+  const appointments = await Appointment.find({
+    patient: patientId,
+    date: { $gte: new Date() }
+  })
+    .sort({ date: 1 })
+    .limit(3)
+    .populate('doctor', 'name specialty');
+
+  // Get active medications
+  const medications = await Medication.find({
+    patient: patientId,
+    status: 'active'
+  })
+    .sort({ startDate: -1 })
+    .populate('prescribedBy', 'name');
+
+  // Get latest vital signs
+  const vitalSigns = await VitalSign.find({ patient: patientId })
+    .sort({ date: -1 })
+    .limit(1);
+
+  // Get health metrics
+  const healthMetrics = await HealthMetric.find({ patient: patientId })
+    .sort({ date: -1 })
+    .limit(1);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      appointments,
+      medications,
+      vitalSigns: vitalSigns[0] || null,
+      healthMetrics: healthMetrics[0] || null
+    }
+  });
+});
+
+// @desc    Get upcoming appointments
+// @route   GET /api/v1/patients/appointments/upcoming
+// @access  Private (Patient only)
+exports.getUpcomingAppointments = asyncHandler(async (req, res, next) => {
+  const appointments = await Appointment.find({
+    patient: req.user.id,
+    date: { $gte: new Date() }
+  })
+    .sort({ date: 1 })
+    .populate('doctor', 'name specialty');
+
+  res.status(200).json({
+    success: true,
+    data: appointments
+  });
+});
+
+// @desc    Get active medications
+// @route   GET /api/v1/patients/medications/active
+// @access  Private (Patient only)
+exports.getActiveMedications = asyncHandler(async (req, res, next) => {
+  const medications = await Medication.find({
+    patient: req.user.id,
+    status: 'active'
+  })
+    .sort({ startDate: -1 })
+    .populate('prescribedBy', 'name');
+
+  res.status(200).json({
+    success: true,
+    data: medications
+  });
+});
+
+// @desc    Get vital signs
+// @route   GET /api/v1/patients/vital-signs
+// @access  Private (Patient only)
+exports.getVitalSigns = asyncHandler(async (req, res, next) => {
+  const vitalSigns = await VitalSign.find({ patient: req.user.id })
+    .sort({ date: -1 })
+    .limit(30); // Get last 30 days of vital signs
+
+  res.status(200).json({
+    success: true,
+    data: vitalSigns
+  });
+});
+
+// @desc    Get health metrics
+// @route   GET /api/v1/patients/health-metrics
+// @access  Private (Patient only)
+exports.getHealthMetrics = asyncHandler(async (req, res, next) => {
+  const healthMetrics = await HealthMetric.find({ patient: req.user.id })
+    .sort({ date: -1 })
+    .limit(30); // Get last 30 days of health metrics
+
+  res.status(200).json({
+    success: true,
+    data: healthMetrics
+  });
 });

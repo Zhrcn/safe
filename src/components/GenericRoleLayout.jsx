@@ -101,12 +101,12 @@ export default function GenericRoleLayout({
         <>
             <Box className={`h-16 ${logoBg} flex items-center justify-between px-4 transition-colors duration-300`}>
                 <Box className="flex items-center">
-                  <Typography variant="h6" className="font-bold text-lg">
-                      {APP_NAME}
-                  </Typography>
-                  <Typography variant="subtitle2" className="ml-2 opacity-75">
-                      {title.replace('S.A.F.E', '').trim()}
-                  </Typography>
+                    <Typography variant="h6" className="font-bold text-lg bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                        {APP_NAME}
+                    </Typography>
+                    <Typography variant="subtitle2" className="ml-2 opacity-75">
+                        {title.replace('S.A.F.E', '').trim()}
+                    </Typography>
                 </Box>
                 {!isDesktop && (
                     <IconButton onClick={() => setMobileOpen(false)} className="text-white">
@@ -122,34 +122,41 @@ export default function GenericRoleLayout({
                         <Link
                             key={index}
                             href={item.link}
-                            className={`flex items-center p-3 mb-2 rounded-lg transition-all duration-200 ${isActive
-                                ? 'bg-primary text-primary-foreground shadow-md'
-                                : 'text-muted-foreground hover:bg-muted/40'
-                                }`}
+                            className={`flex items-center p-3 mb-2 rounded-lg transition-all duration-200 ${
+                                isActive
+                                    ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary-dark'
+                                    : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                            }`}
                         >
-                            {Icon && <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-white' : ''}`} />}
+                            {Icon && (
+                                <Box className={`mr-3 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
+                                    <Icon className={`h-5 w-5 ${isActive ? 'text-white' : ''}`} />
+                                </Box>
+                            )}
                             <span className="font-medium">{item.name}</span>
                             {isActive && (
-                              <ChevronRight className="ml-auto h-5 w-5" />
+                                <ChevronRight className="ml-auto h-5 w-5 animate-pulse" />
                             )}
                         </Link>
                     );
                 })}
             </Box>
             <Box className="p-4 mt-auto">
-              <Divider className="mb-4" />
-              <Box className="flex items-center p-2 rounded-lg hover:bg-muted/40 cursor-pointer" onClick={handleLogout}>
-                <LogOut className="mr-3 h-5 w-5 text-muted-foreground" />
-                <span className="font-medium text-muted-foreground">Logout</span>
-              </Box>
+                <Divider className="mb-4" />
+                <Box 
+                    className="flex items-center p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors duration-200"
+                    onClick={handleLogout}
+                >
+                    <LogOut className="mr-3 h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium text-muted-foreground">Logout</span>
+                </Box>
             </Box>
         </>
     );
 
-    // Define outer return statement for the component
     return (
         <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            {/* Simple fixed width sidebar */}
+            {/* Enhanced fixed width sidebar */}
             <Box 
                 sx={{
                     width: drawerWidth,
@@ -161,35 +168,40 @@ export default function GenericRoleLayout({
                     bgcolor: 'background.paper',
                     borderRight: '1px solid',
                     borderColor: 'divider',
-                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     boxShadow: 3,
-                    display: isDesktop ? 'block' : 'none'
+                    display: isDesktop ? 'block' : 'none',
+                    '&:hover': {
+                        boxShadow: 6,
+                    },
                 }}
-                className={sidebarBg}
+                className={`${sidebarBg} backdrop-blur-sm bg-opacity-95`}
             >
                 <SidebarContent />
             </Box>
             
-            {/* Mobile drawer */}
+            {/* Enhanced mobile drawer */}
             <Drawer
                 variant="temporary"
                 open={mobileOpen}
                 onClose={() => setMobileOpen(false)}
                 ModalProps={{
-                    keepMounted: true, // Better mobile performance
+                    keepMounted: true,
                 }}
                 sx={{
                     display: { xs: 'block', lg: 'none' },
                     '& .MuiDrawer-paper': {
                         boxSizing: 'border-box',
                         width: drawerWidth,
+                        backdropFilter: 'blur(8px)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     },
                 }}
             >
                 <SidebarContent />
             </Drawer>
             
-            {/* Main content with margin adjustment */}
+            {/* Enhanced main content */}
             <Box
                 component="main"
                 sx={{
@@ -199,147 +211,171 @@ export default function GenericRoleLayout({
                     overflow: 'auto',
                     marginLeft: isDesktop && sidebarOpen ? `${drawerWidth}px` : 0,
                     transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    backgroundColor: 'background.default',
+                    backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
+                    backgroundSize: '20px 20px',
                 }}
             >
-                {/* Header */}
-                <Box className={`${headerBg} text-white h-16 shadow-sm transition-colors duration-300`}>
-                    <Box className="flex items-center justify-between h-full px-4">
-                        <Box className="flex items-center">
-                            <IconButton color="inherit" onClick={toggleSidebar} className="mr-2">
-                                {mobileOpen || sidebarOpen ? <X /> : <MenuIcon />}
-                            </IconButton>
-                            <Typography variant="h6" className="font-bold hidden md:block">
-                                {title}
-                            </Typography>
-                        </Box>
+                {/* Enhanced header */}
+                <Box
+                    className={`${headerBg} sticky top-0 z-50 backdrop-blur-sm bg-opacity-95`}
+                    sx={{
+                        height: 64,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        px: 2,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                    }}
+                >
+                    <Box className="flex items-center">
+                        <IconButton
+                            color="inherit"
+                            aria-label="toggle sidebar"
+                            onClick={toggleSidebar}
+                            edge="start"
+                            sx={{ mr: 2 }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <Typography variant="h6" className="font-semibold">
+                            {sidebarItems.find(item => item.link === pathname)?.name || 'Dashboard'}
+                        </Typography>
+                    </Box>
+                    
+                    <Box className="flex items-center space-x-2">
+                        <IconButton
+                            color="inherit"
+                            onClick={toggleTheme}
+                            className="hover:bg-white/10"
+                        >
+                            {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </IconButton>
                         
-                        <Box className="flex items-center gap-1">
-                            {/* Theme Toggle */}
-                            <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}>
-                                <IconButton color="inherit" onClick={toggleTheme}>
-                                    {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                                </IconButton>
-                            </Tooltip>
-                            
-                            {/* Notifications */}
-                            <IconButton color="inherit" onClick={handleNotificationsMenuOpen}>
+                        <Tooltip title="Notifications">
+                            <IconButton
+                                color="inherit"
+                                onClick={handleNotificationsMenuOpen}
+                                className="hover:bg-white/10"
+                            >
                                 <Badge badgeContent={unreadNotificationsCount} color="error">
                                     <Bell size={20} />
                                 </Badge>
                             </IconButton>
-                            <Menu
-                              anchorEl={notificationsMenuAnchor}
-                              open={Boolean(notificationsMenuAnchor)}
-                              onClose={handleNotificationsMenuClose}
-                              PaperProps={{
-                                sx: {
-                                  boxShadow: 3,
-                                  borderRadius: 2,
-                                }
-                              }}
+                        </Tooltip>
+                        
+                        <Tooltip title="Profile">
+                            <IconButton
+                                color="inherit"
+                                onClick={handleProfileMenuOpen}
+                                className="hover:bg-white/10"
                             >
-                              <Box className="px-4 py-2 border-b">
-                                <Typography variant="subtitle1" className="font-medium">Notifications</Typography>
-                              </Box>
-                              {/* Use conditional rendering instead of returns */}
-                              {(() => {
-                                if (notifications.length === 0) {
-                                  return (
-                                    <Box className="p-4 text-center">
-                                      <Typography variant="body2" color="text.secondary">No notifications</Typography>
-                                    </Box>
-                                  );
-                                } else {
-                                  return notifications.map((notification) => (
-                                    <MenuItem 
-                                      key={notification.id} 
-                                      onClick={() => handleNotificationRead(notification.id)}
-                                      sx={{ 
-                                        py: 1.5,
-                                        px: 2,
-                                        backgroundColor: notification.read ? 'transparent' : 'action.hover'
-                                      }}
-                                    >
-                                      <Box>
-                                        <Typography variant="subtitle2" className="font-medium">
-                                          {notification.title}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" className="mt-0.5">
-                                          {notification.message}
-                                        </Typography>
-                                      </Box>
-                                    </MenuItem>
-                                  ));
-                                }
-                              })()}
-                              <Divider />
-                              <Box className="p-2 text-center">
-                                <Typography 
-                                  variant="body2" 
-                                  color="primary" 
-                                  className="cursor-pointer hover:underline"
-                                  onClick={handleNotificationsMenuClose}
+                                <Avatar
+                                    sx={{ width: 32, height: 32 }}
+                                    className="border-2 border-white"
                                 >
-                                  View all notifications
-                                </Typography>
-                              </Box>
-                            </Menu>
-                            
-                            {/* User Profile */}
-                            <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-                                <Avatar 
-                                  sx={{ width: 32, height: 32 }}
-                                  className="bg-primary-dark text-white"
-                                >
-                                  S
+                                    <User size={16} />
                                 </Avatar>
                             </IconButton>
-                            <Menu
-                              anchorEl={profileMenuAnchor}
-                              open={Boolean(profileMenuAnchor)}
-                              onClose={handleProfileMenuClose}
-                              PaperProps={{
-                                sx: {
-                                  boxShadow: 3,
-                                  width: 200,
-                                  borderRadius: 2,
-                                }
-                              }}
-                            >
-                              <Box className="px-4 py-3">
-                                <Typography variant="subtitle1" className="font-medium">Sarah Johnson</Typography>
-                                <Typography variant="body2" color="text.secondary">Patient</Typography>
-                              </Box>
-                              <Divider />
-                              <MenuItem onClick={handleProfileMenuClose}>
-                                <ListItemIcon>
-                                  <User size={18} />
-                                </ListItemIcon>
-                                Profile
-                              </MenuItem>
-                              <MenuItem onClick={handleProfileMenuClose}>
-                                <ListItemIcon>
-                                  <Settings size={18} />
-                                </ListItemIcon>
-                                Settings
-                              </MenuItem>
-                              <Divider />
-                              <MenuItem onClick={handleLogout}>
-                                <ListItemIcon>
-                                  <LogOut size={18} />
-                                </ListItemIcon>
-                                Logout
-                              </MenuItem>
-                            </Menu>
-                        </Box>
+                        </Tooltip>
                     </Box>
                 </Box>
-                
-                {/* Main Content */}
-                <Box className="flex-1 overflow-auto bg-background p-4 md:p-6 transition-colors duration-300">
+
+                {/* Enhanced content area */}
+                <Box
+                    sx={{
+                        p: 3,
+                        minHeight: 'calc(100vh - 64px)',
+                    }}
+                >
                     {children}
                 </Box>
             </Box>
+
+            {/* Enhanced menus */}
+            <Menu
+                anchorEl={profileMenuAnchor}
+                open={Boolean(profileMenuAnchor)}
+                onClose={handleProfileMenuClose}
+                PaperProps={{
+                    elevation: 3,
+                    sx: {
+                        mt: 1.5,
+                        minWidth: 200,
+                        borderRadius: 2,
+                        '& .MuiMenuItem-root': {
+                            px: 2,
+                            py: 1.5,
+                        },
+                    },
+                }}
+            >
+                <MenuItem onClick={() => { handleProfileMenuClose(); router.push('/patient/profile'); }}>
+                    <ListItemIcon>
+                        <User size={20} />
+                    </ListItemIcon>
+                    Profile
+                </MenuItem>
+                <MenuItem onClick={() => { handleProfileMenuClose(); router.push('/settings'); }}>
+                    <ListItemIcon>
+                        <Settings size={20} />
+                    </ListItemIcon>
+                    Settings
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout}>
+                    <ListItemIcon>
+                        <LogOut size={20} />
+                    </ListItemIcon>
+                    Logout
+                </MenuItem>
+            </Menu>
+
+            <Menu
+                anchorEl={notificationsMenuAnchor}
+                open={Boolean(notificationsMenuAnchor)}
+                onClose={handleNotificationsMenuClose}
+                PaperProps={{
+                    elevation: 3,
+                    sx: {
+                        mt: 1.5,
+                        width: 360,
+                        maxHeight: 400,
+                        borderRadius: 2,
+                    },
+                }}
+            >
+                <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="h6">Notifications</Typography>
+                </Box>
+                {notifications.length === 0 ? (
+                    <Box sx={{ p: 2, textAlign: 'center' }}>
+                        <Typography color="text.secondary">No notifications</Typography>
+                    </Box>
+                ) : (
+                    notifications.map((notification) => (
+                        <MenuItem
+                            key={notification.id}
+                            onClick={() => handleNotificationRead(notification.id)}
+                            sx={{
+                                py: 1.5,
+                                px: 2,
+                                borderBottom: 1,
+                                borderColor: 'divider',
+                                backgroundColor: notification.read ? 'inherit' : 'action.hover',
+                            }}
+                        >
+                            <Box sx={{ width: '100%' }}>
+                                <Typography variant="subtitle2">{notification.title}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {notification.message}
+                                </Typography>
+                            </Box>
+                        </MenuItem>
+                    ))
+                )}
+            </Menu>
         </Box>
     );
 }

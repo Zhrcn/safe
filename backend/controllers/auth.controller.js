@@ -135,13 +135,34 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
 
 
 exports.getMe = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+  let user = await User.findById(req.user.id).select('-password');
 
   if (!user) {
     return res.status(404).json(new ApiResponse(404, null, 'User not found.'));
   }
-  const userResponse = user.toObject();
-  delete userResponse.password;
+
+  // Convert the Mongoose document to a plain JavaScript object
+  // so we can add new properties easily.
+  let userResponse = user.toObject();
+
+  // Conditionally fetch and attach role-specific details
+  if (userResponse.role === 'patient') {
+    // Populate medicalFile if it's referenced in the Patient model
+    const patientDetails = await Patient.findOne({ user: user._id }).populate('medicalFile');
+    if (patientDetails) {
+      userResponse.patientInfo = patientDetails.toObject();
+    }
+  } else if (userResponse.role === 'doctor') {
+    const doctorDetails = await Doctor.findOne({ user: user._id });
+    if (doctorDetails) {
+      userResponse.doctorInfo = doctorDetails.toObject();
+    }
+  } else if (userResponse.role === 'pharmacist') {
+    const pharmacistDetails = await Pharmacist.findOne({ user: user._id });
+    if (pharmacistDetails) {
+      userResponse.pharmacistInfo = pharmacistDetails.toObject();
+    }
+  }
 
   res.status(200).json(new ApiResponse(200, { user: userResponse }, 'User data fetched successfully.'));
 });

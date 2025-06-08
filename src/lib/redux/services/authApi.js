@@ -48,10 +48,30 @@ export const authApi = createApi({
             }),
         }),
         verifyToken: builder.query({
-            query: () => ({ // Changed to object form to be consistent
-                url: `/auth/verify?timestamp=${Date.now()}`,
-                method: 'GET', // Explicitly GET
+            query: () => ({
+                url: '/auth/verify',
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             }),
+            transformResponse: (response) => {
+                console.log('Verify token response:', response);
+                // Handle both direct data and nested data structure
+                if (response && response.data) {
+                    return response.data;
+                }
+                return response;
+            },
+            transformErrorResponse: (response) => {
+                console.log('Verify token error:', response);
+                if (response && response.data) {
+                    return response.data;
+                }
+                return response;
+            },
+            // Add cache invalidation
+            providesTags: ['Auth'],
         }),
         resetPassword: builder.mutation({
             query: (data) => ({

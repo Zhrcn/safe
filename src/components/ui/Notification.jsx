@@ -9,55 +9,97 @@ import {
     AlertTriangle,
     Search
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const NotificationContext = createContext(undefined);
+const NotificationContext = createContext({
+    showNotification: () => {},
+    hideNotification: () => {},
+});
 
 export const useNotification = () => {
     const context = useContext(NotificationContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error('useNotification must be used within a NotificationProvider');
     }
     return context;
 };
 
-export const NotificationProvider = ({ children }) => {
+export function NotificationProvider({ children }) {
     const [notification, setNotification] = useState({
         open: false,
         message: '',
-        severity: 'info', 
+        severity: 'info',
+        duration: 6000,
+        position: { vertical: 'bottom', horizontal: 'right' },
     });
 
-    const showNotification = (message, severity = 'info') => {
+    const showNotification = ({
+        message,
+        severity = 'info',
+        duration = 6000,
+        position = { vertical: 'bottom', horizontal: 'right' },
+    }) => {
         setNotification({
             open: true,
             message,
             severity,
+            duration,
+            position,
         });
     };
 
     const hideNotification = () => {
-        setNotification({
-            ...notification,
-            open: false,
-        });
+        setNotification(prev => ({ ...prev, open: false }));
+    };
+
+    const severityStyles = {
+        success: 'bg-green-500 text-white',
+        error: 'bg-red-500 text-white',
+        warning: 'bg-yellow-500 text-gray-800',
+        info: 'bg-blue-500 text-white',
     };
 
     return (
-        <NotificationContext.Provider value={{ showNotification }}>
+        <NotificationContext.Provider value={{ showNotification, hideNotification }}>
             {children}
             <Snackbar
                 open={notification.open}
-                autoHideDuration={6000}
+                autoHideDuration={notification.duration}
                 onClose={hideNotification}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                anchorOrigin={notification.position}
+                sx={{
+                    '& .MuiSnackbar-root': {
+                        bottom: '24px !important',
+                    },
+                }}
             >
-                <Alert onClose={hideNotification} severity={notification.severity} variant="filled">
+                <Alert
+                    onClose={hideNotification}
+                    severity={notification.severity}
+                    className={cn(
+                        'w-full shadow-lg rounded-lg',
+                        severityStyles[notification.severity],
+                        'transition-all duration-300 ease-in-out transform',
+                        notification.open ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                    )}
+                    sx={{
+                        '& .MuiAlert-icon': {
+                            color: 'inherit',
+                        },
+                        '& .MuiAlert-message': {
+                            color: 'inherit',
+                        },
+                        '& .MuiAlert-action': {
+                            color: 'inherit',
+                        },
+                    }}
+                >
                     {notification.message}
                 </Alert>
             </Snackbar>
         </NotificationContext.Provider>
     );
-};
+}
 
 const getIcon = (type) => {
     switch (type) {
