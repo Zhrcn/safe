@@ -155,8 +155,15 @@ const medicalFileSchema = new mongoose.Schema({
   emergencyContact: {
     name: { type: String, trim: true },
     relationship: { type: String, trim: true },
-    phone: { type: String, trim: true }
-  }
+    phone: { type: String, trim: true },
+    email: { type: String, trim: true },
+  },
+  insuranceDetails: {
+    provider: { type: String, trim: true },
+    policyNumber: { type: String, trim: true },
+    groupNumber: { type: String, trim: true },
+    expiryDate: { type: Date },
+  },
 }, {
   timestamps: true,
   collection: 'MedicalFiles'
