@@ -1,3 +1,4 @@
+console.log('Loading Prescription model...');
 const mongoose = require('mongoose');
 
 const prescribedMedicationSchema = new mongoose.Schema({

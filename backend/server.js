@@ -9,6 +9,25 @@ const mainRouter = require('./routes/index');
 const errorHandler = require('./middleware/error.middleware'); 
 const morgan = require('morgan');
 
+// Require all Mongoose models to ensure they are registered
+// Prioritize models that are referenced by others
+require('./models/User');
+require('./models/Medicine'); // Required by Prescription, MedicalFile
+require('./models/Doctor'); // Required by Appointment, Consultation, Prescription
+require('./models/Pharmacist'); // Required by Prescription
+require('./models/Appointment');
+require('./models/Prescription'); // Should be before MedicalFile, Patient
+require('./models/Conversation');
+require('./models/Consultation');
+require('./models/healthMetric.model');
+require('./models/vitalSign.model');
+require('./models/Notification');
+
+// Models that reference others, or are more complex
+require('./models/MedicalFile');
+require('./models/Patient');
+require('./models/medication'); // references Patient, Doctor
+
 dotenv.config({ path: './config/config.env' });
 
 connectDB();

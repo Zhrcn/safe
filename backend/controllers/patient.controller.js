@@ -11,21 +11,24 @@ const HealthMetric = require('../models/healthMetric.model');
 const ErrorResponse = require('../utils/errorResponse');
 
 exports.getPatientProfile = asyncHandler(async (req, res, next) => {
-
-  
   const patientUser = await User.findById(req.user.id).select('-password');
   if (!patientUser) {
     return res.status(404).json(new ApiResponse(404, null, 'Patient user not found.'));
   }
 
-  const patientRecord = await Patient.findOne({ user: req.user.id });
+  // Find the patient record and populate the medicalFile reference
+  const patientRecord = await Patient.findOne({ user: req.user.id })
+                                    .populate('medicalFile'); // Populate the medicalFile
+
   if (!patientRecord) {
     return res.status(404).json(new ApiResponse(404, null, 'Patient record not found.'));
   }
 
-  const medicalFile = await MedicalFile.findOne({ patientId: req.user.id });
+  // Now, medicalFile is directly available through patientRecord
+  const medicalFile = patientRecord.medicalFile;
   if (!medicalFile) {
-
+    // This case means a patient record exists but has no associated medical file
+    // This should ideally not happen if seeding is correct, but handles the edge case.
     return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
   }
 
