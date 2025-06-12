@@ -43,8 +43,6 @@ exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
     availability: doctorRecord.availability,
     workingHours: doctorRecord.workingHours,
     professionalBio: doctorRecord.professionalBio,
-    // linkedPatients: doctorRecord.linkedPatients, // Consider how to handle this - IDs or populated?
-    // ratings: doctorRecord.ratings, // Likely a separate aggregation
   };
 
   res.status(200).json(new ApiResponse(200, profile, 'Doctor profile fetched successfully.'));
@@ -69,7 +67,6 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
     qualifications, // Array
     yearsOfExperience,
     consultationFee,
-    // availability, // This is complex, likely managed via separate endpoints/logic
     workingHours, // Array of objects: { dayOfWeek: String, startTime: String, endTime: String, isAvailable: Boolean }
     professionalBio,
   } = req.body;
@@ -92,7 +89,6 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   await updatedUser.save(); // This will trigger pre-save hooks like password hashing if password were changed
   updatedUser = updatedUser.toObject(); // Convert to plain object
   delete updatedUser.password; // Remove password
-
 
   // Update Doctor document
   const doctorFieldsToUpdate = {};
@@ -136,4 +132,30 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   };
 
   res.status(200).json(new ApiResponse(200, profile, 'Doctor profile updated successfully.'));
+});
+
+// @desc    Get all doctors
+// @route   GET /api/v1/doctors
+// @access  Private
+exports.getDoctors = asyncHandler(async (req, res) => {
+    const doctors = await Doctor.find({})
+        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio');
+
+    res.status(200).json(new ApiResponse(200, doctors, 'Doctors fetched successfully.'));
+});
+
+// @desc    Get single doctor
+// @route   GET /api/v1/doctors/:id
+// @access  Private
+exports.getDoctor = asyncHandler(async (req, res) => {
+    const doctor = await Doctor.findById(req.params.id)
+        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio');
+
+    if (!doctor) {
+        return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+    }
+
+    res.status(200).json(new ApiResponse(200, doctor, 'Doctor fetched successfully.'));
 });

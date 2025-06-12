@@ -121,8 +121,7 @@ const medicalFileSchema = new mongoose.Schema({
   },
   bloodType: {
     type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'],
-    default: 'Unknown'
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
   },
   status: { 
     type: String,
@@ -164,9 +163,36 @@ const medicalFileSchema = new mongoose.Schema({
     groupNumber: { type: String, trim: true },
     expiryDate: { type: Date },
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 }, {
   timestamps: true,
   collection: 'MedicalFiles'
+});
+
+// Update the updatedAt timestamp before saving
+medicalFileSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Calculate BMI before saving if weight and height are provided
+medicalFileSchema.pre('save', function(next) {
+  if (this.vitalSigns && this.vitalSigns.length > 0) {
+    const latestVitals = this.vitalSigns[this.vitalSigns.length - 1];
+    if (latestVitals.weight && latestVitals.height) {
+      // Convert height from cm to m and calculate BMI
+      const heightInMeters = latestVitals.height / 100;
+      latestVitals.bmi = (latestVitals.weight / (heightInMeters * heightInMeters)).toFixed(1);
+    }
+  }
+  next();
 });
 
 const MedicalFile = mongoose.model('MedicalFile', medicalFileSchema);

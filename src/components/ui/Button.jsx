@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button as MuiButton } from '@mui/material';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/styles';
 
 const Button = React.forwardRef(({
     className,

@@ -26,6 +26,8 @@ import {
     Tooltip
 } from '@mui/material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parseISO, addHours, isAfter } from 'date-fns';
 import {
     Calendar,
@@ -358,44 +360,48 @@ function EditAppointmentDialog({ open, appointment, onClose, onSave }) {
 
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
-                        <DatePicker
-                            label="Date"
-                            value={date}
-                            onChange={setDate}
-                            slotProps={{
-                                textField: {
-                                    fullWidth: true,
-                                    variant: 'outlined',
-                                    className: "bg-background",
-                                    InputProps: {
-                                        className: "text-foreground"
-                                    },
-                                    InputLabelProps: {
-                                        className: "text-muted-foreground"
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale="en-US">
+                            <DatePicker
+                                label="Date"
+                                value={date}
+                                onChange={setDate}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        variant: 'outlined',
+                                        className: "bg-background",
+                                        InputProps: {
+                                            className: "text-foreground"
+                                        },
+                                        InputLabelProps: {
+                                            className: "text-muted-foreground"
+                                        }
                                     }
-                                }
-                            }}
-                        />
+                                }}
+                            />
+                        </LocalizationProvider>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <TimePicker
-                            label="Time"
-                            value={time}
-                            onChange={setTime}
-                            slotProps={{
-                                textField: {
-                                    fullWidth: true,
-                                    variant: 'outlined',
-                                    className: "bg-background",
-                                    InputProps: {
-                                        className: "text-foreground"
-                                    },
-                                    InputLabelProps: {
-                                        className: "text-muted-foreground"
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale="en-US">
+                            <TimePicker
+                                label="Time"
+                                value={time}
+                                onChange={setTime}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        variant: 'outlined',
+                                        className: "bg-background",
+                                        InputProps: {
+                                            className: "text-foreground"
+                                        },
+                                        InputLabelProps: {
+                                            className: "text-muted-foreground"
+                                        }
                                     }
-                                }
-                            }}
-                        />
+                                }}
+                            />
+                        </LocalizationProvider>
                     </Grid>
                     <Grid item xs={12}>
                         <FormControl fullWidth variant="outlined">
@@ -767,44 +773,48 @@ function CreateAppointmentDialog({ open, onClose, onSave }) {
                         />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <DatePicker
-                            label="Date"
-                            value={date}
-                            onChange={setDate}
-                            slotProps={{
-                                textField: {
-                                    fullWidth: true,
-                                    variant: 'outlined',
-                                    className: "bg-background",
-                                    InputProps: {
-                                        className: "text-foreground"
-                                    },
-                                    InputLabelProps: {
-                                        className: "text-muted-foreground"
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale="en-US">
+                            <DatePicker
+                                label="Date"
+                                value={date}
+                                onChange={setDate}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        variant: 'outlined',
+                                        className: "bg-background",
+                                        InputProps: {
+                                            className: "text-foreground"
+                                        },
+                                        InputLabelProps: {
+                                            className: "text-muted-foreground"
+                                        }
                                     }
-                                }
-                            }}
-                        />
+                                }}
+                            />
+                        </LocalizationProvider>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <TimePicker
-                            label="Time"
-                            value={time}
-                            onChange={setTime}
-                            slotProps={{
-                                textField: {
-                                    fullWidth: true,
-                                    variant: 'outlined',
-                                    className: "bg-background",
-                                    InputProps: {
-                                        className: "text-foreground"
-                                    },
-                                    InputLabelProps: {
-                                        className: "text-muted-foreground"
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale="en-US">
+                            <TimePicker
+                                label="Time"
+                                value={time}
+                                onChange={setTime}
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        variant: 'outlined',
+                                        className: "bg-background",
+                                        InputProps: {
+                                            className: "text-foreground"
+                                        },
+                                        InputLabelProps: {
+                                            className: "text-muted-foreground"
+                                        }
                                     }
-                                }
-                            }}
-                        />
+                                }}
+                            />
+                        </LocalizationProvider>
                     </Grid>
                     <Grid item xs={12}>
                         <FormControl fullWidth variant="outlined">

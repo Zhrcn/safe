@@ -1,10 +1,8 @@
-// backend/middleware/auth.middleware.js
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('../utils/asyncHandler');
-const User = require('../models/User'); // Assuming User model is in ../models/User
+const User = require('../models/User');
 const ApiResponse = require('../utils/apiResponse');
 
-// Protect routes: Verify token and attach user to request
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
 
@@ -32,7 +30,6 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-// Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

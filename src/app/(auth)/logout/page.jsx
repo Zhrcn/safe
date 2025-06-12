@@ -2,22 +2,24 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout, selectIsAuthenticated } from '@/store/slices/authSlice';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 export default function LogoutPage() {
   const router = useRouter();
-  const { logout, isAuthenticated } = useAuth();
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   useEffect(() => {
     // If the user is authenticated, log them out
     if (isAuthenticated) {
-      logout();
+      dispatch(logout());
     } else {
       // If the user is already logged out, redirect to home page
       router.push('/');
     }
-  }, [isAuthenticated, logout, router]);
+  }, [isAuthenticated, dispatch, router]);
 
   return (
     <Box className="flex flex-col items-center justify-center min-h-screen">

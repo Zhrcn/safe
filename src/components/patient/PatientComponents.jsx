@@ -4,12 +4,14 @@ import React from 'react';
 import { Box, Typography, Paper, InputBase, IconButton, Tooltip, Card, CardContent, CardHeader, Chip } from '@mui/material';
 import { Search, TrendingUp, TrendingDown, Minus, Calendar, Clock, MapPin } from 'lucide-react';
 
+const DEFAULT_AVATAR_PATH = '/avatars/default-avatar.svg';
+
 /**
  * Container component for patient pages with consistent styling
  */
 export function PatientPageContainer({ children }) {
     return (
-        <Box className="container mx-auto px-4 py-8">
+        <Box className="container mx-auto px-4 py-2">
             {children}
         </Box>
     );

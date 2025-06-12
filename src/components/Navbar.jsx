@@ -17,12 +17,12 @@ import {
 import { Menu as MenuIcon, X } from 'lucide-react';
 import { useTheme } from './ThemeProviderWrapper';
 import Link from 'next/link';
-import { APP_NAME } from '@/app-config';
+import { APP_NAME } from '@/config/app-config';
 
 const pages = [
   { name: 'Features', href: '#features' },
   { name: 'Roles', href: '#roles' },
-  { name: 'About', href: '#about' }
+  { name: 'About', href: '#about' },
 ];
 
 function HideOnScroll(props) {
@@ -58,9 +58,11 @@ export default function Navbar() {
 
   return (
     <HideOnScroll>
-      <AppBar position="sticky" color="transparent" elevation={0} sx={{ 
+      <AppBar position="sticky" elevation={0} sx={{
         backdropFilter: 'blur(10px)',
-        backgroundColor: mode === 'dark' ? 'rgba(17, 24, 39, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: mode === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
       }}>
         <Container maxWidth="lg">
           <Toolbar disableGutters>
@@ -90,6 +92,7 @@ export default function Navbar() {
                 aria-haspopup="true"
                 onClick={handleOpenNavMenu}
                 color="inherit"
+                sx={{ color: 'text.primary' }}
               >
                 <MenuIcon />
               </IconButton>
@@ -109,11 +112,15 @@ export default function Navbar() {
                 onClose={handleCloseNavMenu}
                 sx={{
                   display: { xs: 'block', md: 'none' },
+                  '& .MuiPaper-root': {
+                    backgroundColor: mode === 'dark' ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(8px)',
+                  },
                 }}
               >
                 {pages.map((page) => (
                   <MenuItem key={page.name} onClick={() => scrollToSection(page.href)}>
-                    <Typography textAlign="center">{page.name}</Typography>
+                    <Typography textAlign="center" sx={{ color: 'text.primary' }}>{page.name}</Typography>
                   </MenuItem>
                 ))}
               </Menu>
@@ -143,7 +150,12 @@ export default function Navbar() {
                 <Button
                   key={page.name}
                   onClick={() => scrollToSection(page.href)}
-                  sx={{ mx: 1, color: 'text.primary', display: 'block' }}
+                  sx={{
+                    mx: 1,
+                    color: 'text.primary',
+                    display: 'block',
+                    '&:hover': { backgroundColor: 'primary.main', color: 'primary.contrastText' },
+                  }}
                 >
                   {page.name}
                 </Button>
@@ -152,20 +164,21 @@ export default function Navbar() {
 
             {/* Auth buttons */}
             <Box sx={{ flexGrow: 0 }}>
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                sx={{ mr: 1, display: { xs: 'none', sm: 'inline-flex' } }}
+              <Button
+                variant="outlined"
+                color="primary"
+                sx={{ mr: 1, display: { xs: 'none', sm: 'inline-flex' }, borderColor: 'primary.main', color: 'primary.main' }}
                 component={Link}
                 href="/login"
               >
                 Login
               </Button>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 color="primary"
                 component={Link}
                 href="/register"
+                sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
               >
                 Sign Up
               </Button>

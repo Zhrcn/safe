@@ -1,9 +1,11 @@
 'use client';
 
+import React from 'react';
 import { Box, Container, Typography, Button, Grid, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { APP_NAME, APP_DESCRIPTION } from '@/app-config';
+import Link from 'next/link';
+import { APP_NAME, APP_DESCRIPTION } from '@/config/app-config';
 
 export default function HeroSection() {
   const theme = useTheme();

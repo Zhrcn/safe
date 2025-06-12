@@ -1,40 +1,50 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import usePatient from '@/hooks/usePatient';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Typography, Box, TextField, InputAdornment, Avatar,
-    CircularProgress, Chip, Fade, Paper, Divider
+    CircularProgress, Chip, Fade, Paper, Divider,
+    Grid, Card, CardContent, List, ListItem, ListItemText,
+    Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Stack,
+    Tabs, Tab, Button, Alert
 } from '@mui/material';
 import {
     User, Mail, Phone, Home, CalendarDays, FileText, HeartPulse,
     DropletIcon, Edit, Save, X, AlertCircle, Check, MapPin,
-    Shield, Stethoscope, Pill, Clock
+    Shield, Stethoscope, Pill, Clock, BarChart3, ChevronRight,
+    History, FileImage, Download, FilePlus2
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import CardComponent from '@/components/ui/Card';
 import PageHeader from '@/components/patient/PageHeader';
 import FormLayout from '@/components/patient/FormLayout';
 import LoadingState from '@/components/patient/LoadingState';
 import ErrorState from '@/components/patient/ErrorState';
 import { useNotification } from '@/components/ui/Notification';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPatientProfile, updatePatientProfile } from '@/store/slices/patient/profileSlice';
+import AddAllergyDialog from '@/components/patient/medical-file/AddAllergyDialog';
+import AddChronicConditionDialog from '@/components/patient/medical-file/AddChronicConditionDialog';
+import AddMedicationDialog from '@/components/patient/medical-file/AddMedicationDialog';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { useGetProfileQuery, useUpdateProfileMutation } from '@/store/services/patient/patientApi';
 
-const API_BASE_URL = 'http://localhost:5001/api';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 function PatientProfilePage() {
-    const {
-        profile,
-        loading,
-        error,
-        updatePatientProfile,
-        fetchPatientData
-    } = usePatient();
-
+    const dispatch = useDispatch();
+    const { profile, loading, error } = useSelector((state) => state.patient);
     const { showNotification } = useNotification();
     const [editMode, setEditMode] = useState(false);
     const [saving, setSaving] = useState(false);
     const [activeSection, setActiveSection] = useState('personal');
+    
+    // Dialog states
+    const [allergyDialogOpen, setAllergyDialogOpen] = useState(false);
+    const [chronicConditionDialogOpen, setChronicConditionDialogOpen] = useState(false);
+    const [medicationDialogOpen, setMedicationDialogOpen] = useState(false);
     
     const [formData, setFormData] = useState({
         firstName: '',
@@ -50,9 +60,52 @@ function PatientProfilePage() {
         },
     });
 
+    const [emergencyContactData, setEmergencyContactData] = useState({
+        name: '',
+        relationship: '',
+        phone: '',
+        email: '',
+    });
+
+    const [insuranceData, setInsuranceData] = useState({
+        provider: '',
+        policyNumber: '',
+        groupNumber: '',
+        expiryDate: '',
+    });
+
+    const initializedProfileData = useRef(false);
+
+    // State for Medical File Tabs
+    const [medicalTabValue, setMedicalTabValue] = useState(0);
+    const medicalRecordCategories = [
+        { id: 0, label: 'Vital Signs', icon: HeartPulse },
+        { id: 1, label: 'Allergies', icon: DropletIcon },
+        { id: 2, label: 'Chronic Conditions', icon: Stethoscope },
+        { id: 3, label: 'Diagnoses', icon: HeartPulse },
+        { id: 4, label: 'Lab Results', icon: BarChart3 },
+        { id: 5, label: 'Imaging Reports', icon: FileImage },
+        { id: 6, label: 'Medications', icon: Pill },
+        { id: 7, label: 'Immunizations', icon: Shield },
+        { id: 8, label: 'Surgical History', icon: History },
+        { id: 9, label: 'Documents', icon: FileText },
+        { id: 10, label: 'Family History', icon: User },
+        { id: 11, label: 'Social History', icon: Home },
+        { id: 12, label: 'General History', icon: CalendarDays },
+    ];
+
+    // State for PDF Viewer
+    const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+    const [selectedPdf, setSelectedPdf] = useState(null);
+    const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [scale, setScale] = useState(1.2);
+
+    const { data: profileData, isLoading, error: apiError } = useGetProfileQuery();
+    const [updateProfile] = useUpdateProfileMutation();
+
     useEffect(() => {
-        if (!loading && !error && profile) {
-            const profileData = profile.data || profile;
+        if (!initializedProfileData.current && !loading && !error && profileData) {
             setFormData({
                 firstName: profileData.firstName || '',
                 lastName: profileData.lastName || '',
@@ -66,21 +119,34 @@ function PatientProfilePage() {
                     country: '',
                 },
             });
+            setEmergencyContactData(profileData.emergencyContact || {
+                name: '',
+                relationship: '',
+                phone: '',
+                email: '',
+            });
+            setInsuranceData(profileData.insuranceDetails || {
+                provider: '',
+                policyNumber: '',
+                groupNumber: '',
+                expiryDate: '',
+            });
+            initializedProfileData.current = true;
         }
-    }, [loading, error, profile]);
+    }, [loading, error, profileData]);
 
     const handleRefresh = () => {
-        fetchPatientData();
+        dispatch(fetchPatientProfile());
     };
 
     const handleEditToggle = () => {
         if (editMode) {
             setFormData({
-                firstName: profile.data?.firstName || profile.firstName || '',
-                lastName: profile.data?.lastName || profile.lastName || '',
-                email: profile.data?.email || profile.email || '',
-                phoneNumber: profile.data?.phoneNumber || profile.phoneNumber || '',
-                address: profile.data?.address || profile.address || {},
+                firstName: profileData?.firstName || '',
+                lastName: profileData?.lastName || '',
+                email: profileData?.email || '',
+                phoneNumber: profileData?.phoneNumber || '',
+                address: profileData?.address || {},
             });
         }
         setEditMode(!editMode);
@@ -105,588 +171,550 @@ function PatientProfilePage() {
         }
     };
 
+    const handleEmergencyContactChange = (e) => {
+        const { name, value } = e.target;
+        setEmergencyContactData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleInsuranceChange = (e) => {
+        const { name, value } = e.target;
+        setInsuranceData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
     const handleSave = async () => {
         if (!isFormValid()) {
-            showNotification({
-                message: 'Please fill in all required fields.',
-                severity: 'warning',
-            });
+            showNotification('Please fill in all required fields', 'error');
             return;
         }
+
+        setSaving(true);
         try {
-            setSaving(true);
-            
-            const payload = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber,
-                address: formData.address,
-            };
-            
-            const result = await updatePatientProfile(payload);
-            
-            if (result) {
-                showNotification({
-                    message: 'Profile updated successfully!',
-                    severity: 'success',
-                });
-                setEditMode(false);
-            } else {
-                throw new Error('Failed to update profile');
-            }
-        } catch (err) {
-            console.error('Error updating profile:', err);
-            const errorMessage = err.data?.message || err.message || 'Failed to update profile. Please try again.';
-            showNotification({
-                message: errorMessage,
-                severity: 'error',
-            });
+            await updateProfile({
+                ...formData,
+                emergencyContact: emergencyContactData,
+                insuranceDetails: insuranceData
+            }).unwrap();
+            showNotification('Profile updated successfully', 'success');
+            setEditMode(false);
+        } catch (error) {
+            showNotification(error.message || 'Failed to update profile', 'error');
         } finally {
             setSaving(false);
         }
     };
 
     const isFormValid = () => {
-        return (
-            formData.firstName?.trim() !== '' &&
-            formData.lastName?.trim() !== '' &&
-            formData.email?.trim() !== '' &&
-            formData.phoneNumber?.trim() !== '' &&
-            formData.address?.street?.trim() !== '' &&
-            formData.address?.city?.trim() !== '' &&
-            formData.address?.state?.trim() !== '' &&
-            formData.address?.zipCode?.trim() !== '' &&
-            formData.address?.country?.trim() !== ''
-        );
+        return formData.firstName && formData.lastName && formData.email && formData.phoneNumber;
     };
 
-    if (loading) {
-        return (
-            <PatientPageContainer>
-                <LoadingState message="Loading your profile..." />
-            </PatientPageContainer>
-        );
-    }
+    const getStatusText = (loadingState, errorState) => {
+        if (loadingState) return 'Loading...';
+        if (errorState) return 'Error loading data';
+        return '';
+    };
 
-    if (error) {
-        return (
-            <PatientPageContainer>
-                <ErrorState
-                    title="Error Loading Profile"
-                    message={error}
-                    onRetry={handleRefresh}
-                />
-            </PatientPageContainer>
-        );
-    }
+    const handleMedicalTabChange = (event, newValue) => {
+        setMedicalTabValue(newValue);
+    };
 
-    if (!profile) {
-        return (
-            <PatientPageContainer>
-                <ErrorState
-                    title="No Profile Data"
-                    message="No profile data available. Please try refreshing the page."
-                    onRetry={fetchPatientData}
-                />
-            </PatientPageContainer>
-        );
-    }
+    const onDocumentLoadSuccess = ({ numPages }) => {
+        setNumPages(numPages);
+    };
+
+    const changePage = (offset) => {
+        setPageNumber(prevPageNumber => prevPageNumber + offset);
+    };
+
+    const previousPage = () => changePage(-1);
+    const nextPage = () => changePage(1);
+
+    const handlePdfOpen = (document) => {
+        setSelectedPdf(document);
+        setPdfDialogOpen(true);
+    };
+
+    const handlePdfClose = () => {
+        setPdfDialogOpen(false);
+        setSelectedPdf(null);
+        setPageNumber(1);
+    };
 
     const renderProfileHeader = () => (
-        <Card className="relative overflow-hidden">
-            <Box className="flex flex-col md:flex-row items-center p-6 gap-6">
-                <Avatar 
-                    className="w-24 h-24 border-4 border-white shadow-lg"
-                    src={profile.data?.profilePictureUrl || profile.profilePictureUrl}
-                />
-                <Box className="flex-1 text-center md:text-left">
-                    <Typography variant="h4" className="font-bold mb-2">
-                        {profile.data?.firstName || profile.firstName} {profile.data?.lastName || profile.lastName}
+        <Box sx={{ mb: 4 }}>
+            <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                    <Avatar
+                        sx={{ width: 100, height: 100 }}
+                        src={profileData?.profilePicture}
+                    />
+                </Grid>
+                <Grid item xs>
+                    <Typography variant="h4" gutterBottom>
+                        {profileData?.firstName} {profileData?.lastName}
                     </Typography>
-                    <Typography variant="body1" className="text-muted-foreground mb-4">
-                        Patient ID: {profile.data?.userId || profile.userId}
+                    <Typography variant="body1" color="text.secondary">
+                        {profileData?.email}
                     </Typography>
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                        <Chip 
-                            label="Patient" 
-                            color="primary" 
-                            size="small" 
-                            className="bg-primary text-primary-foreground" 
-                        />
-                        <Chip 
-                            label={profile.data?.gender || profile.gender || 'Not specified'} 
-                            size="small" 
-                            className="bg-secondary text-secondary-foreground" 
-                        />
-                    </div>
-                </Box>
-                {!editMode && (
+                </Grid>
+                <Grid item>
                     <Button
-                        variant="outlined"
-                        startIcon={<Edit size={16} />}
+                        variant={editMode ? "contained" : "outlined"}
                         onClick={handleEditToggle}
-                        className="ml-auto"
+                        startIcon={editMode ? <Save /> : <Edit />}
                     >
-                        Edit Profile
+                        {editMode ? 'Save Changes' : 'Edit Profile'}
                     </Button>
-                )}
-            </Box>
-        </Card>
+                </Grid>
+            </Grid>
+        </Box>
     );
 
     const renderNavigation = () => (
-        <Box className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            {[
-                { id: 'personal', label: 'Personal Info', icon: User },
-                { id: 'medical', label: 'Medical Info', icon: Stethoscope },
-                { id: 'insurance', label: 'Insurance', icon: Shield },
-                { id: 'emergency', label: 'Emergency Contact', icon: AlertCircle },
-            ].map(({ id, label, icon: Icon }) => (
-                <Button
-                    key={id}
-                    variant={activeSection === id ? 'default' : 'outlined'}
-                    startIcon={<Icon size={16} />}
-                    onClick={() => setActiveSection(id)}
-                    className="whitespace-nowrap"
-                >
-                    {label}
-                </Button>
-            ))}
+        <Box sx={{ mb: 4 }}>
+            <Tabs
+                value={activeSection}
+                onChange={(e, newValue) => setActiveSection(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+            >
+                <Tab
+                    value="personal"
+                    label="Personal Information"
+                    icon={<User size={20} />}
+                    iconPosition="start"
+                />
+                <Tab
+                    value="medical"
+                    label="Medical Information"
+                    icon={<HeartPulse size={20} />}
+                    iconPosition="start"
+                />
+                <Tab
+                    value="insurance"
+                    label="Insurance"
+                    icon={<Shield size={20} />}
+                    iconPosition="start"
+                />
+                <Tab
+                    value="emergency"
+                    label="Emergency Contact"
+                    icon={<AlertCircle size={20} />}
+                    iconPosition="start"
+                />
+            </Tabs>
         </Box>
     );
 
     const renderPersonalInfo = () => (
-        <Fade in={activeSection === 'personal'}>
-            <div>
-                <FormLayout
-                    title="Personal Information"
-                    description="Update your personal details and contact information"
-                >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <TextField
-                            label="First Name"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <User size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Last Name"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <User size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Mail size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Phone Number"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Phone size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                    </div>
-
-                    <Divider className="my-6" />
-
-                    <Typography variant="h6" className="mb-4 font-semibold">
-                        Address Information
+        <FormLayout>
+            <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="First Name"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Last Name"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Phone Number"
+                        name="phoneNumber"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="h6" gutterBottom>
+                        Address
                     </Typography>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <TextField
-                            label="Street"
-                            name="address.street"
-                            value={formData.address.street}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Home size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="City"
-                            name="address.city"
-                            value={formData.address.city}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <MapPin size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="State"
-                            name="address.state"
-                            value={formData.address.state}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <MapPin size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Zip Code"
-                            name="address.zipCode"
-                            value={formData.address.zipCode}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <MapPin size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Country"
-                            name="address.country"
-                            value={formData.address.country}
-                            onChange={handleInputChange}
-                            fullWidth
-                            InputProps={{
-                                readOnly: !editMode,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <MapPin size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                    </div>
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="Street Address"
+                        name="address.street"
+                        value={formData.address.street}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="City"
+                        name="address.city"
+                        value={formData.address.city}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="State"
+                        name="address.state"
+                        value={formData.address.state}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="ZIP Code"
+                        name="address.zipCode"
+                        value={formData.address.zipCode}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Country"
+                        name="address.country"
+                        value={formData.address.country}
+                        onChange={handleInputChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+            </Grid>
+        </FormLayout>
+    );
 
-                    {editMode && (
-                        <Box className="flex justify-end gap-2 mt-6">
-                            <Button
-                                variant="outlined"
-                                startIcon={<X size={16} />}
-                                onClick={handleEditToggle}
-                                disabled={saving}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="default"
-                                startIcon={<Save size={16} />}
-                                onClick={handleSave}
-                                disabled={saving || !isFormValid()}
-                                loading={saving}
-                            >
-                                Save Changes
-                            </Button>
+    const renderMedicalInfo = () => {
+        const renderTabContent = () => {
+            switch (medicalTabValue) {
+                case 1: // Allergies
+                    return (
+                        <Box>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<FilePlus2 />}
+                                    onClick={() => setAllergyDialogOpen(true)}
+                                >
+                                    Add Allergy
+                                </Button>
+                            </Box>
+                            <List>
+                                {profileData?.allergies?.map((allergy, index) => (
+                                    <ListItem key={index}>
+                                        <ListItemText
+                                            primary={allergy.name}
+                                            secondary={`Severity: ${allergy.severity}${allergy.notes ? ` - ${allergy.notes}` : ''}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
                         </Box>
-                    )}
-                </FormLayout>
-            </div>
-        </Fade>
-    );
+                    );
+                case 2: // Chronic Conditions
+                    return (
+                        <Box>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<FilePlus2 />}
+                                    onClick={() => setChronicConditionDialogOpen(true)}
+                                >
+                                    Add Condition
+                                </Button>
+                            </Box>
+                            <List>
+                                {profileData?.chronicConditions?.map((condition, index) => (
+                                    <ListItem key={index}>
+                                        <ListItemText
+                                            primary={condition.name}
+                                            secondary={`Diagnosed: ${new Date(condition.diagnosisDate).toLocaleDateString()} - Status: ${condition.status}${condition.notes ? ` - ${condition.notes}` : ''}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    );
+                case 6: // Medications
+                    return (
+                        <Box>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<FilePlus2 />}
+                                    onClick={() => setMedicationDialogOpen(true)}
+                                >
+                                    Add Medication
+                                </Button>
+                            </Box>
+                            <List>
+                                {profileData?.medications?.map((medication, index) => (
+                                    <ListItem key={index}>
+                                        <ListItemText
+                                            primary={medication.name}
+                                            secondary={`${medication.dosage} - ${medication.frequency} - Prescribed by: ${medication.prescribedBy}${medication.notes ? ` - ${medication.notes}` : ''}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    );
+                default:
+                    return (
+                        <Box sx={{ p: 2 }}>
+                            <Typography variant="body1" color="text.secondary">
+                                Select a category to view details
+                            </Typography>
+                        </Box>
+                    );
+            }
+        };
 
-    const renderMedicalInfo = () => (
-        <Fade in={activeSection === 'medical'}>
-            <div>
-                <FormLayout
-                    title="Medical Information"
-                    description="View your medical details and history"
+        return (
+            <Box>
+                <Tabs
+                    value={medicalTabValue}
+                    onChange={handleMedicalTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
                 >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <TextField
-                            label="Date of Birth"
-                            value={profile.data?.dateOfBirth || profile.dateOfBirth ? 
-                                new Date(profile.data?.dateOfBirth || profile.dateOfBirth).toLocaleDateString() : 
-                                'Not specified'}
-                            fullWidth
-                            InputProps={{
-                                readOnly: true,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <CalendarDays size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
+                    {medicalRecordCategories.map((category) => (
+                        <Tab
+                            key={category.id}
+                            icon={<category.icon size={20} />}
+                            label={category.label}
+                            iconPosition="start"
                         />
-                        <TextField
-                            label="Gender"
-                            value={profile.data?.gender || profile.gender || 'Not specified'}
-                            fullWidth
-                            InputProps={{
-                                readOnly: true,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <User size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                    </div>
-
-                    <Divider className="my-6" />
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <TextField
-                            label="Medical Conditions"
-                            value={(profile.data?.medicalFile?.medicalConditions || profile.medicalFile?.medicalConditions || []).join(', ') || 'None'}
-                            fullWidth
-                            multiline
-                            rows={2}
-                            InputProps={{
-                                readOnly: true,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <HeartPulse size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                        <TextField
-                            label="Allergies"
-                            value={(profile.data?.medicalFile?.allergies || profile.medicalFile?.allergies || []).join(', ') || 'None'}
-                            fullWidth
-                            multiline
-                            rows={2}
-                            InputProps={{
-                                readOnly: true,
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <AlertCircle size={20} className="text-muted-foreground" />
-                                    </InputAdornment>
-                                ) 
-                            }}
-                        />
-                    </div>
-                </FormLayout>
-            </div>
-        </Fade>
-    );
+                    ))}
+                </Tabs>
+                <Box sx={{ mt: 2 }}>
+                    {renderTabContent()}
+                </Box>
+            </Box>
+        );
+    };
 
     const renderInsuranceInfo = () => (
-        <Fade in={activeSection === 'insurance'}>
-            <div>
-                <FormLayout
-                    title="Insurance Information"
-                    description="View your insurance details"
-                >
-                    {profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <TextField
-                                label="Insurance Provider"
-                                value={(profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails).provider}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Shield size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Policy Number"
-                                value={(profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails).policyNumber}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <FileText size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Group Number"
-                                value={(profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails).groupNumber}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <FileText size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Expiry Date"
-                                value={(profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails).expiryDate ? 
-                                    new Date((profile.data?.medicalFile?.insuranceDetails || profile.medicalFile?.insuranceDetails).expiryDate).toLocaleDateString() : 
-                                    'N/A'}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Clock size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <Box className="text-center p-6 bg-muted/10 rounded-lg">
-                            <Shield size={48} className="mx-auto text-muted-foreground mb-4" />
-                            <Typography variant="h6" className="mb-2">
-                                No Insurance Information
-                            </Typography>
-                            <Typography variant="body2" className="text-muted-foreground">
-                                Your insurance details have not been added yet.
-                            </Typography>
-                        </Box>
-                    )}
-                </FormLayout>
-            </div>
-        </Fade>
+        <FormLayout>
+            <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Insurance Provider"
+                        name="provider"
+                        value={insuranceData.provider}
+                        onChange={handleInsuranceChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Policy Number"
+                        name="policyNumber"
+                        value={insuranceData.policyNumber}
+                        onChange={handleInsuranceChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Group Number"
+                        name="groupNumber"
+                        value={insuranceData.groupNumber}
+                        onChange={handleInsuranceChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Expiry Date"
+                        name="expiryDate"
+                        type="date"
+                        value={insuranceData.expiryDate}
+                        onChange={handleInsuranceChange}
+                        disabled={!editMode}
+                        required
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                    />
+                </Grid>
+            </Grid>
+        </FormLayout>
     );
 
     const renderEmergencyContact = () => (
-        <Fade in={activeSection === 'emergency'}>
-            <div>
-                <FormLayout
-                    title="Emergency Contact"
-                    description="View your emergency contact information"
-                >
-                    {profile.data?.medicalFile?.emergencyContact || profile.medicalFile?.emergencyContact ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <TextField
-                                label="Contact Name"
-                                value={(profile.data?.medicalFile?.emergencyContact || profile.medicalFile?.emergencyContact).name}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <User size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Relationship"
-                                value={(profile.data?.medicalFile?.emergencyContact || profile.medicalFile?.emergencyContact).relationship}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <User size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Phone Number"
-                                value={(profile.data?.medicalFile?.emergencyContact || profile.medicalFile?.emergencyContact).phone}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Phone size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                            <TextField
-                                label="Email"
-                                value={(profile.data?.medicalFile?.emergencyContact || profile.medicalFile?.emergencyContact).email}
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Mail size={20} className="text-muted-foreground" />
-                                        </InputAdornment>
-                                    ) 
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <Box className="text-center p-6 bg-muted/10 rounded-lg">
-                            <AlertCircle size={48} className="mx-auto text-muted-foreground mb-4" />
-                            <Typography variant="h6" className="mb-2">
-                                No Emergency Contact
-                            </Typography>
-                            <Typography variant="body2" className="text-muted-foreground">
-                                Your emergency contact information has not been added yet.
-                            </Typography>
-                        </Box>
-                    )}
-                </FormLayout>
-            </div>
-        </Fade>
+        <FormLayout>
+            <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Contact Name"
+                        name="name"
+                        value={emergencyContactData.name}
+                        onChange={handleEmergencyContactChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Relationship"
+                        name="relationship"
+                        value={emergencyContactData.relationship}
+                        onChange={handleEmergencyContactChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Phone Number"
+                        name="phone"
+                        value={emergencyContactData.phone}
+                        onChange={handleEmergencyContactChange}
+                        disabled={!editMode}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={emergencyContactData.email}
+                        onChange={handleEmergencyContactChange}
+                        disabled={!editMode}
+                    />
+                </Grid>
+            </Grid>
+        </FormLayout>
     );
+
+    const renderContent = () => {
+        if (isLoading) {
+            return <LoadingState />;
+        }
+
+        if (apiError) {
+            return <ErrorState message={apiError.data?.message || 'Failed to load profile'} onRetry={handleRefresh} />;
+        }
+
+        return (
+            <Box>
+                {renderProfileHeader()}
+                {renderNavigation()}
+                <Box sx={{ mt: 4 }}>
+                    {activeSection === 'personal' && renderPersonalInfo()}
+                    {activeSection === 'medical' && renderMedicalInfo()}
+                    {activeSection === 'insurance' && renderInsuranceInfo()}
+                    {activeSection === 'emergency' && renderEmergencyContact()}
+                </Box>
+            </Box>
+        );
+    };
 
     return (
         <PatientPageContainer>
-            <PageHeader
-                title="Profile"
-                description="View and manage your personal information"
-                breadcrumbs={[{ label: 'Profile', href: '/patient/profile' }]}
+            {renderContent()}
+            
+            {/* Dialogs */}
+            <AddAllergyDialog
+                open={allergyDialogOpen}
+                onClose={() => setAllergyDialogOpen(false)}
             />
-
-            {renderProfileHeader()}
-            {renderNavigation()}
-
-            <div className="space-y-6">
-                {renderPersonalInfo()}
-                {renderMedicalInfo()}
-                {renderInsuranceInfo()}
-                {renderEmergencyContact()}
-            </div>
+            <AddChronicConditionDialog
+                open={chronicConditionDialogOpen}
+                onClose={() => setChronicConditionDialogOpen(false)}
+            />
+            <AddMedicationDialog
+                open={medicationDialogOpen}
+                onClose={() => setMedicationDialogOpen(false)}
+            />
+            
+            {/* PDF Viewer Dialog */}
+            <Dialog
+                open={pdfDialogOpen}
+                onClose={handlePdfClose}
+                maxWidth="lg"
+                fullWidth
+            >
+                <DialogTitle>
+                    {selectedPdf?.name}
+                    <IconButton
+                        onClick={handlePdfClose}
+                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                    >
+                        <X />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                        <Button onClick={previousPage} disabled={pageNumber <= 1}>
+                            Previous
+                        </Button>
+                        <Typography sx={{ mx: 2 }}>
+                            Page {pageNumber} of {numPages}
+                        </Typography>
+                        <Button onClick={nextPage} disabled={pageNumber >= numPages}>
+                            Next
+                        </Button>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Document
+                            file={selectedPdf?.url}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                        >
+                            <Page
+                                pageNumber={pageNumber}
+                                scale={scale}
+                            />
+                        </Document>
+                    </Box>
+                </DialogContent>
+            </Dialog>
         </PatientPageContainer>
     );
 }

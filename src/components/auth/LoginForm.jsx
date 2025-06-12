@@ -18,9 +18,11 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAppDispatch } from '@/store/hooks';
+import { useLoginMutation } from '@/store/services/user/authApi';
+import { setCredentials, setError, clearError } from '@/store/slices/user/authSlice';
 import { motion } from 'framer-motion';
-import { ROLE_ROUTES } from '@/app-config';
+import { ROLE_ROUTES } from '@/config/app-config';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -28,11 +30,11 @@ const loginSchema = z.object({
 });
 
 export default function LoginForm({ role, redirectUrl }) {
-    const { login } = useAuth();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
-    const [showPassword, setShowPassword] = useState(false);
+    const dispatch = useAppDispatch();
     const router = useRouter();
+    const [login, { isLoading }] = useLoginMutation();
+    const [error, setLocalError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         register,
@@ -44,92 +46,126 @@ export default function LoginForm({ role, redirectUrl }) {
 
     const onSubmit = async (data) => {
         try {
-            setIsSubmitting(true);
-            setError(null);
+            setLocalError(null);
+            dispatch(clearError());
 
-            const success = await login(data.email, data.password, role);
+            const result = await login({
+                ...data,
+                role
+            }).unwrap();
 
-            if (success) {
-                console.log(`Login successful! Redirecting to ${redirectUrl || ROLE_ROUTES[role].dashboard}`);
-                router.push(redirectUrl || ROLE_ROUTES[role].dashboard);
+            if (result.success && result.data) {
+                dispatch(setCredentials({
+                    user: result.data.user,
+                    token: result.data.token
+                }));
+
+                // Navigate based on role
+                const userRole = result.data.user.role.toLowerCase();
+                router.push(redirectUrl || ROLE_ROUTES[userRole]?.dashboard || '/dashboard');
+            } else {
+                throw new Error(result.message || 'Login failed');
             }
         } catch (err) {
             console.error('Login error:', err);
-            setError(err instanceof Error ? err.message : 'An error occurred during login');
-        } finally {
-            setIsSubmitting(false);
+            const errorMessage = err.data?.message || err.message || 'An error occurred during login';
+            setLocalError(errorMessage);
+            dispatch(setError(errorMessage));
         }
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
-
     return (
-        <motion.div
+        <Box
+            component={motion.div}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '100%',
+                maxWidth: 400,
+                mx: 'auto',
+                p: 3
+            }}
         >
-            <Paper elevation={3} className="p-8 max-w-md mx-auto">
-                <Typography variant="h5" component="h1" gutterBottom className="text-center">
-                    Login as {role.charAt(0).toUpperCase() + role.slice(1)}
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 4,
+                    width: '100%',
+                    borderRadius: 2,
+                    bgcolor: 'background.paper'
+                }}
+            >
+                <Typography variant="h5" component="h1" gutterBottom align="center">
+                    Welcome Back
                 </Typography>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {error && (
+                    <Alert 
+                        severity="error" 
+                        sx={{ mb: 2 }}
+                        onClose={() => {
+                            setLocalError(null);
+                            dispatch(clearError());
+                        }}
+                    >
+                        {error}
+                    </Alert>
+                )}
+
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <TextField
-                        {...register('email')}
-                        label="Email"
                         fullWidth
+                        label="Email"
+                        type="email"
+                        margin="normal"
                         error={!!errors.email}
                         helperText={errors.email?.message}
-                        disabled={isSubmitting}
+                        {...register('email')}
                     />
 
                     <TextField
-                        {...register('password')}
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
                         fullWidth
+                        label="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        margin="normal"
                         error={!!errors.password}
                         helperText={errors.password?.message}
-                        disabled={isSubmitting}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
                                     <IconButton
-                                        aria-label="toggle password visibility"
-                                        onClick={togglePasswordVisibility}
+                                        onClick={() => setShowPassword(!showPassword)}
                                         edge="end"
                                     >
                                         {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </IconButton>
                                 </InputAdornment>
-                            )
+                            ),
                         }}
+                        {...register('password')}
                     />
 
-                    {error && (
-                        <Alert severity="error" className="mt-4">
-                            {error}
-                        </Alert>
-                    )}
-
                     <Button
+                        fullWidth
                         type="submit"
                         variant="contained"
-                        fullWidth
-                        disabled={isSubmitting}
-                        className="mt-6"
+                        color="primary"
+                        size="large"
+                        disabled={isLoading}
+                        sx={{ mt: 3 }}
                     >
-                        {isSubmitting ? (
+                        {isLoading ? (
                             <CircularProgress size={24} color="inherit" />
                         ) : (
-                            'Login'
+                            'Sign In'
                         )}
                     </Button>
                 </form>
             </Paper>
-        </motion.div>
+        </Box>
     );
 } 

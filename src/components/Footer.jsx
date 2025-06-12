@@ -1,8 +1,9 @@
 'use client';
 
+import React from 'react';
 import { Box, Container, Grid, Typography, Link, IconButton, Divider, useTheme } from '@mui/material';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
-import { APP_NAME } from '@/app-config';
+import { APP_NAME } from '@/config/app-config';
 
 const socialLinks = [
   { icon: Facebook, href: '#', label: 'Facebook' },
@@ -27,7 +28,7 @@ const legalLinks = [
   { name: 'HIPAA Compliance', href: '#' },
 ];
 
-export default function Footer() {
+const Footer = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   
@@ -251,4 +252,6 @@ export default function Footer() {
       </Container>
     </Box>
   );
-} 
+};
+
+export default Footer; 

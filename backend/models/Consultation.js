@@ -1,68 +1,57 @@
 const mongoose = require('mongoose');
 
-const consultationSchema = new mongoose.Schema({
-  patientId: {
+const ConsultationSchema = new mongoose.Schema({
+  patient: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Patient',
     required: true
   },
-  doctorId: {
+  doctor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
   reason: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Please provide a reason for the consultation']
   },
-  preferredResponseTime: {
+  preferredTime: {
     type: String,
-    enum: ['24hours', '48hours', 'oneweek'],
-    default: '48hours'
+    required: [true, 'Please provide a preferred time']
   },
   status: {
     type: String,
-    enum: ['pending', 'inProgress', 'completed', 'cancelled'],
-    default: 'pending'
+    enum: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
+    default: 'Pending'
   },
-  attachments: [{ 
-    fileName: String,
-    fileType: String, 
-    fileSize: Number, 
-    fileUrl: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
+  response: {
+    type: String
+  },
+  attachments: [{
+    name: String,
+    url: String,
+    type: String,
+    size: Number
   }],
-  messages: [{
-    sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    content: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now
-    },
-    attachments: [{
-      fileName: String,
-      fileType: String,
-      fileSize: Number,
-      fileUrl: String
-    }]
-  }],
+  requestedAt: {
+    type: Date,
+    default: Date.now
+  },
+  startedAt: {
+    type: Date
+  },
+  completedAt: {
+    type: Date
+  },
+  cancelledAt: {
+    type: Date
+  },
+  cancelledBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 }, {
-  timestamps: true,
-  collection: 'Consultations'
+  timestamps: true
 });
 
-const Consultation = mongoose.model('Consultation', consultationSchema);
-
-module.exports = Consultation;
+module.exports = mongoose.model('Consultation', ConsultationSchema);

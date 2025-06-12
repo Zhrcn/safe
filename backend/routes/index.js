@@ -8,6 +8,7 @@ const pharmacistRoutes = require('./pharmacist.routes');
 const appointmentRoutes = require('./appointment.routes'); 
 const notificationRoutes = require('./notification.routes');
 const medicalFileRoutes = require('./medicalFile.routes');
+const consultationRoutes = require('./consultation.routes');
 
 
 router.use('/auth', authRoutes);
@@ -23,6 +24,8 @@ router.use('/appointments', appointmentRoutes);
 router.use('/notifications', notificationRoutes);
 
 router.use('/medical-files', medicalFileRoutes);
+
+router.use('/consultations', consultationRoutes);
 
 router.get('/', (req, res) => {
   res.send('SAFE App Backend API v1');

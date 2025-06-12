@@ -1,75 +1,97 @@
 'use client';
 
-import { Typography, Box, Paper, Card, CardContent, List, ListItem, ListItemText, Divider } from '@mui/material';
-import { Pill, CalendarDays, User } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { api } from '@/lib/services/api';
+import React from 'react';
+import {
+    Box,
+    Typography,
+    Grid,
+    Card,
+    CardContent,
+    CircularProgress,
+    Alert,
+    Chip,
+} from '@mui/material';
+import { useGetPrescriptionsQuery } from '@/store/services/patient/patientApi';
 
-export default function PatientPrescriptionsPage() {
-  const [prescriptions, setPrescriptions] = useState([]);
-
-  useEffect(() => {
-    async function fetchPrescriptions() {
-      try {
-        const data = await api.get('/prescriptions');
-        setPrescriptions(data);
-      } catch (error) {
-        setPrescriptions([]);
-      }
-    }
-    fetchPrescriptions();
-  }, []);
-
-  return (
-    <Box>
-      <Paper elevation={3} sx={{ p: 3 }} className="bg-card text-card-foreground rounded-lg shadow-md min-h-[80vh]">
-        <Typography variant="h4" gutterBottom className="text-foreground font-bold">
-          Prescriptions
-        </Typography>
-        <Typography paragraph className="text-muted-foreground mb-6">
-          View your prescription history.
-        </Typography>
-
-        <Card className="shadow-lg rounded-lg border border-border bg-card">
-          <CardContent>
-            <Box className="flex items-center mb-4">
-              <Pill size={28} className="mr-4 text-primary" />
-              <Typography variant="h6" component="div" className="font-semibold text-foreground">Prescription History</Typography>
+const PrescriptionCard = ({ prescription }) => (
+    <Card>
+        <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                <Typography variant="h6">
+                    {prescription.medicationName}
+                </Typography>
+                <Chip
+                    label={prescription.status}
+                    color={
+                        prescription.status === 'active'
+                            ? 'success'
+                            : prescription.status === 'completed'
+                            ? 'info'
+                            : 'error'
+                    }
+                    size="small"
+                />
             </Box>
+            <Typography color="textSecondary" gutterBottom>
+                Prescribed by: {prescription.doctorName}
+            </Typography>
+            <Typography color="textSecondary" gutterBottom>
+                Date: {prescription.date}
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+                Dosage: {prescription.dosage}
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+                Frequency: {prescription.frequency}
+            </Typography>
+            <Typography variant="body2">
+                Instructions: {prescription.instructions}
+            </Typography>
+        </CardContent>
+    </Card>
+);
 
-            <List className="border border-border rounded-md overflow-hidden">
-              {prescriptions.length === 0 ? (
-                <ListItem>
-                  <ListItemText primary="No prescriptions found on record." className="text-muted-foreground" />
-                </ListItem>
-              ) : (
-                prescriptions.map((prescription, index) => (
-                  <React.Fragment key={prescription.id}>
-                    <ListItem className="hover:bg-muted transition-colors duration-200">
-                      <ListItemText
-                        primaryTypographyProps={{ component: 'div' }}
-                        primary={<Typography variant="body1" component="div" className="font-semibold text-foreground">{prescription.medication}</Typography>}
-                        secondaryTypographyProps={{ component: 'div' }}
-                        secondary={
-                          <Box className="flex flex-col mt-1 text-muted-foreground">
-                            <Typography variant="body2" component="div"><strong>Dosage:</strong> {prescription.dosage}</Typography>
-                            <Typography variant="body2" component="div"><strong>Frequency:</strong> {prescription.frequency}</Typography>
-                            <Typography variant="body2" component="div" className="flex items-center"><CalendarDays size={16} className="mr-1 text-muted-foreground" /><strong>Issue Date:</strong> {prescription.issueDate}</Typography>
-                            <Typography variant="body2" component="div" className="flex items-center"><User size={16} className="mr-1 text-muted-foreground" /><strong>Prescribed By:</strong> {prescription.prescribingDoctor}</Typography>
-                          </Box>
-                        }
-                      />
-                    </ListItem>{index < prescriptions.length - 1 && <Divider className="!border-border" />}
-                  </React.Fragment>
-                ))
-              )}
-            </List>
-          </CardContent>
-        </Card>
+const PrescriptionsPage = () => {
+    const { data: prescriptions, isLoading, error } = useGetPrescriptionsQuery();
 
-        {/* Add search/filter or other actions here later */}
+    if (isLoading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+                <CircularProgress />
+            </Box>
+        );
+    }
 
-      </Paper>
-    </Box>
-  );
-} 
+    if (error) {
+        return (
+            <Box p={3}>
+                <Alert severity="error">
+                    {error.data?.message || 'Failed to load prescriptions'}
+                </Alert>
+            </Box>
+        );
+    }
+
+    return (
+        <Box p={3}>
+            <Typography variant="h4" gutterBottom>
+                Prescriptions
+            </Typography>
+
+            <Grid container spacing={3}>
+                {prescriptions?.map((prescription) => (
+                    <Grid item xs={12} sm={6} md={4} key={prescription.id}>
+                        <PrescriptionCard prescription={prescription} />
+                    </Grid>
+                ))}
+                {(!prescriptions || prescriptions.length === 0) && (
+                    <Grid item xs={12}>
+                        <Alert severity="info">No prescriptions found</Alert>
+                    </Grid>
+                )}
+            </Grid>
+        </Box>
+    );
+};
+
+export default PrescriptionsPage; 

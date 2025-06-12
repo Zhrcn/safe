@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
 import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/styles';
 
 export default function PageHeader({
     title,
@@ -11,7 +11,7 @@ export default function PageHeader({
     className,
 }) {
     return (
-        <Box className={cn('mb-6', className)}>
+        <Box className={cn('mb-2', className)}>
             <Breadcrumbs
                 separator={<ChevronRight size={16} className="text-muted-foreground" />}
                 aria-label="breadcrumb"

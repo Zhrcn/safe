@@ -1,0 +1,6 @@
+export const NOTIFICATION_CONFIG = {
+  ENABLE_EMAIL: true,
+  ENABLE_SMS: false,
+  ENABLE_PUSH: true,
+  REMINDER_HOURS_BEFORE: 24,
+}; 

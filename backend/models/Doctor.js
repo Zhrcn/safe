@@ -65,8 +65,9 @@ const DoctorSchema = new mongoose.Schema({
   collection: 'Doctors'
 });
 
-DoctorSchema.index({ specialty: 1 });
+DoctorSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
-const Doctor = mongoose.model('Doctor', DoctorSchema);
-
-module.exports = Doctor;
+module.exports = mongoose.model('Doctor', DoctorSchema);

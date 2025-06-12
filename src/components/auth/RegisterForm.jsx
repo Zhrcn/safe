@@ -25,9 +25,9 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { ROLES, ROLE_ROUTES } from '@/app-config';
+import { ROLES, ROLE_ROUTES } from '@/config/app-config';
 
 const baseSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -300,76 +300,35 @@ export default function RegisterForm() {
             setIsSubmitting(true);
             setError(null);
 
-            const registrationData = {
-                name: formValues.name,
-                email: formValues.email,
-                password: formValues.password,
-                role: formValues.role || selectedRole,
-                ...data
+            // Clean up the data object
+            const cleanObject = (obj) => {
+                const cleaned = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    if (value !== null && value !== undefined && value !== '') {
+                        if (typeof value === 'object' && !Array.isArray(value)) {
+                            const cleanedNested = cleanObject(value);
+                            if (Object.keys(cleanedNested).length > 0) {
+                                cleaned[key] = cleanedNested;
+                            }
+                        } else {
+                            cleaned[key] = value;
+                        }
+                    }
+                }
+                return cleaned;
             };
 
-            delete registrationData.confirmPassword;
+            const cleanedData = cleanObject(data);
+            const result = await registerUser(cleanedData);
 
-            const requiredFields = ['name', 'email', 'password', 'role'];
-            const missingFields = requiredFields.filter(field => !registrationData[field]);
-
-            if (missingFields.length > 0) {
-                throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-            }
-
-            if (registrationData.profile) {
-                Object.keys(registrationData.profile).forEach(key => {
-                    if (registrationData.profile[key] === '') {
-                        registrationData.profile[key] = undefined;
-                    }
-                });
-
-                if (Object.keys(registrationData.profile).every(key =>
-                    registrationData.profile[key] === undefined)) {
-                    delete registrationData.profile;
-                }
-            }
-
-            const roleProfileKey = `${selectedRole.toLowerCase()}Profile`;
-            if (registrationData[roleProfileKey]) {
-                const cleanObject = (obj) => {
-                    if (obj && typeof obj === 'object') {
-                        Object.keys(obj).forEach(key => {
-                            if (typeof obj[key] === 'object') {
-                                cleanObject(obj[key]);
-                                if (obj[key] && Object.keys(obj[key]).length === 0) {
-                                    delete obj[key];
-                                }
-                            } else if (obj[key] === '') {
-                                obj[key] = undefined;
-                            }
-                        });
-                    }
-                };
-
-                cleanObject(registrationData[roleProfileKey]);
-
-                if (Object.keys(registrationData[roleProfileKey]).length === 0) {
-                    delete registrationData[roleProfileKey];
-                }
-            }
-
-            console.log('Final registration data:', JSON.stringify(registrationData, null, 2));
-
-            const success = await registerUser(registrationData);
-
-            if (success) {
-                console.log(`Registration successful! Redirecting to ${ROLE_ROUTES[registrationData.role].dashboard}`);
-                router.push(ROLE_ROUTES[registrationData.role].dashboard);
+            if (result.success) {
+                router.push(ROLE_ROUTES[data.role].dashboard);
             } else {
-                setActiveStep(0);
+                setError(result.error);
             }
         } catch (err) {
             console.error('Registration error:', err);
-            if (err.response?.data?.details) {
-                console.error('Validation details:', JSON.stringify(err.response.data.details, null, 2));
-            }
-            setError(err.message || 'An error occurred during registration');
+            setError(err instanceof Error ? err.message : 'An error occurred during registration');
         } finally {
             setIsSubmitting(false);
         }

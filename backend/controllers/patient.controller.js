@@ -4,247 +4,486 @@ const ApiResponse = require('../utils/apiResponse');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const MedicalFile = require('../models/MedicalFile');
-const Appointment = require('../models/Appointment');
-const Medication = require('../models/medication');
-const VitalSign = require('../models/vitalSign.model');
-const HealthMetric = require('../models/healthMetric.model');
 const ErrorResponse = require('../utils/errorResponse');
 
-exports.getPatientProfile = asyncHandler(async (req, res, next) => {
-  const patientUser = await User.findById(req.user.id).select('-password');
-  if (!patientUser) {
-    return res.status(404).json(new ApiResponse(404, null, 'Patient user not found.'));
-  }
+// @desc    Get patient profile
+// @route   GET /api/v1/patients/profile
+// @access  Private
+const getProfile = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .select('-password')
+        .populate('medicalFile');
 
-  // Find the patient record and populate the medicalFile reference
-  const patientRecord = await Patient.findOne({ user: req.user.id })
-                                    .populate('medicalFile'); // Populate the medicalFile
-
-  if (!patientRecord) {
-    return res.status(404).json(new ApiResponse(404, null, 'Patient record not found.'));
-  }
-
-  // Now, medicalFile is directly available through patientRecord
-  const medicalFile = patientRecord.medicalFile;
-  if (!medicalFile) {
-    // This case means a patient record exists but has no associated medical file
-    // This should ideally not happen if seeding is correct, but handles the edge case.
-    return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
-  }
-
-  // Combine data into a profile object
-  const profile = {
-    // From User model
-    _id: patientUser._id,
-    userId: patientUser._id, // for consistency if frontend expects userId
-    firstName: patientUser.firstName,
-    lastName: patientUser.lastName,
-    email: patientUser.email,
-    role: patientUser.role,
-    dateOfBirth: patientUser.dateOfBirth,
-    gender: patientUser.gender,
-    phoneNumber: patientUser.phoneNumber,
-    address: patientUser.address,
-    profilePictureUrl: patientUser.profilePictureUrl,
-    // From Patient model (if any direct fields are added later)
-    // patientSpecificField: patientRecord.someField,
-    // From MedicalFile model
-    medicalFileId: medicalFile._id,
-    emergencyContact: medicalFile.emergencyContact,
-    insuranceDetails: medicalFile.insuranceDetails,
-    // We can add more from medicalFile if needed, e.g., allergies, conditions for a summary
-    // allergies: medicalFile.allergies, 
-    // conditions: medicalFile.conditions,
-  };
-
-  res.status(200).json(new ApiResponse(200, profile, 'Patient profile fetched successfully.'));
-});
-
-// @desc    Update current patient's profile
-// @route   PATCH /api/v1/patients/profile
-// @access  Private (Patient only)
-exports.updatePatientProfile = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id;
-  const {
-    firstName,
-    lastName,
-    dateOfBirth,
-    gender,
-    phoneNumber,
-    address, // { street, city, state, zipCode, country }
-    profilePictureUrl,
-    // MedicalFile specific parts
-    emergencyContact, // { name, relationship, phone, email }
-    insuranceDetails, // { provider, policyNumber, groupNumber, expiryDate }
-  } = req.body;
-
-  // Update User document
-  const userFieldsToUpdate = {};
-  if (firstName) userFieldsToUpdate.firstName = firstName;
-  if (lastName) userFieldsToUpdate.lastName = lastName;
-  if (dateOfBirth) userFieldsToUpdate.dateOfBirth = dateOfBirth;
-  if (gender) userFieldsToUpdate.gender = gender;
-  if (phoneNumber) userFieldsToUpdate.phoneNumber = phoneNumber;
-  if (address && Object.keys(address).length > 0) userFieldsToUpdate.address = address;
-  if (profilePictureUrl) userFieldsToUpdate.profilePictureUrl = profilePictureUrl;
-  
-  let updatedUser;
-  if (Object.keys(userFieldsToUpdate).length > 0) {
-    updatedUser = await User.findByIdAndUpdate(userId, userFieldsToUpdate, {
-      new: true,
-      runValidators: true,
-    }).select('-password');
-  } else {
-    updatedUser = await User.findById(userId).select('-password');
-  }
-
-  if (!updatedUser) {
-    return res.status(404).json(new ApiResponse(404, null, 'Patient user not found for update.'));
-  }
-
-  // Update MedicalFile document
-  const medicalFileFieldsToUpdate = {};
-  if (emergencyContact && Object.keys(emergencyContact).length > 0) medicalFileFieldsToUpdate.emergencyContact = emergencyContact;
-  if (insuranceDetails && Object.keys(insuranceDetails).length > 0) medicalFileFieldsToUpdate.insuranceDetails = insuranceDetails;
-
-  let updatedMedicalFile;
-  if (Object.keys(medicalFileFieldsToUpdate).length > 0) {
-    updatedMedicalFile = await MedicalFile.findOneAndUpdate(
-      { patientId: userId },
-      { $set: medicalFileFieldsToUpdate },
-      { new: true, runValidators: true }
-    );
-  } else {
-    updatedMedicalFile = await MedicalFile.findOne({ patientId: userId });
-  }
-  
-  if (!updatedMedicalFile) {
-     return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for update.'));
-  }
-
-  // Construct the response profile
-  const profile = {
-    _id: updatedUser._id,
-    userId: updatedUser._id,
-    firstName: updatedUser.firstName,
-    lastName: updatedUser.lastName,
-    email: updatedUser.email,
-    role: updatedUser.role,
-    dateOfBirth: updatedUser.dateOfBirth,
-    gender: updatedUser.gender,
-    phoneNumber: updatedUser.phoneNumber,
-    address: updatedUser.address,
-    profilePictureUrl: updatedUser.profilePictureUrl,
-    medicalFileId: updatedMedicalFile._id,
-    emergencyContact: updatedMedicalFile.emergencyContact,
-    insuranceDetails: updatedMedicalFile.insuranceDetails,
-  };
-
-  res.status(200).json(new ApiResponse(200, profile, 'Patient profile updated successfully.'));
-});
-
-// @desc    Get dashboard data
-// @route   GET /api/v1/patients/dashboard
-// @access  Private (Patient only)
-exports.getDashboardData = asyncHandler(async (req, res, next) => {
-  const patientId = req.user.id;
-
-  // Get upcoming appointments
-  const appointments = await Appointment.find({
-    patient: patientId,
-    date: { $gte: new Date() }
-  })
-    .sort({ date: 1 })
-    .limit(3)
-    .populate('doctor', 'name specialty');
-
-  // Get active medications
-  const medications = await Medication.find({
-    patient: patientId,
-    status: 'active'
-  })
-    .sort({ startDate: -1 })
-    .populate('prescribedBy', 'name');
-
-  // Get latest vital signs
-  const vitalSigns = await VitalSign.find({ patient: patientId })
-    .sort({ date: -1 })
-    .limit(1);
-
-  // Get health metrics
-  const healthMetrics = await HealthMetric.find({ patient: patientId })
-    .sort({ date: -1 })
-    .limit(1);
-
-  res.status(200).json({
-    success: true,
-    data: {
-      appointments,
-      medications,
-      vitalSigns: vitalSigns[0] || null,
-      healthMetrics: healthMetrics[0] || null
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
     }
-  });
+
+    res.status(200).json(new ApiResponse(200, patient, 'Patient profile retrieved successfully.'));
 });
 
-// @desc    Get upcoming appointments
-// @route   GET /api/v1/patients/appointments/upcoming
-// @access  Private (Patient only)
-exports.getUpcomingAppointments = asyncHandler(async (req, res, next) => {
-  const appointments = await Appointment.find({
-    patient: req.user.id,
-    date: { $gte: new Date() }
-  })
-    .sort({ date: 1 })
-    .populate('doctor', 'name specialty');
+// @desc    Update patient profile
+// @route   PUT /api/v1/patients/profile
+// @access  Private
+const updateProfile = asyncHandler(async (req, res) => {
+    const { name, email, phone, address } = req.body;
 
-  res.status(200).json({
-    success: true,
-    data: appointments
-  });
+    const patient = await Patient.findById(req.user.id);
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    patient.name = name || patient.name;
+    patient.email = email || patient.email;
+    patient.phone = phone || patient.phone;
+    patient.address = address || patient.address;
+
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, patient, 'Patient profile updated successfully.'));
 });
 
-// @desc    Get active medications
-// @route   GET /api/v1/patients/medications/active
-// @access  Private (Patient only)
-exports.getActiveMedications = asyncHandler(async (req, res, next) => {
-  const medications = await Medication.find({
-    patient: req.user.id,
-    status: 'active'
-  })
-    .sort({ startDate: -1 })
-    .populate('prescribedBy', 'name');
+// @desc    Get patient medical file
+// @route   GET /api/v1/patients/medical-file
+// @access  Private
+const getMedicalFile = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .select('medicalFile')
+        .populate('medicalFile');
 
-  res.status(200).json({
-    success: true,
-    data: medications
-  });
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.medicalFile, 'Medical file retrieved successfully.'));
 });
 
-// @desc    Get vital signs
-// @route   GET /api/v1/patients/vital-signs
-// @access  Private (Patient only)
-exports.getVitalSigns = asyncHandler(async (req, res, next) => {
-  const vitalSigns = await VitalSign.find({ patient: req.user.id })
-    .sort({ date: -1 })
-    .limit(30); // Get last 30 days of vital signs
+// @desc    Update patient medical file
+// @route   PUT /api/v1/patients/medical-file
+// @access  Private
+const updateMedicalFile = asyncHandler(async (req, res) => {
+    const { height, weight, bloodType, allergies, chronicConditions } = req.body;
 
-  res.status(200).json({
-    success: true,
-    data: vitalSigns
-  });
+    const patient = await Patient.findById(req.user.id)
+        .populate('medicalFile');
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    patient.medicalFile.height = height || patient.medicalFile.height;
+    patient.medicalFile.weight = weight || patient.medicalFile.weight;
+    patient.medicalFile.bloodType = bloodType || patient.medicalFile.bloodType;
+    patient.medicalFile.allergies = allergies || patient.medicalFile.allergies;
+    patient.medicalFile.chronicConditions = chronicConditions || patient.medicalFile.chronicConditions;
+
+    await patient.medicalFile.save();
+
+    res.status(200).json(new ApiResponse(200, patient.medicalFile, 'Medical file updated successfully.'));
 });
 
-// @desc    Get health metrics
-// @route   GET /api/v1/patients/health-metrics
-// @access  Private (Patient only)
-exports.getHealthMetrics = asyncHandler(async (req, res, next) => {
-  const healthMetrics = await HealthMetric.find({ patient: req.user.id })
-    .sort({ date: -1 })
-    .limit(30); // Get last 30 days of health metrics
+// @desc    Get patient appointments
+// @route   GET /api/v1/patients/appointments
+// @access  Private
+const getAppointments = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate({
+            path: 'appointments',
+            populate: {
+                path: 'doctor',
+                select: 'name specialty hospital'
+            }
+        });
 
-  res.status(200).json({
-    success: true,
-    data: healthMetrics
-  });
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.appointments, 'Appointments retrieved successfully.'));
 });
+
+// @desc    Create appointment
+// @route   POST /api/v1/patients/appointments
+// @access  Private
+const createAppointment = asyncHandler(async (req, res) => {
+    const { doctorId, date, time, reason } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    const appointment = {
+        doctor: doctorId,
+        date,
+        time,
+        reason,
+        status: 'scheduled'
+    };
+
+    patient.appointments.push(appointment);
+    await patient.save();
+
+    res.status(201).json(new ApiResponse(201, appointment, 'Appointment created successfully.'));
+});
+
+// @desc    Update appointment
+// @route   PUT /api/v1/patients/appointments/:id
+// @access  Private
+const updateAppointment = asyncHandler(async (req, res) => {
+    const { date, time, reason, status } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+    const appointment = patient.appointments.id(req.params.id);
+
+    if (!appointment) {
+        res.status(404);
+        throw new Error('Appointment not found');
+    }
+
+    appointment.date = date || appointment.date;
+    appointment.time = time || appointment.time;
+    appointment.reason = reason || appointment.reason;
+    appointment.status = status || appointment.status;
+
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, appointment, 'Appointment updated successfully.'));
+});
+
+// @desc    Delete appointment
+// @route   DELETE /api/v1/patients/appointments/:id
+// @access  Private
+const deleteAppointment = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id);
+    const appointment = patient.appointments.id(req.params.id);
+
+    if (!appointment) {
+        res.status(404);
+        throw new Error('Appointment not found');
+    }
+
+    appointment.remove();
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, null, 'Appointment deleted successfully.'));
+});
+
+// @desc    Get patient medications
+// @route   GET /api/v1/patients/medications
+// @access  Private
+const getMedications = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate('medications');
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.medications, 'Medications retrieved successfully.'));
+});
+
+// @desc    Add medication
+// @route   POST /api/v1/patients/medications
+// @access  Private
+const addMedication = asyncHandler(async (req, res) => {
+    const { name, dosage, frequency, startDate, endDate } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    const medication = {
+        name,
+        dosage,
+        frequency,
+        startDate,
+        endDate,
+        status: 'active'
+    };
+
+    patient.medications.push(medication);
+    await patient.save();
+
+    res.status(201).json(new ApiResponse(201, medication, 'Medication added successfully.'));
+});
+
+// @desc    Update medication
+// @route   PUT /api/v1/patients/medications/:id
+// @access  Private
+const updateMedication = asyncHandler(async (req, res) => {
+    const { dosage, frequency, endDate, status } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+    const medication = patient.medications.id(req.params.id);
+
+    if (!medication) {
+        res.status(404);
+        throw new Error('Medication not found');
+    }
+
+    medication.dosage = dosage || medication.dosage;
+    medication.frequency = frequency || medication.frequency;
+    medication.endDate = endDate || medication.endDate;
+    medication.status = status || medication.status;
+
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, medication, 'Medication updated successfully.'));
+});
+
+// @desc    Delete medication
+// @route   DELETE /api/v1/patients/medications/:id
+// @access  Private
+const deleteMedication = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id);
+    const medication = patient.medications.id(req.params.id);
+
+    if (!medication) {
+        res.status(404);
+        throw new Error('Medication not found');
+    }
+
+    medication.remove();
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, null, 'Medication deleted successfully.'));
+});
+
+// @desc    Get patient consultations
+// @route   GET /api/v1/patients/consultations
+// @access  Private
+const getConsultations = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate({
+            path: 'consultations',
+            populate: {
+                path: 'doctor',
+                select: 'name specialty hospital'
+            }
+        });
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.consultations, 'Consultations retrieved successfully.'));
+});
+
+// @desc    Create consultation
+// @route   POST /api/v1/patients/consultations
+// @access  Private
+const createConsultation = asyncHandler(async (req, res) => {
+    const { doctorId, date, symptoms, notes } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    const consultation = {
+        doctor: doctorId,
+        date,
+        symptoms,
+        notes,
+        status: 'scheduled'
+    };
+
+    patient.consultations.push(consultation);
+    await patient.save();
+
+    res.status(201).json(new ApiResponse(201, consultation, 'Consultation created successfully.'));
+});
+
+// @desc    Update consultation
+// @route   PUT /api/v1/patients/consultations/:id
+// @access  Private
+const updateConsultation = asyncHandler(async (req, res) => {
+    const { symptoms, notes, status } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+    const consultation = patient.consultations.id(req.params.id);
+
+    if (!consultation) {
+        res.status(404);
+        throw new Error('Consultation not found');
+    }
+
+    consultation.symptoms = symptoms || consultation.symptoms;
+    consultation.notes = notes || consultation.notes;
+    consultation.status = status || consultation.status;
+
+    await patient.save();
+
+    res.status(200).json(new ApiResponse(200, consultation, 'Consultation updated successfully.'));
+});
+
+// @desc    Get patient prescriptions
+// @route   GET /api/v1/patients/prescriptions
+// @access  Private
+const getPrescriptions = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate({
+            path: 'prescriptions',
+            populate: {
+                path: 'doctor',
+                select: 'name specialty hospital'
+            }
+        });
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.prescriptions, 'Prescriptions retrieved successfully.'));
+});
+
+// @desc    Get active prescriptions
+// @route   GET /api/v1/patients/prescriptions/active
+// @access  Private
+const getActivePrescriptions = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate({
+            path: 'prescriptions',
+            match: { status: 'active' },
+            populate: {
+                path: 'doctor',
+                select: 'name specialty hospital'
+            }
+        });
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.prescriptions, 'Active prescriptions retrieved successfully.'));
+});
+
+// @desc    Get patient messages
+// @route   GET /api/v1/patients/messages
+// @access  Private
+const getMessages = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .populate({
+            path: 'messages',
+            populate: {
+                path: 'sender',
+                select: 'name role'
+            }
+        });
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    res.status(200).json(new ApiResponse(200, patient.messages, 'Messages retrieved successfully.'));
+});
+
+// @desc    Send message
+// @route   POST /api/v1/patients/messages
+// @access  Private
+const sendMessage = asyncHandler(async (req, res) => {
+    const { recipientId, content } = req.body;
+
+    const patient = await Patient.findById(req.user.id);
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    const message = {
+        sender: req.user.id,
+        recipient: recipientId,
+        content,
+        status: 'sent'
+    };
+
+    patient.messages.push(message);
+    await patient.save();
+
+    res.status(201).json(new ApiResponse(201, message, 'Message sent successfully.'));
+});
+
+// @desc    Get dashboard summary
+// @route   GET /api/v1/patients/dashboard/summary
+// @access  Private
+const getDashboardSummary = asyncHandler(async (req, res) => {
+    const patient = await Patient.findById(req.user.id)
+        .select('medicalFile appointments medications')
+        .populate('medicalFile')
+        .populate({
+            path: 'appointments',
+            match: { status: 'scheduled' },
+            options: { limit: 5 },
+            populate: {
+                path: 'doctor',
+                select: 'name specialty hospital'
+            }
+        })
+        .populate({
+            path: 'medications',
+            match: { status: 'active' },
+            options: { limit: 5 }
+        });
+
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+
+    const summary = {
+        profile: {
+            id: patient._id,
+            name: patient.name,
+            email: patient.email,
+            phone: patient.phone,
+            address: patient.address
+        },
+        medicalFile: patient.medicalFile,
+        appointments: patient.appointments,
+        medications: patient.medications
+    };
+
+    res.status(200).json(new ApiResponse(200, summary, 'Dashboard summary retrieved successfully.'));
+});
+
+module.exports = {
+    getProfile,
+    updateProfile,
+    getMedicalFile,
+    updateMedicalFile,
+    getAppointments,
+    createAppointment,
+    updateAppointment,
+    deleteAppointment,
+    getMedications,
+    addMedication,
+    updateMedication,
+    deleteMedication,
+    getConsultations,
+    createConsultation,
+    updateConsultation,
+    getPrescriptions,
+    getActivePrescriptions,
+    getMessages,
+    sendMessage,
+    getDashboardSummary,
+};

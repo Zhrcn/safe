@@ -10,23 +10,18 @@ const errorHandler = require('./middleware/error.middleware');
 const morgan = require('morgan');
 
 // Require all Mongoose models to ensure they are registered
-// Prioritize models that are referenced by others
 require('./models/User');
-require('./models/Medicine'); // Required by Prescription, MedicalFile
-require('./models/Doctor'); // Required by Appointment, Consultation, Prescription
-require('./models/Pharmacist'); // Required by Prescription
+require('./models/Medicine');
+require('./models/Doctor');
+require('./models/Pharmacist');
 require('./models/Appointment');
-require('./models/Prescription'); // Should be before MedicalFile, Patient
+require('./models/Prescription');
 require('./models/Conversation');
 require('./models/Consultation');
-require('./models/healthMetric.model');
-require('./models/vitalSign.model');
-require('./models/Notification');
-
-// Models that reference others, or are more complex
 require('./models/MedicalFile');
+require('./models/Notification');
 require('./models/Patient');
-require('./models/medication'); // references Patient, Doctor
+require('./models/medication');
 
 dotenv.config({ path: './config/config.env' });
 
@@ -34,7 +29,13 @@ connectDB();
 
 const app = express();
 
-app.use(cors()); 
+// CORS configuration
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
@@ -59,13 +60,11 @@ const server = app.listen(PORT, () => {
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled Rejection: ${err.message}`.red);
-
   server.close(() => process.exit(1));
 });
 
 process.on('uncaughtException', (err) => {
-    console.error(`Uncaught Exception: ${err.message}`.red);
-    console.error(err.stack);
-    server.close(() => process.exit(1));
+  console.error(`Uncaught Exception: ${err.message}`.red);
+  console.error(err.stack);
+  server.close(() => process.exit(1));
 });
-

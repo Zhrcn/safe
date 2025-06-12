@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { lightTheme, darkTheme } from '@/lib/theme/app-theme';
+import { lightTheme, darkTheme } from '@/styles/theme';
 
 const ThemeContext = createContext(undefined);
 
@@ -18,9 +18,11 @@ export function useTheme() {
 }
 
 export default function ThemeProviderWrapper({ children }) {
+  const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState('light');
 
   useEffect(() => {
+    setMounted(true);
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       setMode(savedTheme);
@@ -43,13 +45,16 @@ export default function ThemeProviderWrapper({ children }) {
     localStorage.setItem('theme', newMode);
   };
 
-  // Select the appropriate theme based on mode
   const theme = mode === 'light' ? lightTheme : darkTheme;
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme }}>
       <ThemeProvider theme={theme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale="en-US">
           <CssBaseline />
           {children}
         </LocalizationProvider>

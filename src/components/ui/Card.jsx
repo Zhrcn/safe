@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/styles';
 
 const Card = React.forwardRef(({
     className,

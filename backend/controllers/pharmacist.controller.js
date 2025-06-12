@@ -130,3 +130,29 @@ exports.updatePharmacistProfile = asyncHandler(async (req, res, next) => {
 
   res.status(200).json(new ApiResponse(200, profile, 'Pharmacist profile updated successfully.'));
 });
+
+// @desc    Get all pharmacists
+// @route   GET /api/v1/pharmacists
+// @access  Private
+exports.getPharmacists = asyncHandler(async (req, res) => {
+    const pharmacists = await Pharmacist.find({})
+        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .select('pharmacyName pharmacyAddress licenseNumber qualifications yearsOfExperience workingHours professionalBio servicesOffered');
+
+    res.status(200).json(new ApiResponse(200, pharmacists, 'Pharmacists fetched successfully.'));
+});
+
+// @desc    Get single pharmacist
+// @route   GET /api/v1/pharmacists/:id
+// @access  Private
+exports.getPharmacist = asyncHandler(async (req, res) => {
+    const pharmacist = await Pharmacist.findById(req.params.id)
+        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .select('pharmacyName pharmacyAddress licenseNumber qualifications yearsOfExperience workingHours professionalBio servicesOffered');
+
+    if (!pharmacist) {
+        return res.status(404).json(new ApiResponse(404, null, 'Pharmacist not found.'));
+    }
+
+    res.status(200).json(new ApiResponse(200, pharmacist, 'Pharmacist fetched successfully.'));
+});

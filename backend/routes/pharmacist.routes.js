@@ -4,7 +4,9 @@ const router = express.Router();
 
 const {
   getPharmacistProfile,
-  updatePharmacistProfile
+  updatePharmacistProfile,
+  getPharmacists,
+  getPharmacist
 } = require('../controllers/pharmacist.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
@@ -18,6 +20,12 @@ router
   .route('/profile')
   .get(getPharmacistProfile)
   .patch(updatePharmacistProfile);
+
+// @route   GET /api/v1/pharmacists
+router.get('/', getPharmacists);
+
+// @route   GET /api/v1/pharmacists/:id
+router.get('/:id', getPharmacist);
 
 // Future pharmacist-specific routes:
 // router.get('/prescriptions/pending', getPendingPrescriptions);

@@ -1,70 +1,29 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { CircularProgress, Box, Typography } from '@mui/material';
-import { useAuth } from '@/lib/auth/AuthContext';
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
+import LoadingScreen from '../common/LoadingScreen';
 import { useNotification } from '@/components/ui/Notification';
 
-export default function ProtectedRoute({ children, allowedRoles = [] }) {
-    const { user, isLoading, isAuthenticated } = useAuth();
-    const router = useRouter();
-    const pathname = usePathname();
+const ProtectedRoute = ({ children, requiredRole }) => {
+    const isAuthenticated = useSelector(selectIsAuthenticated);
+    const user = useSelector(selectCurrentUser);
+    const location = useLocation();
     const notification = useNotification();
 
-    useEffect(() => {
-        if (isLoading) return;
-
-        if (!isAuthenticated) {
-            notification.showNotification('Please log in to access this page', 'warning');
-            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
-            return;
-        }
-
-        if (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role)) {
-            notification.showNotification('You do not have permission to access this page', 'error');
-
-            switch (user.role) {
-                case 'patient':
-                    router.push('/patient/dashboard');
-                    break;
-                case 'doctor':
-                    router.push('/doctor/dashboard');
-                    break;
-                case 'pharmacist':
-                    router.push('/pharmacist/dashboard');
-                    break;
-                case 'admin':
-                    router.push('/admin/dashboard');
-                    break;
-                default:
-                    router.push('/');
-            }
-        }
-    }, [isLoading, isAuthenticated, user, router, pathname, notification, allowedRoles]);
-
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100vh',
-                }}
-            >
-                <CircularProgress size={60} thickness={4} />
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                    Loading...
-                </Typography>
-            </Box>
-        );
+    if (!isAuthenticated) {
+        notification.showNotification('Please log in to access this page', 'warning');
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (!isAuthenticated || (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role))) {
-        return null;
+    if (requiredRole && user?.role !== requiredRole) {
+        notification.showNotification('You do not have permission to access this page', 'error');
+        return <Navigate to="/unauthorized" replace />;
     }
 
-    return <>{children}</>;
-} 
+    return children;
+};
+
+export default ProtectedRoute; 

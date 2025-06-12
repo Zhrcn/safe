@@ -12,15 +12,34 @@ import {
   Clock, AlertCircle, Check, X
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { api } from '@/lib/services/api';
+import { useGetUsersQuery } from '@/store/services/user/userApi';
+import { useRouter, usePathname } from 'next/navigation';
+import PageHeader from '@/components/patient/PageHeader';
 
-export default function PatientProvidersPage() {
+export default function ProvidersPage({ children }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [providers, setProviders] = useState({ doctors: [], pharmacists: [] });
-  const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
-  const [error, setError] = useState(null);
   
+  const { data: users, isLoading: loadingProviders, error: providersError } = useGetUsersQuery();
+
+  useEffect(() => {
+    if (users) {
+      const doctors = users.filter(user => user.role === 'doctor');
+      const pharmacists = users.filter(user => user.role === 'pharmacist');
+      setProviders({ doctors, pharmacists });
+    }
+    if (providersError) {
+      console.error('Error loading providers:', providersError);
+    }
+  }, [users, providersError]);
+
+  const loading = loadingProviders;
+  const error = providersError;
+
   const [appointmentDialog, setAppointmentDialog] = useState(false);
   const [consultationDialog, setConsultationDialog] = useState(false);
   const [medicineDialog, setMedicineDialog] = useState(false);
@@ -38,35 +57,20 @@ export default function PatientProvidersPage() {
   const [appointmentSuccess, setAppointmentSuccess] = useState(false);
   const [consultationSuccess, setConsultationSuccess] = useState(false);
 
-  useEffect(() => {
-    async function loadProviders() {
-      try {
-        setLoading(true);
-        const data = await api.get('/providers');
-        setProviders(data);
-      } catch (error) {
-        console.error('Error loading providers:', error);
-        setError('Failed to load providers. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProviders();
-  }, []);
-
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
+    router.push(`/patient/providers/${newValue}`);
   };
 
-  const filteredProviders = tabValue === 0 
+  const currentTab = pathname.split('/').pop();
+
+  const filteredProviders = currentTab === 'doctors' 
     ? providers.doctors.filter(provider =>
         provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         provider.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
         provider.hospital.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : providers.pharmacists.filter(provider =>
-    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         provider.pharmacy.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
@@ -128,7 +132,6 @@ export default function PatientProvidersPage() {
       await api.post('/appointments', appointment);
       setAppointmentSuccess(true);
       
-      // Clear form after 3 seconds and close dialog
       setTimeout(() => {
         handleDialogClose();
       }, 3000);
@@ -151,7 +154,6 @@ export default function PatientProvidersPage() {
       
       setConsultationSuccess(true);
       
-      // Clear form after 3 seconds and redirect to consultations page
       setTimeout(() => {
         handleDialogClose();
         window.location.href = '/patient/consultations';
@@ -188,17 +190,38 @@ export default function PatientProvidersPage() {
   };
 
   return (
-    <PatientPageContainer
-      title="Healthcare Providers"
-      description="Connect with your doctors and pharmacists"
-    >
+    <Box className="container mx-auto px-4 py-8">
+      <PageHeader
+        title="Healthcare Providers"
+        description="Connect with doctors and pharmacists"
+      />
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          aria-label="provider tabs"
+        >
+          <Tab
+            label="Doctors"
+            value="doctors"
+            onClick={() => router.push('/patient/providers/doctors')}
+          />
+          <Tab
+            label="Pharmacists"
+            value="pharmacists"
+            onClick={() => router.push('/patient/providers/pharmacists')}
+          />
+        </Tabs>
+      </Box>
+
       {loading ? (
         <Box className="flex justify-center items-center h-64">
           <CircularProgress />
         </Box>
       ) : error ? (
         <Box className="flex justify-center items-center h-64">
-          <Typography color="error">{error}</Typography>
+          <Typography color="error">{error.message || 'An error occurred'}</Typography>
         </Box>
       ) : (
         <>
@@ -207,7 +230,7 @@ export default function PatientProvidersPage() {
             fullWidth
             variant="outlined"
             size="medium"
-              placeholder={tabValue === 0 ? "Search doctors by name, specialty, or hospital..." : "Search pharmacists by name or pharmacy..."}
+              placeholder={currentTab === 'doctors' ? "Search doctors by name, specialty, or hospital..." : "Search pharmacists by name or pharmacy..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
@@ -220,41 +243,6 @@ export default function PatientProvidersPage() {
              }}
           />
         </Box>
-
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange} 
-            className="mb-6 border-b border-border"
-            textColor="primary"
-            indicatorColor="primary"
-          >
-            <Tab 
-              label={
-                       <Box className="flex items-center">
-                  <Award className="mr-2 h-4 w-4" />
-                  <span>Doctors</span>
-                  <Chip 
-                    size="small" 
-                    label={providers.doctors.length} 
-                    className="ml-2 bg-primary/10 text-primary"
-                  />
-                       </Box>
-                    }
-            />
-            <Tab 
-              label={
-                <Box className="flex items-center">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  <span>Pharmacies</span>
-                  <Chip 
-                    size="small" 
-                    label={providers.pharmacists.length} 
-                    className="ml-2 bg-primary/10 text-primary"
-                  />
-                      </Box>
-                    }
-            />
-          </Tabs>
 
           {filteredProviders.length === 0 ? (
             <Box className="text-center p-8 bg-muted rounded-lg">
@@ -270,7 +258,7 @@ export default function PatientProvidersPage() {
             <Grid container spacing={3}>
               {filteredProviders.map((provider) => (
                 <Grid item xs={12} md={6} lg={4} key={provider.id}>
-                  {tabValue === 0 ? (
+                  {currentTab === 'doctors' ? (
                     <Card className="h-full flex flex-col border border-border bg-card hover:shadow-md transition-shadow">
                       <CardContent className="flex-1">
                         <Box className="flex items-start justify-between mb-4">
@@ -678,6 +666,6 @@ export default function PatientProvidersPage() {
           </Dialog>
         </>
       )}
-    </PatientPageContainer>
+    </Box>
   );
 } 

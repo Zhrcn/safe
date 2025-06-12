@@ -1,20 +1,69 @@
 import { configureStore } from '@reduxjs/toolkit';
-import patientReducer from './patientSlice';
-import userReducer from './userSlice';
-import { authApi } from '../lib/redux/services/authApi';
-import { patientApi } from '../lib/redux/services/patientApi'; // Import patientApi
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { userApi } from './services/user/userApi';
+import { patientApi } from './services/patient/patientApi';
+import { api } from './services/api';
+import { authApi } from './services/user/authApi';
+import authReducer from './slices/user/authSlice';
+
+// Patient
+import patientProfileReducer from './slices/patient/profileSlice';
+import patientDashboardReducer from './slices/patient/dashboardSlice';
+import patientAppointmentsReducer from './slices/patient/appointmentsSlice';
+import patientPrescriptionsReducer from './slices/patient/prescriptionsSlice';
+import patientConsultationsReducer from './slices/patient/consultationsSlice';
+import patientMedicationsReducer from './slices/patient/medicationsSlice';
+import patientConversationsReducer from './slices/patient/conversationsSlice';
+import patientProvidersReducer from './slices/patient/providersSlice';
+
+// Doctor
+import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
+import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice';
+import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
+import doctorAppointmentsReducer from './slices/doctor/doctorAppointmentsSlice';
+
+// UI
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
-  reducer: {
-    patient: patientReducer,
-    user: userReducer,
-    [authApi.reducerPath]: authApi.reducer,
-    [patientApi.reducerPath]: patientApi.reducer, // Add patientApi reducer
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false
-    })
-    .concat(authApi.middleware)
-    .concat(patientApi.middleware) // Add patientApi middleware
+    reducer: {
+        // APIs
+        [userApi.reducerPath]: userApi.reducer,
+        [patientApi.reducerPath]: patientApi.reducer,
+        [api.reducerPath]: api.reducer,
+        [authApi.reducerPath]: authApi.reducer,
+        
+        // Auth
+        auth: authReducer,
+        
+        // Patient
+        patientProfile: patientProfileReducer,
+        patientDashboard: patientDashboardReducer,
+        patientAppointments: patientAppointmentsReducer,
+        patientPrescriptions: patientPrescriptionsReducer,
+        patientConsultations: patientConsultationsReducer,
+        patientMedications: patientMedicationsReducer,
+        patientConversations: patientConversationsReducer,
+        patientProviders: patientProvidersReducer,
+        
+        // Doctor
+        doctorPatients: doctorPatientsReducer,
+        doctorConsultations: doctorConsultationsReducer,
+        doctorPrescriptions: doctorPrescriptionsReducer,
+        doctorAppointments: doctorAppointmentsReducer,
+        
+        // UI
+        ui: uiReducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(
+            userApi.middleware,
+            patientApi.middleware,
+            api.middleware,
+            authApi.middleware
+        ),
 });
+
+setupListeners(store.dispatch);
+
+export default store;

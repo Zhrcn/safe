@@ -3,74 +3,47 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Paper, List, ListItem, ListItemText, TextField, Button, Avatar, CircularProgress, Badge, IconButton, Tooltip } from '@mui/material';
 import { Send, User, Phone, Calendar, RefreshCw, Video } from 'lucide-react';
-import { api } from '@/lib/services/api';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
 import { formatDistanceToNow } from 'date-fns';
+import { useGetConversationsQuery, useGetConversationByIdQuery, useSendMessageMutation } from '@/store/services/patient/conversationApi';
 
 export default function PatientMessagingPage() {
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [messageInput, setMessageInput] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [error, setError] = useState(null);
+
+  const { data: conversations = [], isLoading: isLoadingConversations, error: conversationsError, refetch: refetchConversations } = useGetConversationsQuery();
+  const { data: selectedConversation, isLoading: isLoadingSelectedConversation, error: selectedConversationError, refetch: refetchSelectedConversation } = useGetConversationByIdQuery(selectedConversationId, { skip: !selectedConversationId });
+  const [sendMessage, { isLoading: isSendingMessage, error: sendMessageError }] = useSendMessageMutation();
 
   useEffect(() => {
-    async function loadConversations() {
-      try {
-        setLoading(true);
-        const data = await api.get('/conversations');
-        setConversations(data);
-        if (data.length > 0) {
-          await selectConversation(data[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading conversations:', error);
-        setError('Failed to load conversations. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
+    if (conversations.length > 0 && !selectedConversationId) {
+      setSelectedConversationId(conversations[0].id);
     }
+  }, [conversations, selectedConversationId]);
 
-    loadConversations();
-  }, []);
-
-  const selectConversation = async (conversationId) => {
-    try {
-      const conversation = await api.get(`/conversations/${conversationId}`);
-      setSelectedConversation(conversation);
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-      setError('Failed to load conversation messages. Please try again.');
+  useEffect(() => {
+    if (selectedConversationId) {
+      refetchSelectedConversation();
     }
+  }, [selectedConversationId, refetchSelectedConversation]);
+
+  const handleSelectConversation = (conversationId) => {
+    setSelectedConversationId(conversationId);
   };
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedConversation) return;
+    if (!messageInput.trim() || !selectedConversationId) return;
 
     try {
-      setSendingMessage(true);
-      const newMessage = await api.post('/messages', {
-        conversationId: selectedConversation.id,
-        content: messageInput
-      });
-      
-      setSelectedConversation(prev => ({
-        ...prev,
-        messages: [...prev.messages, newMessage],
-        lastMessage: messageInput,
-        lastMessageDate: new Date().toISOString()
-      }));
-      
+      await sendMessage({ conversationId: selectedConversationId, content: messageInput }).unwrap();
       setMessageInput('');
+      refetchSelectedConversation(); // Refetch messages for the current conversation
+      refetchConversations(); // Refetch conversations to update last message/unread count
     } catch (error) {
       console.error('Error sending message:', error);
-      setError('Failed to send message. Please try again.');
-    } finally {
-      setSendingMessage(false);
+      // Handle specific error messages if needed, e.g., using notification service
     }
   };
-
   
   const formatTime = (timestamp) => {
     try {
@@ -81,21 +54,27 @@ export default function PatientMessagingPage() {
     }
   };
 
+  const isLoading = isLoadingConversations || isLoadingSelectedConversation;
+  const error = conversationsError || selectedConversationError || sendMessageError;
+
   return (
     <PatientPageContainer
       title="Messages"
       description="Chat with your healthcare providers"
     >
-      {loading ? (
+      {isLoading ? (
         <Box className="flex justify-center items-center h-64">
           <CircularProgress />
         </Box>
       ) : error ? (
         <Box className="flex justify-center items-center h-64">
-          <Typography color="error">{error}</Typography>
+          <Typography color="error">{error.message || 'An error occurred'}</Typography>
           <Button 
             startIcon={<RefreshCw size={16} />} 
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              refetchConversations();
+              if (selectedConversationId) refetchSelectedConversation();
+            }}
             className="ml-2"
           >
             Retry
@@ -119,8 +98,8 @@ export default function PatientMessagingPage() {
                   <ListItem
                     button
                     key={conversation.id}
-                    onClick={() => selectConversation(conversation.id)}
-                    selected={selectedConversation?.id === conversation.id}
+                    onClick={() => handleSelectConversation(conversation.id)}
+                    selected={selectedConversationId === conversation.id}
                     className="border-b border-border hover:bg-muted/50 transition-colors"
                     sx={{
                       '&.Mui-selected': {
@@ -134,8 +113,8 @@ export default function PatientMessagingPage() {
                     <Box className="flex items-center w-full">
                       <Badge
                         color="primary"
-                        badgeContent={conversation.unread}
-                        invisible={conversation.unread === 0}
+                        badgeContent={conversation.unreadCount}
+                        invisible={conversation.unreadCount === 0}
                         className="mr-3"
                       >
                         <Avatar
@@ -154,14 +133,14 @@ export default function PatientMessagingPage() {
                               {conversation.participant?.name || conversation.participantName}
                             </Typography>
                             <Typography variant="caption" component="div" className="text-muted-foreground">
-                              {formatTime(conversation.lastMessageDate)}
+                              {formatTime(conversation.lastMessage?.timestamp || conversation.updatedAt)}
                             </Typography>
                           </Box>
                         }
                         secondaryTypographyProps={{ component: 'div' }}
                         secondary={
                           <Typography variant="body2" component="div" className="text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
-                            {conversation.lastMessage}
+                            {conversation.lastMessage?.content || ''}
                           </Typography>
                         }
                       />
@@ -253,28 +232,36 @@ export default function PatientMessagingPage() {
                   ))}
                 </Box>
 
-                <Box className="p-4 border-t border-border flex items-center space-x-3 bg-background">
+                <Box className="p-4 border-t border-border flex items-center">
                   <TextField
                     fullWidth
                     variant="outlined"
-                    size="small"
                     placeholder="Type a message..."
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    multiline
-                    maxRows={3}
-                    disabled={sendingMessage}
-                    InputProps={{
-                      className: 'text-foreground bg-background',
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSendMessage();
+                      }
+                    }}
+                    sx={{
+                      mr: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '20px',
+                        paddingRight: '8px',
+                      },
                     }}
                   />
-                  <Button 
-                    variant="contained" 
-                    onClick={handleSendMessage} 
-                    disabled={!messageInput.trim() || sendingMessage}
-                    endIcon={sendingMessage ? <CircularProgress size={16} /> : <Send size={16} />}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSendMessage}
+                    endIcon={isSendingMessage ? <CircularProgress size={20} color="inherit" /> : <Send size={20} />}
+                    disabled={!messageInput.trim() || isSendingMessage}
+                    sx={{
+                      borderRadius: '20px',
+                      padding: '12px 24px',
+                    }}
                   >
                     Send
                   </Button>
@@ -282,8 +269,8 @@ export default function PatientMessagingPage() {
               </>
             ) : (
               <Box className="flex-1 flex items-center justify-center">
-                <Typography variant="h6" className="text-muted-foreground">
-                  Select a conversation to view messages
+                <Typography variant="body1" className="text-muted-foreground">
+                  Select a conversation to start chatting.
                 </Typography>
               </Box>
             )}

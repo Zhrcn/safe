@@ -1,38 +1,78 @@
 'use client';
 
-import GenericRoleLayout from '@/components/GenericRoleLayout';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PersonIcon from '@mui/icons-material/Person';
-import MessageIcon from '@mui/icons-material/Message';
-import SearchIcon from '@mui/icons-material/Search';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import FolderSharedIcon from '@mui/icons-material/FolderShared';
-import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { 
+    Home, Calendar, Users, MessageSquare, 
+    FileText, Pill, User, Stethoscope,
+    MessageCircle
+} from 'lucide-react';
+import AppLayout from '@/components/layout/AppLayout';
 
 const sidebarItems = [
-    { name: 'Dashboard', icon: DashboardIcon, link: '/patient/dashboard' },
-    { name: 'Profile', icon: PersonIcon, link: '/patient/profile' },
-    { name: 'Messaging', icon: MessageIcon, link: '/patient/messaging' },
-    { name: 'Providers', icon: SearchIcon, link: '/patient/providers' },
-    { name: 'Appointments', icon: EventNoteIcon, link: '/patient/appointments' },
-    { name: 'Consultations', icon: HelpOutlineIcon, link: '/patient/consultations' },
-    { name: 'Medications', icon: MedicalServicesIcon, link: '/patient/medications' },
-    { name: 'Medical File', icon: FolderSharedIcon, link: '/patient/medical-file' },
-    { name: 'Prescriptions', icon: LocalPharmacyIcon, link: '/patient/prescriptions' },
+    {
+        name: 'Dashboard',
+        icon: Home,
+        link: '/patient/dashboard'
+    },
+    {
+        name: 'Appointments',
+        icon: Calendar,
+        link: '/patient/appointments'
+    },
+    {
+        name: 'Providers',
+        icon: Users,
+        link: '/patient/providers',
+        subItems: [
+            {
+                name: 'Doctors',
+                link: '/patient/providers/doctors'
+            },
+            {
+                name: 'Pharmacists',
+                link: '/patient/providers/pharmacists'
+            }
+        ]
+    },
+    {
+        name: 'Consultations',
+        icon: Stethoscope,
+        link: '/patient/consultations'
+    },
+    {
+        name: 'Medications',
+        icon: Pill,
+        link: '/patient/medications'
+    },
+    {
+        name: 'Medical Records',
+        icon: FileText,
+        link: '/patient/medical-records'
+    },
+    {
+        name: 'Messages',
+        icon: MessageCircle,
+        link: '/patient/messages'
+    },
+    {
+        name: 'Prescriptions',
+        icon: FileText,
+        link: '/patient/prescriptions'
+    },
+    {
+        name: 'Profile',
+        icon: User,
+        link: '/patient/profile'
+    }
 ];
 
 export default function PatientLayout({ children }) {
     return (
-        <GenericRoleLayout
-            headerBg="bg-primary"
-            sidebarBg="bg-background"
-            logoBg="bg-primary"
-            title="S.A.F.E Patient Portal"
+        <AppLayout
+            title="Patient Portal"
             sidebarItems={sidebarItems}
+            allowedRoles={['patient']}
         >
             {children}
-        </GenericRoleLayout>
+        </AppLayout>
     );
 } 

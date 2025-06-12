@@ -9,7 +9,7 @@ import {
     AlertTriangle,
     Search
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/styles';
 
 const NotificationContext = createContext({
     showNotification: () => {},
@@ -67,11 +67,6 @@ export function NotificationProvider({ children }) {
                 autoHideDuration={notification.duration}
                 onClose={hideNotification}
                 anchorOrigin={notification.position}
-                sx={{
-                    '& .MuiSnackbar-root': {
-                        bottom: '24px !important',
-                    },
-                }}
             >
                 <Alert
                     onClose={hideNotification}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/styles';
 
 export default function LoadingState({
     message = 'Loading...',

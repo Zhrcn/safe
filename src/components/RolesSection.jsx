@@ -5,7 +5,8 @@ import { Container, Typography, Grid, Box, Card, CardContent, Button, useTheme, 
 import { motion } from 'framer-motion';
 import { User, Stethoscope, Droplet, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { ROLES } from '@/app-config';
+import { ROLES } from '@/config/app-config';
+import Link from 'next/link';
 
 const roles = [
   {

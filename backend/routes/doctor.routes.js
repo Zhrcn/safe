@@ -1,16 +1,23 @@
 // backend/routes/doctor.routes.js
 const express = require('express');
 const router = express.Router();
-
 const {
   getDoctorProfile,
-  updateDoctorProfile
+  updateDoctorProfile,
+  getDoctor,
+  getDoctors
 } = require('../controllers/doctor.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 // All routes below are protected and accessible only by users with the 'doctor' role.
 router.use(protect);
 router.use(authorize('doctor'));
+
+// @route   GET /api/v1/doctors
+router.get('/', getDoctors);
+
+// @route   GET /api/v1/doctors/:id
+router.get('/:id', getDoctor);
 
 // @route   GET /api/v1/doctors/profile
 // @route   PATCH /api/v1/doctors/profile
