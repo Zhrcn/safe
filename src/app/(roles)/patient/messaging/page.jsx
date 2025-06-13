@@ -1,282 +1,387 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Typography, Box, Paper, List, ListItem, ListItemText, TextField, Button, Avatar, CircularProgress, Badge, IconButton, Tooltip } from '@mui/material';
-import { Send, User, Phone, Calendar, RefreshCw, Video } from 'lucide-react';
-import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { formatDistanceToNow } from 'date-fns';
-import { useGetConversationsQuery, useGetConversationByIdQuery, useSendMessageMutation } from '@/store/services/patient/conversationApi';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Grid,
+  Chip,
+  Stack,
+  Avatar,
+  Tooltip,
+  useTheme,
+  alpha,
+  IconButton,
+  TextField,
+  Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Badge,
+} from '@mui/material';
+import {
+  Send as SendIcon,
+  AttachFile as AttachFileIcon,
+  Image as ImageIcon,
+  VideoCall as VideoCallIcon,
+  Chat as ChatIcon,
+  Search as SearchIcon,
+  MoreVert as MoreVertIcon,
+  Circle as CircleIcon,
+} from '@mui/icons-material';
+import { mockPatientData } from '@/mockdata/patientData';
+import PageHeader from '@/components/patient/PageHeader';
 
-export default function PatientMessagingPage() {
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const [messageInput, setMessageInput] = useState('');
-
-  const { data: conversations = [], isLoading: isLoadingConversations, error: conversationsError, refetch: refetchConversations } = useGetConversationsQuery();
-  const { data: selectedConversation, isLoading: isLoadingSelectedConversation, error: selectedConversationError, refetch: refetchSelectedConversation } = useGetConversationByIdQuery(selectedConversationId, { skip: !selectedConversationId });
-  const [sendMessage, { isLoading: isSendingMessage, error: sendMessageError }] = useSendMessageMutation();
-
-  useEffect(() => {
-    if (conversations.length > 0 && !selectedConversationId) {
-      setSelectedConversationId(conversations[0].id);
-    }
-  }, [conversations, selectedConversationId]);
-
-  useEffect(() => {
-    if (selectedConversationId) {
-      refetchSelectedConversation();
-    }
-  }, [selectedConversationId, refetchSelectedConversation]);
-
-  const handleSelectConversation = (conversationId) => {
-    setSelectedConversationId(conversationId);
-  };
-
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || !selectedConversationId) return;
-
-    try {
-      await sendMessage({ conversationId: selectedConversationId, content: messageInput }).unwrap();
-      setMessageInput('');
-      refetchSelectedConversation(); // Refetch messages for the current conversation
-      refetchConversations(); // Refetch conversations to update last message/unread count
-    } catch (error) {
-      console.error('Error sending message:', error);
-      // Handle specific error messages if needed, e.g., using notification service
-    }
-  };
-  
-  const formatTime = (timestamp) => {
-    try {
-      const date = new Date(timestamp);
-      return formatDistanceToNow(date, { addSuffix: true });
-    } catch (error) {
-      return timestamp;
-    }
-  };
-
-  const isLoading = isLoadingConversations || isLoadingSelectedConversation;
-  const error = conversationsError || selectedConversationError || sendMessageError;
+const MessageBubble = ({ message, isOwn }) => {
+  const theme = useTheme();
 
   return (
-    <PatientPageContainer
-      title="Messages"
-      description="Chat with your healthcare providers"
+    <Box
+      display="flex"
+      justifyContent={isOwn ? 'flex-end' : 'flex-start'}
+      mb={2}
     >
-      {isLoading ? (
-        <Box className="flex justify-center items-center h-64">
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Box className="flex justify-center items-center h-64">
-          <Typography color="error">{error.message || 'An error occurred'}</Typography>
-          <Button 
-            startIcon={<RefreshCw size={16} />} 
-            onClick={() => {
-              refetchConversations();
-              if (selectedConversationId) refetchSelectedConversation();
-            }}
-            className="ml-2"
-          >
-            Retry
-          </Button>
-        </Box>
-      ) : (
-        <Paper elevation={3} className="bg-card text-card-foreground rounded-lg shadow-md h-[calc(100vh-240px)] flex">
-          <Box className="w-1/3 md:w-1/4 border-r border-border overflow-y-auto">
-            <Box className="p-4 border-b border-border">
-              <Typography variant="h6" className="font-semibold">Conversations</Typography>
-            </Box>
-            <List disablePadding>
-              {conversations.length === 0 ? (
-                <Box className="p-4 text-center">
-                  <Typography variant="body2" className="text-muted-foreground">
-                    No conversations yet
-                  </Typography>
-                </Box>
-              ) : (
-                conversations.map((conversation) => (
-                  <ListItem
-                    button
-                    key={conversation.id}
-                    onClick={() => handleSelectConversation(conversation.id)}
-                    selected={selectedConversationId === conversation.id}
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
-                    sx={{
-                      '&.Mui-selected': {
-                        backgroundColor: 'var(--muted)',
-                        '&:hover': {
-                          backgroundColor: 'var(--muted)',
-                        }
-                      }
-                    }}
-                  >
-                    <Box className="flex items-center w-full">
-                      <Badge
-                        color="primary"
-                        badgeContent={conversation.unreadCount}
-                        invisible={conversation.unreadCount === 0}
-                        className="mr-3"
-                      >
-                        <Avatar
-                          src={conversation.participant?.avatar || conversation.participantPhoto}
-                          alt={conversation.participant?.name || conversation.participantName}
-                          className={`${conversation.participant?.role === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}
-                        >
-                          {(conversation.participant?.name || conversation.participantName || 'U').charAt(0)}
-                        </Avatar>
-                      </Badge>
-                      <ListItemText
-                        primaryTypographyProps={{ component: 'div' }}
-                        primary={
-                          <Box className="flex justify-between">
-                            <Typography variant="body1" component="div" className="font-semibold">
-                              {conversation.participant?.name || conversation.participantName}
-                            </Typography>
-                            <Typography variant="caption" component="div" className="text-muted-foreground">
-                              {formatTime(conversation.lastMessage?.timestamp || conversation.updatedAt)}
-                            </Typography>
-                          </Box>
-                        }
-                        secondaryTypographyProps={{ component: 'div' }}
-                        secondary={
-                          <Typography variant="body2" component="div" className="text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
-                            {conversation.lastMessage?.content || ''}
-                          </Typography>
-                        }
-                      />
-                    </Box>
-                  </ListItem>
-                ))
-              )}
-            </List>
+      <Box
+        sx={{
+          maxWidth: '70%',
+          p: 2,
+          borderRadius: 2,
+          bgcolor: isOwn 
+            ? alpha(theme.palette.primary.main, 0.1)
+            : alpha(theme.palette.background.paper, 0.8),
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        {!isOwn && (
+          <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+            {message.sender}
+          </Typography>
+        )}
+        <Typography variant="body1">
+          {message.content}
+        </Typography>
+        {message.attachments && message.attachments.length > 0 && (
+          <Stack direction="row" spacing={1} mt={1}>
+            {message.attachments.map((attachment, index) => (
+              <Chip
+                key={index}
+                icon={<AttachFileIcon />}
+                label={attachment.name}
+                size="small"
+                onClick={() => window.open(attachment.url, '_blank')}
+              />
+            ))}
+          </Stack>
+        )}
+        <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+          {new Date(message.timestamp).toLocaleTimeString()}
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
+
+const ChatWindow = ({ selectedChat, onSendMessage }) => {
+  const theme = useTheme();
+  const [message, setMessage] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [selectedChat?.messages]);
+
+  const handleSend = () => {
+    if (message.trim()) {
+      onSendMessage(message);
+      setMessage('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  if (!selectedChat) {
+    return (
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        height="100%"
+        sx={{
+          bgcolor: alpha(theme.palette.background.default, 0.5),
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h6" color="text.secondary">
+          Select a chat to start messaging
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: alpha(theme.palette.background.default, 0.5),
+        borderRadius: 2,
+      }}
+    >
+      <Box
+        sx={{
+          p: 2,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={2}>
+          <Avatar src={selectedChat.avatar} />
+          <Box flex={1}>
+            <Typography variant="h6">
+              {selectedChat.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {selectedChat.role}
+            </Typography>
           </Box>
+          <IconButton>
+            <VideoCallIcon />
+          </IconButton>
+          <IconButton>
+            <MoreVertIcon />
+          </IconButton>
+        </Box>
+      </Box>
 
-          <Box className="flex-1 flex flex-col">
-            {selectedConversation ? (
-              <>
-                <Box className="p-4 border-b border-border bg-muted/50 flex justify-between items-center">
-                  <Box className="flex items-center">
-                    <Avatar
-                      src={selectedConversation.participant?.avatar || selectedConversation.participantPhoto}
-                      className={`${(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'} mr-3`}
-                    >
-                      {(selectedConversation.participant?.name || selectedConversation.participantName || 'U').charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" component="div" className="font-semibold">
-                        {selectedConversation.participant?.name || selectedConversation.participantName}
-                      </Typography>
-                      <Typography variant="caption" component="div" className="text-muted-foreground">
-                        {(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' ? 'Doctor' : 'Pharmacist'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Tooltip title="Video call">
-                      <IconButton className="text-muted-foreground hover:text-foreground">
-                        <Video size={20} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Voice call">
-                      <IconButton className="text-muted-foreground hover:text-foreground">
-                        <Phone size={20} />
-                      </IconButton>
-                    </Tooltip>
-                    {(selectedConversation.participant?.role || selectedConversation.participantRole) === 'doctor' && (
-                      <Tooltip title="Schedule appointment">
-                        <IconButton className="text-muted-foreground hover:text-foreground">
-                          <Calendar size={20} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                </Box>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          p: 2,
+        }}
+      >
+        {selectedChat.messages.map((message, index) => (
+          <MessageBubble
+            key={index}
+            message={message}
+            isOwn={message.sender === 'You'}
+          />
+        ))}
+        <div ref={messagesEndRef} />
+      </Box>
 
-                <Box className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {selectedConversation.messages.map((message) => (
-                    <Box key={message.id} className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}>
-                      {message.sender !== 'patient' && (
-                        <Avatar
-                          src={selectedConversation.participant?.avatar || selectedConversation.participantPhoto}
-                          alt={selectedConversation.participant?.name || selectedConversation.participantName}
-                          className="h-8 w-8 mr-2 mt-1"
-                        >
-                          {(selectedConversation.participant?.name || selectedConversation.participantName || 'U').charAt(0)}
-                        </Avatar>
-                      )}
-                      <Box className={`rounded-lg p-3 max-w-[70%] ${
-                        message.sender === 'patient' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-foreground'
-                      }`}>
-                        <Typography variant="body2" component="div">{message.content}</Typography>
-                        <Typography 
-                          variant="caption" 
-                          component="div"
-                          className={`mt-1 block ${
-                            message.sender === 'patient' 
-                              ? 'text-primary-foreground/70' 
-                              : 'text-muted-foreground'
-                          }`} 
-                          align={message.sender === 'patient' ? 'right' : 'left'}
-                        >
-                          {formatTime(message.timestamp)}
-                        </Typography>
-                      </Box>
-                      {message.sender === 'patient' && (
-                        <Avatar className="h-8 w-8 ml-2 mt-1 bg-primary/20 text-primary">
-                          <User size={16} />
-                        </Avatar>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        }}
+      >
+        <Box display="flex" gap={1}>
+          <IconButton>
+            <AttachFileIcon />
+          </IconButton>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            multiline
+            maxRows={4}
+            size="small"
+          />
+          <IconButton
+            color="primary"
+            onClick={handleSend}
+            disabled={!message.trim()}
+          >
+            <SendIcon />
+          </IconButton>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
-                <Box className="p-4 border-t border-border flex items-center">
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Type a message..."
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSendMessage();
-                      }
-                    }}
+const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
+  const theme = useTheme();
+
+  const filteredChats = chats.filter(chat =>
+    chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    chat.role.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: alpha(theme.palette.background.default, 0.5),
+        borderRadius: 2,
+      }}
+    >
+      <Box sx={{ p: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={(e) => onSelectChat(null, e.target.value)}
+          InputProps={{
+            startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+          }}
+          size="small"
+        />
+      </Box>
+
+      <List sx={{ flex: 1, overflowY: 'auto' }}>
+        {filteredChats.map((chat) => (
+          <ListItem
+            key={chat.id}
+            button
+            selected={selectedChat?.id === chat.id}
+            onClick={() => onSelectChat(chat)}
+            sx={{
+              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              '&:hover': {
+                bgcolor: alpha(theme.palette.primary.main, 0.05),
+              },
+            }}
+          >
+            <ListItemAvatar>
+              <Badge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                badgeContent={
+                  <CircleIcon
                     sx={{
-                      mr: 2,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '20px',
-                        paddingRight: '8px',
-                      },
+                      fontSize: 12,
+                      color: chat.online ? 'success.main' : 'grey.500',
                     }}
                   />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSendMessage}
-                    endIcon={isSendingMessage ? <CircularProgress size={20} color="inherit" /> : <Send size={20} />}
-                    disabled={!messageInput.trim() || isSendingMessage}
-                    sx={{
-                      borderRadius: '20px',
-                      padding: '12px 24px',
-                    }}
-                  >
-                    Send
-                  </Button>
-                </Box>
-              </>
-            ) : (
-              <Box className="flex-1 flex items-center justify-center">
-                <Typography variant="body1" className="text-muted-foreground">
-                  Select a conversation to start chatting.
-                </Typography>
-              </Box>
+                }
+              >
+                <Avatar src={chat.avatar} />
+              </Badge>
+            </ListItemAvatar>
+            <ListItemText
+              primary={chat.name}
+              secondary={chat.role}
+              primaryTypographyProps={{
+                fontWeight: chat.unread ? 'bold' : 'normal',
+              }}
+              secondaryTypographyProps={{
+                color: chat.unread ? 'primary' : 'text.secondary',
+              }}
+            />
+            {chat.unread && (
+              <Chip
+                label={chat.unread}
+                color="primary"
+                size="small"
+                sx={{ minWidth: 20, height: 20 }}
+              />
             )}
-          </Box>
-        </Paper>
-      )}
-    </PatientPageContainer>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
   );
-}
+};
+
+const MessagingPage = () => {
+  const theme = useTheme();
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [chats, setChats] = useState(mockPatientData.messages);
+
+  const handleSelectChat = (chat, query) => {
+    if (query !== undefined) {
+      setSearchQuery(query);
+      return;
+    }
+    setSelectedChat(chat);
+    // Mark messages as read when selecting a chat
+    if (chat) {
+      setChats(prevChats => 
+        prevChats.map(c => 
+          c.id === chat.id ? { ...c, unreadCount: 0 } : c
+        )
+      );
+    }
+  };
+
+  const handleSendMessage = (content) => {
+    if (!selectedChat) return;
+
+    const newMessage = {
+      sender: 'You',
+      content,
+      timestamp: new Date().toISOString(),
+      attachments: []
+    };
+
+    setChats(prevChats =>
+      prevChats.map(chat =>
+        chat.id === selectedChat.id
+          ? {
+              ...chat,
+              messages: [...chat.messages, newMessage],
+              lastMessage: content,
+              lastMessageTime: 'Just now'
+            }
+          : chat
+      )
+    );
+
+    setSelectedChat(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMessage],
+      lastMessage: content,
+      lastMessageTime: 'Just now'
+    }));
+  };
+
+  return (
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1400px', margin: '0 auto' }}>
+      <PageHeader
+        title="Messaging"
+        subtitle="Communicate with your healthcare providers"
+      />
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={4}>
+          <ChatList
+            chats={chats}
+            selectedChat={selectedChat}
+            onSelectChat={handleSelectChat}
+            searchQuery={searchQuery}
+          />
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <ChatWindow
+            selectedChat={selectedChat}
+            onSendMessage={handleSendMessage}
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default MessagingPage;

@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
-import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/utils/styles';
+import { Box, Typography, Breadcrumbs, Link, useTheme, alpha } from '@mui/material';
+import { ChevronRight as ChevronRightIcon, Home as HomeIcon } from '@mui/icons-material';
 
 export default function PageHeader({
     title,
@@ -10,53 +9,76 @@ export default function PageHeader({
     actions,
     className,
 }) {
+    const theme = useTheme();
+
     return (
-        <Box className={cn('mb-2', className)}>
+        <Box sx={{ mb: 2, ...className }}>
             <Breadcrumbs
-                separator={<ChevronRight size={16} className="text-muted-foreground" />}
+                separator={<ChevronRightIcon fontSize="small" sx={{ color: 'text.secondary' }} />}
                 aria-label="breadcrumb"
-                className="mb-2"
+                sx={{ mb: 2 }}
             >
                 <Link
                     href="/patient/dashboard"
-                    className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'text.secondary',
+                        textDecoration: 'none',
+                        '&:hover': {
+                            color: 'text.primary',
+                        },
+                    }}
                 >
-                    <Home size={16} className="mr-1" />
+                    <HomeIcon fontSize="small" sx={{ mr: 0.5 }} />
                     Dashboard
                 </Link>
                 {breadcrumbs.map((crumb, index) => (
                     <Link
                         key={index}
                         href={crumb.href}
-                        className={cn(
-                            'text-muted-foreground hover:text-foreground transition-colors',
-                            index === breadcrumbs.length - 1 && 'text-foreground font-medium'
-                        )}
+                        sx={{
+                            color: index === breadcrumbs.length - 1 ? 'text.primary' : 'text.secondary',
+                            textDecoration: 'none',
+                            fontWeight: index === breadcrumbs.length - 1 ? 500 : 400,
+                            '&:hover': {
+                                color: 'text.primary',
+                            },
+                        }}
                     >
                         {crumb.label}
                     </Link>
                 ))}
             </Breadcrumbs>
 
-            <Box className="flex items-center justify-between">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                     <Typography
                         variant="h4"
-                        className="font-bold text-2xl md:text-3xl bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent"
+                        sx={{
+                            fontWeight: 'bold',
+                            fontSize: { xs: '1.5rem', md: '1.875rem' },
+                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
                     >
                         {title}
                     </Typography>
                     {description && (
                         <Typography
                             variant="body1"
-                            className="mt-1 text-muted-foreground"
+                            sx={{
+                                mt: 1,
+                                color: 'text.secondary',
+                            }}
                         >
                             {description}
                         </Typography>
                     )}
                 </Box>
                 {actions && (
-                    <Box className="flex items-center gap-2">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {actions}
                     </Box>
                 )}

@@ -27,21 +27,42 @@ export const patientApi = createApi({
         'EmergencyContacts',
         'Insurance',
         'HealthStatus',
-        'Notifications'
+        'Notifications',
+        'Allergies',
+        'ChronicConditions'
     ],
     endpoints: (builder) => ({
         // Profile endpoints
         getProfile: builder.query({
             query: () => '/profile',
             providesTags: ['Profile'],
+            transformResponse: (response) => response.data
         }),
         updateProfile: builder.mutation({
             query: (data) => ({
                 url: '/profile',
-                method: 'PUT',
+                method: 'PATCH',
                 body: data,
             }),
             invalidatesTags: ['Profile'],
+        }),
+        addAllergy: builder.mutation({
+            query: (allergyData) => ({
+                url: '/allergies',
+                method: 'POST',
+                body: allergyData,
+            }),
+            invalidatesTags: ['Profile'],
+            transformResponse: (response) => response.data
+        }),
+        addChronicCondition: builder.mutation({
+            query: (conditionData) => ({
+                url: '/chronic-conditions',
+                method: 'POST',
+                body: conditionData,
+            }),
+            invalidatesTags: ['Profile'],
+            transformResponse: (response) => response.data
         }),
 
         // Medical file endpoints
@@ -62,6 +83,7 @@ export const patientApi = createApi({
         getAppointments: builder.query({
             query: () => '/appointments',
             providesTags: ['Appointments'],
+            transformResponse: (response) => response.data
         }),
         createAppointment: builder.mutation({
             query: (data) => ({
@@ -91,14 +113,16 @@ export const patientApi = createApi({
         getMedications: builder.query({
             query: () => '/medications',
             providesTags: ['Medications'],
+            transformResponse: (response) => response.data
         }),
         addMedication: builder.mutation({
-            query: (data) => ({
+            query: (medicationData) => ({
                 url: '/medications',
                 method: 'POST',
-                body: data,
+                body: medicationData,
             }),
-            invalidatesTags: ['Medications'],
+            invalidatesTags: ['Profile', 'Medications'],
+            transformResponse: (response) => response.data
         }),
         updateMedication: builder.mutation({
             query: ({ id, data }) => ({
@@ -182,8 +206,9 @@ export const patientApi = createApi({
 
         // Dashboard endpoint
         getDashboardSummary: builder.query({
-            query: () => '/dashboard/summary',
-            providesTags: ['Profile', 'MedicalFile', 'Appointments', 'Medications'],
+            query: () => '/dashboard',
+            providesTags: ['Profile', 'Appointments', 'Medications'],
+            transformResponse: (response) => response.data
         }),
 
         // Emergency Contacts endpoints
@@ -269,6 +294,9 @@ export const {
     // Profile
     useGetProfileQuery,
     useUpdateProfileMutation,
+    useAddAllergyMutation,
+    useAddChronicConditionMutation,
+    useAddMedicationMutation,
     
     // Medical File
     useGetMedicalFileQuery,
@@ -282,7 +310,6 @@ export const {
     
     // Medications
     useGetMedicationsQuery,
-    useAddMedicationMutation,
     useUpdateMedicationMutation,
     useDeleteMedicationMutation,
     

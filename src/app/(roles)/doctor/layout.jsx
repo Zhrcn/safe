@@ -30,7 +30,7 @@ const sidebarItems = [
     {
         name: 'Messages',
         icon: MessageSquare,
-        link: '/doctor/messages'
+        link: '/doctor/messaging'
     },
     {
         name: 'Settings',

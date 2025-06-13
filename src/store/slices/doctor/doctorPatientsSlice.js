@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { doctorApi } from '@/store/services/doctor/doctorApi';
+import { patients } from '../../../mockdata/patients';
 
 const initialState = {
     patients: [],
@@ -41,7 +42,7 @@ const doctorPatientsSlice = createSlice({
                 doctorApi.endpoints.getPatients.matchFulfilled,
                 (state, action) => {
                     state.loading = false;
-                    state.patients = action.payload;
+                    state.patients = patients;
                 }
             )
             .addMatcher(
@@ -54,7 +55,8 @@ const doctorPatientsSlice = createSlice({
             .addMatcher(
                 doctorApi.endpoints.getPatientDetails.matchFulfilled,
                 (state, action) => {
-                    state.selectedPatient = action.payload;
+                    const patientId = action.payload;
+                    state.selectedPatient = patients.find(p => p.id === patientId);
                 }
             );
     }

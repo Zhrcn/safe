@@ -4,250 +4,282 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
-    Button,
-    Grid,
     Card,
     CardContent,
-    CardActions,
+    Button,
+    Grid,
+    Chip,
+    Stack,
+    Avatar,
+    Tooltip,
+    useTheme,
+    alpha,
     IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
     TextField,
-    MenuItem,
-    CircularProgress,
-    Alert,
 } from '@mui/material';
 import {
-    Add as AddIcon,
-    Edit as EditIcon,
+    VideoCall as VideoCallIcon,
+    Chat as ChatIcon,
+    Person as UserIcon,
+    AccessTime as ClockIcon,
+    Download as DownloadIcon,
+    AttachFile as AttachFileIcon,
+    Check as CheckIcon,
+    Close as CloseIcon,
+    Send as SendIcon,
 } from '@mui/icons-material';
-import { useNotification } from '@/components/ui/Notification';
-import {
-    useGetConsultationsQuery,
-    useCreateConsultationMutation,
-    useUpdateConsultationMutation,
-} from '@/store/services/patient/patientApi';
+import { mockPatientData } from '@/mockdata/patientData';
+import PageHeader from '@/components/patient/PageHeader';
 
-const ConsultationCard = ({ consultation, onEdit }) => (
-    <Card>
-        <CardContent>
-            <Typography variant="h6" gutterBottom>
-                {consultation.doctorName}
-            </Typography>
-            <Typography color="textSecondary" gutterBottom>
-                Type: {consultation.type}
-            </Typography>
-            <Typography color="textSecondary" gutterBottom>
-                Date: {consultation.date} at {consultation.time}
-            </Typography>
-            <Typography variant="body2">
-                Notes: {consultation.notes}
-            </Typography>
-        </CardContent>
-        <CardActions>
-            <IconButton onClick={() => onEdit(consultation)} size="small">
-                <EditIcon />
-            </IconButton>
-        </CardActions>
-    </Card>
-);
-
-const ConsultationDialog = ({ open, onClose, consultation, onSubmit }) => {
-    const [formData, setFormData] = useState({
-        type: consultation?.type || '',
-        doctorId: consultation?.doctorId || '',
-        date: consultation?.date || '',
-        time: consultation?.time || '',
-        notes: consultation?.notes || '',
-    });
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+const ConsultationCard = ({ consultation, onOpenDialog }) => {
+    const theme = useTheme();
+    const statusColors = {
+        scheduled: 'info',
+        completed: 'success',
+        cancelled: 'error',
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit(formData);
+    const statusIcons = {
+        scheduled: <ClockIcon />,
+        completed: <CheckIcon />,
+        cancelled: <CloseIcon />,
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <form onSubmit={handleSubmit}>
-                <DialogTitle>
-                    {consultation ? 'Edit Consultation' : 'New Consultation'}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <TextField
-                            name="type"
-                            label="Consultation Type"
-                            select
-                            value={formData.type}
-                            onChange={handleChange}
-                            required
-                            fullWidth
+        <Card 
+            elevation={0}
+            sx={{
+                height: '100%',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.1)}`,
+                },
+            }}
+        >
+            <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar 
+                            sx={{ 
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                color: theme.palette.primary.main,
+                            }}
                         >
-                            <MenuItem value="general">General Checkup</MenuItem>
-                            <MenuItem value="follow-up">Follow-up</MenuItem>
-                            <MenuItem value="specialist">Specialist</MenuItem>
-                            <MenuItem value="emergency">Emergency</MenuItem>
-                        </TextField>
-                        <TextField
-                            name="doctorId"
-                            label="Doctor"
-                            select
-                            value={formData.doctorId}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        >
-                            <MenuItem value="1">Dr. John Doe</MenuItem>
-                            <MenuItem value="2">Dr. Jane Smith</MenuItem>
-                        </TextField>
-                        <TextField
-                            name="date"
-                            label="Date"
-                            type="date"
-                            value={formData.date}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="time"
-                            label="Time"
-                            type="time"
-                            value={formData.time}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="notes"
-                            label="Notes"
-                            multiline
-                            rows={4}
-                            value={formData.notes}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        />
+                            {consultation.type === 'video' ? <VideoCallIcon /> : <ChatIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" fontWeight="bold">
+                                {consultation.doctorName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {consultation.type.charAt(0).toUpperCase() + consultation.type.slice(1)} Consultation
+                            </Typography>
+                        </Box>
                     </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cancel</Button>
-                    <Button type="submit" variant="contained" color="primary">
-                        {consultation ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </form>
-        </Dialog>
+                    <Chip
+                        icon={statusIcons[consultation.status]}
+                        label={consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
+                        color={statusColors[consultation.status]}
+                        size="small"
+                    />
+                </Box>
+
+                <Stack spacing={2}>
+                    <Box 
+                        sx={{
+                            p: 2,
+                            borderRadius: 1,
+                            bgcolor: alpha(theme.palette.background.default, 0.5),
+                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                        }}
+                    >
+                        <Stack spacing={1}>
+                            <Typography variant="body2">
+                                <strong>Date:</strong> {new Date(consultation.date).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Time:</strong> {consultation.time}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Duration:</strong> {consultation.duration}
+                            </Typography>
+                            <Typography variant="body2">
+                                <strong>Reason:</strong> {consultation.reason}
+                            </Typography>
+                        </Stack>
+                    </Box>
+
+                    {consultation.notes && (
+                        <Typography variant="body2" color="text.secondary">
+                            <strong>Notes:</strong> {consultation.notes}
+                        </Typography>
+                    )}
+
+                    {consultation.attachments && consultation.attachments.length > 0 && (
+                        <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                                Attachments:
+                            </Typography>
+                            <Stack direction="row" spacing={1}>
+                                {consultation.attachments.map((attachment, index) => (
+                                    <Chip
+                                        key={index}
+                                        icon={<AttachFileIcon />}
+                                        label={attachment.name}
+                                        size="small"
+                                        onClick={() => window.open(attachment.url, '_blank')}
+                                    />
+                                ))}
+                            </Stack>
+                        </Box>
+                    )}
+                </Stack>
+
+                <Box display="flex" gap={1} mt={2}>
+                    {consultation.status === 'scheduled' && (
+                        <>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                startIcon={<VideoCallIcon />}
+                                sx={{ flex: 1 }}
+                                onClick={() => onOpenDialog(consultation)}
+                            >
+                                Join {consultation.type === 'video' ? 'Video' : 'Chat'}
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                sx={{ flex: 1 }}
+                            >
+                                Cancel
+                            </Button>
+                        </>
+                    )}
+                    {consultation.status === 'completed' && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<DownloadIcon />}
+                            sx={{ flex: 1 }}
+                        >
+                            Download Summary
+                        </Button>
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
     );
 };
 
-const ConsultationsPage = () => {
-    const { showNotification } = useNotification();
-    const [dialogOpen, setDialogOpen] = useState(false);
+export default function ConsultationsPage() {
+    const [consultations, setConsultations] = useState(mockPatientData.consultations);
     const [selectedConsultation, setSelectedConsultation] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [message, setMessage] = useState('');
 
-    const { data: consultations, isLoading, error } = useGetConsultationsQuery();
-    const [createConsultation] = useCreateConsultationMutation();
-    const [updateConsultation] = useUpdateConsultationMutation();
-
-    const handleCreate = async (formData) => {
-        try {
-            await createConsultation(formData).unwrap();
-            showNotification('Consultation created successfully', 'success');
-            setDialogOpen(false);
-        } catch (error) {
-            showNotification(error.data?.message || 'Failed to create consultation', 'error');
-        }
+    const handleOpenDialog = (consultation) => {
+        setSelectedConsultation(consultation);
+        setDialogOpen(true);
     };
 
-    const handleUpdate = async (formData) => {
-        try {
-            await updateConsultation({
-                id: selectedConsultation.id,
-                ...formData,
-            }).unwrap();
-            showNotification('Consultation updated successfully', 'success');
-            setDialogOpen(false);
-            setSelectedConsultation(null);
-        } catch (error) {
-            showNotification(error.data?.message || 'Failed to update consultation', 'error');
-        }
+    const handleCloseDialog = () => {
+        setDialogOpen(false);
+        setSelectedConsultation(null);
+        setMessage('');
     };
 
-    if (isLoading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box p={3}>
-                <Alert severity="error">
-                    {error.data?.message || 'Failed to load consultations'}
-                </Alert>
-            </Box>
-        );
-    }
+    const handleSendMessage = () => {
+        if (message.trim()) {
+            // Here you would typically send the message to your backend
+            console.log('Sending message:', message);
+            setMessage('');
+        }
+    };
 
     return (
-        <Box p={3}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4">Consultations</Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={() => setDialogOpen(true)}
-                >
-                    New Consultation
-                </Button>
-            </Box>
+        <Box className="container mx-auto px-4 py-8">
+            <PageHeader
+                title="Consultations"
+                description="View and manage your medical consultations"
+            />
 
             <Grid container spacing={3}>
-                {consultations?.map((consultation) => (
-                    <Grid item xs={12} sm={6} md={4} key={consultation.id}>
+                {consultations.map((consultation) => (
+                    <Grid item xs={12} md={6} key={consultation.id}>
                         <ConsultationCard
                             consultation={consultation}
-                            onEdit={(consultation) => {
-                                setSelectedConsultation(consultation);
-                                setDialogOpen(true);
-                            }}
+                            onOpenDialog={handleOpenDialog}
                         />
                     </Grid>
                 ))}
-                {(!consultations || consultations.length === 0) && (
-                    <Grid item xs={12}>
-                        <Alert severity="info">No consultations found</Alert>
-                    </Grid>
-                )}
             </Grid>
 
-            <ConsultationDialog
-                open={dialogOpen}
-                onClose={() => {
-                    setDialogOpen(false);
-                    setSelectedConsultation(null);
-                }}
-                consultation={selectedConsultation}
-                onSubmit={selectedConsultation ? handleUpdate : handleCreate}
-            />
+            <Dialog 
+                open={dialogOpen} 
+                onClose={handleCloseDialog}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    {selectedConsultation?.type === 'video' ? 'Video Consultation' : 'Chat Consultation'}
+                </DialogTitle>
+                <DialogContent>
+                    {selectedConsultation && (
+                        <Stack spacing={2} sx={{ mt: 2 }}>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <Avatar>
+                                    <UserIcon />
+                                </Avatar>
+                                <Typography variant="h6">
+                                    Dr. {selectedConsultation.doctorName}
+                                </Typography>
+                            </Box>
+                            
+                            {selectedConsultation.type === 'chat' && (
+                                <Box sx={{ mt: 2 }}>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={4}
+                                        variant="outlined"
+                                        placeholder="Type your message..."
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                    />
+                                    <Box display="flex" justifyContent="flex-end" mt={1}>
+                                        <Button
+                                            variant="contained"
+                                            endIcon={<SendIcon />}
+                                            onClick={handleSendMessage}
+                                        >
+                                            Send Message
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            )}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog}>Close</Button>
+                    {selectedConsultation?.type === 'video' && (
+                        <Button 
+                            variant="contained" 
+                            startIcon={<VideoCallIcon />}
+                        >
+                            Start Video Call
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </Box>
     );
-};
-
-export default ConsultationsPage;
+}

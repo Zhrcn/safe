@@ -15,9 +15,29 @@ import doctorScheduleReducer from './slices/doctor/doctorScheduleSlice';
 import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
 import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice';
 import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
+import dashboardReducer from './slices/patient/dashboardSlice';
+import { dashboardApi } from './services/patient/dashboardApi';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query';
+
+// Create a root API that will be used as the base for all other APIs
+const rootApi = createApi({
+  reducerPath: 'rootApi',
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'http://localhost:5001/api/v1',
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState().auth.token;
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
+  endpoints: () => ({}),
+});
 
 const store = configureStore({
   reducer: {
+    [rootApi.reducerPath]: rootApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [patientApi.reducerPath]: patientApi.reducer,
@@ -26,6 +46,7 @@ const store = configureStore({
     [patientsApi.reducerPath]: patientsApi.reducer,
     [doctorConsultationsApi.reducerPath]: doctorConsultationsApi.reducer,
     [doctorPrescriptionsApi.reducerPath]: doctorPrescriptionsApi.reducer,
+    [dashboardApi.reducerPath]: dashboardApi.reducer,
     auth: authReducer,
     user: userReducer,
     doctorProfile: doctorProfileReducer,
@@ -33,12 +54,14 @@ const store = configureStore({
     doctorPatients: doctorPatientsReducer,
     doctorConsultations: doctorConsultationsReducer,
     doctorPrescriptions: doctorPrescriptionsReducer,
+    dashboard: dashboardReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
       immutableCheck: false,
     }).concat(
+      rootApi.middleware,
       authApi.middleware,
       userApi.middleware,
       patientApi.middleware,
@@ -46,11 +69,12 @@ const store = configureStore({
       scheduleApi.middleware,
       patientsApi.middleware,
       doctorConsultationsApi.middleware,
-      doctorPrescriptionsApi.middleware
+      doctorPrescriptionsApi.middleware,
+      dashboardApi.middleware
     ),
   devTools: process.env.NODE_ENV !== 'production',
 });
 
 setupListeners(store.dispatch);
 
-export { store }; 
+export default store; 

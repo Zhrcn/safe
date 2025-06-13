@@ -51,7 +51,7 @@ const sidebarItems = [
     {
         name: 'Messages',
         icon: MessageCircle,
-        link: '/patient/messages'
+        link: '/patient/messaging'
     },
     {
         name: 'Prescriptions',

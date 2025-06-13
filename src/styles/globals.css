@@ -94,116 +94,116 @@
 
     /* Paper Components */
     .MuiPaper-root {
-        @apply bg-background text-foreground border-border shadow-sm transition-colors duration-200 !important;
+        @apply bg-background text-foreground border-border shadow-sm transition-colors duration-200;
     }
 
     /* Typography */
     .MuiTypography-root {
-        @apply text-foreground transition-colors duration-200 !important;
+        @apply text-foreground transition-colors duration-200;
     }
 
     /* Form Elements */
     .MuiInputBase-root {
-        @apply bg-background text-foreground border-border rounded-md transition-colors duration-200 !important;
+        @apply bg-background text-foreground border-border rounded-md transition-colors duration-200;
     }
 
     .MuiInputLabel-root {
-        @apply text-muted-foreground transition-colors duration-200 !important;
+        @apply text-muted-foreground transition-colors duration-200;
     }
 
     /* Buttons */
     .MuiButton-root {
-        @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 rounded-md !important;
+        @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 rounded-md;
     }
 
     .MuiButton-outlined {
-        @apply border-primary bg-transparent hover:bg-primary/10 !important;
+        @apply border-primary bg-transparent hover:bg-primary/10;
     }
 
     .MuiButton-text {
-        @apply bg-transparent hover:bg-primary/10 !important;
+        @apply bg-transparent hover:bg-primary/10;
     }
 
     /* List Components */
     .MuiListItem-root {
-        @apply text-foreground hover:bg-muted/40 transition-colors duration-200 !important;
+        @apply text-foreground hover:bg-muted/40 transition-colors duration-200;
     }
 
     .MuiListItem-root.Mui-selected {
-        @apply bg-primary/20 !important;
+        @apply bg-primary/20;
     }
 
     .MuiDivider-root {
-        @apply border-border !important;
+        @apply border-border;
     }
 
     /* Cards */
     .MuiCard-root {
-        @apply bg-card text-card-foreground shadow-sm transition-colors duration-200 rounded-lg !important;
+        @apply shadow-sm transition-colors duration-200 rounded-lg;
     }
 
     /* Tables */
     .MuiTableCell-root {
-        @apply text-foreground border-border transition-colors duration-200 !important;
+        @apply text-foreground border-border transition-colors duration-200;
     }
 
     .MuiTableRow-root:hover {
-        @apply bg-muted/40 transition-colors duration-200 !important;
+        @apply bg-muted/40 transition-colors duration-200;
     }
 
     /* Dialogs and Menus */
     .MuiDialog-paper {
-        @apply bg-background text-foreground shadow-lg transition-colors duration-200 rounded-lg !important;
+        @apply bg-background text-foreground shadow-lg transition-colors duration-200 rounded-lg;
     }
 
     .MuiMenu-paper {
-        @apply bg-popover text-popover-foreground shadow-lg transition-colors duration-200 rounded-lg !important;
+        @apply bg-popover text-popover-foreground shadow-lg transition-colors duration-200 rounded-lg;
     }
 
     .MuiMenuItem-root {
-        @apply text-foreground hover:bg-muted/40 transition-colors duration-200 !important;
+        @apply text-foreground hover:bg-muted/40 transition-colors duration-200;
     }
 
     /* Icons */
     .MuiIconButton-root {
-        @apply text-foreground hover:bg-muted/40 rounded-full transition-colors duration-200 !important;
+        @apply text-foreground hover:bg-muted/40 rounded-full transition-colors duration-200;
     }
 
     /* Form Controls */
     .MuiFormControl-root {
-        @apply w-full !important;
+        @apply w-full;
     }
 
     /* Select */
     .MuiSelect-select {
-        @apply bg-background text-foreground border-border rounded-md !important;
+        @apply bg-background text-foreground border-border rounded-md;
     }
 
     /* Checkbox and Radio */
     .MuiCheckbox-root,
     .MuiRadio-root {
-        @apply text-primary transition-colors duration-200 !important;
+        @apply text-primary transition-colors duration-200;
     }
 
     /* Switch */
     .MuiSwitch-root {
-        @apply text-primary transition-colors duration-200 !important;
+        @apply text-primary transition-colors duration-200;
     }
 
     /* Tabs */
     .MuiTab-root {
-        @apply text-muted-foreground hover:text-foreground transition-colors duration-200 !important;
+        @apply text-muted-foreground hover:text-foreground transition-colors duration-200;
     }
 
     .MuiTab-root.Mui-selected {
-        @apply text-primary !important;
+        @apply text-primary;
     }
 
     /* Focus States */
     .MuiButton-root:focus-visible,
     .MuiIconButton-root:focus-visible,
     .MuiTab-root:focus-visible {
-        @apply outline-none ring-2 ring-primary/40 !important;
+        @apply outline-none ring-2 ring-primary/40;
     }
 }
 

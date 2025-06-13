@@ -29,7 +29,11 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
-import { getPatients, getAppointments, getPatientStatistics } from '@/services/doctorService';
+import { 
+  useGetPatientsQuery,
+  useGetAppointmentsQuery,
+  useGetPatientStatisticsQuery
+} from '@/store/services/doctor/doctorApi';
 import { PageContainer } from '@/components/common';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -328,8 +332,15 @@ function PatientDistributionChart({ data, loading }) {
 }
 
 export default function DashboardPage() {
-  const [patients, setPatients] = useState([]);
-  const [appointments, setAppointments] = useState([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const { data: patients, isLoading: patientsLoading } = useGetPatientsQuery();
+  const { data: appointments, isLoading: appointmentsLoading } = useGetAppointmentsQuery();
+  const { data: statistics, isLoading: statisticsLoading } = useGetPatientStatisticsQuery();
+
+  const isLoading = patientsLoading || appointmentsLoading || statisticsLoading;
+
+  const [patientsData, setPatientsData] = useState([]);
+  const [appointmentsData, setAppointmentsData] = useState([]);
   const [patientStats, setPatientStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -359,8 +370,8 @@ export default function DashboardPage() {
           getPatientStatistics()
         ]);
         
-        setPatients(patientsData);
-        setAppointments(appointmentsData);
+        setPatientsData(patientsData);
+        setAppointmentsData(appointmentsData);
         setPatientStats(statsData);
         
         // In a real app, this would come from the API
@@ -383,22 +394,22 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (Array.isArray(patients)) {
-      setRecentPatients(patients.slice(0, 5));
+    if (Array.isArray(patientsData)) {
+      setRecentPatients(patientsData.slice(0, 5));
     }
     
-    if (Array.isArray(appointments)) {
+    if (Array.isArray(appointmentsData)) {
       setUpcomingAppointments(
-        appointments
+        appointmentsData
           .filter(a => a.status !== 'Rejected')
           .slice(0, 4)
       );
       
       setPendingAppointments(
-        appointments.filter(a => a.status === 'Pending').length
+        appointmentsData.filter(a => a.status === 'Pending').length
       );
     }
-  }, [patients, appointments]);
+  }, [patientsData, appointmentsData]);
 
   // Get today's date in YYYY-MM-DD format safely
   const getTodayDateString = () => {
@@ -413,7 +424,7 @@ export default function DashboardPage() {
   const todayDateString = getTodayDateString();
   
   // Count today's appointments safely with array validation
-  const todayAppointmentsCount = Array.isArray(appointments) ? appointments.filter(a => {
+  const todayAppointmentsCount = Array.isArray(appointmentsData) ? appointmentsData.filter(a => {
     try {
       return a && a.date === todayDateString;
     } catch (err) {
@@ -581,7 +592,7 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   // Triple check patients is an array before any operations
-                  (Array.isArray(patients) ? patients : [])
+                  (Array.isArray(patientsData) ? patientsData : [])
                     .filter(p => p && typeof p === 'object' && p.isCritical === true)
                     .slice(0, 5)
                     .map((patient) => (

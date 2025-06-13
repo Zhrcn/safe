@@ -17,16 +17,18 @@ exports.protect = asyncHandler(async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    req.user = await User.findById(decoded.id).select('-password'); 
-
-    if (!req.user) {
-        return res.status(401).json(new ApiResponse(401, null, 'Not authorized, user not found.'));
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json(new ApiResponse(401, null, 'Not authorized, user not found.'));
     }
 
+    // Attach user to request object
+    req.user = user;
     next();
   } catch (error) {
     console.error('Token verification error:', error);
-    return next(error); 
+    return res.status(401).json(new ApiResponse(401, null, 'Not authorized, token failed.'));
   }
 });
 

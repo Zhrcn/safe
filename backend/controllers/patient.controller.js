@@ -426,7 +426,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 // @route   GET /api/v1/patients/dashboard/summary
 // @access  Private
 const getDashboardSummary = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user.id })
         .select('medicalFile appointments medications')
         .populate('medicalFile')
         .populate({

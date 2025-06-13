@@ -1,0 +1,82 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { pharmacists } from '../../../mockdata/pharmacists';
+
+const initialState = {
+  profile: null,
+  loading: false,
+  error: null,
+};
+
+const pharmacistProfileSlice = createSlice({
+  name: 'pharmacistProfile',
+  initialState,
+  reducers: {
+    fetchProfileStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchProfileSuccess: (state, action) => {
+      state.loading = false;
+      state.profile = action.payload;
+      state.error = null;
+    },
+    fetchProfileFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    updateProfileStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    updateProfileSuccess: (state, action) => {
+      state.loading = false;
+      state.profile = action.payload;
+      state.error = null;
+    },
+    updateProfileFailure: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+  },
+});
+
+// Thunks
+export const fetchPharmacistProfile = (pharmacistId) => async (dispatch) => {
+  try {
+    dispatch(fetchProfileStart());
+    // In a real app, this would be an API call
+    const profile = pharmacists.find(p => p.id === pharmacistId);
+    if (!profile) {
+      throw new Error('Pharmacist not found');
+    }
+    dispatch(fetchProfileSuccess(profile));
+  } catch (error) {
+    dispatch(fetchProfileFailure(error.message));
+  }
+};
+
+export const updatePharmacistProfile = (pharmacistId, updates) => async (dispatch) => {
+  try {
+    dispatch(updateProfileStart());
+    // In a real app, this would be an API call
+    const profile = pharmacists.find(p => p.id === pharmacistId);
+    if (!profile) {
+      throw new Error('Pharmacist not found');
+    }
+    const updatedProfile = { ...profile, ...updates };
+    dispatch(updateProfileSuccess(updatedProfile));
+  } catch (error) {
+    dispatch(updateProfileFailure(error.message));
+  }
+};
+
+export const {
+  fetchProfileStart,
+  fetchProfileSuccess,
+  fetchProfileFailure,
+  updateProfileStart,
+  updateProfileSuccess,
+  updateProfileFailure,
+} = pharmacistProfileSlice.actions;
+
+export default pharmacistProfileSlice.reducer; 

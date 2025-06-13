@@ -15,7 +15,7 @@ export const doctorApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['Doctor', 'Patients', 'Appointments', 'Consultations', 'Prescriptions'],
+    tagTypes: ['Doctor', 'Patients', 'Appointments', 'Consultations', 'Prescriptions', 'Statistics'],
     endpoints: (builder) => ({
         // Profile
         getProfile: builder.query({
@@ -38,13 +38,9 @@ export const doctorApi = createApi({
 
         // Patients
         getPatients: builder.query({
-            query: (params) => ({
-                url: DOCTOR_CONSTANTS.API_ENDPOINTS.PATIENTS,
-                method: 'GET',
-                params,
-            }),
+            query: () => '/patients',
             providesTags: ['Patients'],
-            transformErrorResponse: handleApiError,
+            transformResponse: (response) => response.data
         }),
         getPatientDetails: builder.query({
             query: (patientId) => ({
@@ -57,13 +53,9 @@ export const doctorApi = createApi({
 
         // Appointments
         getAppointments: builder.query({
-            query: (params) => ({
-                url: DOCTOR_CONSTANTS.API_ENDPOINTS.APPOINTMENTS,
-                method: 'GET',
-                params,
-            }),
+            query: () => '/appointments',
             providesTags: ['Appointments'],
-            transformErrorResponse: handleApiError,
+            transformResponse: (response) => response.data
         }),
         getAppointmentsByPatient: builder.query({
             query: (patientId) => ({
@@ -165,6 +157,13 @@ export const doctorApi = createApi({
             invalidatesTags: ['Prescriptions'],
             transformErrorResponse: handleApiError,
         }),
+
+        // Statistics
+        getPatientStatistics: builder.query({
+            query: () => '/statistics',
+            providesTags: ['Statistics'],
+            transformResponse: (response) => response.data
+        }),
     }),
 });
 
@@ -185,4 +184,5 @@ export const {
     useGetPrescriptionsQuery,
     useCreatePrescriptionMutation,
     useUpdatePrescriptionMutation,
+    useGetPatientStatisticsQuery,
 } = doctorApi;

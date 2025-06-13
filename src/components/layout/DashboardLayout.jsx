@@ -27,17 +27,17 @@ import {
     Settings as SettingsIcon,
     ExitToApp as LogoutIcon
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 
 const drawerWidth = 240;
-
+const router = useRouter();
 const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Patients', icon: <PeopleIcon />, path: '/patients' },
     { text: 'Appointments', icon: <CalendarIcon />, path: '/appointments' },
     { text: 'Prescriptions', icon: <PharmacyIcon />, path: '/prescriptions' },
-    { text: 'Messages', icon: <ChatIcon />, path: '/messages' },
+    { text: 'Messages', icon: <ChatIcon />, path: '/messaging' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
 ];
 
@@ -64,7 +64,7 @@ const DashboardLayout = ({ children }) => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        router.push('/');
     };
 
     const drawer = (

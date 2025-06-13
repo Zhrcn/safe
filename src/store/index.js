@@ -15,6 +15,7 @@ import patientConsultationsReducer from './slices/patient/consultationsSlice';
 import patientMedicationsReducer from './slices/patient/medicationsSlice';
 import patientConversationsReducer from './slices/patient/conversationsSlice';
 import patientProvidersReducer from './slices/patient/providersSlice';
+import medicalRecordsReducer from './slices/patient/medicalRecordsSlice';
 
 // Doctor
 import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
@@ -45,6 +46,7 @@ export const store = configureStore({
         patientMedications: patientMedicationsReducer,
         patientConversations: patientConversationsReducer,
         patientProviders: patientProvidersReducer,
+        medicalRecords: medicalRecordsReducer,
         
         // Doctor
         doctorPatients: doctorPatientsReducer,

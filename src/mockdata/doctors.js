@@ -1,0 +1,54 @@
+export const doctors = [
+  {
+    id: '1',
+    user: {
+      id: '2',
+      firstName: 'Doctor',
+      lastName: 'User',
+      email: 'doctor@example.com',
+      phoneNumber: '0987654321',
+      age: 35,
+      address: '456 Doctor St',
+      profileImage: '',
+      gender: 'female',
+      isActive: true,
+      role: 'doctor',
+      isVerified: true,
+      lastLogin: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    medicalLicenseNumber: 'MD123456',
+    specialty: 'Cardiology',
+    experienceYears: 10,
+    education: [
+      {
+        degree: 'MD',
+        institution: 'Harvard Medical School',
+        yearCompleted: 2010,
+      },
+    ],
+    achievements: ['Board Certified in Cardiology'],
+    patientsList: ['1', '2'], // IDs of patients from mockdata/patients.js
+    experience: [
+      {
+        title: 'Cardiologist',
+        institution: {
+          name: 'General Hospital',
+          address: '123 Hospital St',
+        },
+        startDate: new Date('2010-01-01'),
+        endDate: new Date('2020-01-01'),
+        description: 'Worked as a cardiologist',
+      },
+    ],
+    currentHospitalAffiliation: {
+      name: 'City Hospital',
+      address: '789 Hospital Ave',
+      phoneNumber: '5551234567',
+    },
+    rating: 4.5,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+]; 

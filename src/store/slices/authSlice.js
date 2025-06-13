@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { userApi } from '@/store/services/user/userApi';
+import { users } from '../../mockdata/users';
 
 // Helper function to safely access localStorage
 const getStoredToken = () => {
@@ -99,16 +100,24 @@ const authSlice = createSlice({
             .addMatcher(
                 userApi.endpoints.login.matchFulfilled,
                 (state, { payload }) => {
-                    state.user = payload.user;
-                    state.token = payload.token;
-                    state.isAuthenticated = true;
-                    state.loading = false;
-                    state.error = null;
-                    state.lastActivity = Date.now();
-                    
-                    if (typeof window !== 'undefined') {
-                        localStorage.setItem('token', payload.token);
-                        localStorage.setItem('user', JSON.stringify(payload.user));
+                    const { username, password } = payload; // Assuming payload contains username and password
+                    const user = users.find(u => u.username === username && u.password === password);
+
+                    if (user) {
+                        state.user = user;
+                        state.token = `mock-token-${user.id}`;
+                        state.isAuthenticated = true;
+                        state.loading = false;
+                        state.error = null;
+                        state.lastActivity = Date.now();
+                        
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('token', state.token);
+                            localStorage.setItem('user', JSON.stringify(user));
+                        }
+                    } else {
+                        state.loading = false;
+                        state.error = 'Invalid credentials';
                     }
                 }
             )
@@ -124,12 +133,24 @@ const authSlice = createSlice({
             .addMatcher(
                 userApi.endpoints.getCurrentUser.matchFulfilled,
                 (state, { payload }) => {
-                    state.user = payload;
-                    state.isAuthenticated = true;
-                    state.loading = false;
-                    state.error = null;
-                    state.authChecked = true;
-                    state.lastActivity = Date.now();
+                    // For mock data, we can assume if there's a token, the user is authenticated.
+                    // In a real app, this would fetch user details based on the token.
+                    if (state.token) {
+                        const userId = state.token.split('-')[2]; // Extract user ID from mock token
+                        state.user = users.find(u => u.id === userId);
+                        state.isAuthenticated = true;
+                        state.loading = false;
+                        state.error = null;
+                        state.authChecked = true;
+                        state.lastActivity = Date.now();
+                    } else {
+                        state.user = null;
+                        state.token = null;
+                        state.isAuthenticated = false;
+                        state.loading = false;
+                        state.error = 'No token found';
+                        state.authChecked = true;
+                    }
                 }
             )
             // Handle getCurrentUser failure

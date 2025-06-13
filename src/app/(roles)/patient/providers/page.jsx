@@ -1,671 +1,685 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, Box, Grid, TextField, InputAdornment, Tabs, Tab, Card, CardContent,
-  CardActions, Button, Avatar, Chip, Rating, CircularProgress, IconButton, Dialog,
-  DialogTitle, DialogContent, DialogContentText, DialogActions, FormControl, InputLabel,
-  Select, MenuItem, TextareaAutosize
-} from '@mui/material';
-import { 
-  Search, MapPin, Phone, Mail, Award, Calendar, MessageCircle, 
-  Clock, AlertCircle, Check, X
-} from 'lucide-react';
-import { PatientPageContainer } from '@/components/patient/PatientComponents';
-import { useGetUsersQuery } from '@/store/services/user/userApi';
-import { useRouter, usePathname } from 'next/navigation';
+import { mockPatientData } from '@/mockdata/patientData';
 import PageHeader from '@/components/patient/PageHeader';
+import {
+    AccessTime as AccessTimeIcon,
+    Add as PlusIcon,
+    Check as CheckIcon,
+    Close as XIcon,
+    Delete as TrashIcon,
+    Edit as EditIcon,
+    Event as CalendarIcon,
+    LocationOn as LocationIcon,
+    Person as PersonIcon,
+    Search as SearchIcon,
+    Warning as AlertCircleIcon,
+    VideoCall as VideoCallIcon,
+    Chat as ChatIcon,
+    Send as SendIcon,
+    LocalPharmacy as PharmacyIcon,
+    MedicalServices as MedicalServicesIcon,
+    Work as WorkIcon,
+    School as SchoolIcon,
+    Language as LanguageIcon,
+    FilterList as FilterIcon,
+    Sort as SortIcon,
+} from '@mui/icons-material';
+import {
+    Box,
+    Tabs,
+    Tab,
+    TextField,
+    Grid,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Stack,
+    Avatar,
+    Typography,
+    Card,
+    CardContent,
+    Chip,
+    Rating,
+    useTheme,
+    alpha,
+    InputAdornment,
+    IconButton,
+    Menu,
+    MenuItem,
+    CircularProgress,
+    Fade,
+    Tooltip,
+    Divider,
+    Alert,
+    Snackbar,
+} from '@mui/material';
 
-export default function ProvidersPage({ children }) {
-  const router = useRouter();
-  const pathname = usePathname();
+const ProviderCard = ({ provider, type, onOpenDialog }) => {
+    const theme = useTheme();
+    const isDoctor = type === 'doctor';
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [providers, setProviders] = useState({ doctors: [], pharmacists: [] });
-  const [tabValue, setTabValue] = useState(0);
-  
-  const { data: users, isLoading: loadingProviders, error: providersError } = useGetUsersQuery();
-
-  useEffect(() => {
-    if (users) {
-      const doctors = users.filter(user => user.role === 'doctor');
-      const pharmacists = users.filter(user => user.role === 'pharmacist');
-      setProviders({ doctors, pharmacists });
-    }
-    if (providersError) {
-      console.error('Error loading providers:', providersError);
-    }
-  }, [users, providersError]);
-
-  const loading = loadingProviders;
-  const error = providersError;
-
-  const [appointmentDialog, setAppointmentDialog] = useState(false);
-  const [consultationDialog, setConsultationDialog] = useState(false);
-  const [medicineDialog, setMedicineDialog] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTimeSlot, setAppointmentTimeSlot] = useState('');
-  const [appointmentReason, setAppointmentReason] = useState('');
-  const [consultationReason, setConsultationReason] = useState('');
-  const [preferredTime, setPreferredTime] = useState('');
-  const [medicationName, setMedicationName] = useState('');
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [availabilityResult, setAvailabilityResult] = useState(null);
-  
-  const [appointmentSuccess, setAppointmentSuccess] = useState(false);
-  const [consultationSuccess, setConsultationSuccess] = useState(false);
-
-  const handleTabChange = (event, newValue) => {
-    router.push(`/patient/providers/${newValue}`);
-  };
-
-  const currentTab = pathname.split('/').pop();
-
-  const filteredProviders = currentTab === 'doctors' 
-    ? providers.doctors.filter(provider =>
-        provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.hospital.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : providers.pharmacists.filter(provider =>
-        provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.pharmacy.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-  const handleAppointmentOpen = (provider) => {
-    setSelectedProvider(provider);
-    setAppointmentDialog(true);
-  };
-
-  const handleConsultationOpen = (provider) => {
-    setSelectedProvider(provider);
-    setConsultationDialog(true);
-  };
-
-  const handleMedicineDialogOpen = (provider) => {
-    setSelectedProvider(provider);
-    setMedicineDialog(true);
-    setAvailabilityResult(null);
-  };
-
-  const handleDialogClose = () => {
-    setAppointmentDialog(false);
-    setConsultationDialog(false);
-    setMedicineDialog(false);
-    setAppointmentDate('');
-    setAppointmentTimeSlot('');
-    setAppointmentReason('');
-    setConsultationReason('');
-    setPreferredTime('');
-    setMedicationName('');
-    setAvailabilityResult(null);
-    setAppointmentSuccess(false);
-    setConsultationSuccess(false);
-  };
-
-  const handleCheckAvailability = async () => {
-    if (!medicationName.trim() || !selectedProvider) return;
-    
-    try {
-      setCheckingAvailability(true);
-      const result = await api.get(`/pharmacies/${selectedProvider.id}/availability`, { params: { medication: medicationName } });
-      setAvailabilityResult(result);
-    } catch (error) {
-      console.error('Error checking medicine availability:', error);
-    } finally {
-      setCheckingAvailability(false);
-    }
-  };
-
-  const handleScheduleAppointment = async () => {
-    if (!appointmentTimeSlot || !appointmentReason || !selectedProvider) return;
-    
-    try {
-      const appointment = {
-        doctorId: selectedProvider.id,
-        timeSlot: appointmentTimeSlot,
-        reason: appointmentReason
-      };
-      
-      await api.post('/appointments', appointment);
-      setAppointmentSuccess(true);
-      
-      setTimeout(() => {
-        handleDialogClose();
-      }, 3000);
-    } catch (error) {
-      console.error('Error scheduling appointment:', error);
-      setError('Failed to schedule appointment. Please try again later.');
-    }
-  };
-
-  const handleRequestConsultation = async () => {
-    if (!consultationReason || !preferredTime || !selectedProvider) return;
-    
-    try {
-      await api.post('/consultations', {
-        doctorId: selectedProvider.id,
-        reason: consultationReason,
-        preferredTime: preferredTime,
-        attachments: []
-      });
-      
-      setConsultationSuccess(true);
-      
-      setTimeout(() => {
-        handleDialogClose();
-        window.location.href = '/patient/consultations';
-      }, 3000);
-    } catch (error) {
-      console.error('Error requesting consultation:', error);
-      setError('Failed to request consultation. Please try again later.');
-    }
-  };
-
-  const toggleDoctorAccess = async (doctorId, currentAccess) => {
-    try {
-      await api.patch(`/doctors/${doctorId}/access`, { hasAccess: !currentAccess });
-      setProviders(prev => ({
-        ...prev,
-        doctors: prev.doctors.map(doctor => 
-          doctor.id === doctorId 
-            ? { ...doctor, hasAccess: !currentAccess } 
-            : doctor
-        )
-      }));
-    } catch (error) {
-      console.error('Error updating doctor access:', error);
-    }
-  };
-
-  const makePrimaryDoctor = async (doctorId) => {
-    try {
-      await api.patch(`/doctors/${doctorId}/primary`);
-      
-    } catch (error) {
-      console.error('Error setting primary doctor:', error);
-    }
-  };
-
-  return (
-    <Box className="container mx-auto px-4 py-8">
-      <PageHeader
-        title="Healthcare Providers"
-        description="Connect with doctors and pharmacists"
-      />
-
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-        <Tabs
-          value={currentTab}
-          onChange={handleTabChange}
-          aria-label="provider tabs"
+    return (
+        <Card
+            elevation={1}
+            sx={{
+                height: '100%',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                borderRadius: 2,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                    boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.1)}`,
+                },
+                bgcolor: theme.palette.background.paper,
+            }}
         >
-          <Tab
-            label="Doctors"
-            value="doctors"
-            onClick={() => router.push('/patient/providers/doctors')}
-          />
-          <Tab
-            label="Pharmacists"
-            value="pharmacists"
-            onClick={() => router.push('/patient/providers/pharmacists')}
-          />
-        </Tabs>
-      </Box>
-
-      {loading ? (
-        <Box className="flex justify-center items-center h-64">
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Box className="flex justify-center items-center h-64">
-          <Typography color="error">{error.message || 'An error occurred'}</Typography>
-        </Box>
-      ) : (
-        <>
-        <Box className="mb-6">
-          <TextField
-            fullWidth
-            variant="outlined"
-            size="medium"
-              placeholder={currentTab === 'doctors' ? "Search doctors by name, specialty, or hospital..." : "Search pharmacists by name or pharmacy..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                    <Search size={20} className="text-muted-foreground" />
-                </InputAdornment>
-              ),
-                className: 'text-foreground bg-background',
-             }}
-          />
-        </Box>
-
-          {filteredProviders.length === 0 ? (
-            <Box className="text-center p-8 bg-muted rounded-lg">
-              <AlertCircle size={48} className="mx-auto text-muted-foreground mb-4" />
-              <Typography variant="h6" className="font-semibold">
-                No providers found
-              </Typography>
-              <Typography variant="body2" component="div" className="text-muted-foreground">
-                Try adjusting your search or browse all providers
-              </Typography>
-            </Box>
-          ) : (
-            <Grid container spacing={3}>
-              {filteredProviders.map((provider) => (
-                <Grid item xs={12} md={6} lg={4} key={provider.id}>
-                  {currentTab === 'doctors' ? (
-                    <Card className="h-full flex flex-col border border-border bg-card hover:shadow-md transition-shadow">
-                      <CardContent className="flex-1">
-                        <Box className="flex items-start justify-between mb-4">
-                          <Box className="flex items-center">
-                            <Avatar 
-                              src={provider.photo} 
-                              alt={provider.name}
-                              className="w-12 h-12 mr-3 bg-primary/10"
-                            >
-                              {provider.name.charAt(0)}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="h6" className="font-semibold">
+            <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar
+                            sx={{
+                                bgcolor: isDoctor ? alpha(theme.palette.primary.main, 0.1) : alpha(theme.palette.success.main, 0.1),
+                                color: isDoctor ? theme.palette.primary.main : theme.palette.success.main,
+                                width: 48,
+                                height: 48,
+                            }}
+                        >
+                            {isDoctor ? <MedicalServicesIcon fontSize="small" /> : <PharmacyIcon fontSize="small" />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" fontWeight="bold" color="text.primary">
                                 {provider.name}
-                              </Typography>
-                              <Typography variant="body2" component="div" className="text-muted-foreground">
-                                {provider.specialty}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <IconButton 
-                            onClick={() => toggleDoctorAccess(provider.id, provider.hasAccess)}
-                            color={provider.hasAccess ? "primary" : "default"}
-                            className="h-8 w-8"
-                            title={provider.hasAccess ? "Revoke access to medical files" : "Grant access to medical files"}
-                          >
-                            {provider.hasAccess ? <Check size={20} /> : <X size={20} />}
-                          </IconButton>
-                        </Box>
-                        
-                        <Box className="mb-4">
-                          <Box className="flex items-center mb-2">
-                            <MapPin size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2" component="span">{provider.hospital}</Typography>
-                          </Box>
-                          <Box className="flex items-center mb-2">
-                            <Award size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2" component="span">{provider.yearsExperience} years experience</Typography>
-                          </Box>
-                          <Box className="flex items-center">
-                            <Rating 
-                              value={provider.rating} 
-                              readOnly 
-                              precision={0.1} 
-                              size="small"
-                            />
-                            <Typography variant="body2" component="span" className="ml-1">
-                              ({provider.rating})
                             </Typography>
-                          </Box>
-                        </Box>
-                        
-                        {provider.isPrimary && (
-                          <Chip 
-                            label="Primary Doctor" 
-                            size="small" 
-                            color="primary" 
-                            className="mb-2"
-                          />
-                        )}
-                      </CardContent>
-                      <CardActions className="bg-muted/30 p-3 flex flex-wrap justify-between">
-                        <Box className="flex flex-wrap gap-2 mb-2 w-full">
-                          <Button 
-                            size="small" 
-                            variant="contained" 
-                            startIcon={<Calendar size={16} />}
-                            onClick={() => handleAppointmentOpen(provider)}
-                            className="bg-primary text-primary-foreground flex-grow"
-                          >
-                            Schedule Appointment
-                          </Button>
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            startIcon={<MessageCircle size={16} />}
-                            onClick={() => handleConsultationOpen(provider)}
-                            className="text-primary border-primary hover:bg-primary/10 flex-grow"
-                          >
-                            Request Consultation
-                          </Button>
-                        </Box>
-                        <Box className="flex justify-between w-full">
-                          <Button 
-                            size="small" 
-                            variant="text" 
-                            startIcon={<MessageCircle size={16} />}
-                            onClick={() => window.location.href = '/patient/messaging'}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            Chat
-                          </Button>
-                          {!provider.isPrimary && (
-                            <Button 
-                              size="small" 
-                              variant="text" 
-                              onClick={() => makePrimaryDoctor(provider.id)}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              Set as Primary
-                            </Button>
-                          )}
-                        </Box>
-                      </CardActions>
-                    </Card>
-                  ) : (
-                    <Card className="h-full flex flex-col border border-border bg-card hover:shadow-md transition-shadow">
-                      <CardContent className="flex-1">
-                        <Box className="flex items-center mb-4">
-                          <Avatar 
-                            src={provider.photo} 
-                            alt={provider.name}
-                            className="w-12 h-12 mr-3 bg-green-100 text-green-600"
-                          >
-                            {provider.name.charAt(0)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="h6" className="font-semibold">
-                              {provider.name}
+                            <Typography variant="body2" color="text.secondary">
+                                {isDoctor ? provider.specialty : provider.role}
                             </Typography>
-                            <Typography variant="body2" component="div" className="text-muted-foreground">
-                              {provider.pharmacy}
-                            </Typography>
-                          </Box>
                         </Box>
-                        
-                        <Box className="mb-4">
-                          <Box className="flex items-center mb-2">
-                            <Phone size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2" component="span">+963 11 123 4567</Typography>
-                          </Box>
-                          <Box className="flex items-center mb-2">
-                            <Mail size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2" component="span">contact@{provider.pharmacy.toLowerCase().replace(/\s+/g, '')}.sy</Typography>
-                          </Box>
-                          <Box className="flex items-center">
-                            <Rating 
-                              value={provider.rating} 
-                              readOnly 
-                              precision={0.1} 
-                              size="small"
-                            />
-                            <Typography variant="body2" component="span" className="ml-1">
-                              ({provider.rating})
-                            </Typography>
-                          </Box>
-                          <Box className="flex items-center mt-2">
-                            <Award size={16} className="mr-2 text-muted-foreground" />
-                            <Typography variant="body2" component="span">{provider.yearsExperience} years experience</Typography>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                      <CardActions className="bg-muted/30 p-3">
-                        <Button 
-                          size="small" 
-                          variant="outlined" 
-                          startIcon={<MessageCircle size={16} />}
-                          className="mr-2"
-                          onClick={() => window.location.href = '/patient/messaging'}
-                        >
-                          Chat
-                        </Button>
-                        <Button 
-                          size="small" 
-                          variant="outlined" 
-                          startIcon={<Search size={16} />}
-                          onClick={() => handleMedicineDialogOpen(provider)}
-                        >
-                          Check Availability
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  )}
-                </Grid>
-              ))}
-            </Grid>
-          )}
-          
-          <Dialog 
-            open={appointmentDialog} 
-            onClose={handleDialogClose}
-            fullWidth
-            maxWidth="sm"
-          >
-            <DialogTitle className="bg-primary text-primary-foreground">
-              Schedule Appointment with {selectedProvider?.name}
-            </DialogTitle>
-            <DialogContent className="mt-4">
-              {appointmentSuccess ? (
-                <Box className="text-center py-6">
-                  <Check size={48} className="mx-auto text-green-500 mb-2" />
-                  <Typography variant="h6" className="font-semibold">
-                    Appointment Scheduled!
-                  </Typography>
-                  <Typography variant="body1">
-                    Your appointment has been successfully scheduled.
-                  </Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                        <Rating value={provider.rating} readOnly size="small" />
+                        <Typography variant="body2" color="text.secondary">
+                            ({provider.rating})
+                        </Typography>
+                    </Box>
                 </Box>
-              ) : (
-                <>
-                  <DialogContentText className="mb-4">
-                    Please select a time slot and provide a reason for your appointment with {selectedProvider?.name}.
-                  </DialogContentText>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth className="mb-4">
-                        <InputLabel id="appointment-time-slot-label">Time Slot</InputLabel>
-                        <Select
-                          labelId="appointment-time-slot-label"
-                          value={appointmentTimeSlot}
-                          onChange={(e) => setAppointmentTimeSlot(e.target.value)}
-                          label="Time Slot"
-                        >
-                          <MenuItem value="morning">Morning (9:00 AM)</MenuItem>
-                          <MenuItem value="afternoon">Afternoon (1:00 PM)</MenuItem>
-                          <MenuItem value="evening">Evening (6:00 PM)</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Reason for Visit"
-                        multiline
-                        rows={3}
-                        value={appointmentReason}
-                        onChange={(e) => setAppointmentReason(e.target.value)}
-                        className="mb-2"
-                      />
-                    </Grid>
-                  </Grid>
-                </>
-              )}
-            </DialogContent>
-            <DialogActions className="bg-muted/30 p-3">
-              {!appointmentSuccess && (
-                <>
-                  <Button 
-                    onClick={handleDialogClose} 
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleScheduleAppointment} 
-                    variant="contained"
-                    disabled={!appointmentTimeSlot || !appointmentReason}
-                    className="bg-primary text-primary-foreground"
-                  >
-                    Schedule Appointment
-                  </Button>
-                </>
-              )}
-            </DialogActions>
-          </Dialog>
-          
-          <Dialog 
-            open={consultationDialog} 
-            onClose={handleDialogClose}
-            fullWidth
-            maxWidth="sm"
-          >
-            <DialogTitle className="bg-primary text-primary-foreground">
-              Request Medical Consultation with {selectedProvider?.name}
-            </DialogTitle>
-            <DialogContent className="mt-4">
-              {consultationSuccess ? (
-                <Box className="text-center py-6">
-                  <Check size={48} className="mx-auto text-green-500 mb-2" />
-                  <Typography variant="h6" className="font-semibold">
-                    Consultation Requested!
-                  </Typography>
-                  <Typography variant="body1">
-                    Your consultation request has been sent successfully.
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <DialogContentText className="mb-4">
-                    Please provide details for your medical consultation request.
-                  </DialogContentText>
-                  <TextField
-                    fullWidth
-                    label="Reason for Consultation"
-                    multiline
-                    rows={4}
-                    value={consultationReason}
-                    onChange={(e) => setConsultationReason(e.target.value)}
-                    className="mb-4"
-                  />
-                  <FormControl fullWidth className="mb-2">
-                    <InputLabel>Preferred Time</InputLabel>
-                    <Select
-                      value={preferredTime}
-                      onChange={(e) => setPreferredTime(e.target.value)}
-                      label="Preferred Time"
-                    >
-                      <MenuItem value="Morning (8AM-12PM)">Morning (8AM-12PM)</MenuItem>
-                      <MenuItem value="Afternoon (12PM-4PM)">Afternoon (12PM-4PM)</MenuItem>
-                      <MenuItem value="Evening (4PM-8PM)">Evening (4PM-8PM)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </>
-              )}
-            </DialogContent>
-            <DialogActions className="bg-muted/30 p-3">
-              {!consultationSuccess && (
-                <>
-                  <Button 
-                    onClick={handleDialogClose} 
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleRequestConsultation} 
-                    variant="contained"
-                    disabled={!consultationReason || !preferredTime}
-                    className="bg-primary text-primary-foreground"
-                  >
-                    Send Request
-                  </Button>
-                </>
-              )}
-            </DialogActions>
-          </Dialog>
-          
-          {/* Medicine Availability Dialog */}
-          <Dialog 
-            open={medicineDialog} 
-            onClose={handleDialogClose}
-            fullWidth
-            maxWidth="sm"
-          >
-            <DialogTitle className="bg-primary text-primary-foreground">
-              Check Medicine Availability at {selectedProvider?.pharmacy}
-            </DialogTitle>
-            <DialogContent className="mt-4">
-              <DialogContentText className="mb-4">
-                Enter the name of the medication you want to check availability for.
-              </DialogContentText>
-              <Box className="flex mb-4">
-                <TextField
-                  fullWidth
-                  label="Medication Name"
-                  value={medicationName}
-                  onChange={(e) => setMedicationName(e.target.value)}
-                  className="mr-2"
-                />
-                <Button 
-                  variant="contained"
-                  onClick={handleCheckAvailability}
-                  disabled={!medicationName.trim() || checkingAvailability}
-                  className="bg-primary text-primary-foreground whitespace-nowrap"
-                >
-                  {checkingAvailability ? (
-                    <CircularProgress size={24} className="text-primary-foreground" />
-                  ) : (
-                    'Check'
-                  )}
-                </Button>
-              </Box>
 
-              {availabilityResult && (
-                <Box className={`p-4 rounded-md ${availabilityResult.isAvailable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                  <Box className="flex items-center mb-2">
-                    {availabilityResult.isAvailable ? (
-                      <Check className="mr-2 text-green-500" />
-                    ) : (
-                      <X className="mr-2 text-red-500" />
+                <Stack spacing={2}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 1,
+                            bgcolor: alpha(theme.palette.background.default, 0.5),
+                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                        }}
+                    >
+                        <Stack spacing={1}>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <LocationIcon color="action" fontSize="small" />
+                                <Typography variant="body2" color="text.primary">
+                                    {isDoctor ? provider.hospital : provider.pharmacy}
+                                </Typography>
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <WorkIcon color="action" fontSize="small" />
+                                <Typography variant="body2" color="text.primary">
+                                    {provider.experience} years experience
+                                </Typography>
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <SchoolIcon color="action" fontSize="small" />
+                                <Typography variant="body2" color="text.primary">
+                                    {provider.education && provider.education.length > 0 ?
+                                        `${provider.education[provider.education.length - 1].degree} from ${provider.education[provider.education.length - 1].institution} (${provider.education[provider.education.length - 1].year})`
+                                        : 'Education: N/A'}
+                                </Typography>
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <LanguageIcon color="action" fontSize="small" />
+                                <Typography variant="body2" color="text.primary">
+                                    {provider.languages.join(', ')}
+                                </Typography>
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <AccessTimeIcon color="action" fontSize="small" />
+                                <Typography variant="body2" color="text.primary">
+                                    {isDoctor ? 'Available for consultations' : `Working hours: ${provider.workingHours}`}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                    </Box>
+
+                    {!isDoctor && provider.services && (
+                        <Box>
+                            <Typography variant="subtitle2" gutterBottom color="text.primary">
+                                Services:
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {provider.services.map((service, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={service}
+                                        size="small"
+                                        sx={{ m: 0.5 }}
+                                    />
+                                ))}
+                            </Stack>
+                        </Box>
                     )}
-                    <Typography variant="h6" className={availabilityResult.isAvailable ? 'text-green-700' : 'text-red-700'}>
-                      {availabilityResult.isAvailable ? 'Available' : 'Not Available'}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body1" className={availabilityResult.isAvailable ? 'text-green-600' : 'text-red-600'}>
-                    {availabilityResult.medication} is {availabilityResult.isAvailable ? 'in stock' : 'out of stock'} at {availabilityResult.pharmacy}.
-                  </Typography>
-                  {availabilityResult.isAvailable && (
-                    <Typography variant="body2" component="div" className="mt-1 flex items-center text-green-600">
-                      <Clock size={16} className="mr-1" /> 
-                      Current stock: {availabilityResult.quantity} units
-                    </Typography>
-                  )}
+                </Stack>
+
+                <Box display="flex" gap={1} mt={2}>
+                    {isDoctor ? (
+                        <>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                startIcon={<VideoCallIcon />}
+                                sx={{ flex: 1 }}
+                                onClick={() => onOpenDialog(provider, 'appointment')}
+                            >
+                                Book Appointment
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<ChatIcon />}
+                                sx={{ flex: 1 }}
+                                onClick={() => onOpenDialog(provider, 'message')}
+                            >
+                                Message
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                startIcon={<PharmacyIcon />}
+                                sx={{ flex: 1 }}
+                                onClick={() => onOpenDialog(provider, 'medicine')}
+                            >
+                                Check Medicine
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<ChatIcon />}
+                                sx={{ flex: 1 }}
+                                onClick={() => onOpenDialog(provider, 'message')}
+                            >
+                                Message
+                            </Button>
+                        </>
+                    )}
                 </Box>
-              )}
-            </DialogContent>
-            <DialogActions className="bg-muted/30 p-3">
-              <Button 
-                onClick={handleDialogClose} 
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Close
-              </Button>
-              {availabilityResult && availabilityResult.isAvailable && (
-                <Button 
-                  variant="contained"
-                  className="bg-primary text-primary-foreground"
-                  onClick={() => window.location.href = '/patient/messaging'}
+            </CardContent>
+        </Card>
+    );
+};
+
+export default function ProvidersPage() {
+    const [activeTab, setActiveTab] = useState(0);
+    const [selectedProvider, setSelectedProvider] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogType, setDialogType] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [sortAnchorEl, setSortAnchorEl] = useState(null);
+    const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+    const [sortBy, setSortBy] = useState('rating');
+    const [filterBy, setFilterBy] = useState('all');
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const theme = useTheme();
+
+    // Simulate loading state
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleTabChange = (_, newValue) => {
+        setActiveTab(newValue);
+        setSearchQuery('');
+        setSortBy('rating');
+        setFilterBy('all');
+    };
+
+    const handleOpenDialog = (provider, type) => {
+        setSelectedProvider(provider);
+        setDialogType(type);
+        setDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setDialogOpen(false);
+        setSelectedProvider(null);
+        setDialogType('');
+        setMessage('');
+    };
+
+    const handleSendMessage = () => {
+        if (message.trim()) {
+            setSnackbar({
+                open: true,
+                message: 'Message sent successfully!',
+                severity: 'success'
+            });
+            setMessage('');
+            handleCloseDialog();
+        }
+    };
+
+    const handleSortClick = (event) => {
+        setSortAnchorEl(event.currentTarget);
+    };
+
+    const handleFilterClick = (event) => {
+        setFilterAnchorEl(event.currentTarget);
+    };
+
+    const handleSortClose = () => {
+        setSortAnchorEl(null);
+    };
+
+    const handleFilterClose = () => {
+        setFilterAnchorEl(null);
+    };
+
+    const handleSortSelect = (value) => {
+        setSortBy(value);
+        handleSortClose();
+    };
+
+    const handleFilterSelect = (value) => {
+        setFilterBy(value);
+        handleFilterClose();
+    };
+
+    const sortProviders = (providers) => {
+        return [...providers].sort((a, b) => {
+            switch (sortBy) {
+                case 'rating':
+                    return b.rating - a.rating;
+                case 'experience':
+                    return b.experience - a.experience;
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                default:
+                    return 0;
+            }
+        });
+    };
+
+    const filterProviders = (providers) => {
+        if (filterBy === 'all') return providers;
+        return providers.filter(provider => {
+            switch (filterBy) {
+                case 'available':
+                    return provider.available;
+                case 'online':
+                    return provider.online;
+                default:
+                    return true;
+            }
+        });
+    };
+
+    const filteredDoctors = filterProviders(
+        sortProviders(
+            mockPatientData.doctors.filter(doctor =>
+                doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                doctor.hospital.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        )
+    );
+
+    const filteredPharmacists = filterProviders(
+        sortProviders(
+            mockPatientData.pharmacists.filter(pharmacist =>
+                pharmacist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (pharmacist.specialties && pharmacist.specialties.some(specialty => 
+                    specialty.toLowerCase().includes(searchQuery.toLowerCase())
+                )) ||
+                pharmacist.pharmacy.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        )
+    );
+
+    const renderEmptyState = () => (
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 8,
+                px: 2,
+                textAlign: 'center',
+            }}
+        >
+            <Avatar
+                sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: theme.palette.primary.main,
+                    width: 64,
+                    height: 64,
+                    mb: 2,
+                }}
+            >
+                {activeTab === 0 ? <MedicalServicesIcon /> : <PharmacyIcon />}
+            </Avatar>
+            <Typography variant="h6" color="text.primary" gutterBottom>
+                No {activeTab === 0 ? 'Doctors' : 'Pharmacists'} Found
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                Try adjusting your search or filters to find what you're looking for.
+            </Typography>
+        </Box>
+    );
+
+    return (
+        <Box sx={{ p: 3 }}>
+            <PageHeader
+                title="Healthcare Providers"
+                subtitle="Find and connect with doctors and pharmacists"
+                breadcrumbs={[
+                    { label: 'Providers', href: '/patient/providers' },
+                    { label: 'doctors', href: '/patient/dashboard' },
+                ]}
+            />
+
+            <Box sx={{ mb: 3 }}>
+                <Tabs
+                    value={activeTab}
+                    onChange={handleTabChange}
+                    sx={{
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        mb: 3,
+                    }}
                 >
-                  Message Pharmacy
-                </Button>
-              )}
-            </DialogActions>
-          </Dialog>
-        </>
-      )}
-    </Box>
-  );
+                    <Tab
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <MedicalServicesIcon fontSize="small" />
+                                <Typography>Doctors</Typography>
+                            </Box>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <PharmacyIcon fontSize="small" />
+                                <Typography>Pharmacists</Typography>
+                            </Box>
+                        }
+                    />
+                </Tabs>
+
+                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                    <TextField
+                        fullWidth
+                        placeholder={`Search ${activeTab === 0 ? 'doctors' : 'pharmacists'}...`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                            },
+                        }}
+                    />
+                    <Tooltip title="Sort">
+                        <IconButton
+                            onClick={handleSortClick}
+                            sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                },
+                            }}
+                        >
+                            <SortIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Filter">
+                        <IconButton
+                            onClick={handleFilterClick}
+                            sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                },
+                            }}
+                        >
+                            <FilterIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+
+                <Menu
+                    anchorEl={sortAnchorEl}
+                    open={Boolean(sortAnchorEl)}
+                    onClose={handleSortClose}
+                >
+                    <MenuItem onClick={() => handleSortSelect('rating')}>
+                        Sort by Rating
+                    </MenuItem>
+                    <MenuItem onClick={() => handleSortSelect('experience')}>
+                        Sort by Experience
+                    </MenuItem>
+                    <MenuItem onClick={() => handleSortSelect('name')}>
+                        Sort by Name
+                    </MenuItem>
+                </Menu>
+
+                <Menu
+                    anchorEl={filterAnchorEl}
+                    open={Boolean(filterAnchorEl)}
+                    onClose={handleFilterClose}
+                >
+                    <MenuItem onClick={() => handleFilterSelect('all')}>
+                        All Providers
+                    </MenuItem>
+                    <MenuItem onClick={() => handleFilterSelect('available')}>
+                        Available Now
+                    </MenuItem>
+                    <MenuItem onClick={() => handleFilterSelect('online')}>
+                        Online
+                    </MenuItem>
+                </Menu>
+
+                {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <Grid container spacing={3}>
+                        {activeTab === 0 ? (
+                            filteredDoctors.length > 0 ? (
+                                filteredDoctors.map((doctor) => (
+                                    <Grid item xs={12} sm={6} md={4} key={doctor.id}>
+                                        <ProviderCard
+                                            provider={doctor}
+                                            type="doctor"
+                                            onOpenDialog={handleOpenDialog}
+                                        />
+                                    </Grid>
+                                ))
+                            ) : (
+                                <Grid item xs={12}>
+                                    {renderEmptyState()}
+                                </Grid>
+                            )
+                        ) : (
+                            filteredPharmacists.length > 0 ? (
+                                filteredPharmacists.map((pharmacist) => (
+                                    <Grid item xs={12} sm={6} md={4} key={pharmacist.id}>
+                                        <ProviderCard
+                                            provider={pharmacist}
+                                            type="pharmacist"
+                                            onOpenDialog={handleOpenDialog}
+                                        />
+                                    </Grid>
+                                ))
+                            ) : (
+                                <Grid item xs={12}>
+                                    {renderEmptyState()}
+                                </Grid>
+                            )
+                        )}
+                    </Grid>
+                )}
+            </Box>
+
+            <Dialog
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                    },
+                }}
+            >
+                <DialogTitle>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        {dialogType === 'appointment' && <CalendarIcon color="primary" />}
+                        {dialogType === 'message' && <ChatIcon color="primary" />}
+                        {dialogType === 'medicine' && <PharmacyIcon color="primary" />}
+                        <Typography variant="h6">
+                            {dialogType === 'appointment' && 'Book Appointment'}
+                            {dialogType === 'message' && 'Send Message'}
+                            {dialogType === 'medicine' && 'Check Medicine'}
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    {selectedProvider && (
+                        <Box sx={{ py: 2 }}>
+                            <Box display="flex" alignItems="center" gap={2} mb={3}>
+                                <Avatar
+                                    sx={{
+                                        bgcolor: activeTab === 0
+                                            ? alpha(theme.palette.primary.main, 0.1)
+                                            : alpha(theme.palette.success.main, 0.1),
+                                        color: activeTab === 0
+                                            ? theme.palette.primary.main
+                                            : theme.palette.success.main,
+                                        width: 48,
+                                        height: 48,
+                                    }}
+                                >
+                                    {activeTab === 0 ? <MedicalServicesIcon /> : <PharmacyIcon />}
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h6">{selectedProvider.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {activeTab === 0 ? selectedProvider.specialty : selectedProvider.role}
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            {dialogType === 'message' && (
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    placeholder="Type your message..."
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    sx={{ mb: 2 }}
+                                />
+                            )}
+
+                            {dialogType === 'appointment' && (
+                                <Stack spacing={2}>
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        label="Preferred Date"
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        type="time"
+                                        label="Preferred Time"
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        label="Reason for Visit"
+                                        placeholder="Please describe your symptoms or reason for visit..."
+                                    />
+                                </Stack>
+                            )}
+
+                            {dialogType === 'medicine' && (
+                                <Stack spacing={2}>
+                                    <TextField
+                                        fullWidth
+                                        label="Medicine Name"
+                                        placeholder="Enter the name of the medicine..."
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        label="Additional Information"
+                                        placeholder="Any specific concerns or questions about the medicine..."
+                                    />
+                                </Stack>
+                            )}
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button
+                        onClick={handleCloseDialog}
+                        variant="outlined"
+                        startIcon={<XIcon />}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={dialogType === 'message' ? handleSendMessage : handleCloseDialog}
+                        variant="contained"
+                        startIcon={dialogType === 'message' ? <SendIcon /> : <CheckIcon />}
+                    >
+                        {dialogType === 'message' ? 'Send' : 'Confirm'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </Box>
+    );
 } 

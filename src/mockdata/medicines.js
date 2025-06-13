@@ -1,0 +1,27 @@
+export const medicines = [
+  {
+    id: '1',
+    name: 'Lisinopril',
+    genericName: 'Lisinopril',
+    description: 'Used to treat high blood pressure and heart failure.',
+    category: 'Antihypertensive',
+    availableForms: [
+      {
+        form: 'Tablet',
+        strengths: ['5mg', '10mg', '20mg', '40mg'],
+      },
+    ],
+    sideEffects: ['Dizziness', 'Cough', 'Headache'],
+    contraindications: ['Pregnancy', 'Angioedema'],
+    interactions: ['Potassium supplements', 'Lithium'],
+    storageInstructions: 'Store at room temperature.',
+    manufacturer: 'Pfizer',
+    barcode: '123456789',
+    isPrescriptionRequired: true,
+    availableStock: 100,
+    usageInstructions: 'Take once daily with or without food.',
+    status: 'active',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+]; 

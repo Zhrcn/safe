@@ -1,8 +1,8 @@
 import { jwtDecode } from 'jwt-decode';
 import { AUTH_CONSTANTS } from '@/config/constants';
 
-// Token storage key
-const TOKEN_KEY = AUTH_CONSTANTS.TOKEN_STORAGE_KEY || 'safe_auth_token';
+// Token name from environment variable
+const TOKEN_KEY = process.env.NEXT_PUBLIC_TOKEN_NAME || 'safe_auth_token';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -31,17 +31,10 @@ export const verifyToken = (token) => {
  * @param {string} token - The JWT token to store
  */
 export const setToken = (token) => {
-    if (!isBrowser) return;
-    if (!token) {
-        console.error('Attempting to set invalid token');
-        return;
-    }
-    try {
-        cleanupOldTokens(); // Clean up old tokens first
+    if (token) {
         localStorage.setItem(TOKEN_KEY, token);
-        console.log('Token set successfully');
-    } catch (error) {
-        console.error('Error setting token:', error);
+    } else {
+        localStorage.removeItem(TOKEN_KEY);
     }
 };
 
@@ -50,28 +43,14 @@ export const setToken = (token) => {
  * @returns {string|null} The stored token or null if not found
  */
 export const getToken = () => {
-    if (!isBrowser) return null;
-    try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        console.log('Getting token:', token);
-        return token;
-    } catch (error) {
-        console.error('Error getting token:', error);
-        return null;
-    }
+    return localStorage.getItem(TOKEN_KEY);
 };
 
 /**
  * Remove the authentication token from localStorage
  */
 export const removeToken = () => {
-    if (!isBrowser) return;
-    try {
-        localStorage.removeItem(TOKEN_KEY);
-        console.log('Token removed');
-    } catch (error) {
-        console.error('Error removing token:', error);
-    }
+    localStorage.removeItem(TOKEN_KEY);
 };
 
 /**
@@ -81,14 +60,12 @@ export const removeToken = () => {
 export const hasValidToken = () => {
     const token = getToken();
     if (!token) return false;
-
+    
     try {
-        // Basic JWT validation
+        // Check if token is expired
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const expirationTime = payload.exp * 1000; // Convert to milliseconds
-        return Date.now() < expirationTime;
+        return payload.exp * 1000 > Date.now();
     } catch (error) {
-        console.error('Error validating token:', error);
         return false;
     }
 };
