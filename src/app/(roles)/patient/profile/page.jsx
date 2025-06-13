@@ -21,21 +21,17 @@ import FormLayout from '@/components/patient/FormLayout';
 import LoadingState from '@/components/patient/LoadingState';
 import ErrorState from '@/components/patient/ErrorState';
 import { useNotification } from '@/components/ui/Notification';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPatientProfile, updatePatientProfile } from '@/store/slices/patient/profileSlice';
 import AddAllergyDialog from '@/components/patient/medical-file/AddAllergyDialog';
 import AddChronicConditionDialog from '@/components/patient/medical-file/AddChronicConditionDialog';
 import AddMedicationDialog from '@/components/patient/medical-file/AddMedicationDialog';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { useGetProfileQuery, useUpdateProfileMutation } from '@/store/services/patient/patientApi';
+import { mockPatientData } from '@/mockdata/patientData';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 function PatientProfilePage() {
-    const dispatch = useDispatch();
-    const { profile, loading, error } = useSelector((state) => state.patient);
     const { showNotification } = useNotification();
     const [editMode, setEditMode] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -101,11 +97,13 @@ function PatientProfilePage() {
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.2);
 
-    const { data: profileData, isLoading, error: apiError } = useGetProfileQuery();
-    const [updateProfile] = useUpdateProfileMutation();
+    // Mock data
+    const profileData = mockPatientData.profile;
+    const isLoading = false;
+    const apiError = null;
 
     useEffect(() => {
-        if (!initializedProfileData.current && !loading && !error && profileData) {
+        if (!initializedProfileData.current && !isLoading && !apiError && profileData) {
             setFormData({
                 firstName: profileData.firstName || '',
                 lastName: profileData.lastName || '',
@@ -133,10 +131,10 @@ function PatientProfilePage() {
             });
             initializedProfileData.current = true;
         }
-    }, [loading, error, profileData]);
+    }, [isLoading, apiError, profileData]);
 
     const handleRefresh = () => {
-        dispatch(fetchPatientProfile());
+        // No-op for mock data
     };
 
     const handleEditToggle = () => {
@@ -195,11 +193,9 @@ function PatientProfilePage() {
 
         setSaving(true);
         try {
-            await updateProfile({
-                ...formData,
-                emergencyContact: emergencyContactData,
-                insuranceDetails: insuranceData
-            }).unwrap();
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             showNotification('Profile updated successfully', 'success');
             setEditMode(false);
         } catch (error) {
@@ -312,110 +308,148 @@ function PatientProfilePage() {
     );
 
     const renderPersonalInfo = () => (
-        <FormLayout>
-            <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="First Name"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                        required
-                    />
+        <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="First Name"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <User size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Last Name"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <User size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Last Name"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                        required
-                    />
+
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Mail size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Phone Number"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Phone size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                        required
-                    />
+
+                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                    Address
+                </Typography>
+
+                <Grid container spacing={3}>
+                    <Grid xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Street Address"
+                            name="address.street"
+                            value={formData.address.street}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Home size={20} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="City"
+                            name="address.city"
+                            value={formData.address.city}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="State/Province"
+                            name="address.state"
+                            value={formData.address.state}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="ZIP/Postal Code"
+                            name="address.zipCode"
+                            value={formData.address.zipCode}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Country"
+                            name="address.country"
+                            value={formData.address.country}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Phone Number"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                        required
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="h6" gutterBottom>
-                        Address
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        label="Street Address"
-                        name="address.street"
-                        value={formData.address.street}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="City"
-                        name="address.city"
-                        value={formData.address.city}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="State"
-                        name="address.state"
-                        value={formData.address.state}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="ZIP Code"
-                        name="address.zipCode"
-                        value={formData.address.zipCode}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Country"
-                        name="address.country"
-                        value={formData.address.country}
-                        onChange={handleInputChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-            </Grid>
-        </FormLayout>
+            </Stack>
+        </Box>
     );
 
     const renderMedicalInfo = () => {
@@ -529,108 +563,112 @@ function PatientProfilePage() {
     };
 
     const renderInsuranceInfo = () => (
-        <FormLayout>
-            <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Insurance Provider"
-                        name="provider"
-                        value={insuranceData.provider}
-                        onChange={handleInsuranceChange}
-                        disabled={!editMode}
-                        required
-                    />
+        <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Insurance Provider"
+                            name="provider"
+                            value={insuranceData.provider}
+                            onChange={handleInsuranceChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Policy Number"
+                            name="policyNumber"
+                            value={insuranceData.policyNumber}
+                            onChange={handleInsuranceChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Policy Number"
-                        name="policyNumber"
-                        value={insuranceData.policyNumber}
-                        onChange={handleInsuranceChange}
-                        disabled={!editMode}
-                        required
-                    />
+
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Group Number"
+                            name="groupNumber"
+                            value={insuranceData.groupNumber}
+                            onChange={handleInsuranceChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Expiry Date"
+                            name="expiryDate"
+                            type="date"
+                            value={insuranceData.expiryDate}
+                            onChange={handleInsuranceChange}
+                            disabled={!editMode}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Group Number"
-                        name="groupNumber"
-                        value={insuranceData.groupNumber}
-                        onChange={handleInsuranceChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Expiry Date"
-                        name="expiryDate"
-                        type="date"
-                        value={insuranceData.expiryDate}
-                        onChange={handleInsuranceChange}
-                        disabled={!editMode}
-                        required
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                </Grid>
-            </Grid>
-        </FormLayout>
+            </Stack>
+        </Box>
     );
 
     const renderEmergencyContact = () => (
-        <FormLayout>
-            <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Contact Name"
-                        name="name"
-                        value={emergencyContactData.name}
-                        onChange={handleEmergencyContactChange}
-                        disabled={!editMode}
-                        required
-                    />
+        <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Contact Name"
+                            name="name"
+                            value={emergencyContactData.name}
+                            onChange={handleEmergencyContactChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Relationship"
+                            name="relationship"
+                            value={emergencyContactData.relationship}
+                            onChange={handleEmergencyContactChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Relationship"
-                        name="relationship"
-                        value={emergencyContactData.relationship}
-                        onChange={handleEmergencyContactChange}
-                        disabled={!editMode}
-                        required
-                    />
+
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Phone Number"
+                            name="phone"
+                            value={emergencyContactData.phone}
+                            onChange={handleEmergencyContactChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
+                    <Grid xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            name="email"
+                            type="email"
+                            value={emergencyContactData.email}
+                            onChange={handleEmergencyContactChange}
+                            disabled={!editMode}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Phone Number"
-                        name="phone"
-                        value={emergencyContactData.phone}
-                        onChange={handleEmergencyContactChange}
-                        disabled={!editMode}
-                        required
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={emergencyContactData.email}
-                        onChange={handleEmergencyContactChange}
-                        disabled={!editMode}
-                    />
-                </Grid>
-            </Grid>
-        </FormLayout>
+            </Stack>
+        </Box>
     );
 
     const renderContent = () => {

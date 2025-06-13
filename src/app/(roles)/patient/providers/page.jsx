@@ -25,7 +25,7 @@ import {
     FilterList as FilterIcon,
     Sort as SortIcon,
 } from '@mui/icons-material';
-import {
+import { 
     Box,
     Tabs,
     Tab,
@@ -61,7 +61,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
     const theme = useTheme();
     const isDoctor = type === 'doctor';
 
-    return (
+  return (
         <Card
             elevation={1}
             sx={{
@@ -87,24 +87,24 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                             }}
                         >
                             {isDoctor ? <MedicalServicesIcon fontSize="small" /> : <PharmacyIcon fontSize="small" />}
-                        </Avatar>
-                        <Box>
+                            </Avatar>
+                            <Box>
                             <Typography variant="h6" fontWeight="bold" color="text.primary">
                                 {provider.name}
-                            </Typography>
+                              </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {isDoctor ? provider.specialty : provider.role}
-                            </Typography>
+                              </Typography>
                         </Box>
-                    </Box>
+                          </Box>
                     <Box display="flex" alignItems="center" gap={0.5}>
                         <Rating value={provider.rating} readOnly size="small" />
                         <Typography variant="body2" color="text.secondary">
-                            ({provider.rating})
-                        </Typography>
-                    </Box>
-                </Box>
-
+                              ({provider.rating})
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
                 <Stack spacing={2}>
                     <Box
                         sx={{
@@ -157,10 +157,10 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                             </Typography>
                             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                                 {provider.services.map((service, index) => (
-                                    <Chip
+                          <Chip 
                                         key={index}
                                         label={service}
-                                        size="small"
+                            size="small" 
                                         sx={{ m: 0.5 }}
                                     />
                                 ))}
@@ -172,38 +172,38 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                 <Box display="flex" gap={1} mt={2}>
                     {isDoctor ? (
                         <>
-                            <Button
-                                size="small"
-                                variant="contained"
+                          <Button 
+                            size="small" 
+                            variant="contained" 
                                 startIcon={<VideoCallIcon />}
                                 sx={{ flex: 1 }}
                                 onClick={() => onOpenDialog(provider, 'appointment')}
                             >
                                 Book Appointment
-                            </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
+                          </Button>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
                                 startIcon={<ChatIcon />}
                                 sx={{ flex: 1 }}
                                 onClick={() => onOpenDialog(provider, 'message')}
                             >
                                 Message
-                            </Button>
+                          </Button>
                         </>
                     ) : (
                         <>
-                            <Button
-                                size="small"
+                          <Button 
+                            size="small" 
                                 variant="contained"
                                 startIcon={<PharmacyIcon />}
                                 sx={{ flex: 1 }}
                                 onClick={() => onOpenDialog(provider, 'medicine')}
                             >
                                 Check Medicine
-                            </Button>
-                            <Button
-                                size="small"
+                          </Button>
+                            <Button 
+                              size="small" 
                                 variant="outlined"
                                 startIcon={<ChatIcon />}
                                 sx={{ flex: 1 }}
@@ -212,10 +212,10 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                                 Message
                             </Button>
                         </>
-                    )}
-                </Box>
+                          )}
+                        </Box>
             </CardContent>
-        </Card>
+                    </Card>
     );
 };
 
@@ -363,7 +363,7 @@ export default function ProvidersPage() {
                 textAlign: 'center',
             }}
         >
-            <Avatar
+                          <Avatar 
                 sx={{
                     bgcolor: alpha(theme.palette.primary.main, 0.1),
                     color: theme.palette.primary.main,
@@ -373,14 +373,14 @@ export default function ProvidersPage() {
                 }}
             >
                 {activeTab === 0 ? <MedicalServicesIcon /> : <PharmacyIcon />}
-            </Avatar>
+                          </Avatar>
             <Typography variant="h6" color="text.primary" gutterBottom>
                 No {activeTab === 0 ? 'Doctors' : 'Pharmacists'} Found
-            </Typography>
+                            </Typography>
             <Typography variant="body2" color="text.secondary">
                 Try adjusting your search or filters to find what you're looking for.
-            </Typography>
-        </Box>
+                            </Typography>
+                          </Box>
     );
 
     return (
@@ -409,7 +409,7 @@ export default function ProvidersPage() {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <MedicalServicesIcon fontSize="small" />
                                 <Typography>Doctors</Typography>
-                            </Box>
+                          </Box>
                         }
                     />
                     <Tab
@@ -417,7 +417,7 @@ export default function ProvidersPage() {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <PharmacyIcon fontSize="small" />
                                 <Typography>Pharmacists</Typography>
-                            </Box>
+                          </Box>
                         }
                     />
                 </Tabs>
@@ -504,13 +504,22 @@ export default function ProvidersPage() {
                 {isLoading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                         <CircularProgress />
-                    </Box>
-                ) : (
+                </Box>
+              ) : (
                     <Grid container spacing={3}>
                         {activeTab === 0 ? (
                             filteredDoctors.length > 0 ? (
                                 filteredDoctors.map((doctor) => (
-                                    <Grid item xs={12} sm={6} md={4} key={doctor.id}>
+                                    <Grid 
+                                        key={doctor.id}
+                                        sx={{ 
+                                            width: {
+                                                xs: '100%',
+                                                sm: '50%',
+                                                md: '33.33%'
+                                            }
+                                        }}
+                                    >
                                         <ProviderCard
                                             provider={doctor}
                                             type="doctor"
@@ -519,14 +528,23 @@ export default function ProvidersPage() {
                                     </Grid>
                                 ))
                             ) : (
-                                <Grid item xs={12}>
+                                <Grid sx={{ width: '100%' }}>
                                     {renderEmptyState()}
-                                </Grid>
+                    </Grid>
                             )
                         ) : (
                             filteredPharmacists.length > 0 ? (
                                 filteredPharmacists.map((pharmacist) => (
-                                    <Grid item xs={12} sm={6} md={4} key={pharmacist.id}>
+                                    <Grid 
+                                        key={pharmacist.id}
+                                        sx={{ 
+                                            width: {
+                                                xs: '100%',
+                                                sm: '50%',
+                                                md: '33.33%'
+                                            }
+                                        }}
+                                    >
                                         <ProviderCard
                                             provider={pharmacist}
                                             type="pharmacist"
@@ -535,7 +553,7 @@ export default function ProvidersPage() {
                                     </Grid>
                                 ))
                             ) : (
-                                <Grid item xs={12}>
+                                <Grid sx={{ width: '100%' }}>
                                     {renderEmptyState()}
                                 </Grid>
                             )
@@ -543,12 +561,12 @@ export default function ProvidersPage() {
                     </Grid>
                 )}
             </Box>
-
-            <Dialog
+          
+          <Dialog 
                 open={dialogOpen}
                 onClose={handleCloseDialog}
                 maxWidth="sm"
-                fullWidth
+            fullWidth
                 PaperProps={{
                     sx: {
                         borderRadius: 2,
@@ -566,7 +584,7 @@ export default function ProvidersPage() {
                             {dialogType === 'medicine' && 'Check Medicine'}
                         </Typography>
                     </Box>
-                </DialogTitle>
+            </DialogTitle>
                 <DialogContent>
                     {selectedProvider && (
                         <Box sx={{ py: 2 }}>
@@ -589,15 +607,15 @@ export default function ProvidersPage() {
                                     <Typography variant="h6">{selectedProvider.name}</Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         {activeTab === 0 ? selectedProvider.specialty : selectedProvider.role}
-                                    </Typography>
-                                </Box>
+                  </Typography>
+                </Box>
                             </Box>
 
                             {dialogType === 'message' && (
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={4}
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
                                     placeholder="Type your message..."
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
@@ -616,7 +634,7 @@ export default function ProvidersPage() {
                                     <TextField
                                         fullWidth
                                         type="time"
-                                        label="Preferred Time"
+                      label="Preferred Time"
                                         InputLabelProps={{ shrink: true }}
                                     />
                                     <TextField
@@ -646,26 +664,26 @@ export default function ProvidersPage() {
                                 </Stack>
                             )}
                         </Box>
-                    )}
-                </DialogContent>
+              )}
+            </DialogContent>
                 <DialogActions sx={{ px: 3, py: 2 }}>
-                    <Button
+                  <Button 
                         onClick={handleCloseDialog}
                         variant="outlined"
                         startIcon={<XIcon />}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
                         onClick={dialogType === 'message' ? handleSendMessage : handleCloseDialog}
-                        variant="contained"
+                    variant="contained"
                         startIcon={dialogType === 'message' ? <SendIcon /> : <CheckIcon />}
-                    >
+                  >
                         {dialogType === 'message' ? 'Send' : 'Confirm'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
+                  </Button>
+            </DialogActions>
+          </Dialog>
+          
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
@@ -680,6 +698,6 @@ export default function ProvidersPage() {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-        </Box>
-    );
+    </Box>
+  );
 } 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useDispatch, useSelector } from 'react-redux';
 import { useVerifyTokenQuery } from '@/store/services/user/authApi';
 import { logout } from '@/store/slices/user/authSlice';
 import { getToken, removeToken } from '@/utils/tokenUtils';
@@ -12,8 +12,8 @@ export default function ProtectedLayout({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const dispatch = useAppDispatch();
-  const { user, token } = useAppSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { user, token } = useSelector((state) => state.auth);
   const hasToken = !!getToken();
 
   const { data: verifyData, isLoading: isVerifying, error: verifyError } = useVerifyTokenQuery(undefined, {

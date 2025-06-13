@@ -83,7 +83,7 @@ const DAYS_OF_WEEK = [
     { value: 'sunday', label: 'Sunday' },
 ];
 
-const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
+const MedicationCard = ({ medication }) => {
     const theme = useTheme();
     const isExpiringSoon = medication.endDate && 
         new Date(medication.endDate) - new Date() < 7 * 24 * 60 * 60 * 1000;
@@ -177,8 +177,8 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                             : theme.palette.text.primary,
                                     }}
                                 >
-                                    {medication.name}
-                                </Typography>
+                {medication.name}
+            </Typography>
                                 <Typography 
                                     variant="body2" 
                                     color="text.secondary"
@@ -190,7 +190,7 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                 >
                                     <Pill size={14} />
                                     {medication.dosage}
-                                </Typography>
+            </Typography>
                             </Box>
                         </Box>
                         <Chip
@@ -230,7 +230,7 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                             <RepeatIcon color="primary" fontSize="small" />
                             <Typography variant="body2" color="text.secondary">
                                 {medication.frequency}
-                            </Typography>
+            </Typography>
                         </Box>
 
                         <Box display="flex" flexDirection="column" gap={1}>
@@ -238,10 +238,10 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                 <CalendarIcon color="action" fontSize="small" />
                                 <Typography variant="body2" color="text.secondary">
                                     Start: {new Date(medication.startDate).toLocaleDateString()}
-                                </Typography>
+            </Typography>
                             </Box>
 
-                            {medication.endDate && (
+            {medication.endDate && (
                                 <Box display="flex" alignItems="center" gap={1}>
                                     <CalendarIcon color="action" fontSize="small" />
                                     <Typography variant="body2" color="text.secondary">
@@ -265,7 +265,7 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                 <InfoIcon color="info" fontSize="small" sx={{ mt: 0.5 }} />
                                 <Typography variant="body2" color="text.secondary">
                                     {medication.instructions}
-                                </Typography>
+                </Typography>
                             </Box>
                         )}
 
@@ -309,7 +309,7 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                         >
                                             <AccessTimeIcon fontSize="small" />
                                             Times:
-                                        </Typography>
+            </Typography>
                                         <Chip
                                             label={medication.reminderTimes?.join(', ')}
                                             size="small"
@@ -337,7 +337,7 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                                         >
                                             <CalendarIcon fontSize="small" />
                                             Days:
-                                        </Typography>
+            </Typography>
                                         <Chip
                                             label={
                                                 medication.reminderDays?.length === 7 
@@ -357,45 +357,10 @@ const MedicationCard = ({ medication, onEdit, onDelete, onToggleReminder }) => {
                             </Box>
                         )}
                     </Stack>
-                </CardContent>
-                <CardActions sx={{ 
-                    pt: 1, 
-                    pb: 2, 
-                    px: 2,
-                    borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                }}>
-                    <Button
-                        size="small"
-                        startIcon={<EditIcon />}
-                        onClick={() => onEdit(medication)}
-                        sx={{ 
-                            mr: 1,
-                            '&:hover': {
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                            },
-                        }}
-                    >
-                        Edit
-                    </Button>
-                    <Button
-                        size="small"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => onDelete(medication.id)}
-                        color="error"
-                        sx={{
-                            '&:hover': {
-                                bgcolor: alpha(theme.palette.error.main, 0.1),
-                            },
-                        }}
-                    >
-                        Delete
-                    </Button>
-                </CardActions>
-            </Card>
+        </CardContent>
+    </Card>
         </Zoom>
-    );
+);
 };
 
 const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
@@ -501,9 +466,9 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
                                 <FormControl fullWidth>
                                     <InputLabel>Frequency</InputLabel>
                                     <Select
-                                        name="frequency"
-                                        value={formData.frequency}
-                                        onChange={handleChange}
+                            name="frequency"
+                            value={formData.frequency}
+                            onChange={handleChange}
                                         label="Frequency"
                                     >
                                         {FREQUENCY_OPTIONS.map(option => (
@@ -514,15 +479,15 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
                                     </Select>
                                 </FormControl>
 
-                                <TextField
+                        <TextField
                                     name="firstTime"
                                     label="First Reminder Time"
                                     type="time"
                                     value={formData.firstTime}
-                                    onChange={handleChange}
-                                    InputLabelProps={{ shrink: true }}
-                                    fullWidth
-                                />
+                            onChange={handleChange}
+                            InputLabelProps={{ shrink: true }}
+                            fullWidth
+                        />
 
                                 <Box>
                                     <Typography variant="subtitle2" gutterBottom>
@@ -574,112 +539,10 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
     );
 };
 
-const MedicationDialog = ({ open, onClose, medication, onSubmit }) => {
-    const [formData, setFormData] = useState({
-        name: medication?.name || '',
-        dosage: medication?.dosage || '',
-        frequency: medication?.frequency || '',
-        startDate: medication?.startDate ? new Date(medication.startDate).toISOString().split('T')[0] : '',
-        endDate: medication?.endDate ? new Date(medication.endDate).toISOString().split('T')[0] : '',
-        instructions: medication?.instructions || '',
-        reminderEnabled: medication?.reminderEnabled || false,
-        reminderFrequency: medication?.reminderFrequency || 'once',
-        reminderTimes: medication?.reminderTimes || [],
-        reminderDays: medication?.reminderDays || DAYS_OF_WEEK.map(day => day.value),
-    });
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit(formData);
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <form onSubmit={handleSubmit}>
-                <DialogTitle>
-                    {medication ? 'Edit Medication' : 'New Medication'}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <TextField
-                            name="name"
-                            label="Medication Name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="dosage"
-                            label="Dosage"
-                            value={formData.dosage}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="frequency"
-                            label="Frequency"
-                            value={formData.frequency}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="startDate"
-                            label="Start Date"
-                            type="date"
-                            value={formData.startDate}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="endDate"
-                            label="End Date"
-                            type="date"
-                            value={formData.endDate}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            fullWidth
-                        />
-                        <TextField
-                            name="instructions"
-                            label="Instructions"
-                            multiline
-                            rows={4}
-                            value={formData.instructions}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cancel</Button>
-                    <Button type="submit" variant="contained" color="primary">
-                        {medication ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </form>
-        </Dialog>
-    );
-};
-
 const MedicationsPage = () => {
     const { showNotification } = useNotification();
     const dispatch = useDispatch();
     const [activeTab, setActiveTab] = useState(0);
-    const [dialogOpen, setDialogOpen] = useState(false);
     const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
     const [selectedMedication, setSelectedMedication] = useState(null);
     const [localMedications, setLocalMedications] = useState([]);
@@ -707,61 +570,21 @@ const MedicationsPage = () => {
         }
     }, [dispatch]);
 
-    const handleCreate = async (formData) => {
-        try {
-            const newMedication = {
-                id: Date.now().toString(),
-                ...formData,
-                status: 'active',
-                prescribedBy: 'Dr. John Doe',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setLocalMedications(prev => [...prev, newMedication]);
-            dispatch(setActiveMedications([...localMedications, newMedication]));
-            showNotification('Medication added successfully', 'success');
-            setDialogOpen(false);
-        } catch (error) {
-            showNotification(error.message || 'Failed to add medication', 'error');
-        }
-    };
+    if (isLoading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+                <CircularProgress />
+            </Box>
+        );
+    }
 
-    const handleUpdate = async (formData) => {
-        try {
-            const updatedMedication = {
-                ...selectedMedication,
-                ...formData,
-                updatedAt: new Date().toISOString(),
-            };
-            setLocalMedications(prev =>
-                prev.map(med => (med.id === selectedMedication.id ? updatedMedication : med))
-            );
-            dispatch(setActiveMedications(
-                localMedications.map(med => (med.id === selectedMedication.id ? updatedMedication : med))
-            ));
-            showNotification('Medication updated successfully', 'success');
-            setDialogOpen(false);
-            setSelectedMedication(null);
-        } catch (error) {
-            showNotification(error.message || 'Failed to update medication', 'error');
-        }
-    };
-
-    const handleDelete = async (id) => {
-        try {
-            setLocalMedications(prev => prev.filter(med => med.id !== id));
-            dispatch(setActiveMedications(localMedications.filter(med => med.id !== id)));
-            showNotification('Medication deleted successfully', 'success');
-        } catch (error) {
-            showNotification(error.message || 'Failed to delete medication', 'error');
-        }
-    };
-
-    const handleToggleReminder = (id) => {
-        const medication = localMedications.find(med => med.id === id);
-        setSelectedMedication(medication);
-        setReminderDialogOpen(true);
-    };
+    if (error) {
+        return (
+            <Box p={3}>
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
+    }
 
     const handleReminderUpdate = (formData) => {
         try {
@@ -784,22 +607,6 @@ const MedicationsPage = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box p={3}>
-                <Alert severity="error">{error}</Alert>
-            </Box>
-        );
-    }
-
     return (
         <Box sx={{ p: 3 }}>
             <Box sx={{ mb: 3 }}>
@@ -815,34 +622,15 @@ const MedicationsPage = () => {
 
             {activeTab === 0 ? (
                 <>
-                    <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => {
-                                setSelectedMedication(null);
-                                setDialogOpen(true);
-                            }}
-                        >
-                            Add Medication
-                        </Button>
-                    </Box>
-
-                    <Grid container spacing={3}>
-                        {localMedications.map((medication) => (
-                            <Grid item xs={12} sm={6} md={4} key={medication.id}>
-                                <MedicationCard
-                                    medication={medication}
-                                    onEdit={(med) => {
-                                        setSelectedMedication(med);
-                                        setDialogOpen(true);
-                                    }}
-                                    onDelete={handleDelete}
-                                    onToggleReminder={handleToggleReminder}
-                                />
-                            </Grid>
-                        ))}
+            <Grid container spacing={3}>
+                {localMedications.map((medication) => (
+                    <Grid item xs={12} sm={6} md={4} key={medication.id}>
+                        <MedicationCard
+                            medication={medication}
+                        />
                     </Grid>
+                ))}
+            </Grid>
                 </>
             ) : (
                 <Box>
@@ -1065,16 +853,6 @@ const MedicationsPage = () => {
                     </Grid>
                 </Box>
             )}
-
-            <MedicationDialog
-                open={dialogOpen}
-                onClose={() => {
-                    setDialogOpen(false);
-                    setSelectedMedication(null);
-                }}
-                medication={selectedMedication}
-                onSubmit={selectedMedication ? handleUpdate : handleCreate}
-            />
 
             <ReminderDialog
                 open={reminderDialogOpen}

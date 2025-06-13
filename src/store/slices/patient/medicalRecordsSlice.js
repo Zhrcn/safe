@@ -1,16 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    basicInfo: null,
-    vitalSigns: null,
-    allergies: [],
-    conditions: [],
-    medications: [],
-    immunizations: [],
-    labResults: [],
-    procedures: [],
-    familyHistory: [],
-    lifestyle: null,
+    records: [],
     loading: false,
     error: null
 };
@@ -20,7 +11,7 @@ const medicalRecordsSlice = createSlice({
     initialState,
     reducers: {
         setMedicalRecords: (state, action) => {
-            return { ...state, ...action.payload };
+            state.records = action.payload;
         },
         setLoading: (state, action) => {
             state.loading = action.payload;

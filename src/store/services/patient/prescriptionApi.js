@@ -7,12 +7,44 @@ export const prescriptionApi = api.injectEndpoints({
         url: '/prescriptions',
         method: 'GET',
       }),
+      providesTags: ['Prescriptions'],
     }),
     getActivePrescriptions: builder.query({
       query: () => ({
         url: '/prescriptions/active',
         method: 'GET',
       }),
+      providesTags: ['Prescriptions'],
+    }),
+    getPrescriptionById: builder.query({
+      query: (id) => ({
+        url: `/prescriptions/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Prescriptions', id }],
+    }),
+    addPrescription: builder.mutation({
+      query: (prescription) => ({
+        url: '/prescriptions',
+        method: 'POST',
+        body: prescription,
+      }),
+      invalidatesTags: ['Prescriptions'],
+    }),
+    updatePrescription: builder.mutation({
+      query: ({ id, ...prescription }) => ({
+        url: `/prescriptions/${id}`,
+        method: 'PUT',
+        body: prescription,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Prescriptions', id }],
+    }),
+    deletePrescription: builder.mutation({
+      query: (id) => ({
+        url: `/prescriptions/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Prescriptions'],
     }),
   }),
 });
@@ -20,4 +52,8 @@ export const prescriptionApi = api.injectEndpoints({
 export const {
   useGetPrescriptionsQuery,
   useGetActivePrescriptionsQuery,
+  useGetPrescriptionByIdQuery,
+  useAddPrescriptionMutation,
+  useUpdatePrescriptionMutation,
+  useDeletePrescriptionMutation,
 } = prescriptionApi; 

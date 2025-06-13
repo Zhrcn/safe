@@ -22,6 +22,9 @@ import {
   ListItemAvatar,
   ListItemText,
   Badge,
+  Paper,
+  InputAdornment,
+  CircularProgress,
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -32,6 +35,7 @@ import {
   Search as SearchIcon,
   MoreVert as MoreVertIcon,
   Circle as CircleIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { mockPatientData } from '@/mockdata/patientData';
 import PageHeader from '@/components/patient/PageHeader';
@@ -44,6 +48,7 @@ const MessageBubble = ({ message, isOwn }) => {
       display="flex"
       justifyContent={isOwn ? 'flex-end' : 'flex-start'}
       mb={2}
+      px={2}
     >
       <Box
         sx={{
@@ -54,6 +59,23 @@ const MessageBubble = ({ message, isOwn }) => {
             ? alpha(theme.palette.primary.main, 0.1)
             : alpha(theme.palette.background.paper, 0.8),
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          boxShadow: theme.shadows[1],
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            [isOwn ? 'right' : 'left']: -8,
+            width: 0,
+            height: 0,
+            border: '8px solid transparent',
+            borderTopColor: isOwn 
+              ? alpha(theme.palette.primary.main, 0.1)
+              : alpha(theme.palette.background.paper, 0.8),
+            borderBottom: 0,
+            marginLeft: '-8px',
+            marginBottom: '-8px',
+          }
         }}
       >
         {!isOwn && (
@@ -61,11 +83,11 @@ const MessageBubble = ({ message, isOwn }) => {
             {message.sender}
           </Typography>
         )}
-        <Typography variant="body1">
+        <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
           {message.content}
         </Typography>
         {message.attachments && message.attachments.length > 0 && (
-          <Stack direction="row" spacing={1} mt={1}>
+          <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" gap={1}>
             {message.attachments.map((attachment, index) => (
               <Chip
                 key={index}
@@ -73,11 +95,23 @@ const MessageBubble = ({ message, isOwn }) => {
                 label={attachment.name}
                 size="small"
                 onClick={() => window.open(attachment.url, '_blank')}
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  }
+                }}
               />
             ))}
           </Stack>
         )}
-        <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+        <Typography 
+          variant="caption" 
+          color="text.secondary" 
+          display="block" 
+          mt={1}
+          sx={{ textAlign: isOwn ? 'right' : 'left' }}
+        >
           {new Date(message.timestamp).toLocaleTimeString()}
         </Typography>
       </Box>
@@ -89,6 +123,7 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
   const theme = useTheme();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -124,9 +159,12 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
           borderRadius: 2,
         }}
       >
-        <Typography variant="h6" color="text.secondary">
-          Select a chat to start messaging
-        </Typography>
+        <Stack spacing={2} alignItems="center">
+          <ChatIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+          <Typography variant="h6" color="text.secondary">
+            Select a chat to start messaging
+          </Typography>
+        </Stack>
       </Box>
     );
   }
@@ -145,6 +183,7 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
         sx={{
           p: 2,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          bgcolor: 'background.paper',
         }}
       >
         <Box display="flex" alignItems="center" gap={2}>
@@ -157,12 +196,18 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
               {selectedChat.role}
             </Typography>
           </Box>
-          <IconButton>
-            <VideoCallIcon />
-          </IconButton>
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Start Video Call">
+              <IconButton>
+                <VideoCallIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="More Options">
+              <IconButton>
+                <MoreVertIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Box>
       </Box>
 
@@ -171,6 +216,7 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
           flex: 1,
           overflowY: 'auto',
           p: 2,
+          bgcolor: alpha(theme.palette.background.default, 0.3),
         }}
       >
         {selectedChat.messages.map((message, index) => (
@@ -180,6 +226,14 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
             isOwn={message.sender === 'You'}
           />
         ))}
+        {isTyping && (
+          <Box display="flex" alignItems="center" gap={1} px={2} mb={2}>
+            <CircularProgress size={16} />
+            <Typography variant="body2" color="text.secondary">
+              {selectedChat.name} is typing...
+            </Typography>
+          </Box>
+        )}
         <div ref={messagesEndRef} />
       </Box>
 
@@ -187,12 +241,15 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
         sx={{
           p: 2,
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          bgcolor: 'background.paper',
         }}
       >
         <Box display="flex" gap={1}>
-          <IconButton>
-            <AttachFileIcon />
-          </IconButton>
+          <Tooltip title="Attach File">
+            <IconButton>
+              <AttachFileIcon />
+            </IconButton>
+          </Tooltip>
           <TextField
             fullWidth
             variant="outlined"
@@ -203,14 +260,23 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
             multiline
             maxRows={4}
             size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'background.default',
+              }
+            }}
           />
-          <IconButton
-            color="primary"
-            onClick={handleSend}
-            disabled={!message.trim()}
-          >
-            <SendIcon />
-          </IconButton>
+          <Tooltip title="Send Message">
+            <span>
+              <IconButton
+                color="primary"
+                onClick={handleSend}
+                disabled={!message.trim()}
+              >
+                <SendIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
     </Box>
@@ -231,7 +297,7 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: alpha(theme.palette.background.default, 0.5),
+        bgcolor: 'background.paper',
         borderRadius: 2,
       }}
     >
@@ -243,9 +309,18 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
           value={searchQuery}
           onChange={(e) => onSelectChat(null, e.target.value)}
           InputProps={{
-            startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
           }}
           size="small"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.default',
+            }
+          }}
         />
       </Box>
 
@@ -253,14 +328,20 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
         {filteredChats.map((chat) => (
           <ListItem
             key={chat.id}
-            button
             selected={selectedChat?.id === chat.id}
             onClick={() => onSelectChat(chat)}
             sx={{
+              cursor: 'pointer',
               borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               '&:hover': {
                 bgcolor: alpha(theme.palette.primary.main, 0.05),
               },
+              '&.Mui-selected': {
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.15),
+                }
+              }
             }}
           >
             <ListItemAvatar>
@@ -276,7 +357,10 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
                   />
                 }
               >
-                <Avatar src={chat.avatar} />
+                <Avatar 
+                  src={chat.avatar || '/images/default-avatar.png'} 
+                  alt={chat.name}
+                />
               </Badge>
             </ListItemAvatar>
             <ListItemText
@@ -309,6 +393,25 @@ const MessagingPage = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [chats, setChats] = useState(mockPatientData.messages);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showChatList, setShowChatList] = useState(true);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+      // Reset to chat list view on mobile when screen size changes
+      if (window.innerWidth < 768) {
+        setShowChatList(true);
+      }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleSelectChat = (chat, query) => {
     if (query !== undefined) {
@@ -316,6 +419,9 @@ const MessagingPage = () => {
       return;
     }
     setSelectedChat(chat);
+    if (isMobileView) {
+      setShowChatList(false);
+    }
     // Mark messages as read when selecting a chat
     if (chat) {
       setChats(prevChats => 
@@ -324,6 +430,10 @@ const MessagingPage = () => {
         )
       );
     }
+  };
+
+  const handleBackToChatList = () => {
+    setShowChatList(true);
   };
 
   const handleSendMessage = (content) => {
@@ -358,28 +468,88 @@ const MessagingPage = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1400px', margin: '0 auto' }}>
+    <Box sx={{ 
+      p: { xs: 2, md: 4 }, 
+      maxWidth: '1400px', 
+      margin: '0 auto',
+      height: 'calc(100vh - 100px)',
+      minHeight: '600px'
+    }}>
       <PageHeader
         title="Messaging"
         subtitle="Communicate with your healthcare providers"
       />
 
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={4}>
+      <Box sx={{ 
+        height: 'calc(100% - 80px)',
+        mt: 2,
+        display: 'flex',
+        gap: 2,
+        position: 'relative'
+      }}>
+        {/* Chat List */}
+        <Box sx={{ 
+          width: { xs: '100%', md: '350px' },
+          display: { xs: showChatList ? 'block' : 'none', md: 'block' },
+          height: '100%',
+          position: { xs: 'absolute', md: 'relative' },
+          left: 0,
+          top: 0,
+          zIndex: { xs: showChatList ? 1 : 0, md: 1 },
+          bgcolor: 'background.paper',
+          boxShadow: { xs: showChatList ? 3 : 0, md: 0 },
+          transition: 'all 0.3s ease-in-out',
+        }}>
           <ChatList
             chats={chats}
             selectedChat={selectedChat}
             onSelectChat={handleSelectChat}
             searchQuery={searchQuery}
           />
-        </Grid>
-        <Grid item xs={12} md={8}>
-          <ChatWindow
-            selectedChat={selectedChat}
-            onSendMessage={handleSendMessage}
-          />
-        </Grid>
-      </Grid>
+        </Box>
+
+        {/* Chat Window */}
+        <Box sx={{ 
+          flex: 1,
+          display: { xs: showChatList ? 'none' : 'block', md: 'block' },
+          height: '100%',
+          position: 'relative'
+        }}>
+          {isMobileView && !showChatList && (
+            <Box sx={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              zIndex: 2,
+              p: 1,
+              bgcolor: 'background.paper',
+              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <IconButton
+                onClick={handleBackToChatList}
+                sx={{ mr: 1 }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              <Typography variant="subtitle1" noWrap>
+                {selectedChat?.name}
+              </Typography>
+            </Box>
+          )}
+          <Box sx={{ 
+            height: '100%',
+            pt: isMobileView && !showChatList ? '48px' : 0
+          }}>
+            <ChatWindow
+              selectedChat={selectedChat}
+              onSendMessage={handleSendMessage}
+            />
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };

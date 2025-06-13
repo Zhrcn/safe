@@ -1,125 +1,228 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
-import { useTheme, alpha } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Divider from '@mui/material/Divider';
-import PersonIcon from '@mui/icons-material/Person';
-import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
-import WarningIcon from '@mui/icons-material/Warning';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import MedicationIcon from '@mui/icons-material/Medication';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
-import ScaleIcon from '@mui/icons-material/Scale';
-import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { mockPatientData } from '@/mockdata/patientData';
-import PageHeader from '../../../../components/patient/PageHeader';
 import { setMedicalRecords, setLoading, setError } from '@/store/slices/patient/medicalRecordsSlice';
-
-const MedicalRecordCard = ({ title, icon, children, action }) => {
-    const theme = useTheme();
-    
-    return (
-        <Card 
-            elevation={0}
-            sx={{
-                height: '100%',
-                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.1)}`,
-                },
-            }}
-        >
-            <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar 
-                            sx={{ 
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                color: theme.palette.primary.main,
-                            }}
-                        >
-                            {icon}
-                        </Avatar>
-                        <Typography variant="h6" fontWeight="bold">
-                            {title}
-                        </Typography>
-                    </Box>
-                    {action}
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                {children}
-            </CardContent>
-        </Card>
-    );
-};
-
-const TabPanel = ({ children, value, index, ...other }) => {
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`medical-record-tabpanel-${index}`}
-            aria-labelledby={`medical-record-tab-${index}`}
-            {...other}
-        >
-            {value === index && (
-                <Box sx={{ py: 3 }}>
-                    {children}
-                </Box>
-            )}
-        </div>
-    );
-};
+import { medicalFiles } from '@/mockdata/medicalFiles';
+import { 
+    Box, 
+    CircularProgress, 
+    Typography, 
+    Card, 
+    Grid, 
+    Chip,
+    Divider,
+    CardContent,
+    CardHeader,
+    Avatar,
+    IconButton,
+    Tooltip,
+    Paper,
+    Tabs,
+    Tab,
+    Breadcrumbs,
+    Link,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button
+} from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
+import DescriptionIcon from '@mui/icons-material/Description';
+import EventIcon from '@mui/icons-material/Event';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PersonIcon from '@mui/icons-material/Person';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DownloadIcon from '@mui/icons-material/Download';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import HomeIcon from '@mui/icons-material/Home';
+import ScienceIcon from '@mui/icons-material/Science';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import MedicationIcon from '@mui/icons-material/Medication';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import HistoryIcon from '@mui/icons-material/History';
+import FolderIcon from '@mui/icons-material/Folder';
+import WarningIcon from '@mui/icons-material/Warning';
+import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 
 const MedicalRecordsPage = () => {
-    const theme = useTheme();
     const dispatch = useDispatch();
-    const { loading, error, basicInfo, vitalSigns, allergies, conditions, medications } = useSelector(state => state.medicalRecords);
-    const [tabValue, setTabValue] = useState(0);
+    const theme = useTheme();
+    const { records, loading, error } = useSelector((state) => state.medicalRecords);
+    const [selectedTab, setSelectedTab] = useState(0);
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState(null);
+
+    const recordCategories = [
+        { id: 'all', label: 'All Records', icon: <FolderIcon /> },
+        { id: 'lab', label: 'Lab Results', icon: <ScienceIcon /> },
+        { id: 'imaging', label: 'Imaging Reports', icon: <LocalHospitalIcon /> },
+        { id: 'vital', label: 'Vital Signs', icon: <BloodtypeIcon /> },
+        { id: 'medication', label: 'Medications', icon: <MedicationIcon /> },
+        { id: 'vaccination', label: 'Immunizations', icon: <VaccinesIcon /> },
+        { id: 'surgery', label: 'Surgical History', icon: <HistoryIcon /> },
+        { id: 'allergy', label: 'Allergies', icon: <WarningIcon /> },
+        { id: 'condition', label: 'Chronic Conditions', icon: <MedicalServicesIcon /> }
+    ];
 
     useEffect(() => {
-        const loadMedicalRecords = async () => {
+        const fetchRecords = async () => {
             try {
                 dispatch(setLoading(true));
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                dispatch(setMedicalRecords(mockPatientData.medicalRecord));
-            } catch (err) {
-                dispatch(setError(err.message));
+                
+                // Transform medical file data into records format
+                const transformedRecords = [];
+                const medicalFile = medicalFiles[0]; // Using first medical file for now
+
+                // Add lab results
+                medicalFile.labResults.forEach(result => {
+                    transformedRecords.push({
+                        id: `lab-${result.testName}`,
+                        title: result.testName,
+                        type: 'lab',
+                        date: result.date,
+                        doctor: result.doctorId,
+                        location: result.labName,
+                        description: `Results: ${result.results} ${result.unit} (Normal Range: ${result.normalRange})`,
+                        attachments: result.documents
+                    });
+                });
+
+                // Add imaging reports
+                medicalFile.imagingReports.forEach(report => {
+                    transformedRecords.push({
+                        id: `imaging-${report.type}`,
+                        title: `${report.type} - ${report.location}`,
+                        type: 'imaging',
+                        date: report.date,
+                        doctor: report.doctorId,
+                        location: 'Imaging Center',
+                        description: report.findings,
+                        attachments: report.images
+                    });
+                });
+
+                // Add vital signs
+                medicalFile.vitalSigns.forEach(signs => {
+                    transformedRecords.push({
+                        id: `vital-${signs.date}`,
+                        title: 'Vital Signs Check',
+                        type: 'vital',
+                        date: signs.date,
+                        doctor: 'Dr. Smith',
+                        location: 'Main Clinic',
+                        description: `BP: ${signs.bloodPressure}, HR: ${signs.heartRate}, Temp: ${signs.temperature}°C, RR: ${signs.respiratoryRate}, SpO2: ${signs.oxygenSaturation}%`,
+                        attachments: []
+                    });
+                });
+
+                // Add medications
+                medicalFile.medicationHistory.forEach(med => {
+                    transformedRecords.push({
+                        id: `med-${med.medicine}`,
+                        title: med.name,
+                        type: 'medication',
+                        date: med.startDate,
+                        doctor: med.prescribedBy,
+                        location: 'Pharmacy',
+                        description: `${med.dose} ${med.frequency} - ${med.instructions}`,
+                        attachments: []
+                    });
+                });
+
+                // Add immunizations
+                medicalFile.immunizations.forEach(immunization => {
+                    transformedRecords.push({
+                        id: `vacc-${immunization.name}`,
+                        title: immunization.name,
+                        type: 'vaccination',
+                        date: immunization.dateAdministered,
+                        doctor: immunization.administeredBy,
+                        location: 'Vaccination Center',
+                        description: `Manufacturer: ${immunization.manufacturer}, Batch: ${immunization.batchNumber}`,
+                        attachments: []
+                    });
+                });
+
+                // Add surgical history
+                medicalFile.surgicalHistory.forEach(surgery => {
+                    transformedRecords.push({
+                        id: `surgery-${surgery.name}`,
+                        title: surgery.name,
+                        type: 'surgery',
+                        date: surgery.date,
+                        doctor: surgery.surgeon,
+                        location: surgery.hospital,
+                        description: `${surgery.notes} - Outcome: ${surgery.outcome}`,
+                        attachments: []
+                    });
+                });
+
+                // Add allergies
+                medicalFile.allergies.forEach(allergy => {
+                    transformedRecords.push({
+                        id: `allergy-${allergy.name}`,
+                        title: allergy.name,
+                        type: 'allergy',
+                        date: new Date(),
+                        doctor: 'Dr. Smith',
+                        location: 'Main Clinic',
+                        description: `Severity: ${allergy.severity}, Reaction: ${allergy.reaction}`,
+                        attachments: []
+                    });
+                });
+
+                // Add chronic conditions
+                medicalFile.chronicConditions.forEach(condition => {
+                    transformedRecords.push({
+                        id: `condition-${condition.name}`,
+                        title: condition.name,
+                        type: 'condition',
+                        date: condition.diagnosisDate,
+                        doctor: 'Dr. Smith',
+                        location: 'Main Clinic',
+                        description: `Status: ${condition.status}, Notes: ${condition.notes}`,
+                        attachments: []
+                    });
+                });
+
+                // Sort records by date
+                transformedRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                dispatch(setMedicalRecords(transformedRecords));
+            } catch (error) {
+                dispatch(setError(error.message));
             } finally {
                 dispatch(setLoading(false));
             }
         };
 
-        loadMedicalRecords();
+        fetchRecords();
     }, [dispatch]);
 
     const handleTabChange = (event, newValue) => {
-        setTabValue(newValue);
+        setSelectedTab(newValue);
+    };
+
+    const filteredRecords = selectedTab === 0 
+        ? records 
+        : records.filter(record => record.type === recordCategories[selectedTab].id);
+
+    const handleOpenModal = (record) => {
+        setSelectedRecord(record);
+        setOpenModal(true);
+    };
+    const handleCloseModal = () => {
+        setOpenModal(false);
+        setSelectedRecord(null);
     };
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />
             </Box>
         );
@@ -127,239 +230,385 @@ const MedicalRecordsPage = () => {
 
     if (error) {
         return (
-            <Box p={3}>
-                <Alert severity="error">
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h6" color="error" gutterBottom>
+                    Error Loading Medical Records
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
                     {error}
-                </Alert>
+                </Typography>
             </Box>
         );
     }
 
-    return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1400px', margin: '0 auto' }}>
-            <PageHeader
-                title="Medical Records"
-                description="View your complete medical history"
-                breadcrumbs={[
-                    { label: 'Medical Records', href: '/patient/medical-records' }
-                ]}
-            />
+    const getRecordTypeColor = (type) => {
+        switch (type.toLowerCase()) {
+            case 'lab':
+                return 'success';
+            case 'imaging':
+                return 'info';
+            case 'vital':
+                return 'primary';
+            case 'medication':
+                return 'warning';
+            case 'vaccination':
+                return 'secondary';
+            case 'surgery':
+                return 'error';
+            case 'allergy':
+                return 'error';
+            case 'condition':
+                return 'primary';
+            default:
+                return 'default';
+        }
+    };
 
-            <Paper 
-                elevation={0}
+    const getRecordTypeIcon = (type) => {
+        switch (type.toLowerCase()) {
+            case 'lab':
+                return <ScienceIcon />;
+            case 'imaging':
+                return <LocalHospitalIcon />;
+            case 'vital':
+                return <BloodtypeIcon />;
+            case 'medication':
+                return <MedicationIcon />;
+            case 'vaccination':
+                return <VaccinesIcon />;
+            case 'surgery':
+                return <HistoryIcon />;
+            case 'allergy':
+                return <WarningIcon />;
+            case 'condition':
+                return <MedicalServicesIcon />;
+            default:
+                return <FolderIcon />;
+        }
+    };
+
+    return (
+        <Box
+            sx={{
+                pt: { xs: 3, sm: 4, md: 6 },
+                pb: { xs: 8, sm: 10, md: 12 },
+                maxWidth: '2000px',
+                margin: '0 auto',
+                minHeight: '100vh',
+                bgcolor: 'background.default',
+            }}
+        >
+            {/* Breadcrumbs */}
+            <Breadcrumbs 
+                separator={<NavigateNextIcon fontSize="small" />} 
+                aria-label="breadcrumb"
+                sx={{ mb: 5 }}
+            >
+                <Link
+                    underline="hover"
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                    color="inherit"
+                    href="/patient/dashboard"
+                >
+                    <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                    Dashboard
+                </Link>
+                <Typography
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                    color="text.primary"
+                >
+                    <FolderIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                    Medical Records
+                </Typography>
+            </Breadcrumbs>
+
+            <Typography 
+                variant="h4" 
+                gutterBottom 
                 sx={{ 
-                    p: 3,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.background.default, 0.5),
+                    mb: 5,
+                    fontWeight: 700,
+                    color: 'text.primary',
+                    letterSpacing: '-0.5px'
                 }}
             >
-                <Tabs
-                    value={tabValue}
+                Medical Records
+            </Typography>
+
+            {/* Tabs */}
+            <Box sx={{ 
+                borderBottom: 1, 
+                borderColor: 'divider', 
+                mb: 5,
+                '& .MuiTabs-root': {
+                    minHeight: '56px'
+                }
+            }}>
+                <Tabs 
+                    value={selectedTab} 
                     onChange={handleTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
                     sx={{
-                        borderBottom: 1,
-                        borderColor: 'divider',
-                        mb: 3,
+                        '& .MuiTab-root': {
+                            minHeight: '56px',
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            fontSize: '0.95rem',
+                            px: 3,
+                            '&.Mui-selected': {
+                                fontWeight: 600
+                            }
+                        },
+                        '& .MuiTabs-indicator': {
+                            height: 3
+                        }
                     }}
                 >
-                    <Tab 
-                        label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <PersonIcon fontSize="small" />
-                                <Typography>Basic Info</Typography>
-                            </Box>
-                        }
-                    />
-                    <Tab 
-                        label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <MonitorHeartIcon fontSize="small" />
-                                <Typography>Vital Signs</Typography>
-                            </Box>
-                        }
-                    />
-                    <Tab 
-                        label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <WarningIcon fontSize="small" />
-                                <Typography>Allergies</Typography>
-                            </Box>
-                        }
-                    />
-                    <Tab 
-                        label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <PsychologyIcon fontSize="small" />
-                                <Typography>Conditions</Typography>
-                            </Box>
-                        }
-                    />
-                    <Tab 
-                        label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <MedicationIcon fontSize="small" />
-                                <Typography>Medications</Typography>
-                            </Box>
-                        }
-                    />
+                    {recordCategories.map((category, index) => (
+                        <Tab
+                            key={category.id}
+                            icon={category.icon}
+                            label={category.label}
+                            iconPosition="start"
+                        />
+                    ))}
                 </Tabs>
+            </Box>
 
-                <TabPanel value={tabValue} index={0}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
-                            <MedicalRecordCard
-                                title="Basic Information"
-                                icon={<PersonIcon />}
+            {/* Records Grid */}
+            {filteredRecords.length === 0 ? (
+                <Box sx={{ 
+                    p: 6, 
+                    textAlign: 'center',
+                    bgcolor: 'background.paper',
+                    borderRadius: 3,
+                    boxShadow: 2,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                }}>
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No Records Found
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        No {recordCategories[selectedTab].label.toLowerCase()} available.
+                    </Typography>
+                </Box>
+            ) : (
+                <Grid 
+                    container 
+                    spacing={4} 
+                    sx={{ 
+                        justifyContent: 'center',
+                        '& .MuiGrid-item': {
+                            width: { xs: '100%' },
+                            '@media (min-width: 600px)': {
+                                width: 'calc(50% - 16px)',
+                            },
+                            '@media (min-width: 900px)': {
+                                width: 'calc(33.33% - 22px)',
+                            }
+                        }
+                    }}
+                >
+                    {filteredRecords.map((record) => (
+                        <Grid item key={record.id}>
+                            <Card 
+                                sx={{ 
+                                    height: '100%',
+                                    minHeight: { 
+                                        xs: '460px',
+                                        sm: '440px',
+                                        md: '420px',
+                                        lg: '400px'
+                                    },
+                                    maxHeight: { 
+                                        xs: '460px',
+                                        sm: '440px',
+                                        md: '420px',
+                                        lg: '400px'
+                                    },
+                                    transition: 'all 0.3s ease-in-out',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: theme.shadows[8],
+                                    },
+                                    borderRadius: 3,
+                                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    bgcolor: 'background.paper',
+                                    overflow: 'hidden'
+                                }}
                             >
-                                <Stack spacing={2}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <WaterDropIcon color="action" />
-                                        <Typography>
-                                            <strong>Blood Type:</strong> {basicInfo?.bloodType}
-                                        </Typography>
-                                    </Box>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <ScaleIcon color="action" />
-                                        <Typography>
-                                            <strong>Height:</strong> {basicInfo?.height}
-                                        </Typography>
-                                    </Box>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <ScaleIcon color="action" />
-                                        <Typography>
-                                            <strong>Weight:</strong> {basicInfo?.weight}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                            </MedicalRecordCard>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <MedicalRecordCard
-                                title="Vital Signs"
-                                icon={<MonitorHeartIcon />}
-                                action={
-                                    <Tooltip title="Last updated">
-                                        <Chip
-                                            icon={<AccessTimeIcon />}
-                                            label={vitalSigns?.lastUpdated}
-                                            size="small"
-                                        />
-                                    </Tooltip>
-                                }
-                            >
-                                <Stack spacing={2}>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <WaterDropIcon color="action" />
-                                        <Typography>
-                                            <strong>Blood Pressure:</strong> {vitalSigns?.bloodPressure}
-                                        </Typography>
-                                    </Box>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <FavoriteIcon color="action" />
-                                        <Typography>
-                                            <strong>Heart Rate:</strong> {vitalSigns?.heartRate}
-                                        </Typography>
-                                    </Box>
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <DeviceThermostatIcon color="action" />
-                                        <Typography>
-                                            <strong>Temperature:</strong> {vitalSigns?.temperature}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                            </MedicalRecordCard>
-                        </Grid>
-                    </Grid>
-                </TabPanel>
-
-                <TabPanel value={tabValue} index={1}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12}>
-                            <MedicalRecordCard
-                                title="Vital Signs History"
-                                icon={<MonitorHeartIcon />}
-                            >
-                                <Stack spacing={2}>
-                                    {vitalSigns?.history?.map((record, index) => (
-                                        <Box key={index} display="flex" alignItems="center" gap={1}>
-                                            <AccessTimeIcon color="action" />
-                                            <Typography>
-                                                <strong>{record.date}:</strong> {record.value}
+                                <CardHeader
+                                    avatar={
+                                        <Avatar 
+                                            sx={{ 
+                                                bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
+                                                color: theme.palette[getRecordTypeColor(record.type)].main,
+                                                width: 40,
+                                                height: 40
+                                            }}
+                                        >
+                                            {getRecordTypeIcon(record.type)}
+                                        </Avatar>
+                                    }
+                                    action={
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            {record.attachments && record.attachments.length > 0 && (
+                                                <Tooltip title="Download Attachments">
+                                                    <IconButton 
+                                                        size="small"
+                                                        onClick={() => window.open(record.attachments[0], '_blank')}
+                                                        sx={{ 
+                                                            color: theme.palette[getRecordTypeColor(record.type)].main,
+                                                            '&:hover': {
+                                                                bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
+                                                            },
+                                                        }}
+                                                    >
+                                                        <DownloadIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                            <Tooltip title="View Details">
+                                                <IconButton 
+                                                    size="small"
+                                                    onClick={() => handleOpenModal(record)}
+                                                    sx={{ 
+                                                        color: theme.palette[getRecordTypeColor(record.type)].main,
+                                                        '&:hover': {
+                                                            bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
+                                                        },
+                                                    }}
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    }
+                                    title={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
+                                                {record.title}
+                                            </Typography>
+                                            <Chip 
+                                                label={record.type}
+                                                size="small"
+                                                color={getRecordTypeColor(record.type)}
+                                                sx={{ 
+                                                    ml: 1,
+                                                    fontWeight: 500,
+                                                    height: '24px'
+                                                }}
+                                            />
+                                        </Box>
+                                    }
+                                    subheader={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                            <EventIcon fontSize="small" color="action" />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {new Date(record.date).toLocaleDateString()}
                                             </Typography>
                                         </Box>
-                                    ))}
-                                </Stack>
-                            </MedicalRecordCard>
-                        </Grid>
-                    </Grid>
-                </TabPanel>
-
-                <TabPanel value={tabValue} index={2}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12}>
-                            <MedicalRecordCard
-                                title="Allergies"
-                                icon={<WarningIcon />}
-                            >
-                                <Stack spacing={2}>
-                                    {allergies?.map((allergy, index) => (
-                                        <Box key={index} display="flex" alignItems="center" gap={1}>
-                                            <WarningIcon color="error" />
-                                            <Typography>
-                                                <strong>{allergy.name}</strong> - {allergy.severity}
+                                    }
+                                    sx={{
+                                        pb: 1.5,
+                                        px: 3,
+                                        pt: 3,
+                                        '& .MuiCardHeader-content': {
+                                            overflow: 'hidden'
+                                        }
+                                    }}
+                                />
+                                <Divider />
+                                <CardContent sx={{ 
+                                    flexGrow: 1, 
+                                    overflow: 'auto',
+                                    p: 3,
+                                    '&:last-child': {
+                                        pb: 3
+                                    }
+                                }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <PersonIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                                            <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
+                                                Doctor: {record.doctor}
                                             </Typography>
                                         </Box>
-                                    ))}
-                                </Stack>
-                            </MedicalRecordCard>
-                        </Grid>
-                    </Grid>
-                </TabPanel>
-
-                <TabPanel value={tabValue} index={3}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12}>
-                            <MedicalRecordCard
-                                title="Medical Conditions"
-                                icon={<PsychologyIcon />}
-                            >
-                                <Stack spacing={2}>
-                                    {conditions?.map((condition, index) => (
-                                        <Box key={index} display="flex" alignItems="center" gap={1}>
-                                            <PsychologyIcon color="action" />
-                                            <Typography>
-                                                <strong>{condition.name}</strong> - {condition.status}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <LocationOnIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                                            <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
+                                                Location: {record.location}
                                             </Typography>
                                         </Box>
-                                    ))}
-                                </Stack>
-                            </MedicalRecordCard>
-                        </Grid>
-                    </Grid>
-                </TabPanel>
-
-                <TabPanel value={tabValue} index={4}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12}>
-                            <MedicalRecordCard
-                                title="Current Medications"
-                                icon={<MedicationIcon />}
-                            >
-                                <Stack spacing={2}>
-                                    {medications?.map((medication, index) => (
-                                        <Box key={index} display="flex" alignItems="center" gap={1}>
-                                            <MedicationIcon color="action" />
-                                            <Typography>
-                                                <strong>{medication.name}</strong> - {medication.dosage}
+                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                                            <DescriptionIcon sx={{ color: 'text.secondary', mt: 0.5, fontSize: '1.2rem' }} />
+                                            <Typography variant="body1" sx={{ 
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                lineHeight: 1.5
+                                            }}>
+                                                {record.description}
                                             </Typography>
                                         </Box>
-                                    ))}
-                                </Stack>
-                            </MedicalRecordCard>
+                                        {record.attachments && record.attachments.length > 0 && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <AttachFileIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                    {record.attachments.length} attachment(s)
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </CardContent>
+                            </Card>
                         </Grid>
-                    </Grid>
-                </TabPanel>
-            </Paper>
+                    ))}
+                </Grid>
+            )}
+
+            {/* Modal for full card details */}
+            <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+                <DialogTitle>Record Details</DialogTitle>
+                <DialogContent dividers>
+                    {selectedRecord && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>{selectedRecord.title}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                <b>Type:</b> {selectedRecord.type}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                <b>Date:</b> {new Date(selectedRecord.date).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                <b>Doctor:</b> {selectedRecord.doctor}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                <b>Location:</b> {selectedRecord.location}
+                            </Typography>
+                            <Typography variant="body1" sx={{ mt: 2 }}>{selectedRecord.description}</Typography>
+                            {selectedRecord.attachments && selectedRecord.attachments.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <b>Attachments:</b> {selectedRecord.attachments.length}
+                                    </Typography>
+                                    {/* You can add download/view links for attachments here if needed */}
+                                </Box>
+                            )}
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseModal} color="primary">Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
