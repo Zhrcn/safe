@@ -1,663 +1,275 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  Chip,
-  Avatar,
-  Skeleton,
-  Divider,
-  Tab,
-  Tabs
-} from '@mui/material';
-import { 
-  Users, 
-  Calendar, 
-  Clock, 
-  Activity, 
-  FileText,
-  ChevronRight,
-  MessageSquare,
-  UserPlus,
-  AlertCircle,
-  BarChart4,
-  CalendarClock,
-  CheckCircle2
-} from 'lucide-react';
 import Link from 'next/link';
 import { 
-  useGetPatientsQuery,
-  useGetAppointmentsQuery,
-  useGetPatientStatisticsQuery
-} from '@/store/services/doctor/doctorApi';
-import { PageContainer } from '@/components/common';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+  UserPlus, 
+  CalendarClock, 
+  FileText, 
+  MessageSquare, 
+  Users, 
+  ChevronRight 
+} from 'lucide-react';
+import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
-  ArcElement,
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from 'chart.js';
+import CalendarComponent from '@/components/CalendarComponent';
 
-// Register Chart.js components
+// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
-  ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
-function DashboardStatCard({ title, value, icon: Icon, color, linkTo, loading }) {
-  return (
-    <Card 
-      variant="elevated" 
-      className="h-full"
-      hoverable
-    >
-      <Box className="flex items-center">
-        <Box 
-          className={`rounded-full p-3 mr-4 ${color}`}
-        >
-          <Icon size={20} className="text-white" />
-        </Box>
-        <Box>
-          {loading ? (
-            <>
-              <Skeleton width={100} height={24} />
-              <Skeleton width={60} height={36} />
-            </>
-          ) : (
-            <>
-              <Typography variant="body2" color="text.secondary" className="font-medium">
-                {title}
-              </Typography>
-              <Typography variant="h4" className="font-bold">
-                {value}
-              </Typography>
-            </>
-          )}
-        </Box>
-        {linkTo && !loading && (
-          <Box className="ml-auto">
-            <Button 
-              component={Link} 
-              href={linkTo}
-              endIcon={<ChevronRight size={16} />}
-              size="small"
-              variant="soft"
-            >
-              View
-            </Button>
-          </Box>
-        )}
-      </Box>
-    </Card>
-  );
-}
+// Mock data for charts
+const mockAppointmentsData = {
+  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  datasets: [
+    {
+      label: 'Appointments',
+      data: [12, 19, 15, 17, 14, 8, 5],
+      backgroundColor: 'rgba(109, 87, 241, 0.6)',
+      borderColor: 'rgb(109, 87, 241)',
+      borderWidth: 1,
+    },
+  ],
+};
 
-function AppointmentCard({ appointment, loading }) {
-  if (loading) {
-    return (
-      <Box className="mb-3">
-        <Skeleton variant="rounded" height={100} />
-      </Box>
-    );
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Confirmed': return 'success';
-      case 'Pending': return 'warning';
-      case 'Cancelled': return 'error';
-      default: return 'default';
-    }
-  };
-
-  return (
-    <Card 
-      variant="outlined" 
-      bordered 
-      hoverable
-      className="mb-3 transition-all"
-    >
-      <Box className="flex items-center mb-2">
-        <Box className="mr-3">
-          <Avatar className="bg-blue-100 text-blue-600">
-            {appointment.patientName.charAt(0)}
-          </Avatar>
-        </Box>
-        <Box className="flex-grow">
-          <Typography variant="subtitle1" className="font-medium text-foreground">
-            {appointment.patientName}
-          </Typography>
-          <Typography variant="body2" className="text-muted-foreground">
-            {appointment.type}
-          </Typography>
-        </Box>
-        <Chip 
-          label={appointment.status} 
-          size="small" 
-          color={getStatusColor(appointment.status)}
-          variant="outlined"
-          className="ml-auto"
-        />
-      </Box>
-      <Divider className="my-2" />
-      <Box className="flex justify-between items-center">
-        <Box className="flex items-center text-sm text-gray-500">
-          <Calendar size={14} className="mr-1" />
-          {appointment.date}
-        </Box>
-        <Box className="flex items-center text-sm text-gray-500">
-          <Clock size={14} className="mr-1" />
-          {appointment.time}
-        </Box>
-        <Button 
-          variant="soft" 
-          color="primary" 
-          size="xs"
-        >
-          Details
-        </Button>
-      </Box>
-    </Card>
-  );
-}
-
-function PatientListItem({ patient, loading }) {
-  if (loading) {
-    return (
-      <Box className="mb-3">
-        <Skeleton variant="rounded" height={80} />
-      </Box>
-    );
-  }
-
-  return (
-    <Card 
-      variant="outlined" 
-      bordered 
-      hoverable
-      className="mb-3 transition-all"
-    >
-      <Box className="flex items-center">
-        <Avatar className="mr-3">
-          {patient.name.charAt(0)}
-        </Avatar>
-        <Box className="flex-grow">
-          <Typography variant="subtitle1" className="font-medium">
-            {patient.name}
-          </Typography>
-          <Box className="flex items-center text-sm text-gray-500">
-            <Typography variant="body2" color="text.secondary">
-              {patient.age} years • {patient.gender}
-            </Typography>
-          </Box>
-        </Box>
-        <Button 
-          variant="soft" 
-          color="primary" 
-          size="small"
-          component={Link}
-          href={`/doctor/patients/${patient.id}`}
-        >
-          View
-        </Button>
-      </Box>
-    </Card>
-  );
-}
-
-function AppointmentsChart({ data, loading }) {
-  const chartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+const mockPatientDistributionData = {
+  labels: ['New', 'Follow-up', 'Emergency', 'Regular'],
     datasets: [
       {
-        label: 'This Week',
-        data: data?.thisWeek || [4, 6, 8, 7, 5, 3, 0],
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderRadius: 4,
-      },
-      {
-        label: 'Last Week',
-        data: data?.lastWeek || [3, 5, 7, 6, 4, 2, 0],
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderRadius: 4,
+      data: [30, 25, 15, 30],
+      backgroundColor: [
+        'rgba(109, 87, 241, 0.6)',
+        'rgba(16, 185, 129, 0.6)',
+        'rgba(245, 158, 11, 0.6)',
+        'rgba(239, 68, 68, 0.6)',
+      ],
+      borderColor: [
+        'rgb(109, 87, 241)',
+        'rgb(16, 185, 129)',
+        'rgb(245, 158, 11)',
+        'rgb(239, 68, 68)',
+      ],
+      borderWidth: 1,
       },
     ],
   };
 
-  const options = {
+const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
-      },
-      title: {
         display: false,
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+      grid: {
+        display: true,
+        color: 'rgba(255, 255, 255, 0.1)',
+      },
         ticks: {
-          precision: 0,
-        },
+        color: 'rgb(209, 213, 219)',
       },
     },
-  };
-
-  return (
-    <Card 
-      title="Appointments Overview" 
-      subtitle="Weekly comparison"
-      icon={<BarChart4 className="h-5 w-5 text-blue-500" />}
-      variant="elevated"
-    >
-      {loading ? (
-        <Box className="h-[300px] flex items-center justify-center">
-          <CircularProgress size={45} />
-        </Box>
-      ) : (
-        <Box className="h-[300px] pt-4">
-          <Bar data={chartData} options={options} />
-        </Box>
-      )}
-    </Card>
-  );
-}
-
-function PatientDistributionChart({ data, loading }) {
-  const chartData = {
-    labels: ['Male', 'Female'],
-    datasets: [
-      {
-        data: data?.genderDistribution || [55, 45],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-        ],
-        borderWidth: 0,
+    x: {
+      grid: {
+        display: false,
       },
-    ],
+      ticks: {
+        color: 'rgb(209, 213, 219)',
+      },
+    },
+      },
   };
 
-  const options = {
+const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'right',
+      position: 'bottom',
+      labels: {
+        color: 'rgb(209, 213, 219)',
       },
     },
-    cutout: '60%',
-  };
+  },
+};
 
-  return (
-    <Card 
-      title="Patient Distribution" 
-      subtitle="By gender"
-      icon={<Users className="h-5 w-5 text-purple-500" />}
-      variant="elevated"
-    >
-      {loading ? (
-        <Box className="h-[240px] flex items-center justify-center">
-          <CircularProgress size={45} />
-        </Box>
-      ) : (
-        <Box className="h-[240px] flex items-center justify-center">
-          <Doughnut data={chartData} options={options} />
-        </Box>
-      )}
-    </Card>
-  );
-}
-
-export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState(0);
-  const { data: patients, isLoading: patientsLoading } = useGetPatientsQuery();
-  const { data: appointments, isLoading: appointmentsLoading } = useGetAppointmentsQuery();
-  const { data: statistics, isLoading: statisticsLoading } = useGetPatientStatisticsQuery();
-
-  const isLoading = patientsLoading || appointmentsLoading || statisticsLoading;
-
-  const [patientsData, setPatientsData] = useState([]);
-  const [appointmentsData, setAppointmentsData] = useState([]);
-  const [patientStats, setPatientStats] = useState(null);
+export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [tabValue, setTabValue] = useState(0);
   const [recentPatients, setRecentPatients] = useState([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
-  const [pendingAppointments, setPendingAppointments] = useState(0);
-
-  // Chart data
-  const [chartData, setChartData] = useState({
-    appointmentsData: {
-      thisWeek: [4, 6, 8, 7, 5, 3, 0],
-      lastWeek: [3, 5, 7, 6, 4, 2, 0],
-    },
-    genderDistribution: [55, 45],
-  });
 
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        const [patientsData, appointmentsData, statsData] = await Promise.all([
-          getPatients(),
-          getAppointments(),
-          getPatientStatistics()
-        ]);
-        
-        setPatientsData(patientsData);
-        setAppointmentsData(appointmentsData);
-        setPatientStats(statsData);
-        
-        // In a real app, this would come from the API
-        setChartData({
-          appointmentsData: {
-            thisWeek: [4, 6, 8, 7, 5, 3, 0],
-            lastWeek: [3, 5, 7, 6, 4, 2, 0],
-          },
-          genderDistribution: [55, 45],
-        });
-      } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error(err);
-      } finally {
+    // Simulate API call
+    setTimeout(() => {
+      setRecentPatients([
+        { id: 1, name: 'John Doe', lastVisit: '2024-02-15' },
+        { id: 2, name: 'Jane Smith', lastVisit: '2024-02-14' },
+        { id: 3, name: 'Mike Johnson', lastVisit: '2024-02-13' },
+      ]);
+      setUpcomingAppointments([
+        { id: 1, patientName: 'John Doe', time: '09:00 AM', status: 'Confirmed', date: '2024-02-28' },
+        { id: 2, patientName: 'Jane Smith', time: '10:30 AM', status: 'Pending', date: '2024-02-29' },
+        { id: 3, patientName: 'Mike Johnson', time: '02:00 PM', status: 'Confirmed', date: '2024-03-01' },
+        { id: 4, patientName: 'Alice Brown', time: '03:00 PM', status: 'Confirmed', date: '2024-03-01' },
+        { id: 5, patientName: 'Bob White', time: '04:00 PM', status: 'Pending', date: '2024-03-02' },
+      ]);
         setLoading(false);
-      }
-    };
-    
-    loadDashboardData();
+    }, 1000);
   }, []);
 
-  useEffect(() => {
-    if (Array.isArray(patientsData)) {
-      setRecentPatients(patientsData.slice(0, 5));
-    }
-    
-    if (Array.isArray(appointmentsData)) {
-      setUpcomingAppointments(
-        appointmentsData
-          .filter(a => a.status !== 'Rejected')
-          .slice(0, 4)
-      );
-      
-      setPendingAppointments(
-        appointmentsData.filter(a => a.status === 'Pending').length
-      );
-    }
-  }, [patientsData, appointmentsData]);
-
-  // Get today's date in YYYY-MM-DD format safely
-  const getTodayDateString = () => {
-    try {
-      return new Date().toISOString().split('T')[0];
-    } catch (err) {
-      console.error('Date formatting error:', err);
-      return '';
-    }
-  };
-  
-  const todayDateString = getTodayDateString();
-  
-  // Count today's appointments safely with array validation
-  const todayAppointmentsCount = Array.isArray(appointmentsData) ? appointmentsData.filter(a => {
-    try {
-      return a && a.date === todayDateString;
-    } catch (err) {
-      console.error('Error comparing appointment date:', err);
-      return false;
-    }
-  }).length : 0;
-  
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
   return (
-    <PageContainer
-      title="Dashboard"
-      description="Welcome back! Here's an overview of your practice."
-    >
-      {error && (
-        <Alert severity="error" className="mb-6">
-          {error}
-        </Alert>
-      )}
-      
-      {/* Stats Cards */}
-      <Grid container spacing={3} className="mb-6">
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardStatCard 
-            title="Total Patients" 
-            value={patientStats?.totalPatients || 0} 
-            icon={Users}
-            color="bg-blue-500"
-            linkTo="/doctor/patients"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardStatCard 
-            title="Today's Appointments" 
-            value={todayAppointmentsCount}
-            icon={Calendar}
-            color="bg-purple-500"
-            linkTo="/doctor/appointments"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardStatCard 
-            title="Pending Requests" 
-            value={pendingAppointments} 
-            icon={Clock}
-            color="bg-amber-500"
-            linkTo="/doctor/appointments"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <DashboardStatCard 
-            title="Urgent Cases" 
-            value={patientStats?.urgentCases || 0} 
-            icon={AlertCircle}
-            color="bg-red-500"
-            loading={loading}
-          />
-        </Grid>
-      </Grid>
-      
-      {/* Charts & Lists */}
-      <Grid container spacing={3}>
-        {/* Left Column - Charts */}
-        <Grid item xs={12} md={8}>
-          <AppointmentsChart data={chartData.appointmentsData} loading={loading} />
-          
-          <Box className="mt-6">
-            <Card
-              title="Today's Schedule"
-              subtitle="Your appointments for today"
-              icon={<CalendarClock className="h-5 w-5 text-emerald-500" />}
-              actions={
-                <Button 
-                  variant="soft" 
-                  color="primary" 
-                  size="small"
-                  href="/doctor/appointments"
-                  endIcon={<ChevronRight size={16} />}
-                >
-                  View All
-                </Button>
-              }
-              variant="elevated"
-            >
-              {loading ? (
-                [...Array(3)].map((_, index) => (
-                  <AppointmentCard key={index} loading={true} />
-                ))
-              ) : upcomingAppointments.length === 0 ? (
-                <Box className="text-center py-6">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <Typography color="text.secondary">No appointments scheduled for today</Typography>
-                </Box>
-              ) : (
-                upcomingAppointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
-                ))
-              )}
-            </Card>
-          </Box>
-        </Grid>
-        
-        {/* Right Column - Patients */}
-        <Grid item xs={12} md={4}>
-          <PatientDistributionChart data={chartData} loading={loading} />
-          
-          <Box className="mt-6">
-            <Card
-              title="Recent Patients"
-              subtitle="Your latest patient interactions"
-              icon={<UserPlus className="h-5 w-5 text-blue-500" />}
-              actions={
-                <Button 
-                  variant="soft" 
-                  color="primary" 
-                  size="small"
-                  href="/doctor/patients"
-                  endIcon={<ChevronRight size={16} />}
-                >
-                  View All
-                </Button>
-              }
-              variant="elevated"
-            >
-              <Box className="mb-3">
-                <Tabs 
-                  value={tabValue} 
-                  onChange={handleTabChange}
-                  variant="fullWidth"
-                  textColor="primary"
-                  indicatorColor="primary"
-                >
-                  <Tab 
-                    label="Recent" 
-                    icon={<Clock size={16} />} 
-                    iconPosition="start"
-                  />
-                  <Tab 
-                    label="Critical" 
-                    icon={<AlertCircle size={16} />} 
-                    iconPosition="start"
-                  />
-                </Tabs>
-              </Box>
-              
-              {loading ? (
-                [...Array(3)].map((_, index) => (
-                  <PatientListItem key={index} loading={true} />
-                ))
-              ) : recentPatients.length === 0 ? (
-                <Box className="text-center py-6">
-                  <Users className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                  <Typography color="text.secondary">No patients found</Typography>
-                </Box>
-              ) : (
-                tabValue === 0 ? (
-                  recentPatients.map((patient) => (
-                    <PatientListItem key={patient.id} patient={patient} />
-                  ))
+    <div className="p-8 bg-gray-950 min-h-screen text-gray-100 flex justify-center">
+      <div className="w-full max-w-screen-xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-lg text-gray-400">Welcome back, Dr. Smith</p>
+        </div>
+
+        {/* First Row: Recent Patients, Quick Actions, Calendar */}
+        <div className="grid grid-cols-12 gap-8 mb-8">
+          {/* Recent Patients */}
+          <div className="col-span-12 md:col-span-5 flex flex-col">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 flex-grow">
+              <div className="p-6 flex flex-col flex-grow">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-white">Recent Patients</h2>
+                  <Link 
+                    href="/doctor/patients"
+                    className="text-blue-400 hover:text-blue-300 text-base font-medium flex items-center gap-1 transition-colors duration-200"
+                  >
+                    View All
+                    <ChevronRight size={18} />
+                  </Link>
+                </div>
+                <div className="border-b border-gray-700 mb-4" />
+                {loading ? (
+                  <div className="py-8 text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-400 mx-auto" />
+                  </div>
+                ) : recentPatients.length === 0 ? (
+                  <div className="py-8 text-center text-gray-500">
+                    <Users size={64} className="mx-auto mb-4 opacity-50" />
+                    <p className="text-base">No patients found</p>
+                  </div>
                 ) : (
-                  // Triple check patients is an array before any operations
-                  (Array.isArray(patientsData) ? patientsData : [])
-                    .filter(p => p && typeof p === 'object' && p.isCritical === true)
-                    .slice(0, 5)
-                    .map((patient) => (
-                    <PatientListItem key={patient.id} patient={patient} />
-                  ))
-                )
-              )}
-            </Card>
-          </Box>
-          
-          <Box className="mt-6">
-            <Card
-              title="Quick Actions"
-              variant="elevated"
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Button
-                    variant="soft"
-                    color="primary"
-                    fullWidth
-                    startIcon={<UserPlus size={18} />}
-                    href="/doctor/patients/new"
-                  >
-                    New Patient
-                  </Button>
-                </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="soft"
-                    color="secondary"
-                    fullWidth
-                    startIcon={<CalendarClock size={18} />}
-                    href="/doctor/appointments/new"
-                  >
-                    Schedule
-                  </Button>
-                </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="soft"
-                    color="success"
-                    fullWidth
-                    startIcon={<FileText size={18} />}
-                    href="/doctor/prescriptions/new"
-                  >
-                    Prescription
-                  </Button>
-                </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="soft"
-                    color="info"
-                    fullWidth
-                    startIcon={<MessageSquare size={18} />}
-                    href="/doctor/messaging"
-                  >
-                    Messages
-                  </Button>
-                </Grid>
-              </Grid>
-            </Card>
-          </Box>
-        </Grid>
-      </Grid>
-    </PageContainer>
+                  <div className="flex flex-col gap-4 flex-grow">
+                    {recentPatients.map((patient) => (
+                      <div key={patient.id} className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-700/30 flex items-center justify-center text-blue-300 font-semibold text-lg">
+                          {patient.name[0]}
+                        </div>
+                        <div className="flex-grow">
+                          <p className="text-base font-medium text-white">{patient.name}</p>
+                          <p className="text-sm text-gray-400">
+                            Last visit: {new Date(patient.lastVisit).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/doctor/patients/${patient.id}`}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="col-span-12 md:col-span-3 flex flex-col">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 flex-grow">
+              <div className="p-6 flex flex-col flex-grow">
+                <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-2 gap-4 flex-grow">
+                  <button className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-blue-600 text-blue-400 hover:bg-gray-700 transition-colors duration-200 text-sm font-medium h-24">
+                    <UserPlus size={24} />
+                    <span>New Patient</span>
+                  </button>
+                  <button className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-green-600 text-green-400 hover:bg-gray-700 transition-colors duration-200 text-sm font-medium h-24">
+                    <CalendarClock size={24} />
+                    <span>Schedule</span>
+                  </button>
+                  <button className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-yellow-600 text-yellow-400 hover:bg-gray-700 transition-colors duration-200 text-sm font-medium h-24">
+                    <FileText size={24} />
+                    <span>Prescription</span>
+                  </button>
+                  <button className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-red-600 text-red-400 hover:bg-gray-700 transition-colors duration-200 text-sm font-medium h-24">
+                    <MessageSquare size={24} />
+                    <span>Messages</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar */}
+          <div className="col-span-12 md:col-span-4 flex flex-col">
+            <CalendarComponent appointments={upcomingAppointments} />
+          </div>
+        </div>
+
+        {/* Second Row: Charts */}
+        <div className="grid grid-cols-12 gap-8">
+          {/* Appointments Overview Chart */}
+          <div className="col-span-12 md:col-span-7 flex flex-col">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 flex-grow">
+              <div className="p-6 flex flex-col flex-grow">
+                <h2 className="text-xl font-semibold text-white mb-4">Appointments Overview</h2>
+                {loading ? (
+                  <div className="flex-grow flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-400" />
+                  </div>
+                ) : (
+                  <div className="flex-grow min-h-0">
+                    <Bar data={mockAppointmentsData} options={chartOptions} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Patient Distribution Chart */}
+          <div className="col-span-12 md:col-span-5 flex flex-col">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 flex-grow">
+              <div className="p-6 flex flex-col flex-grow">
+                <h2 className="text-xl font-semibold text-white mb-4">Patient Distribution</h2>
+                {loading ? (
+                  <div className="flex-grow flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-400" />
+                  </div>
+                ) : (
+                  <div className="flex-grow min-h-0">
+                    <Doughnut data={mockPatientDistributionData} options={doughnutOptions} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

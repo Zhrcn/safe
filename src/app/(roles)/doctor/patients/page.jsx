@@ -16,7 +16,7 @@ import {
   Alert
 } from '@mui/material';
 import { Search, UserPlus, UserRound, Filter } from 'lucide-react';
-import { getPatients } from '@/services/doctorService';
+import { patients as mockPatients } from '@/mockdata/patients';
 import AddPatientForm from '@/components/doctor/AddPatientForm';
 import PatientCard from '@/components/doctor/PatientCard';
 
@@ -34,14 +34,14 @@ export default function PatientsPage() {
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(patient => 
-        patient.name.toLowerCase().includes(lowercaseSearch) || 
+        `${patient.user?.firstName || ''} ${patient.user?.lastName || ''}`.trim().toLowerCase().includes(lowercaseSearch) || 
         patient.condition.toLowerCase().includes(lowercaseSearch) ||
         patient.medicalId?.toLowerCase().includes(lowercaseSearch)
       );
     }
     
     if (activeTab !== 'all') {
-      filtered = filtered.filter(patient => patient.status.toLowerCase() === activeTab);
+      filtered = filtered.filter(patient => (patient.user?.isActive ? 'active' : 'inactive').toLowerCase() === activeTab);
     }
     
     return filtered;
@@ -53,9 +53,9 @@ export default function PatientsPage() {
     }
     return {
       all: patients.length,
-      active: patients.filter(p => p.status.toLowerCase() === 'active').length,
-      urgent: patients.filter(p => p.status.toLowerCase() === 'urgent').length,
-      inactive: patients.filter(p => p.status.toLowerCase() === 'inactive').length
+      active: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'active').length,
+      urgent: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'urgent').length,
+      inactive: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'inactive').length
     };
   }, [patients]);
 
@@ -74,7 +74,7 @@ export default function PatientsPage() {
         setLoading(true);
         setError('');
         
-        const data = await getPatients();
+        const data = mockPatients;
         setPatients(data);
       } catch (err) {
         setError('Failed to load patients');

@@ -197,7 +197,7 @@ const AppointmentCard = ({ appointment, onViewDetails }) => {
 
             <Box sx={{ p: 2, pt: 0 }}>
                 <Button
-                    fullWidth
+                            fullWidth
                     variant="outlined"
                     endIcon={<ChevronRightIcon />}
                     onClick={() => onViewDetails(appointment)}
@@ -224,7 +224,7 @@ const AppointmentDetailDialog = ({ open, onClose, appointment }) => {
             open={open} 
             onClose={onClose}
             maxWidth="sm"
-            fullWidth
+                            fullWidth
             PaperProps={{
                 sx: {
                     borderRadius: 2,
@@ -307,12 +307,12 @@ const AppointmentDetailDialog = ({ open, onClose, appointment }) => {
                         )}
                     </Stack>
                 </Stack>
-            </DialogContent>
+                </DialogContent>
             <DialogActions sx={{ px: 3, py: 2 }}>
                 <Button onClick={onClose} variant="outlined">
                     Close
-                </Button>
-            </DialogActions>
+                    </Button>
+                </DialogActions>
         </Dialog>
     );
 };
@@ -329,8 +329,8 @@ const AppointmentsPage = () => {
     };
 
     const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setSelectedAppointment(null);
+            setDialogOpen(false);
+            setSelectedAppointment(null);
     };
 
     return (
@@ -339,17 +339,17 @@ const AppointmentsPage = () => {
                 title="Appointments"
                 subtitle="View and manage your upcoming appointments"
                 action={
-                    <Button
-                        variant="contained"
+                <Button
+                    variant="contained"
                         startIcon={<PlusIcon />}
                         sx={{
                             borderRadius: 2,
                             textTransform: 'none',
                             fontWeight: 600,
                         }}
-                    >
+                >
                         Book Appointment
-                    </Button>
+                </Button>
                 }
             />
 

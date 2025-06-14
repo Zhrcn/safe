@@ -95,7 +95,7 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                 },
             }}
         >
-            <CardContent>
+        <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                     <Box display="flex" alignItems="center" gap={1}>
                         <Badge
@@ -115,10 +115,10 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                         <Box>
                             <Typography variant="h6" fontWeight="bold">
                                 {consultation.doctorName}
-                            </Typography>
+            </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {consultation.type.charAt(0).toUpperCase() + consultation.type.slice(1)} Consultation
-                            </Typography>
+            </Typography>
                         </Box>
                     </Box>
                     <Chip
@@ -141,10 +141,10 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                         <Stack spacing={1}>
                             <Typography variant="body2" noWrap>
                                 <strong>Last Message:</strong> {getLastMessage()}
-                            </Typography>
+            </Typography>
                             <Typography variant="caption" color="text.secondary">
                                 {getLastMessageTime()}
-                            </Typography>
+            </Typography>
                         </Stack>
                     </Box>
 
@@ -152,7 +152,7 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>
                                 Attachments:
-                            </Typography>
+                </Typography>
                             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                                 {consultation.attachments.map((attachment, index) => (
                                     <Chip
@@ -187,11 +187,11 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                         >
                             Cancel
                         </Button>
-                    )}
+            )}
                 </Box>
-            </CardContent>
-        </Card>
-    );
+        </CardContent>
+    </Card>
+);
 };
 
 const NewConsultationDialog = ({ open, onClose, onSubmit }) => {
@@ -265,10 +265,10 @@ const NewConsultationDialog = ({ open, onClose, onSubmit }) => {
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
             <DialogTitle>New Consultation Request</DialogTitle>
-            <DialogContent>
+                <DialogContent>
                 <Stack spacing={3} sx={{ mt: 2 }}>
-                    <TextField
-                        fullWidth
+                        <TextField
+                            fullWidth
                         multiline
                         rows={4}
                         label="Your Question"
@@ -309,8 +309,8 @@ const NewConsultationDialog = ({ open, onClose, onSubmit }) => {
                         />
                     </Box>
                 </Stack>
-            </DialogContent>
-            <DialogActions>
+                </DialogContent>
+                <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
                 <Button 
                     variant="contained" 
@@ -318,8 +318,8 @@ const NewConsultationDialog = ({ open, onClose, onSubmit }) => {
                     disabled={!question.trim()}
                 >
                     Submit
-                </Button>
-            </DialogActions>
+                    </Button>
+                </DialogActions>
         </Dialog>
     );
 };
@@ -347,7 +347,7 @@ const ConsultationThread = ({ consultation, onReply }) => {
         }
     };
 
-    return (
+        return (
         <Box sx={{ height: '60vh', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ 
                 flex: 1, 
@@ -452,8 +452,8 @@ const ConsultationThread = ({ consultation, onReply }) => {
                     </Button>
                 </Stack>
             </Box>
-        </Box>
-    );
+            </Box>
+        );
 };
 
 export default function ConsultationsPage() {
@@ -581,7 +581,7 @@ export default function ConsultationsPage() {
                 <DialogContent sx={{ p: 0 }}>
                     {selectedConsultation && (
                         <ConsultationThread
-                            consultation={selectedConsultation}
+                consultation={selectedConsultation}
                             onReply={handleReply}
                         />
                     )}

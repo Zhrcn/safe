@@ -2,7 +2,7 @@
 
 import { 
     Home, Calendar, FileText, Users, 
-    MessageSquare, Settings, Bell, LogOut 
+    MessageSquare, Settings, Bell, LogOut, BarChart2, User, Pill 
 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 
@@ -10,7 +10,7 @@ const sidebarItems = [
     {
         name: 'Dashboard',
         icon: Home,
-        link: '/doctor'
+        link: '/doctor/dashboard'
     },
     {
         name: 'Appointments',
@@ -18,24 +18,29 @@ const sidebarItems = [
         link: '/doctor/appointments'
     },
     {
-        name: 'Medical Records',
-        icon: FileText,
-        link: '/doctor/medical-records'
-    },
-    {
         name: 'Patients',
         icon: Users,
         link: '/doctor/patients'
     },
     {
-        name: 'Messages',
+        name: 'Medicine',
+        icon: Pill,
+        link: '/doctor/medicine'
+    },
+    {
+        name: 'Analytics',
+        icon: BarChart2,
+        link: '/doctor/analytics'
+    },
+    {
+        name: 'Messaging',
         icon: MessageSquare,
         link: '/doctor/messaging'
     },
     {
-        name: 'Settings',
-        icon: Settings,
-        link: '/doctor/settings'
+        name: 'Profile',
+        icon: User,
+        link: '/doctor/profile'
     }
 ];
 

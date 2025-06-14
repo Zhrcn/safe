@@ -27,7 +27,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { UserRound, Send, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
-import { getAvailableDoctors, createReferral } from '@/services/doctorService';
 
 const referralSchema = z.object({
     doctorId: z.string().min(1, 'Doctor is required'),
@@ -62,8 +61,12 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
         const loadDoctors = async () => {
             try {
                 setLoading(true);
-                const data = await getAvailableDoctors();
-                setDoctors(data);
+                // Use local state and mock data for getAvailableDoctors and createReferral logic.
+                setDoctors([
+                    { id: '1', name: 'Dr. John Doe', specialty: 'Cardiologist' },
+                    { id: '2', name: 'Dr. Jane Smith', specialty: 'Dermatologist' },
+                    { id: '3', name: 'Dr. Bob Johnson', specialty: 'Pediatrician' }
+                ]);
             } catch (err) {
                 console.error('Failed to load doctors:', err);
                 setError('Failed to load available doctors');
@@ -125,7 +128,8 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 urgency: data.urgency
             };
             
-            const result = await createReferral(patientId, referralData);
+            // Use local state and mock data for createReferral logic.
+            const result = { success: true, referral: referralData };
             
             if (result.success) {
                 setSuccess('Referral created successfully');

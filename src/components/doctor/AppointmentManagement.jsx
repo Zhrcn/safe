@@ -42,7 +42,7 @@ import {
     XCircle,
     Plus
 } from 'lucide-react';
-import { getAppointments, manageAppointment, updateAppointmentStatus, acceptAppointment, rejectAppointment, updateAppointment } from '@/services/doctorService';
+import { appointments as mockAppointments } from '@/mockdata/appointments';
 
 const appointmentTypes = [
     'Annual Physical',
@@ -900,7 +900,7 @@ export default function AppointmentManagement() {
             setLoading(true);
             setError('');
 
-            const data = await getAppointments();
+            const data = mockAppointments;
             console.log('Loaded appointments:', data);
 
             // Transform the data if needed to match the expected format

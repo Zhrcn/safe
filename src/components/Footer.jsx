@@ -47,7 +47,7 @@ const Footer = () => {
     >
       <Container maxWidth="lg">
         <Grid container spacing={6}>
-          <Grid columns={{ xs: 12, md: 4 }}>
+          <Grid item xs={12} md={4}>
             <Box sx={{ mb: 3 }}>
               <Typography 
                 variant="h5" 
@@ -111,13 +111,13 @@ const Footer = () => {
             </Box>
           </Grid>
           
-          <Grid columns={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
               Quick Links
             </Typography>
             
             <Grid container spacing={2}>
-              <Grid columns={{ xs: 6 }}>
+              <Grid item xs={6}>
                 {quickLinks.slice(0, Math.ceil(quickLinks.length / 2)).map((link) => (
                   <Box key={link.name} sx={{ mb: 1.5 }}>
                     <Link 
@@ -137,7 +137,7 @@ const Footer = () => {
                   </Box>
                 ))}
               </Grid>
-              <Grid columns={{ xs: 6 }}>
+              <Grid item xs={6}>
                 {quickLinks.slice(Math.ceil(quickLinks.length / 2)).map((link) => (
                   <Box key={link.name} sx={{ mb: 1.5 }}>
                     <Link 
@@ -160,7 +160,7 @@ const Footer = () => {
             </Grid>
           </Grid>
           
-          <Grid columns={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <Typography variant="h6" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
               Legal
             </Typography>

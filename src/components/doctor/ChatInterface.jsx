@@ -33,7 +33,7 @@ import {
     MoreVertical 
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { getConversations, getMessages, sendMessage } from '@/services/doctorService';
+import { conversations as mockConversations } from '@/mockdata/conversations';
 
 const getRoleIcon = (role) => {
     switch(role) {
@@ -192,7 +192,7 @@ export default function ChatInterface() {
                 setLoading(true);
                 setError('');
                 
-                const data = await getConversations();
+                const data = mockConversations;
                 
                 if (!data || data.length === 0) {
                     const mockConversations = [
@@ -269,7 +269,7 @@ export default function ChatInterface() {
         try {
             setLoadingMessages(true);
             
-            const data = await getMessages(conversationId);
+            const data = mockConversations.find(c => c.id === conversationId);
             
             if (!data || data.length === 0) {
                 const conversation = conversations.find(c => c.id === conversationId);

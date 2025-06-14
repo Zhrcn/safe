@@ -22,7 +22,7 @@ export default forwardRef(function FormLayout({
     return (
         <Box sx={{ width: '100%', maxWidth: maxWidth, mx: 'auto', px: 2 }} ref={ref}>
             <Grid container spacing={3}>
-                <Grid xs={12}>
+                <Grid item xs={12}>
                     <Paper className="px-2 py-4 shadow-lg rounded-lg">
                         {(title || description) && (
                             <>

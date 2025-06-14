@@ -87,7 +87,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                 }}
             />
             <CardContent sx={{ pt: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                     <Box display="flex" alignItems="center" gap={2}>
                         <Avatar 
                             sx={{ 
@@ -108,17 +108,17 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                                 <CalendarIcon fontSize="small" color="action" />
                                 <Typography variant="body2" color="text.secondary">
                                     {new Date(prescription.date).toLocaleDateString()}
-                                </Typography>
+                </Typography>
                             </Box>
                         </Box>
                     </Box>
-                    <Chip
+                <Chip
                         icon={statusIcons[prescription.status]}
-                        label={prescription.status}
+                    label={prescription.status}
                         color={statusColors[prescription.status]}
-                        size="small"
-                    />
-                </Box>
+                    size="small"
+                />
+            </Box>
 
                 <Stack spacing={2} sx={{ flex: 1, overflow: 'hidden' }}>
                     {prescription.medications.map((medication, index) => (
@@ -144,11 +144,11 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                                 </Box>
                                 <Typography variant="subtitle1" fontWeight="medium" noWrap>
                                     {medication.name}
-                                </Typography>
+            </Typography>
                             </Box>
                             <Typography variant="body2" color="text.secondary" noWrap>
                                 {medication.dosage} - {medication.frequency}
-                            </Typography>
+            </Typography>
                         </Box>
                     ))}
                 </Stack>
@@ -221,9 +221,9 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                         </IconButton>
                     </Tooltip>
                 </Box>
-            </CardContent>
-        </Card>
-    );
+        </CardContent>
+    </Card>
+);
 };
 
 const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => {

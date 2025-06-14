@@ -180,36 +180,36 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
       }}
     >
       <Box
-        sx={{
+                    sx={{
           p: 2,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           bgcolor: 'background.paper',
-        }}
-      >
+                    }}
+                  >
         <Box display="flex" alignItems="center" gap={2}>
           <Avatar src={selectedChat.avatar} />
           <Box flex={1}>
             <Typography variant="h6">
               {selectedChat.name}
-            </Typography>
+                            </Typography>
             <Typography variant="body2" color="text.secondary">
               {selectedChat.role}
-            </Typography>
+                          </Typography>
           </Box>
           <Stack direction="row" spacing={1}>
             <Tooltip title="Start Video Call">
               <IconButton>
                 <VideoCallIcon />
-              </IconButton>
-            </Tooltip>
+                      </IconButton>
+                    </Tooltip>
             <Tooltip title="More Options">
               <IconButton>
                 <MoreVertIcon />
-              </IconButton>
-            </Tooltip>
+                      </IconButton>
+                    </Tooltip>
           </Stack>
-        </Box>
-      </Box>
+                  </Box>
+                </Box>
 
       <Box
         sx={{
@@ -231,11 +231,11 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
             <CircularProgress size={16} />
             <Typography variant="body2" color="text.secondary">
               {selectedChat.name} is typing...
-            </Typography>
-          </Box>
-        )}
+                        </Typography>
+                      </Box>
+                      )}
         <div ref={messagesEndRef} />
-      </Box>
+                </Box>
 
       <Box
         sx={{
@@ -250,10 +250,10 @@ const ChatWindow = ({ selectedChat, onSendMessage }) => {
               <AttachFileIcon />
             </IconButton>
           </Tooltip>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Type a message..."
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Type a message..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -341,8 +341,8 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
                 '&:hover': {
                   bgcolor: alpha(theme.palette.primary.main, 0.15),
                 }
-              }
-            }}
+                      }
+                    }}
           >
             <ListItemAvatar>
               <Badge
@@ -376,7 +376,7 @@ const ChatList = ({ chats, selectedChat, onSelectChat, searchQuery }) => {
             {chat.unread && (
               <Chip
                 label={chat.unread}
-                color="primary"
+                    color="primary"
                 size="small"
                 sx={{ minWidth: 20, height: 20 }}
               />
@@ -536,9 +536,9 @@ const MessagingPage = () => {
               </IconButton>
               <Typography variant="subtitle1" noWrap>
                 {selectedChat?.name}
-              </Typography>
-            </Box>
-          )}
+                </Typography>
+              </Box>
+            )}
           <Box sx={{ 
             height: '100%',
             pt: isMobileView && !showChatList ? '48px' : 0

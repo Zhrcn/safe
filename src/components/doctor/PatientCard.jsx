@@ -80,7 +80,8 @@ export default function PatientCard({ patient }) {
         }
     };
     
-    const getInitials = (name) => {
+    const getInitials = (patient) => {
+        const name = `${patient.user?.firstName || ''} ${patient.user?.lastName || ''}`.trim();
         return name
             .split(' ')
             .map(n => n[0])
@@ -97,20 +98,20 @@ export default function PatientCard({ patient }) {
                             className="bg-primary text-primary-foreground"
                             sx={{ width: 40, height: 40 }}
                         >
-                            {getInitials(patient.name)}
+                            {getInitials(patient)}
                         </Avatar>
                         <Box className="ml-3 flex-grow">
                             <Typography variant="h6" className="text-foreground font-medium">
-                                {patient.name}
+                                {`${patient.user?.firstName || ''} ${patient.user?.lastName || ''}`.trim()}
                             </Typography>
                             <Typography variant="body2" className="text-muted-foreground">
                                 {patient.age} years • {patient.gender}
                             </Typography>
                         </Box>
                         <Chip 
-                            label={patient.status}
+                            label={patient.user?.isActive ? 'active' : 'inactive'}
                             size="small"
-                            {...getStatusChipProps(patient.status)}
+                            {...getStatusChipProps(patient.user?.isActive ? 'active' : 'inactive')}
                         />
                     </Box>
                     

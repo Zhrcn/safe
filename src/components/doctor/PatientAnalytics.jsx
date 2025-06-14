@@ -32,9 +32,86 @@ import {
     Legend, 
     ResponsiveContainer 
 } from 'recharts';
-import { getAnalyticsData, getPatientStatistics } from '@/services/doctorService';
+import { patients } from '@/mockdata/patients';
+import { appointments } from '@/mockdata/appointments';
+import { medications } from '@/mockdata/medications';
+import { consultations } from '@/mockdata/consultations';
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#f59e0b', '#6366f1'];
+
+// Mock implementation for analytics data
+function getAnalyticsData() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Appointments by month (last 12 months)
+      const now = new Date();
+      const months = Array.from({ length: 12 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+        return d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      });
+      const appointmentsByMonth = months.map((monthLabel, i) => {
+        // Count appointments in this month
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+        const nextMonth = new Date(monthDate);
+        nextMonth.setMonth(monthDate.getMonth() + 1);
+        const count = appointments.filter(a => {
+          const date = new Date(a.date);
+          return date >= monthDate && date < nextMonth;
+        }).length;
+        return { month: monthLabel, count };
+      });
+      // Appointments by patient
+      const appointmentsByPatient = patients.map(p => ({
+        patient: `${p.user.firstName} ${p.user.lastName}`,
+        count: appointments.filter(a => a.patient === p.id).length
+      }));
+      // Prescriptions by patient
+      const prescriptionsByPatient = patients.map(p => ({
+        patient: `${p.user.firstName} ${p.user.lastName}`,
+        count: medications.filter(m => m.patient === p.id).length
+      }));
+      // Treatment outcomes (mocked)
+      const treatmentOutcomes = [
+        { condition: 'Hypertension', improved: 8, unchanged: 2, worsened: 1 },
+        { condition: 'Diabetes', improved: 5, unchanged: 3, worsened: 0 },
+      ];
+      // Patient demographics (mocked)
+      const ageGroups = [
+        { group: '0-18', count: patients.filter(p => p.user.age <= 18).length },
+        { group: '19-35', count: patients.filter(p => p.user.age >= 19 && p.user.age <= 35).length },
+        { group: '36-60', count: patients.filter(p => p.user.age >= 36 && p.user.age <= 60).length },
+        { group: '61+', count: patients.filter(p => p.user.age >= 61).length },
+      ];
+      const gender = [
+        { name: 'Male', value: patients.filter(p => p.user.gender === 'male').length },
+        { name: 'Female', value: patients.filter(p => p.user.gender === 'female').length },
+      ];
+      resolve({
+        appointmentsByMonth,
+        appointmentsByPatient,
+        prescriptionsByPatient,
+        treatmentOutcomes,
+        patientDemographics: { ageGroups, gender },
+      });
+    }, 500);
+  });
+}
+
+function getPatientStatistics() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        totalPatients: patients.length,
+        activePatients: patients.filter(p => p.user.isActive).length,
+        urgentCases: 2, // mock
+        byCondition: [
+          { condition: 'Hypertension', count: patients.filter(p => p.chronicConditions.some(c => c.name === 'Hypertension')).length },
+          { condition: 'Diabetes', count: patients.filter(p => p.chronicConditions.some(c => c.name === 'Diabetes')).length },
+        ],
+      });
+    }, 500);
+  });
+}
 
 export default function PatientAnalytics() {
     const [activeTab, setActiveTab] = useState('appointments');

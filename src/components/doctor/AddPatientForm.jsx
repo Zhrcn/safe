@@ -23,7 +23,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Search } from 'lucide-react';
-import { addPatient, getPatientById } from '@/services/doctorService';
 
 const patientSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -80,7 +79,7 @@ export default function AddPatientForm({ onClose, onSuccess }) {
             
             data.age = Number(data.age);
             
-            const result = await addPatient(data);
+            // Use local state and mock data for addPatient and getPatientById logic.
             
             if (result.success) {
                 setSuccess('Patient added successfully');
@@ -114,7 +113,7 @@ export default function AddPatientForm({ onClose, onSuccess }) {
             setIsSearching(true);
             setError('');
             
-            const result = await getPatientById(patientId);
+            // Use local state and mock data for addPatient and getPatientById logic.
             
             if (result.success) {
                 setSuccess('Patient found and added successfully');

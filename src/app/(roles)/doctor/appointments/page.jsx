@@ -7,6 +7,7 @@ import {
   Paper,
 } from '@mui/material';
 import AppointmentManagement from '@/components/doctor/AppointmentManagement';
+import { appointments as mockAppointments } from '@/mockdata/appointments';
 
 export default function AppointmentsPage() {
   return (

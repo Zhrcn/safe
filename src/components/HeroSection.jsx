@@ -56,10 +56,8 @@ export default function HeroSection() {
       </Box>
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-        <Grid container spacing={{ xs: 2, md: 4 }} alignItems="center">
-          <Grid sx={{ 
-            gridColumn: { xs: '1 / -1', md: '1 / span 6' } 
-          }}>
+        <Grid container spacing={4} alignItems="center">
+          <Grid item xs={12} md={6} sx={{ gridColumn: { xs: '1 / -1', md: '1 / span 6' } }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -128,10 +126,7 @@ export default function HeroSection() {
             </motion.div>
           </Grid>
           
-          <Grid sx={{ 
-            gridColumn: { xs: '1 / -1', md: '7 / span 6' },
-            display: { xs: 'none', md: 'block' } 
-          }}>
+          <Grid item xs={12} md={6} sx={{ gridColumn: { xs: '1 / -1', md: '7 / span 6' }, display: { xs: 'none', md: 'block' } }}>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

@@ -286,12 +286,6 @@ function PatientProfilePage() {
                     iconPosition="start"
                 />
                 <Tab
-                    value="medical"
-                    label="Medical Information"
-                    icon={<HeartPulse size={20} />}
-                    iconPosition="start"
-                />
-                <Tab
                     value="insurance"
                     label="Insurance"
                     icon={<Shield size={20} />}
@@ -452,116 +446,6 @@ function PatientProfilePage() {
         </Box>
     );
 
-    const renderMedicalInfo = () => {
-        const renderTabContent = () => {
-            switch (medicalTabValue) {
-                case 1: // Allergies
-                    return (
-                        <Box>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<FilePlus2 />}
-                                    onClick={() => setAllergyDialogOpen(true)}
-                                >
-                                    Add Allergy
-                                </Button>
-                            </Box>
-                            <List>
-                                {profileData?.allergies?.map((allergy, index) => (
-                                    <ListItem key={index}>
-                                        <ListItemText
-                                            primary={allergy.name}
-                                            secondary={`Severity: ${allergy.severity}${allergy.notes ? ` - ${allergy.notes}` : ''}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                    );
-                case 2: // Chronic Conditions
-                    return (
-                        <Box>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<FilePlus2 />}
-                                    onClick={() => setChronicConditionDialogOpen(true)}
-                                >
-                                    Add Condition
-                                </Button>
-                            </Box>
-                            <List>
-                                {profileData?.chronicConditions?.map((condition, index) => (
-                                    <ListItem key={index}>
-                                        <ListItemText
-                                            primary={condition.name}
-                                            secondary={`Diagnosed: ${new Date(condition.diagnosisDate).toLocaleDateString()} - Status: ${condition.status}${condition.notes ? ` - ${condition.notes}` : ''}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                    );
-                case 6: // Medications
-                    return (
-                        <Box>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<FilePlus2 />}
-                                    onClick={() => setMedicationDialogOpen(true)}
-                                >
-                                    Add Medication
-                                </Button>
-                            </Box>
-                            <List>
-                                {profileData?.medications?.map((medication, index) => (
-                                    <ListItem key={index}>
-                                        <ListItemText
-                                            primary={medication.name}
-                                            secondary={`${medication.dosage} - ${medication.frequency} - Prescribed by: ${medication.prescribedBy}${medication.notes ? ` - ${medication.notes}` : ''}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                    );
-                default:
-                    return (
-                        <Box sx={{ p: 2 }}>
-                            <Typography variant="body1" color="text.secondary">
-                                Select a category to view details
-                            </Typography>
-                        </Box>
-                    );
-            }
-        };
-
-        return (
-            <Box>
-                <Tabs
-                    value={medicalTabValue}
-                    onChange={handleMedicalTabChange}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                >
-                    {medicalRecordCategories.map((category) => (
-                        <Tab
-                            key={category.id}
-                            icon={<category.icon size={20} />}
-                            label={category.label}
-                            iconPosition="start"
-                        />
-                    ))}
-                </Tabs>
-                <Box sx={{ mt: 2 }}>
-                    {renderTabContent()}
-                </Box>
-            </Box>
-        );
-    };
-
     const renderInsuranceInfo = () => (
         <Box sx={{ p: 3 }}>
             <Stack spacing={3}>
@@ -686,7 +570,6 @@ function PatientProfilePage() {
                 {renderNavigation()}
                 <Box sx={{ mt: 4 }}>
                     {activeSection === 'personal' && renderPersonalInfo()}
-                    {activeSection === 'medical' && renderMedicalInfo()}
                     {activeSection === 'insurance' && renderInsuranceInfo()}
                     {activeSection === 'emergency' && renderEmergencyContact()}
                 </Box>

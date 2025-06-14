@@ -40,7 +40,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getDoctorProfile, updateDoctorProfile, addProfileItem } from '@/services/doctorService';
+import { doctors as mockDoctors } from '@/mockdata/doctors';
 
 const personalInfoSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -85,7 +85,7 @@ function PersonalInfoForm({ profile, onSave }) {
             name: profile?.name || '',
             specialty: profile?.specialty || '',
             licenseNumber: profile?.licenseNumber || '',
-            experience: profile?.experience || '',
+            experience: profile?.experienceYears || '',
             contact: {
                 email: profile?.contact?.email || '',
                 phone: profile?.contact?.phone || ''
@@ -100,7 +100,7 @@ function PersonalInfoForm({ profile, onSave }) {
                 name: profile.name,
                 specialty: profile.specialty,
                 licenseNumber: profile.licenseNumber,
-                experience: profile.experience,
+                experience: profile.experienceYears,
                 contact: {
                     email: profile.contact?.email,
                     phone: profile.contact?.phone
@@ -204,7 +204,7 @@ function PersonalInfoForm({ profile, onSave }) {
                         </div>
                         <div>
                             <Typography variant="subtitle1" className="text-muted-foreground">Experience (Years)</Typography>
-                            <Typography variant="body1" className="text-foreground">{profile?.experience}</Typography>
+                            <Typography variant="body1" className="text-foreground">{profile?.experienceYears}</Typography>
                         </div>
                     </div>
                     
@@ -421,11 +421,10 @@ function AddEducationDialog({ open, onClose, onAdd }) {
             setIsSubmitting(true);
             setError('');
             
-            const result = await addProfileItem('education', data);
+            const result = await onAdd(data);
             
             if (result.success) {
                 reset();
-                if (onAdd) onAdd(result.profile);
                 onClose();
             } else {
                 setError(result.message || 'Failed to add education');
@@ -584,11 +583,10 @@ function AddAchievementDialog({ open, onClose, onAdd }) {
             setIsSubmitting(true);
             setError('');
             
-            const result = await addProfileItem('achievement', data);
+            const result = await onAdd(data);
             
             if (result.success) {
                 reset();
-                if (onAdd) onAdd(result.profile);
                 onClose();
             } else {
                 setError(result.message || 'Failed to add achievement');
@@ -741,7 +739,7 @@ export default function ProfileManager() {
             setLoading(true);
             setError('');
             
-            const data = await getDoctorProfile();
+            const data = mockDoctors[0];
             setProfile(data);
         } catch (err) {
             setError('Failed to load profile');
@@ -890,6 +888,41 @@ export default function ProfileManager() {
                                     ) : (
                                         <Typography className="text-muted-foreground text-center py-4">
                                             No achievements found
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                {/* Experience Section */}
+                                <Divider className="my-6" />
+                                <Box>
+                                    <Typography variant="h6" className="text-foreground font-medium mb-4">
+                                        Experience
+                                    </Typography>
+                                    {Array.isArray(profile?.experience) && profile.experience.length > 0 ? (
+                                        <Grid container spacing={3}>
+                                            {profile.experience.map((exp, idx) => (
+                                                <Grid item xs={12} md={6} key={idx}>
+                                                    <Card className="border border-border">
+                                                        <CardContent>
+                                                            <Box className="flex items-center mb-2">
+                                                                <Typography variant="h6" className="text-foreground font-medium">
+                                                                    {exp.title} at {exp.institution?.name}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Typography variant="body2" className="text-muted-foreground">
+                                                                {exp.startDate ? new Date(exp.startDate).toLocaleDateString() : ''} - {exp.endDate ? new Date(exp.endDate).toLocaleDateString() : 'Present'}
+                                                            </Typography>
+                                                            <Typography variant="body1" className="text-foreground mt-2">
+                                                                {exp.description}
+                                                            </Typography>
+                                                        </CardContent>
+                                                    </Card>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    ) : (
+                                        <Typography className="text-muted-foreground text-center py-4">
+                                            No experience listed.
                                         </Typography>
                                     )}
                                 </Box>
