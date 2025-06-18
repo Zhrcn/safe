@@ -1,51 +1,1 @@
-'use client';
-
-import { Box, Card, Typography } from '@mui/material';
-import { Calendar, Pill, Stethoscope } from 'lucide-react';
-
-const iconMap = {
-    calendar: Calendar,
-    medication: Pill,
-    stethoscope: Stethoscope,
-};
-
-export default function EnhancedStatCard({ title, value, icon, color }) {
-    const Icon = iconMap[icon] || Calendar;
-
-    return (
-        <Card
-            variant="outlined"
-            sx={{
-                p: 3,
-                height: '100%',
-                transition: 'all 0.3s ease-in-out',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 3,
-                },
-            }}
-        >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box
-                    sx={{
-                        backgroundColor: `${color}.light`,
-                        color: `${color}.main`,
-                        p: 2,
-                        borderRadius: 2,
-                        mr: 2,
-                    }}
-                >
-                    <Icon size={24} />
-                </Box>
-                <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
-                        {title}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
-                        {value}
-                    </Typography>
-                </Box>
-            </Box>
-        </Card>
-    );
-} 
+'use client';import { Calendar, Pill, Stethoscope } from 'lucide-react';import { Card, CardContent } from '@/components/ui/Card';const iconMap = {    calendar: Calendar,    medication: Pill,    stethoscope: Stethoscope,};export default function EnhancedStatCard({ title, value, icon, color }) {    const Icon = iconMap[icon] || Calendar;    const getColorClasses = (color) => {        switch (color) {            case 'primary':                return 'bg-blue-100 text-blue-600';            case 'secondary':                return 'bg-purple-100 text-purple-600';            case 'success':                return 'bg-green-100 text-green-600';            case 'warning':                return 'bg-yellow-100 text-yellow-600';            case 'error':                return 'bg-red-100 text-red-600';            default:                return 'bg-gray-100 text-gray-600';        }    };    return (        <Card className="h-full transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg">            <CardContent className="p-6">                <div className="flex items-center">                    <div className={`p-3 rounded-lg mr-4 ${getColorClasses(color)}`}>                        <Icon size={24} />                    </div>                    <div>                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">                            {title}                        </p>                        <p className="text-2xl font-bold mt-1">                            {value}                        </p>                    </div>                </div>            </CardContent>        </Card>    );} 

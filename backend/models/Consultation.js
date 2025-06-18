@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const ConsultationSchema = new mongoose.Schema({
   patient: {
     type: mongoose.Schema.Types.ObjectId,
@@ -53,5 +52,4 @@ const ConsultationSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
 module.exports = mongoose.model('Consultation', ConsultationSchema);

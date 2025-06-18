@@ -1,78 +1,91 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip } from '@mui/material';
-import { ShoppingCart, Eye, CheckCircle, X } from 'lucide-react';
-import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
-import { SearchField } from '@/components/ui/Notification';
-import { getOrders, updateOrderStatus } from '@/services/pharmacistService';
+import { ShoppingCart, Eye, CheckCircle, X, Search } from 'lucide-react';
+import {
+  PharmacistPageContainer,
+  PharmacistCard,
+} from '@/components/pharmacist/PharmacistComponents';
+import {
+  getOrders,
+  updateOrderStatus,
+} from '@/services/pharmacistService';
+import { SearchField } from '@/components/ui/SearchField';
+import { TableContainer } from '@/components/ui/TableContainer';
+import { Table } from '@/components/ui/Table';
+import { TableHead } from '@/components/ui/TableHead';
+import { TableBody } from '@/components/ui/TableBody';
+import { TableRow } from '@/components/ui/TableRow';
+import { TableCell } from '@/components/ui/TableCell';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Paper } from '@/components/ui/Paper';
 
-function OrderDetailDialog({ open, onClose, order }) {
+function OrderDetailDialog({ open, onClose, order, onMarkAsProcessed }) {
   if (!order) return null;
-
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle className="flex justify-between items-center">
-        <Typography variant="h6" className="font-bold">
-          Order Details
-        </Typography>
-        <IconButton onClick={onClose}>
-          <X size={20} />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <Box className="mt-4 space-y-4">
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Order ID</Typography>
-            <Typography variant="body1" className="font-medium">{order.id}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Items</Typography>
-            <Typography variant="body1" className="font-medium">{order.items}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Date</Typography>
-            <Typography variant="body1">{order.date}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Status</Typography>
-            <Chip
-              label={order.status}
-              color={
-                order.status === 'Pending' ? 'warning' :
-                  order.status === 'Processing' ? 'info' :
-                    'success'
-              }
-              size="small"
-            />
-          </Box>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} className="text-muted-foreground">
-          Close
-        </Button>
-        {order.status !== 'Completed' && (
-          <Button
-            variant="contained"
-            startIcon={<CheckCircle size={16} />}
+    <div className={`fixed inset-0 z-50 ${open ? 'block' : 'hidden'}`}>
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-lg font-bold">Order Details</h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Order ID</p>
+            <p className="font-medium">{order.id}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Items</p>
+            <p className="font-medium">{order.items}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+            <p>{order.date}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
+            <Chip label={order.status} color={getStatusColor(order.status)} size="small" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t">
+          <button
             onClick={onClose}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
           >
-            Mark as Processed
-          </Button>
-        )}
-      </DialogActions>
-    </Dialog>
+            Close
+          </button>
+          {order.status !== 'Completed' && (
+            <button
+              onClick={() => {
+                onMarkAsProcessed(order.id);
+                onClose();
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+            >
+              <CheckCircle size={16} />
+              {order.status === 'Pending' ? 'Start Processing' : 'Mark as Completed'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
+}
+
+function getStatusColor(status) {
+  switch (status) {
+    case 'Pending':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    case 'Processing':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    case 'Completed':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+  }
 }
 
 export default function PharmacistOrdersPage() {
@@ -94,54 +107,31 @@ export default function PharmacistOrdersPage() {
         setLoading(false);
       }
     }
-
     loadOrders();
   }, []);
 
   const filteredOrders = searchTerm
     ? orders.filter(order =>
-      order.items.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toString().includes(searchTerm.toLowerCase())
-    )
+        order.items.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id.toString().includes(searchTerm.toLowerCase())
+      )
     : orders;
 
   const handleViewDetails = (orderId) => {
     const order = orders.find(o => o.id === orderId);
-    if (order) {
-      setSelectedOrder(order);
-      setDetailDialogOpen(true);
-    }
+    setSelectedOrder(order);
+    setDetailDialogOpen(true);
   };
 
   const handleMarkAsProcessed = async (orderId) => {
     try {
       const order = orders.find(o => o.id === orderId);
       const nextStatus = order.status === 'Pending' ? 'Processing' : 'Completed';
-
       const updatedOrder = await updateOrderStatus(orderId, nextStatus);
-      setOrders(prev => prev.map(order =>
-        order.id === orderId ? updatedOrder : order
-      ));
+      setOrders(prev => prev.map(o => (o.id === orderId ? updatedOrder : o)));
     } catch (error) {
       console.error('Error updating order status:', error);
     }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pending':
-        return 'warning';
-      case 'Processing':
-        return 'info';
-      case 'Completed':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
-
-  const getActionButtonText = (status) => {
-    return status === 'Pending' ? 'Start Processing' : 'Mark as Completed';
   };
 
   return (
@@ -159,56 +149,48 @@ export default function PharmacistOrdersPage() {
           />
         }
       >
-        <TableContainer component={Paper} elevation={2} className="bg-card rounded-md">
+        <TableContainer component={Paper} elevation={2}>
           <Table>
             <TableHead>
-              <TableRow className="bg-muted">
-                <TableCell className="text-foreground font-semibold">Order ID</TableCell>
-                <TableCell className="text-foreground font-semibold">Items</TableCell>
-                <TableCell className="text-foreground font-semibold">Date</TableCell>
-                <TableCell className="text-foreground font-semibold">Status</TableCell>
-                <TableCell align="right" className="text-foreground font-semibold">Actions</TableCell>
+              <TableRow>
+                <TableCell>Order ID</TableCell>
+                <TableCell>Items</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" className="text-muted-foreground">
-                    Loading orders data...
+                  <TableCell colSpan={5} align="center">
+                    Loading orders...
                   </TableCell>
                 </TableRow>
               ) : filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" className="text-muted-foreground">
+                  <TableCell colSpan={5} align="center">
                     No orders found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredOrders.map((order) => (
-                  <TableRow
-                    key={order.id}
-                    className="hover:bg-muted/40 transition-colors duration-200"
-                  >
-                    <TableCell className="text-foreground flex items-center">
-                      <ShoppingCart size={20} className="mr-2 text-muted-foreground" />
+                  <TableRow key={order.id}>
+                    <TableCell className="flex items-center">
+                      <ShoppingCart size={18} className="mr-2" />
                       {order.id}
                     </TableCell>
-                    <TableCell className="text-foreground">{order.items}</TableCell>
-                    <TableCell className="text-foreground">{order.date}</TableCell>
+                    <TableCell>{order.items}</TableCell>
+                    <TableCell>{order.date}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={order.status}
-                        color={getStatusColor(order.status)}
-                        size="small"
-                      />
+                      <Chip label={order.status} color={getStatusColor(order.status)} size="small" />
                     </TableCell>
-                    <TableCell align="right" className="space-x-2">
+                    <TableCell align="right">
                       <Button
                         variant="outlined"
                         size="small"
-                        startIcon={<Eye size={16} />}
                         onClick={() => handleViewDetails(order.id)}
-                        className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
+                        startIcon={<Eye size={16} />}
                       >
                         View
                       </Button>
@@ -216,11 +198,11 @@ export default function PharmacistOrdersPage() {
                         <Button
                           variant="contained"
                           size="small"
-                          startIcon={<CheckCircle size={16} />}
                           onClick={() => handleMarkAsProcessed(order.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          startIcon={<CheckCircle size={16} />}
+                          className="ml-2 bg-green-600 hover:bg-green-700 text-white"
                         >
-                          {getActionButtonText(order.status)}
+                          {order.status === 'Pending' ? 'Start Processing' : 'Mark as Completed'}
                         </Button>
                       )}
                     </TableCell>
@@ -231,13 +213,12 @@ export default function PharmacistOrdersPage() {
           </Table>
         </TableContainer>
       </PharmacistCard>
-
-      {/* Order Detail Dialog */}
       <OrderDetailDialog
         open={detailDialogOpen}
         onClose={() => setDetailDialogOpen(false)}
         order={selectedOrder}
+        onMarkAsProcessed={handleMarkAsProcessed}
       />
     </PharmacistPageContainer>
   );
-} 
+}

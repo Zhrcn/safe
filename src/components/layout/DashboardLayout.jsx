@@ -1,191 +1,178 @@
-import React, { useState } from 'react';
+'use client';
+import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Drawer,
-    AppBar,
-    Toolbar,
-    List,
-    Typography,
-    Divider,
-    IconButton,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    Avatar,
-    Menu,
-    MenuItem,
-    useTheme,
-    useMediaQuery
-} from '@mui/material';
-import {
-    Menu as MenuIcon,
-    Dashboard as DashboardIcon,
-    People as PeopleIcon,
-    CalendarToday as CalendarIcon,
-    LocalPharmacy as PharmacyIcon,
-    Chat as ChatIcon,
-    Settings as SettingsIcon,
-    ExitToApp as LogoutIcon
-} from '@mui/icons-material';
+  Menu as MenuIcon,
+  LayoutDashboard as DashboardIcon,
+  Users as PeopleIcon,
+  Calendar as CalendarIcon,
+  ShoppingCart as PharmacyIcon,
+  MessageSquare as ChatIcon,
+  Settings as SettingsIcon,
+  LogOut as LogoutIcon,
+  ChevronRight as ChevronRightIcon,
+  Home as HomeIcon,
+  Bell,
+  User
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../hooks/useAuth';
+import { useSelector, useDispatch } from 'react-redux';
+import { useVerifyTokenQuery } from '@/store/services/user/authApi';
+import { selectIsAuthenticated, selectCurrentUser } from '@/store/slices/auth/authSlice';
+import { ROLES, ROLE_ROUTES } from '@/config/app-config';
+import { Button } from '@/components/ui/Button';
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/Separator';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet'; 
+import { cn } from '@/lib/utils';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const drawerWidth = 240;
-const router = useRouter();
 const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Patients', icon: <PeopleIcon />, path: '/patients' },
-    { text: 'Appointments', icon: <CalendarIcon />, path: '/appointments' },
-    { text: 'Prescriptions', icon: <PharmacyIcon />, path: '/prescriptions' },
-    { text: 'Messages', icon: <ChatIcon />, path: '/messaging' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
+  { text: 'Dashboard', icon: <DashboardIcon className="h-5 w-5" />, path: '/dashboard' },
+  { text: 'Patients', icon: <PeopleIcon className="h-5 w-5" />, path: '/patients' },
+  { text: 'Appointments', icon: <CalendarIcon className="h-5 w-5" />, path: '/appointments' },
+  { text: 'Prescriptions', icon: <PharmacyIcon className="h-5 w-5" />, path: '/prescriptions' },
+  { text: 'Messages', icon: <ChatIcon className="h-5 w-5" />, path: '/messaging' },
+  { text: 'Settings', icon: <SettingsIcon className="h-5 w-5" />, path: '/settings' },
 ];
-
 const DashboardLayout = ({ children }) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState(null);
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { user, logout } = useAuth();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+  const { refetch: verifyToken } = useVerifyTokenQuery(undefined, {
+    skip: !isAuthenticated
+  });
 
-    const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
-    };
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
 
-    const handleProfileMenuOpen = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
+    // Verify token on mount and every 5 minutes
+    verifyToken();
+    const interval = setInterval(verifyToken, 5 * 60 * 1000);
 
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
+    return () => clearInterval(interval);
+  }, [isAuthenticated, router, verifyToken]);
 
-    const handleLogout = async () => {
-        await logout();
-        router.push('/');
-    };
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
-    const drawer = (
-        <Box>
-            <Toolbar>
-                <Typography variant="h6" noWrap component="div">
-                    SAFE Health
-                </Typography>
-            </Toolbar>
-            <Divider />
-            <List>
-                {menuItems.map((item) => (
-                    <ListItem
-                        button
-                        key={item.text}
-                        onClick={() => {
-                            navigate(item.path);
-                            if (isMobile) {
-                                handleDrawerToggle();
-                            }
-                        }}
-                        selected={location.pathname === item.path}
-                    >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.text} />
-                    </ListItem>
-                ))}
-            </List>
-        </Box>
-    );
+  // Check if user has access to the current route
+  const currentPath = window.location.pathname;
+  const roleRoute = ROLE_ROUTES[user.role];
+  
+  if (roleRoute && !currentPath.startsWith(roleRoute)) {
+    router.push(roleRoute);
+    return null;
+  }
 
-    return (
-        <Box sx={{ display: 'flex' }}>
-            <AppBar
-                position="fixed"
-                sx={{
-                    width: { md: `calc(100% - ${drawerWidth}px)` },
-                    ml: { md: `${drawerWidth}px` }
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+  const handleLogout = async () => {
+    // Implement logout logic
+  };
+  const activePath = router.pathname; 
+  const sidebarContent = (
+    <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm">
+      <div className="flex h-16 items-center px-4">
+        <h1 className="text-xl font-semibold text-foreground">SAFE Health</h1>
+      </div>
+      <Separator className="my-2" />
+      <nav className="flex-1 px-2 py-4">
+        <ul className="space-y-1">
+          {menuItems.map((item) => (
+            <li key={item.text}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3",
+                  router.pathname.startsWith(item.path) && "bg-muted text-primary"
+                )}
+                onClick={() => {
+                  router.push(item.path);
+                  if (mobileOpen) {
+                    handleDrawerToggle();
+                  }
                 }}
-            >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { md: 'none' } }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Box sx={{ flexGrow: 1 }} />
-                    <IconButton
-                        onClick={handleProfileMenuOpen}
-                        size="small"
-                        sx={{ ml: 2 }}
-                    >
-                        <Avatar sx={{ width: 32, height: 32 }}>
-                            {user?.firstName?.[0]}
-                        </Avatar>
-                    </IconButton>
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleProfileMenuClose}
-                    >
-                        <MenuItem onClick={() => {
-                            handleProfileMenuClose();
-                            navigate('/profile');
-                        }}>
-                            Profile
-                        </MenuItem>
-                        <MenuItem onClick={() => {
-                            handleProfileMenuClose();
-                            navigate('/settings');
-                        }}>
-                            Settings
-                        </MenuItem>
-                        <Divider />
-                        <MenuItem onClick={handleLogout}>
-                            <ListItemIcon>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            Logout
-                        </MenuItem>
-                    </Menu>
-                </Toolbar>
-            </AppBar>
-            <Box
-                component="nav"
-                sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-            >
-                <Drawer
-                    variant={isMobile ? 'temporary' : 'permanent'}
-                    open={isMobile ? mobileOpen : true}
-                    onClose={handleDrawerToggle}
-                    ModalProps={{
-                        keepMounted: true // Better open performance on mobile
-                    }}
-                    sx={{
-                        '& .MuiDrawer-paper': {
-                            boxSizing: 'border-box',
-                            width: drawerWidth
-                        }
-                    }}
-                >
-                    {drawer}
-                </Drawer>
-            </Box>
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    width: { md: `calc(100% - ${drawerWidth}px)` },
-                    mt: '64px'
-                }}
-            >
-                {children}
-            </Box>
-        </Box>
-    );
+              >
+                {item.icon}
+                <span>{item.text}</span>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  );
+  return (
+    <div className="flex min-h-screen bg-background">
+      <aside className="hidden md:block flex-shrink-0" style={{ width: drawerWidth }}>
+        {sidebarContent}
+      </aside>
+      <div className="flex-1 flex flex-col md:ml-[240px]">
+        <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border h-16 flex items-center px-4 md:px-6">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild className="md:hidden mr-4">
+              <Button variant="ghost" size="icon">
+                <MenuIcon className="h-6 w-6" />
+                <span className="sr-only">Toggle sidebar</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[240px]">
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+          <div className="flex-1" />
+          <div className="flex items-center gap-4">
+            <ThemeSwitcher />
+            <Button variant="ghost" size="icon" title="Notifications">
+              <Bell className="h-5 w-5" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback>{user?.firstName?.[0] || 'U'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings')}>
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogoutIcon className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 };
-
 export default DashboardLayout; 

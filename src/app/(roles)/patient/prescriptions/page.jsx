@@ -1,748 +1,456 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
-import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    Button,
-    Grid,
-    Chip,
-    Stack,
-    Avatar,
-    Tooltip,
-    useTheme,
-    alpha,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    CircularProgress,
-} from '@mui/material';
-import {
-    Medication as MedicationIcon,
-    CalendarMonth as CalendarIcon,
-    Person as PersonIcon,
-    AccessTime as AccessTimeIcon,
-    Download as DownloadIcon,
-    Print as PrintIcon,
-    Warning as AlertCircleIcon,
-    Check as CheckIcon,
-    Close as CloseIcon,
-    QrCode as QrCodeIcon,
-    Visibility as VisibilityIcon,
-} from '@mui/icons-material';
 import { QRCodeSVG } from 'qrcode.react';
 import PageHeader from '@/components/patient/PageHeader';
 import { mockPatientData } from '@/mockdata/patientData';
-
+import {
+    Pill,
+    Calendar,
+    User,
+    Clock,
+    Download,
+    Printer,
+    AlertCircle,
+    Check,
+    X,
+    QrCode,
+    Eye,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { Separator } from '@/components/ui/Separator';
+import { Input } from '@/components/ui/Input';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/DropdownMenu';
+import { ChevronDown, ListFilter, Search } from 'lucide-react';
 const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
-    const theme = useTheme();
     const statusColors = {
-        active: 'success',
-        completed: 'info',
-        expired: 'error',
-        pending: 'warning',
+        active: 'bg-success/10 text-success',
+        completed: 'bg-info/10 text-info',
+        expired: 'bg-error/10 text-error',
+        pending: 'bg-warning/10 text-warning',
     };
-
     const statusIcons = {
-        active: <CheckIcon />,
-        completed: <CheckIcon />,
-        expired: <CloseIcon />,
-        pending: <AlertCircleIcon />,
+        active: <Check className="w-4 h-4" />,
+        completed: <Check className="w-4 h-4" />,
+        expired: <X className="w-4 h-4" />,
+        pending: <AlertCircle className="w-4 h-4" />,
     };
-
     return (
-        <Card 
-            elevation={0}
-            sx={{
-                height: '280px',
-                width: '100%',
-                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'hidden',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.1)}`,
-                    '& .prescription-actions': {
-                        opacity: 1,
-                        transform: 'translateY(0)',
-                    },
-                },
-            }}
-        >
-            <Box
-                sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 4,
-                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                    borderTopLeftRadius: 8,
-                    borderTopRightRadius: 8,
-                }}
-            />
-            <CardContent sx={{ pt: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar 
-                            sx={{ 
-                                width: 48,
-                                height: 48,
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                color: theme.palette.primary.main,
-                                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                            }}
-                        >
-                            <PersonIcon />
+        <Card className="relative h-[280px] w-full border border-border transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-lg" />
+            <CardContent className="pt-6 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 bg-primary/10 border-2 border-primary/20">
+                            <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
+                            <AvatarFallback>
+                                <User className="h-6 w-6 text-primary" />
+                            </AvatarFallback>
                         </Avatar>
-                        <Box>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                {prescription.doctorName}
-                            </Typography>
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <CalendarIcon fontSize="small" color="action" />
-                                <Typography variant="body2" color="text.secondary">
-                                    {new Date(prescription.date).toLocaleDateString()}
-                </Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-                <Chip
-                        icon={statusIcons[prescription.status]}
-                    label={prescription.status}
-                        color={statusColors[prescription.status]}
-                    size="small"
-                />
-            </Box>
-
-                <Stack spacing={2} sx={{ flex: 1, overflow: 'hidden' }}>
+                        <div>
+                            <h3 className="font-semibold text-lg text-foreground">{prescription.doctorName}</h3>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Calendar className="w-4 h-4" />
+                                <span>{new Date(prescription.date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <Badge variant="outline" className={statusColors[prescription.status]}>
+                        {statusIcons[prescription.status]}
+                        <span className="ml-1">{prescription.status}</span>
+                    </Badge>
+                </div>
+                <div className="flex-1 overflow-hidden space-y-2">
                     {prescription.medications.map((medication, index) => (
-                        <Box 
+                        <div
                             key={index}
-                            sx={{
-                                p: 2,
-                                borderRadius: 2,
-                                bgcolor: alpha(theme.palette.background.default, 0.5),
-                                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                            }}
+                            className="p-3 rounded-lg bg-muted border border-border"
                         >
-                            <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-                                <Box
-                                    sx={{
-                                        p: 1,
-                                        borderRadius: 1,
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                        color: theme.palette.primary.main,
-                                    }}
-                                >
-                                    <MedicationIcon />
-                                </Box>
-                                <Typography variant="subtitle1" fontWeight="medium" noWrap>
-                                    {medication.name}
-            </Typography>
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" noWrap>
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                                    <Pill className="w-4 h-4" />
+                                </div>
+                                <h4 className="font-medium truncate text-foreground">{medication.name}</h4>
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">
                                 {medication.dosage} - {medication.frequency}
-            </Typography>
-                        </Box>
+                            </p>
+                        </div>
                     ))}
-                </Stack>
-
-                <Box 
-                    className="prescription-actions"
-                    display="flex" 
-                    gap={1} 
-                    sx={{
-                        mt: 2,
-                        opacity: 0,
-                        transform: 'translateY(10px)',
-                        transition: 'all 0.3s ease',
-                    }}
-                >
-                    <Tooltip title="View Details">
-                        <IconButton
-                            size="small"
-                            onClick={() => onViewDetails(prescription)}
-                            sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                '&:hover': {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                }
-                            }}
-                        >
-                            <VisibilityIcon />
-                        </IconButton>
-                    </Tooltip>
-                    {(prescription.status === 'active' || prescription.status === 'pending') && (
-                        <Tooltip title="Show QR Code">
-                            <IconButton
-                                size="small"
-                                onClick={() => onShowQR(prescription)}
-                                sx={{
-                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                    '&:hover': {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                    }
-                                }}
-                            >
-                                <QrCodeIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    <Tooltip title="Download">
-                        <IconButton
-                            size="small"
-                            sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                '&:hover': {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                }
-                            }}
-                        >
-                            <DownloadIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Print">
-                        <IconButton
-                            size="small"
-                            sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                '&:hover': {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                }
-                            }}
-                        >
-                            <PrintIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-        </CardContent>
-    </Card>
-);
-};
-
-const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => {
-    const theme = useTheme();
-
-    const statusColors = {
-        active: 'success',
-        completed: 'info',
-        expired: 'error',
-        pending: 'warning',
-    };
-
-    const statusIcons = {
-        active: <CheckIcon />,
-        completed: <CheckIcon />,
-        expired: <CloseIcon />,
-        pending: <AlertCircleIcon />,
-    };
-
-    if (!prescription) return null;
-
-    return (
-        <Dialog 
-            open={open} 
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{
-                sx: {
-                    borderRadius: 2,
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                }
-            }}
-        >
-            <DialogTitle sx={{ 
-                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                pb: 2
-            }}>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <Avatar 
-                        sx={{ 
-                            width: 40,
-                            height: 40,
-                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                            color: theme.palette.primary.main,
-                        }}
+                </div>
+                <div className="mt-4 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onViewDetails(prescription)}
+                        className="bg-primary/10 hover:bg-primary/20 text-primary"
                     >
-                        <MedicationIcon />
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h6">
-                            Prescription Details
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            ID: {prescription.id}
-                        </Typography>
-                    </Box>
-                </Box>
-            </DialogTitle>
-            <DialogContent sx={{ mt: 2 }}>
-                <Grid container spacing={3}>
-                    {/* Doctor Information */}
-                    <Grid item xs={12}>
-                        <Box 
-                            sx={{
-                                p: 3,
-                                borderRadius: 2,
-                                bgcolor: alpha(theme.palette.primary.main, 0.02),
-                                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                            }}
-                        >
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item>
-                                    <Avatar 
-                                        sx={{ 
-                                            width: 64,
-                                            height: 64,
-                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                            color: theme.palette.primary.main,
-                                        }}
-                                    >
-                                        <PersonIcon />
-                                    </Avatar>
-                                </Grid>
-                                <Grid item xs>
-                                    <Typography variant="h5" gutterBottom>
-                                        {prescription.doctorName}
-                                    </Typography>
-                                    <Box display="flex" gap={3}>
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                            <CalendarIcon color="action" />
-                                            <Typography variant="body2" color="text.secondary">
-                                                Prescribed on {new Date(prescription.date).toLocaleDateString()}
-                                            </Typography>
-                                        </Box>
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                            <AccessTimeIcon color="action" />
-                                            <Typography variant="body2" color="text.secondary">
-                                                Last updated {new Date(prescription.lastUpdated).toLocaleDateString()}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </Grid>
-                                <Grid item>
-                                    <Chip
-                                        icon={statusIcons[prescription.status]}
-                                        label={prescription.status}
-                                        color={statusColors[prescription.status]}
-                                        sx={{ 
-                                            px: 1,
-                                            '& .MuiChip-icon': {
-                                                color: 'inherit',
-                                            },
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                    </Grid>
-
-                    {/* Medications */}
-                    <Grid item xs={12}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <MedicationIcon color="primary" />
-                            Medications
-                        </Typography>
-                        <Stack spacing={2}>
-                            {prescription.medications.map((medication, index) => (
-                                <Box 
-                                    key={index}
-                                    sx={{
-                                        p: 3,
-                                        borderRadius: 2,
-                                        bgcolor: alpha(theme.palette.background.default, 0.5),
-                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                        transition: 'all 0.2s ease',
-                                        '&:hover': {
-                                            bgcolor: alpha(theme.palette.primary.main, 0.02),
-                                            borderColor: alpha(theme.palette.primary.main, 0.2),
-                                        },
-                                    }}
-                                >
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12}>
-                                            <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
-                                                <Box
-                                                    sx={{
-                                                        p: 1,
-                                                        borderRadius: 1,
-                                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                                        color: theme.palette.primary.main,
-                                                    }}
-                                                >
-                                                    <MedicationIcon />
-                                                </Box>
-                                                <Typography variant="subtitle1" fontWeight="medium">
-                                                    {medication.name}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                <strong>Dosage:</strong>
-                                            </Typography>
-                                            <Typography variant="body1">
-                                                {medication.dosage}
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                <strong>Frequency:</strong>
-                                            </Typography>
-                                            <Typography variant="body1">
-                                                {medication.frequency}
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                <strong>Duration:</strong>
-                                            </Typography>
-                                            <Typography variant="body1">
-                                                {medication.duration}
-                                            </Typography>
-                                        </Grid>
-                                        {medication.refills > 0 && (
-                                            <Grid item xs={12} sm={6}>
-                                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                    <strong>Refills:</strong>
-                                                </Typography>
-                                                <Typography variant="body1">
-                                                    {medication.refills} remaining
-                                                </Typography>
-                                            </Grid>
-                                        )}
-                                        {medication.instructions && (
-                                            <Grid item xs={12}>
-                                                <Box 
-                                                    sx={{ 
-                                                        mt: 1.5,
-                                                        pt: 1.5,
-                                                        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                                    }}
-                                                >
-                                                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                        <strong>Instructions:</strong>
-                                                    </Typography>
-                                                    <Typography variant="body1">
-                                                        {medication.instructions}
-                                                    </Typography>
-                                                </Box>
-                                            </Grid>
-                                        )}
-                                    </Grid>
-                                </Box>
-                            ))}
-                        </Stack>
-                    </Grid>
-
-                    {/* Notes */}
-                    {prescription.notes && (
-                        <Grid item xs={12}>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <AlertCircleIcon color="info" />
-                                Additional Notes
-                            </Typography>
-                            <Box 
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 2,
-                                    bgcolor: alpha(theme.palette.info.main, 0.05),
-                                    border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`,
-                                }}
-                            >
-                                <Typography variant="body1" color="text.secondary">
-                                    {prescription.notes}
-                                </Typography>
-                            </Box>
-                        </Grid>
-                    )}
-                </Grid>
-            </DialogContent>
-            <DialogActions sx={{ 
-                px: 3, 
-                py: 2,
-                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                gap: 1
-            }}>
-                <Button 
-                    onClick={onClose}
-                    variant="outlined"
-                >
-                    Close
-                </Button>
-                {(prescription.status === 'active' || prescription.status === 'pending') && (
-                    <Button 
-                        variant="outlined"
-                        startIcon={<QrCodeIcon />}
-                        onClick={() => {
-                            onClose();
-                            onShowQR(prescription);
-                        }}
-                    >
-                        Show QR Code
+                        <Eye className="w-4 h-4" />
                     </Button>
-                )}
-                <Button 
-                    variant="contained" 
-                    startIcon={<DownloadIcon />}
-                >
-                    Download
-                </Button>
-                <Button 
-                    variant="contained" 
-                    startIcon={<PrintIcon />}
-                >
-                    Print
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-};
-
-const QRCodeDialog = ({ open, onClose, prescription }) => {
-    const theme = useTheme();
-
-    if (!prescription) return null;
-
-    const qrValue = JSON.stringify({
-        prescriptionId: prescription.id,
-        doctorName: prescription.doctorName,
-        date: prescription.date,
-        status: prescription.status,
-        medications: prescription.medications.map(med => ({
-            name: med.name,
-            dosage: med.dosage,
-            frequency: med.frequency,
-            duration: med.duration,
-            instructions: med.instructions
-        }))
-    });
-
-    return (
-        <Dialog 
-            open={open} 
-            onClose={onClose}
-            maxWidth="xs"
-            fullWidth
-        >
-            <DialogTitle>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <QrCodeIcon color="primary" />
-                    <Typography variant="h6">
-                        Prescription QR Code
-                    </Typography>
-                </Box>
-            </DialogTitle>
-            <DialogContent>
-                <Box 
-                    display="flex" 
-                    flexDirection="column" 
-                    alignItems="center" 
-                    gap={2}
-                    sx={{ py: 2 }}
-                >
-                    <Box
-                        sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            bgcolor: 'background.paper',
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
+                    {(prescription.status === 'active' || prescription.status === 'pending') && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onShowQR(prescription)}
+                            className="bg-primary/10 hover:bg-primary/20 text-primary"
+                        >
+                            <QrCode className="w-4 h-4" />
+                        </Button>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-primary/10 hover:bg-primary/20 text-primary"
                     >
-                        <QRCodeSVG 
-                            value={qrValue}
-                            size={200}
-                            level="H"
-                            includeMargin
-                        />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" align="center">
-                        Scan this QR code to view prescription details
-                    </Typography>
-                </Box>
+                        <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-primary/10 hover:bg-primary/20 text-primary"
+                    >
+                        <Printer className="w-4 h-4" />
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => {
+    if (!prescription) return null;
+    const statusColors = {
+        active: 'bg-success/10 text-success',
+        completed: 'bg-info/10 text-info',
+        expired: 'bg-error/10 text-error',
+        pending: 'bg-warning/10 text-warning',
+    };
+    const statusIcons = {
+        active: <Check className="w-4 h-4" />,
+        completed: <Check className="w-4 h-4" />,
+        expired: <X className="w-4 h-4" />,
+        pending: <AlertCircle className="w-4 h-4" />,
+    };
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[650px] p-6">
+                <DialogHeader className="pb-4 mb-4 border-b border-border">
+                    <DialogTitle className="text-2xl font-bold text-foreground">Prescription Details</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2 -mr-2">
+                    <div className="flex items-center gap-4 p-4 bg-info/10 rounded-lg">
+                        <Avatar className="h-20 w-20 border-4 border-info/20 shadow-md">
+                            <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
+                            <AvatarFallback>
+                                <User className="h-10 w-10 text-info" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                            <h3 className="text-2xl font-semibold text-foreground">Dr. {prescription.doctorName}</h3>
+                            <div className="flex items-center gap-2 text-md text-muted-foreground mt-1">
+                                <Calendar className="w-5 h-5" />
+                                <span>Prescribed on: {new Date(prescription.date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-md text-muted-foreground mt-1">
+                                <Clock className="w-5 h-5" />
+                                <span>Valid until: {new Date(prescription.endDate).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <Badge variant="outline" className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColors[prescription.status]}`}>
+                            {statusIcons[prescription.status]}
+                            <span className="ml-2">{prescription.status}</span>
+                        </Badge>
+                    </div>
+                    <Separator />
+                    <div className="space-y-4">
+                        <h4 className="text-xl font-semibold text-foreground">Medications ({prescription.medications.length})</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {prescription.medications.map((medication, index) => (
+                                <Card key={index} className="p-4 border border-border shadow-sm transition-shadow hover:shadow-md">
+                                    <CardContent className="p-0">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="p-2 rounded-full bg-primary/10 text-primary">
+                                                <Pill className="w-5 h-5" />
+                                            </div>
+                                            <h5 className="font-bold text-lg text-foreground">{medication.name}</h5>
+                                        </div>
+                                        <div className="space-y-1 text-sm text-muted-foreground">
+                                            <p><span className="font-medium">Dosage:</span> {medication.dosage}</p>
+                                            <p><span className="font-medium">Frequency:</span> {medication.frequency}</p>
+                                            {medication.instructions && (
+                                                <p><span className="font-medium">Instructions:</span> {medication.instructions}</p>
+                                            )}
+                                            {medication.notes && (
+                                                <p><span className="font-medium">Notes:</span> {medication.notes}</p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                    {prescription.notes && (
+                        <div className="space-y-3 p-4 bg-muted rounded-lg border border-border">
+                            <h4 className="text-xl font-semibold text-foreground">Doctor's Notes</h4>
+                            <p className="text-muted-foreground leading-relaxed">{prescription.notes}</p>
+                        </div>
+                    )}
+                </div>
+                <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end gap-3">
+                    <Button variant="outline" onClick={onClose} className="px-6 py-2">
+                        Close
+                    </Button>
+                    {(prescription.status === 'active' || prescription.status === 'pending') && (
+                        <Button onClick={() => onShowQR(prescription)} className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+                            <QrCode className="w-5 h-5 mr-2" />
+                            Show QR Code
+                        </Button>
+                    )}
+                </DialogFooter>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Close</Button>
-                <Button 
-                    variant="contained" 
-                    startIcon={<DownloadIcon />}
-                >
-                    Download QR
-                </Button>
-            </DialogActions>
         </Dialog>
     );
 };
-
+const QRCodeDialog = ({ open, onClose, prescription }) => {
+    if (!prescription) return null;
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[450px] p-6 text-center">
+                <DialogHeader className="pb-4 mb-4 border-b border-border">
+                    <DialogTitle className="text-2xl font-bold text-foreground">Prescription QR Code</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col items-center space-y-6 py-4 bg-info/10 rounded-lg border border-info/20">
+                    <p className="text-md text-info font-medium">
+                        Scan this code at the pharmacy to get your prescription
+                    </p>
+                    <div className="p-5 bg-card rounded-lg shadow-xl border-4 border-primary/30">
+                        <QRCodeSVG
+                            value={JSON.stringify({
+                                id: prescription.id,
+                                doctor: prescription.doctorName,
+                                date: prescription.date,
+                                medications: prescription.medications.map(med => med.name).join(', '),
+                                patientId: mockPatientData.id,
+                                patientName: mockPatientData.name,
+                            })}
+                            size={250}
+                            level="H"
+                            includeMargin={true}
+                        />
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-2">
+                        <p><span className="font-semibold">Prescription ID:</span> {prescription.id}</p>
+                        <p><span className="font-semibold">Medications:</span> {prescription.medications.map(med => med.name).join(', ')}</p>
+                    </div>
+                </div>
+                <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end">
+                    <Button variant="outline" onClick={onClose} className="px-6 py-2">
+                        Close
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 const PrescriptionsPage = () => {
-    const [selectedPrescription, setSelectedPrescription] = useState(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [qrDialogOpen, setQrDialogOpen] = useState(false);
     const [prescriptions, setPrescriptions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [selectedPrescription, setSelectedPrescription] = useState(null);
+    const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+    const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [sortBy, setSortBy] = useState('date');
+    const [sortOrder, setSortOrder] = useState('desc');
     useEffect(() => {
-        // Simulate API call with mock data
-        const loadPrescriptions = async () => {
-            try {
-                setIsLoading(true);
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setPrescriptions(mockPatientData.prescriptions);
-                setError(null);
-            } catch (err) {
-                setError(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         loadPrescriptions();
-    }, []);
-
+    }, [filterStatus, searchTerm, sortBy, sortOrder]);
+    const loadPrescriptions = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            let filtered = mockPatientData.prescriptions || [];
+            // Apply search term filter
+            if (searchTerm) {
+                filtered = filtered.filter(
+                    (p) =>
+                        p.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.medications.some((m) =>
+                            m.name.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                );
+            }
+            // Apply status filter
+            if (filterStatus !== 'all') {
+                filtered = filtered.filter((p) => p.status === filterStatus);
+            }
+            // Apply sorting
+            filtered.sort((a, b) => {
+                let comparison = 0;
+                if (sortBy === 'date') {
+                    comparison = new Date(a.date) - new Date(b.date);
+                } else if (sortBy === 'doctorName') {
+                    comparison = a.doctorName.localeCompare(b.doctorName);
+                }
+                return sortOrder === 'asc' ? comparison : -comparison;
+            });
+            setPrescriptions(filtered);
+        } catch (err) {
+            setError('Failed to load prescriptions');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleShowQR = (prescription) => {
         setSelectedPrescription(prescription);
-        setQrDialogOpen(true);
+        setIsQrDialogOpen(true);
     };
-
     const handleViewDetails = (prescription) => {
         setSelectedPrescription(prescription);
-        setDialogOpen(true);
+        setIsDetailDialogOpen(true);
     };
-
     const handleCloseDialog = () => {
-        setDialogOpen(false);
+        setIsDetailDialogOpen(false);
         setSelectedPrescription(null);
     };
-
     const handleCloseQrDialog = () => {
-        setQrDialogOpen(false);
+        setIsQrDialogOpen(false);
         setSelectedPrescription(null);
     };
-
     const handleRetry = () => {
-        setIsLoading(true);
-        // Simulate API call with mock data
-        setTimeout(() => {
-            setPrescriptions(mockPatientData.prescriptions);
-            setError(null);
-            setIsLoading(false);
-        }, 1000);
+        loadPrescriptions();
     };
-
-    if (isLoading) {
-        return (
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '100vh',
-                gap: 2
-            }}>
-                <CircularProgress />
-                <Typography variant="body1" color="text.secondary">
-                    Loading prescriptions...
-                </Typography>
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box sx={{ 
-                p: 4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2
-            }}>
-                <Typography color="error" variant="h6">
-                    Error loading prescriptions
-                </Typography>
-                <Typography color="error" variant="body1">
-                    {error.message || 'An unexpected error occurred'}
-                </Typography>
-                <Button 
-                    variant="contained" 
-                    onClick={handleRetry}
-                    sx={{ mt: 2 }}
-                >
-                    Retry
-                </Button>
-            </Box>
-        );
-    }
-
-    if (!prescriptions || prescriptions.length === 0) {
-        return (
-            <Box sx={{ 
-                p: 4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2
-            }}>
-                <Typography variant="h6" color="text.secondary">
-                    No prescriptions found
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    You don't have any prescriptions at the moment.
-                </Typography>
-            </Box>
-        );
-    }
-
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
             <PageHeader
-                title="Prescriptions"
-                subtitle="View and manage your prescriptions"
+                title="My Prescriptions"
+                description="View and manage all your active, past, and pending prescriptions."
             />
-
-            <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { 
-                    xs: '1fr', 
-                    sm: 'repeat(2, 1fr)', 
-                    md: 'repeat(3, 1fr)' 
-                }, 
-                gap: 3, 
-                mt: 3 
-            }}>
-                {prescriptions.map((prescription) => (
-                    <Box key={prescription.id}>
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="relative w-full sm:w-auto flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search prescriptions by doctor or medication..."
+                        className="w-full pl-9 pr-3 py-2 border border-border rounded-md focus:ring-primary focus:border-primary"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
+                                <ListFilter className="w-4 h-4" />
+                                Status: {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+                                <ChevronDown className="w-4 h-4 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 bg-card border-border">
+                            <DropdownMenuLabel className="text-foreground">Filter by Status</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={filterStatus} onValueChange={setFilterStatus}>
+                                <DropdownMenuRadioItem value="all" className="text-foreground hover:bg-accent">
+                                    All
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="active" className="text-foreground hover:bg-accent">
+                                    Active
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="completed" className="text-foreground hover:bg-accent">
+                                    Completed
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="pending" className="text-foreground hover:bg-accent">
+                                    Pending
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="expired" className="text-foreground hover:bg-accent">
+                                    Expired
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
+                                <ListFilter className="w-4 h-4" />
+                                Sort: {sortBy === 'date' ? 'Date' : 'Doctor'} ({sortOrder === 'asc' ? 'Asc' : 'Desc'})
+                                <ChevronDown className="w-4 h-4 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 bg-card border-border">
+                            <DropdownMenuLabel className="text-foreground">Sort by</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                                <DropdownMenuRadioItem value="date" className="text-foreground hover:bg-accent">
+                                    Date
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="doctorName" className="text-foreground hover:bg-accent">
+                                    Doctor Name
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={sortOrder} onValueChange={setSortOrder}>
+                                <DropdownMenuRadioItem value="asc" className="text-foreground hover:bg-accent">
+                                    Ascending
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="desc" className="text-foreground hover:bg-accent">
+                                    Descending
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+            {loading && (
+                <div className="text-center py-10">
+                    <p className="text-lg text-muted-foreground">Loading prescriptions...</p>
+                </div>
+            )}
+            {error && (
+                <div className="text-center py-10">
+                    <p className="text-lg text-destructive">{error}</p>
+                    <Button onClick={handleRetry} className="mt-4">Retry</Button>
+                </div>
+            )}
+            {!loading && !error && ( (prescriptions.length === 0 && searchTerm === '') ? (
+                <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
+                    <h3 className="text-xl font-semibold text-foreground mb-3">No Prescriptions Found</h3>
+                    <p className="text-muted-foreground mb-4">It looks like you don't have any prescriptions recorded yet.</p>
+                    <p className="text-sm text-muted-foreground">Prescriptions will appear here once issued by your doctor.</p>
+                </div>
+            ) : (prescriptions.length === 0 && searchTerm !== '') ? (
+                <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
+                    <h3 className="text-xl font-semibold text-foreground mb-3">No Matching Prescriptions</h3>
+                    <p className="text-muted-foreground mb-4">Your search for "{searchTerm}" did not yield any results.</p>
+                    <Button onClick={() => setSearchTerm('')} className="mt-4">Clear Search</Button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {prescriptions.map((prescription) => (
                         <PrescriptionCard
+                            key={prescription.id}
                             prescription={prescription}
                             onShowQR={handleShowQR}
                             onViewDetails={handleViewDetails}
                         />
-                    </Box>
-                ))}
-            </Box>
-
+                    ))}
+                </div>
+            ))}
             <PrescriptionDetailDialog
-                open={dialogOpen}
+                open={isDetailDialogOpen}
                 onClose={handleCloseDialog}
                 prescription={selectedPrescription}
                 onShowQR={handleShowQR}
             />
-
             <QRCodeDialog
-                open={qrDialogOpen}
+                open={isQrDialogOpen}
                 onClose={handleCloseQrDialog}
                 prescription={selectedPrescription}
             />
-        </Box>
+        </div>
     );
 };
-
 export default PrescriptionsPage; 

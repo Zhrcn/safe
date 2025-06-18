@@ -1,25 +1,16 @@
 'use client';
-
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Grid,
-  Button,
-  TextField,
-  InputAdornment,
-  Dialog,
-  CircularProgress,
-  Tabs,
-  Tab,
-  Alert
-} from '@mui/material';
 import { Search, UserPlus, UserRound, Filter } from 'lucide-react';
 import { patients as mockPatients } from '@/mockdata/patients';
 import AddPatientForm from '@/components/doctor/AddPatientForm';
 import PatientCard from '@/components/doctor/PatientCard';
-
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Card } from '@/components/ui/Card';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { Dialog, DialogContent } from '@/components/ui/Dialog';
+import { Loader2 } from 'lucide-react';
 export default function PatientsPage() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,10 +18,8 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-
   const filteredPatients = useMemo(() => {
     let filtered = Array.isArray(patients) ? patients : [];
-    
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(patient => 
@@ -39,14 +28,11 @@ export default function PatientsPage() {
         patient.medicalId?.toLowerCase().includes(lowercaseSearch)
       );
     }
-    
     if (activeTab !== 'all') {
       filtered = filtered.filter(patient => (patient.user?.isActive ? 'active' : 'inactive').toLowerCase() === activeTab);
     }
-    
     return filtered;
   }, [searchTerm, activeTab, patients]);
-
   const statusCounts = useMemo(() => {
     if (!Array.isArray(patients)) {
       return { all: 0, active: 0, urgent: 0, inactive: 0 };
@@ -58,7 +44,6 @@ export default function PatientsPage() {
       inactive: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'inactive').length
     };
   }, [patients]);
-
   const tabLabels = useMemo(() => {
     return {
       all: `All Patients (${statusCounts.all})`,
@@ -67,13 +52,11 @@ export default function PatientsPage() {
       inactive: `Inactive (${statusCounts.inactive})`
     };
   }, [statusCounts]);
-
   useEffect(() => {
     const loadPatients = async () => {
       try {
         setLoading(true);
         setError('');
-        
         const data = mockPatients;
         setPatients(data);
       } catch (err) {
@@ -83,155 +66,109 @@ export default function PatientsPage() {
         setLoading(false);
       }
     };
-    
     loadPatients();
   }, []);
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  const handleTabChange = (value) => {
+    setActiveTab(value);
   };
-  
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
-  
   const handleOpenAddDialog = () => {
     setAddDialogOpen(true);
   };
-  
   const handleCloseAddDialog = () => {
     setAddDialogOpen(false);
   };
-  
   const handlePatientAdded = (newPatient) => {
     setPatients(prevPatients => [...prevPatients, newPatient]);
   };
-
   return (
-    <Box className="p-6">
-      <Box className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Typography variant="h4" component="h1" className="font-bold text-foreground">
+    <div className="p-6">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-foreground">
           Patient Management
-        </Typography>
+        </h1>
         <Button
-          variant="contained"
-          startIcon={<UserPlus size={18} />}
           onClick={handleOpenAddDialog}
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
+          <UserPlus className="mr-2 h-4 w-4" />
           Add New Patient
         </Button>
-      </Box>
-      
+      </div>
       {error && (
-        <Alert severity="error" className="mb-6">
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
-      <Paper className="p-6 bg-card border border-border rounded-lg mb-6">
-        <Box className="flex flex-col sm:flex-row gap-4 mb-6">
-          <TextField
-            placeholder="Search patients by name, condition, or ID..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            variant="outlined"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={20} className="text-muted-foreground" />
-                </InputAdornment>
-              ),
-              className: "bg-background text-foreground"
-            }}
-          />
+      <Card className="p-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search patients by name, condition, or ID..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="pl-10 bg-background"
+            />
+          </div>
           <Button
-            variant="outlined"
-            startIcon={<Filter size={18} />}
+            variant="outline"
             className="whitespace-nowrap text-muted-foreground border-muted-foreground hover:bg-muted/50"
           >
+            <Filter className="mr-2 h-4 w-4" />
             Advanced Filters
           </Button>
-        </Box>
-        
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          className="mb-6"
-          TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
-        >
-          <Tab 
-            label={tabLabels.all} 
-            value="all" 
-            className={activeTab === 'all' ? 'text-primary' : 'text-muted-foreground'}
-          />
-          <Tab 
-            label={tabLabels.active} 
-            value="active" 
-            className={activeTab === 'active' ? 'text-primary' : 'text-muted-foreground'}
-          />
-          <Tab 
-            label={tabLabels.urgent} 
-            value="urgent" 
-            className={activeTab === 'urgent' ? 'text-primary' : 'text-muted-foreground'}
-          />
-          <Tab 
-            label={tabLabels.inactive} 
-            value="inactive" 
-            className={activeTab === 'inactive' ? 'text-primary' : 'text-muted-foreground'}
-          />
+        </div>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="all">{tabLabels.all}</TabsTrigger>
+            <TabsTrigger value="active">{tabLabels.active}</TabsTrigger>
+            <TabsTrigger value="urgent">{tabLabels.urgent}</TabsTrigger>
+            <TabsTrigger value="inactive">{tabLabels.inactive}</TabsTrigger>
+          </TabsList>
         </Tabs>
-        
         {loading ? (
-          <Box className="flex justify-center items-center py-12">
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         ) : filteredPatients.length === 0 ? (
-          <Box className="py-12 text-center">
-            <UserRound size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-            <Typography variant="h6" className="text-foreground mb-2">
+          <div className="py-12 text-center">
+            <UserRound className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">
               No patients found
-            </Typography>
-            <Typography variant="body2" className="text-muted-foreground mb-6">
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
               {searchTerm 
                 ? 'Try a different search term or clear the filters'
                 : 'Add a new patient to get started'
               }
-            </Typography>
+            </p>
             <Button
-              variant="outlined"
+              variant="outline"
               onClick={handleOpenAddDialog}
               className="text-primary border-primary hover:bg-primary/10"
             >
               Add New Patient
             </Button>
-          </Box>
+          </div>
         ) : (
-          <Grid container spacing={3}>
-            {(Array.isArray(filteredPatients) ? filteredPatients : []).map((patient) => (
-              <Grid item xs={12} sm={6} md={4} key={patient.id}>
-                <PatientCard patient={patient} />
-              </Grid>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filteredPatients.map((patient) => (
+              <PatientCard key={patient.id} patient={patient} />
             ))}
-          </Grid>
+          </div>
         )}
-      </Paper>
-      
-      <Dialog
-        open={addDialogOpen}
-        onClose={handleCloseAddDialog}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          className: "bg-background"
-        }}
-      >
-        <AddPatientForm 
-          onClose={handleCloseAddDialog} 
-          onSuccess={handlePatientAdded} 
-        />
+      </Card>
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <AddPatientForm 
+            onClose={handleCloseAddDialog} 
+            onSuccess={handlePatientAdded} 
+          />
+        </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
-} 
+}

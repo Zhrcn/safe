@@ -1,61 +1,25 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
-    Button,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    CircularProgress,
-    Alert,
-    Tabs,
-    Tab,
-    Switch,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
-    Stack,
-    FormGroup,
-    FormControlLabel,
-    Checkbox,
-    Tooltip,
-    Divider,
-    Paper,
-    Fade,
-    Zoom,
-    useTheme,
-    alpha,
-    InputAdornment,
-    Badge,
-    Avatar,
-} from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Notifications as NotificationsIcon,
-    NotificationsOff as NotificationsOffIcon,
-    AccessTime as AccessTimeIcon,
-    CalendarToday as CalendarIcon,
-    Repeat as RepeatIcon,
-    LocalPharmacy as PharmacyIcon,
-    Medication as MedicationIcon,
-    Warning as WarningIcon,
-    CheckCircle as CheckCircleIcon,
-    Schedule as ScheduleIcon,
-    Info as InfoIcon,
-} from '@mui/icons-material';
+    Add,
+    Edit,
+    Trash2,
+    BellRing,
+    BellOff,
+    Clock,
+    CalendarDays,
+    Repeat,
+    Hospital,
+    Pill,
+    AlertCircle,
+    CheckCircle,
+    Info,
+    Search,
+    Plus,
+    ChevronDown,
+    Calendar as CalendarIcon,
+    FileText
+} from 'lucide-react';
 import { useNotification } from '@/components/ui/Notification';
 import { useDispatch } from 'react-redux';
 import { medications } from '@/mockdata/medications';
@@ -64,806 +28,692 @@ import {
     setMedicationsLoading,
     setMedicationsError,
 } from '@/store/slices/patient/dashboardSlice';
-import { Pill } from 'lucide-react';
+import PageHeader from '@/components/patient/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { ScrollArea } from '@/components/ui/ScrollArea';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { Separator } from '@/components/ui/Separator';
+import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { Label } from '@/components/ui/Label';
+import { Textarea } from '@/components/ui/Textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/ToggleGroup';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
+import { Calendar } from '@/components/ui/Calendar';
+import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 const FREQUENCY_OPTIONS = [
-    { value: 'four', label: 'Four times a day' },
-    { value: 'six', label: 'Every 6 hours' },
-    { value: 'eight', label: 'Every 8 hours' },
-    { value: 'twelve', label: 'Every 12 hours' },
+    { value: 'once_daily', label: 'Once a day' },
+    { value: 'twice_daily', label: 'Twice a day' },
+    { value: 'three_times_daily', label: 'Three times a day' },
+    { value: 'four_times_daily', label: 'Four times a day' },
+    { value: 'every_6_hours', label: 'Every 6 hours' },
+    { value: 'every_8_hours', label: 'Every 8 hours' },
+    { value: 'every_12_hours', label: 'Every 12 hours' },
+    { value: 'as_needed', label: 'As Needed' },
 ];
-
 const DAYS_OF_WEEK = [
-    { value: 'monday', label: 'Monday' },
-    { value: 'tuesday', label: 'Tuesday' },
-    { value: 'wednesday', label: 'Wednesday' },
-    { value: 'thursday', label: 'Thursday' },
-    { value: 'friday', label: 'Friday' },
-    { value: 'saturday', label: 'Saturday' },
-    { value: 'sunday', label: 'Sunday' },
+    { value: 'monday', label: 'Mon' },
+    { value: 'tuesday', label: 'Tue' },
+    { value: 'wednesday', label: 'Wed' },
+    { value: 'thursday', label: 'Thu' },
+    { value: 'friday', label: 'Fri' },
+    { value: 'saturday', label: 'Sat' },
+    { value: 'sunday', label: 'Sun' },
 ];
+const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, onToggleReminder, onEdit, onDelete }) => {
+    const getStatusColor = (status) => {
+        switch (status.toLowerCase()) {
+            case 'active':
+                return 'bg-success/10 text-success border-success';
+            case 'completed':
+                return 'bg-secondary/10 text-secondary border-secondary';
+            case 'expired':
+                return 'bg-error/10 text-error border-error';
+            default:
+                return 'bg-secondary/10 text-secondary border-secondary';
+        }
+    };
 
-const MedicationCard = ({ medication }) => {
-    const theme = useTheme();
-    const isExpiringSoon = medication.endDate && 
-        new Date(medication.endDate) - new Date() < 7 * 24 * 60 * 60 * 1000;
-    const isExpired = medication.endDate && 
-        new Date(medication.endDate) - new Date() < 0;
+    const isRefillable = medication.status.toLowerCase() === 'active' && 
+        (medication.refillDate && new Date(medication.refillDate) <= new Date());
 
     return (
-        <Zoom in={true}>
-            <Card 
-                sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: theme.shadows[8],
-                        '& .MuiCardContent-root': {
-                            bgcolor: alpha(theme.palette.background.default, 0.8),
-                        },
-                    },
-                    position: 'relative',
-                    overflow: 'visible',
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                }}
-            >
-                {isExpired && (
-                    <Chip
-                        icon={<WarningIcon />}
-                        label="Expired"
-                        color="error"
-                        size="small"
-                        sx={{
-                            position: 'absolute',
-                            top: -12,
-                            right: 16,
-                            zIndex: 1,
-                            boxShadow: theme.shadows[2],
-                        }}
-                    />
-                )}
-                {isExpiringSoon && !isExpired && (
-                    <Chip
-                        icon={<WarningIcon />}
-                        label="Expiring Soon"
-                        color="warning"
-                        size="small"
-                        sx={{
-                            position: 'absolute',
-                            top: -12,
-                            right: 16,
-                            zIndex: 1,
-                            boxShadow: theme.shadows[2],
-                        }}
-                    />
-                )}
-                <CardContent sx={{ 
-                    flexGrow: 1, 
-                    pb: 1,
-                    transition: 'background-color 0.3s ease-in-out',
-                }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                        <Box display="flex" alignItems="center" gap={1.5}>
-                            <Avatar
-                                sx={{
-                                    bgcolor: isExpired 
-                                        ? alpha(theme.palette.error.main, 0.1)
-                                        : alpha(theme.palette.primary.main, 0.1),
-                                    color: isExpired 
-                                        ? theme.palette.error.main
-                                        : theme.palette.primary.main,
-                                    width: 48,
-                                    height: 48,
-                                    transition: 'transform 0.3s ease-in-out',
-                                    '&:hover': {
-                                        transform: 'scale(1.1)',
-                                    },
-                                }}
-                            >
-                                <MedicationIcon />
-                            </Avatar>
-                            <Box>
-                                <Typography 
-                                    variant="h6" 
-                                    gutterBottom
-                                    sx={{
-                                        fontWeight: 600,
-                                        color: isExpired 
-                                            ? theme.palette.error.main
-                                            : theme.palette.text.primary,
-                                    }}
-                                >
-                {medication.name}
-            </Typography>
-                                <Typography 
-                                    variant="body2" 
-                                    color="text.secondary"
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 0.5,
-                                    }}
-                                >
-                                    <Pill size={14} />
-                                    {medication.dosage}
-            </Typography>
-                            </Box>
-                        </Box>
-                        <Chip
-                            label={medication.status}
-                            color={isExpired ? 'error' : (medication.status === 'active' ? 'success' : 'default')}
-                            size="small"
-                            sx={{
-                                bgcolor: alpha(
-                                    isExpired 
-                                        ? theme.palette.error.main 
-                                        : (medication.status === 'active' 
-                                            ? theme.palette.success.main 
-                                            : theme.palette.grey[500]),
-                                    0.1
-                                ),
-                                color: isExpired 
-                                    ? theme.palette.error.main 
-                                    : (medication.status === 'active' 
-                                        ? theme.palette.success.main 
-                                        : theme.palette.grey[700]),
-                                fontWeight: 500,
-                            }}
-                        />
-                    </Box>
+        <Card className="transition-all duration-300 hover:shadow-lg">
+            <CardContent className="p-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-3 mb-2">
+                        <Pill className="h-6 w-6 text-primary" />
+                        <h3 className="text-lg font-bold text-foreground">{medication.name}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{medication.dosage} - {medication.frequency}</p>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                        {medication.refillDate && (
+                            <div className="flex items-center gap-1">
+                                <CalendarIcon className="h-4 w-4 text-primary" />
+                                <span>Next refill: {format(new Date(medication.refillDate), 'PPP')}</span>
+                            </div>
+                        )}
+                        {medication.prescribedBy && (
+                             <div className="flex items-center gap-1">
+                                <Hospital className="h-4 w-4 text-primary" />
+                                <span>Prescribed by {medication.prescribedBy}</span>
+                            </div>
+                        )}
+                    </div>
 
-                    <Stack spacing={2}>
-                        <Box 
-                            display="flex" 
-                            alignItems="center" 
-                            gap={1}
-                            sx={{
-                                p: 1,
-                                borderRadius: 1,
-                                bgcolor: alpha(theme.palette.primary.main, 0.05),
-                            }}
+                    {medication.notes && (
+                        <Alert className="mt-3 bg-warning/10 text-warning border-warning" icon={<AlertCircle className="h-4 w-4" />}>
+                            <AlertTitle>Note</AlertTitle>
+                            <AlertDescription>{medication.notes}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    {medication.remindersEnabled && medication.reminderTimes && medication.reminderDays && (
+                        <Alert className="mt-3 bg-info/10 text-info border-info" icon={<BellRing className="h-4 w-4" />}>
+                            <AlertTitle>Reminders Active</AlertTitle>
+                            <AlertDescription>
+                                Daily at: {medication.reminderTimes.join(', ')} on {medication.reminderDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </div>
+                
+                <div className="flex flex-col items-end gap-2">
+                    <Badge className={getStatusColor(medication.status)}>
+                        {medication.status}
+                    </Badge>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                        {isRefillable && (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => onRefill(medication)}
+                                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                            >
+                                <Pill className="h-4 w-4" />
+                                Refill Now
+                            </Button>
+                        )}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => onSetReminder(medication)}
+                            className="flex items-center gap-2"
                         >
-                            <RepeatIcon color="primary" fontSize="small" />
-                            <Typography variant="body2" color="text.secondary">
-                                {medication.frequency}
-            </Typography>
-                        </Box>
-
-                        <Box display="flex" flexDirection="column" gap={1}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <CalendarIcon color="action" fontSize="small" />
-                                <Typography variant="body2" color="text.secondary">
-                                    Start: {new Date(medication.startDate).toLocaleDateString()}
-            </Typography>
-                            </Box>
-
-            {medication.endDate && (
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <CalendarIcon color="action" fontSize="small" />
-                                    <Typography variant="body2" color="text.secondary">
-                                        End: {new Date(medication.endDate).toLocaleDateString()}
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-
-                        {medication.instructions && (
-                            <Box 
-                                display="flex" 
-                                alignItems="flex-start" 
-                                gap={1}
-                                sx={{
-                                    p: 1,
-                                    borderRadius: 1,
-                                    bgcolor: alpha(theme.palette.info.main, 0.05),
-                                }}
-                            >
-                                <InfoIcon color="info" fontSize="small" sx={{ mt: 0.5 }} />
-                                <Typography variant="body2" color="text.secondary">
-                                    {medication.instructions}
-                </Typography>
-                            </Box>
-                        )}
-
-                        {medication.reminderEnabled && (
-                            <Box 
-                                sx={{
-                                    p: 2,
-                                    borderRadius: 1,
-                                    bgcolor: alpha(theme.palette.success.main, 0.05),
-                                    border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
-                                }}
-                            >
-                                <Typography 
-                                    variant="subtitle2" 
-                                    color="success" 
-                                    gutterBottom
-                                    sx={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: 0.5,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    <ScheduleIcon fontSize="small" />
-                                    Reminder Schedule
-                                </Typography>
-
-                                <Stack spacing={2}>
-                                    <Box>
-                                        <Typography 
-                                            variant="caption" 
-                                            color="text.secondary" 
-                                            display="block" 
-                                            gutterBottom
-                                            sx={{ 
-                                                fontWeight: 500,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 0.5,
-                                            }}
-                                        >
-                                            <AccessTimeIcon fontSize="small" />
-                                            Times:
-            </Typography>
-                                        <Chip
-                                            label={medication.reminderTimes?.join(', ')}
-                                            size="small"
-                                            sx={{ 
-                                                m: 0.5,
-                                                bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                color: theme.palette.success.main,
-                                                fontWeight: 500,
-                                            }}
-                                        />
-                                    </Box>
-
-                                    <Box>
-                                        <Typography 
-                                            variant="caption" 
-                                            color="text.secondary" 
-                                            display="block" 
-                                            gutterBottom
-                                            sx={{ 
-                                                fontWeight: 500,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 0.5,
-                                            }}
-                                        >
-                                            <CalendarIcon fontSize="small" />
-                                            Days:
-            </Typography>
-                                        <Chip
-                                            label={
-                                                medication.reminderDays?.length === 7 
-                                                    ? 'Everyday' 
-                                                    : medication.reminderDays?.join(', ')
-                                            }
-                                            size="small"
-                                            sx={{ 
-                                                m: 0.5,
-                                                bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                color: theme.palette.success.main,
-                                                fontWeight: 500,
-                                            }}
-                                        />
-                                    </Box>
-                                </Stack>
-                            </Box>
-                        )}
-                    </Stack>
-        </CardContent>
-    </Card>
-        </Zoom>
-);
+                            {medication.remindersEnabled ? <BellOff className="h-4 w-4" /> : <BellRing className="h-4 w-4" />}
+                            {medication.remindersEnabled ? 'Manage Reminders' : 'Set Reminders'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewDetails(medication)}
+                            className="flex items-center gap-2"
+                        >
+                            View Details
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(medication)}
+                            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                        >
+                            <Edit className="h-4 w-4" />
+                            Edit
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(medication.id)}
+                            className="flex items-center gap-2 text-destructive hover:text-destructive"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
 };
-
 const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
-    const [formData, setFormData] = useState({
-        reminderEnabled: medication?.reminderEnabled || false,
-        frequency: medication?.reminderFrequency || 'once',
-        firstTime: medication?.reminderTimes?.[0] || '08:00',
-        reminderDays: medication?.reminderDays || DAYS_OF_WEEK.map(day => day.value),
-    });
+    const [times, setTimes] = useState([]);
+    const [selectedDays, setSelectedDays] = useState([]);
+    const [firstTime, setFirstTime] = useState('09:00'); 
+    const [selectedFrequency, setSelectedFrequency] = useState(medication?.frequency || '');
+    const { showNotification } = useNotification();
 
-    const calculateReminderTimes = (frequency, firstTime) => {
-        const times = [firstTime];
-        const [hours, minutes] = firstTime.split(':').map(Number);
-        
-        switch (frequency) {
-            case 'twice':
-                times.push(`${(hours + 12) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            case 'three':
-                times.push(`${(hours + 8) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 16) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            case 'four':
-                times.push(`${(hours + 6) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 12) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 18) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            case 'six':
-                times.push(`${(hours + 6) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 12) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 18) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            case 'eight':
-                times.push(`${(hours + 8) % 24}:${minutes.toString().padStart(2, '0')}`);
-                times.push(`${(hours + 16) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            case 'twelve':
-                times.push(`${(hours + 12) % 24}:${minutes.toString().padStart(2, '0')}`);
-                break;
-            default:
-                break;
+    useEffect(() => {
+        if (medication) {
+            setTimes(medication.reminderTimes || []);
+            setSelectedDays(medication.reminderDays || []);
+            setSelectedFrequency(medication.frequency || '');
+            if (medication.reminderTimes && medication.reminderTimes.length > 0) {
+                setFirstTime(medication.reminderTimes[0]);
+            } else {
+                setFirstTime('09:00');
+            }
         }
-        
-        return times.sort((a, b) => {
-            const [hoursA, minutesA] = a.split(':').map(Number);
-            const [hoursB, minutesB] = b.split(':').map(Number);
-            return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
-        });
+    }, [medication]);
+
+    useEffect(() => {
+        if (selectedFrequency && firstTime) {
+            setTimes(calculateReminderTimes(selectedFrequency, firstTime));
+        }
+    }, [selectedFrequency, firstTime]);
+
+    const calculateReminderTimes = (frequency, initialTime) => {
+        const newTimes = [];
+        const [hours, minutes] = initialTime.split(':').map(Number);
+        let intervalHours = 0;
+
+        switch (frequency) {
+            case 'once_daily': intervalHours = 24; break;
+            case 'twice_daily': intervalHours = 12; break;
+            case 'three_times_daily': intervalHours = 8; break;
+            case 'four_times_daily': intervalHours = 6; break;
+            case 'every_6_hours': intervalHours = 6; break;
+            case 'every_8_hours': intervalHours = 8; break;
+            case 'every_12_hours': intervalHours = 12; break;
+            case 'as_needed': return []; // No scheduled times for as needed
+            default: return [];
+        }
+
+        if (intervalHours === 24) {
+            newTimes.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+        } else {
+            let currentHour = hours;
+            for (let i = 0; i < 24 / intervalHours; i++) {
+                newTimes.push(`${String(currentHour % 24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+                currentHour += intervalHours;
+            }
+        }
+        return newTimes.sort();
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-            reminderTimes: name === 'frequency' || name === 'firstTime' 
-                ? calculateReminderTimes(
-                    name === 'frequency' ? value : prev.frequency,
-                    name === 'firstTime' ? value : prev.firstTime
-                )
-                : prev.reminderTimes
-        }));
+    const handleFrequencyChange = (value) => {
+        setSelectedFrequency(value);
     };
 
-    const handleDayToggle = (day) => {
-        setFormData(prev => ({
-            ...prev,
-            reminderDays: prev.reminderDays.includes(day)
-                ? prev.reminderDays.filter(d => d !== day)
-                : [...prev.reminderDays, day]
-        }));
+    const handleFirstTimeChange = (e) => {
+        setFirstTime(e.target.value);
+    };
+
+    const handleDayToggle = (value) => {
+        setSelectedDays(prev => 
+            prev.includes(value)
+                ? prev.filter(day => day !== value)
+                : [...prev, value]
+        );
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (times.length === 0 || selectedDays.length === 0) {
+            showNotification('Please select reminder times and days.', 'error');
+            return;
+        }
         onSubmit({
-            ...formData,
-            reminderTimes: calculateReminderTimes(formData.frequency, formData.firstTime)
+            reminderTimes: times,
+            reminderDays: selectedDays,
+            remindersEnabled: true,
         });
+        showNotification('Reminder settings updated successfully!', 'success');
+        onClose();
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <form onSubmit={handleSubmit}>
-                <DialogTitle>Set Reminder for {medication?.name}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={formData.reminderEnabled}
-                                    onChange={(e) => setFormData(prev => ({
-                                        ...prev,
-                                        reminderEnabled: e.target.checked
-                                    }))}
-                                />
-                            }
-                            label="Enable Reminder"
-                        />
-                        
-                        {formData.reminderEnabled && (
-                            <>
-                                <FormControl fullWidth>
-                                    <InputLabel>Frequency</InputLabel>
-                                    <Select
-                            name="frequency"
-                            value={formData.frequency}
-                            onChange={handleChange}
-                                        label="Frequency"
-                                    >
-                                        {FREQUENCY_OPTIONS.map(option => (
-                                            <MenuItem key={option.value} value={option.value}>
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                        <TextField
-                                    name="firstTime"
-                                    label="First Reminder Time"
-                                    type="time"
-                                    value={formData.firstTime}
-                            onChange={handleChange}
-                            InputLabelProps={{ shrink: true }}
-                            fullWidth
-                        />
-
-                                <Box>
-                                    <Typography variant="subtitle2" gutterBottom>
-                                        Days of Week
-                                    </Typography>
-                                    <FormGroup row>
-                                        {DAYS_OF_WEEK.map(day => (
-                                            <FormControlLabel
-                                                key={day.value}
-                                                control={
-                                                    <Checkbox
-                                                        checked={formData.reminderDays.includes(day.value)}
-                                                        onChange={() => handleDayToggle(day.value)}
-                                                    />
-                                                }
-                                                label={day.label}
-                                            />
-                                        ))}
-                                    </FormGroup>
-                                </Box>
-
-                                <Box>
-                                    <Typography variant="subtitle2" gutterBottom>
-                                        Reminder Times
-                                    </Typography>
-                                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                        {calculateReminderTimes(formData.frequency, formData.firstTime).map((time, index) => (
-                                            <Chip
-                                                key={index}
-                                                icon={<AccessTimeIcon />}
-                                                label={time}
-                                                sx={{ m: 0.5 }}
-                                            />
-                                        ))}
-                                    </Stack>
-                                </Box>
-                            </>
-                        )}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cancel</Button>
-                    <Button type="submit" variant="contained" color="primary">
-                        Save Reminder
-                    </Button>
-                </DialogActions>
-            </form>
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[480px]">
+                <DialogHeader>
+                    <DialogTitle>Set Reminders for {medication?.name}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="frequency">Frequency</Label>
+                        <Select value={selectedFrequency} onValueChange={handleFrequencyChange}>
+                            <SelectTrigger id="frequency">
+                                <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {FREQUENCY_OPTIONS.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {selectedFrequency !== 'as_needed' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="firstTime">First Dose Time (24h format)</Label>
+                            <Input
+                                id="firstTime"
+                                type="time"
+                                value={firstTime}
+                                onChange={handleFirstTimeChange}
+                                className="border-border focus:border-primary focus:ring-primary/20"
+                            />
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <Label>Reminder Days</Label>
+                        <ToggleGroup type="multiple" value={selectedDays} onValueChange={setSelectedDays} className="flex flex-wrap gap-2">
+                            {DAYS_OF_WEEK.map(day => (
+                                <ToggleGroupItem
+                                    key={day.value}
+                                    value={day.value}
+                                    aria-label={`Toggle ${day.label}`}
+                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                                >
+                                    {day.label}
+                                </ToggleGroupItem>
+                            ))}
+                        </ToggleGroup>
+                    </div>
+                    {times.length > 0 && selectedDays.length > 0 && selectedFrequency !== 'as_needed' && (
+                        <Alert className="bg-primary/10 text-primary border-primary">
+                            <AlertTitle>Scheduled Times:</AlertTitle>
+                            <AlertDescription>{times.join(', ')}</AlertDescription>
+                        </Alert>
+                    )}
+                </form>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" form="reminder-form" onClick={handleSubmit}>Save Reminders</Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
     );
 };
-
-const MedicationsPage = () => {
+const MedicationFormDialog = ({ open, onClose, onSubmit, medication }) => {
+    const [formData, setFormData] = useState({
+        id: '',
+        name: '',
+        dosage: '',
+        frequency: '',
+        notes: '',
+        refillDate: null,
+        prescribedBy: '',
+        status: 'active',
+        remindersEnabled: false,
+        reminderTimes: [],
+        reminderDays: [],
+    });
     const { showNotification } = useNotification();
-    const dispatch = useDispatch();
-    const [activeTab, setActiveTab] = useState(0);
-    const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-    const [selectedMedication, setSelectedMedication] = useState(null);
-    const [localMedications, setLocalMedications] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const theme = useTheme();
 
     useEffect(() => {
-        try {
-            const mockMedications = medications.filter(med => 
-                med.status === 'active'
-            ).map(med => ({
-                ...med,
-                reminderEnabled: false,
+        if (medication) {
+            setFormData({
+                id: medication.id || '',
+                name: medication.name || '',
+                dosage: medication.dosage || '',
+                frequency: medication.frequency || '',
+                notes: medication.notes || '',
+                refillDate: medication.refillDate ? new Date(medication.refillDate) : null,
+                prescribedBy: medication.prescribedBy || '',
+                status: medication.status || 'active',
+                remindersEnabled: medication.remindersEnabled || false,
+                reminderTimes: medication.reminderTimes || [],
+                reminderDays: medication.reminderDays || [],
+            });
+        } else {
+            setFormData({
+                id: '',
+                name: '',
+                dosage: '',
+                frequency: '',
+                notes: '',
+                refillDate: null,
+                prescribedBy: '',
+                status: 'active',
+                remindersEnabled: false,
                 reminderTimes: [],
                 reminderDays: [],
-            }));
-            setLocalMedications(mockMedications);
-            dispatch(setActiveMedications(mockMedications));
-            setIsLoading(false);
-        } catch (err) {
-            setError(err.message);
-            dispatch(setMedicationsError(err.message));
-            setIsLoading(false);
+            });
         }
-    }, [dispatch]);
+    }, [medication]);
 
-    if (isLoading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-                <CircularProgress />
-            </Box>
-        );
-    }
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
-    if (error) {
-        return (
-            <Box p={3}>
-                <Alert severity="error">{error}</Alert>
-            </Box>
-        );
-    }
+    const handleDateChange = (date, field) => {
+        setFormData(prev => ({ ...prev, [field]: date }));
+    };
 
-    const handleReminderUpdate = (formData) => {
-        try {
-            const updatedMedication = {
-                ...selectedMedication,
-                ...formData,
-                updatedAt: new Date().toISOString(),
-            };
-            setLocalMedications(prev =>
-                prev.map(med => (med.id === selectedMedication.id ? updatedMedication : med))
-            );
-            dispatch(setActiveMedications(
-                localMedications.map(med => (med.id === selectedMedication.id ? updatedMedication : med))
-            ));
-            showNotification('Reminder settings updated successfully', 'success');
-            setReminderDialogOpen(false);
-            setSelectedMedication(null);
-        } catch (error) {
-            showNotification(error.message || 'Failed to update reminder settings', 'error');
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.dosage || !formData.frequency) {
+            showNotification('Please fill in all required fields.', 'error');
+            return;
         }
+        onSubmit(formData);
+        showNotification('Medication saved successfully!', 'success');
+        onClose();
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ mb: 3 }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={(_, newValue) => setActiveTab(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
-                >
-                    <Tab label="Medications" />
-                    <Tab label="Reminders" />
-                </Tabs>
-            </Box>
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                    <DialogTitle>{medication ? 'Edit Medication' : 'Add New Medication'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">Name</Label>
+                        <Input id="name" name="name" value={formData.name} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="dosage" className="text-right">Dosage</Label>
+                        <Input id="dosage" name="dosage" value={formData.dosage} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="frequency" className="text-right">Frequency</Label>
+                        <Select value={formData.frequency} onValueChange={(value) => handleChange({ target: { name: 'frequency', value } })}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {FREQUENCY_OPTIONS.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="prescribedBy" className="text-right">Prescribed By</Label>
+                        <Input id="prescribedBy" name="prescribedBy" value={formData.prescribedBy} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="refillDate" className="text-right">Next Refill Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal col-span-3",
+                                        !formData.refillDate && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {formData.refillDate ? format(formData.refillDate, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={formData.refillDate}
+                                    onSelect={(date) => handleDateChange(date, 'refillDate')}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="status" className="text-right">Status</Label>
+                        <Select value={formData.status} onValueChange={(value) => handleChange({ target: { name: 'status', value } })}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="expired">Expired</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="notes" className="text-right">Notes</Label>
+                        <Textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} className="col-span-3 min-h-[80px] border-border focus:border-primary focus:ring-primary/20" />
+                    </div>
+                </form>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" form="medication-form" onClick={handleSubmit}>Save Medication</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+const MedicationsPage = () => {
+    const router = useRouter();
+    const { showNotification } = useNotification();
+    const [activeTab, setActiveTab] = useState('active');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [medicationDialogOpen, setMedicationDialogOpen] = useState(false);
+    const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+    const [selectedMedication, setSelectedMedication] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [apiError, setApiError] = useState(null);
 
-            {activeTab === 0 ? (
-                <>
-            <Grid container spacing={3}>
-                {localMedications.map((medication) => (
-                    <Grid item xs={12} sm={6} md={4} key={medication.id}>
-                        <MedicationCard
-                            medication={medication}
-                        />
-                    </Grid>
-                ))}
-            </Grid>
-                </>
-            ) : (
-                <Box>
-                    <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-                        Medication Reminders
-                    </Typography>
-                    <Grid container spacing={3}>
-                        {localMedications
-                            .filter(medication => {
-                                const isExpired = medication.endDate && 
-                                    new Date(medication.endDate) - new Date() < 0;
-                                return !isExpired;
-                            })
-                            .map((medication) => (
-                                <Grid item xs={12} sm={6} md={4} key={medication.id}>
-                                    <Card 
-                                        sx={{ 
-                                            height: '100%',
-                                            transition: 'all 0.3s ease-in-out',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: theme.shadows[8],
-                                            },
-                                            position: 'relative',
-                                            borderRadius: 2,
-                                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                                                <Box display="flex" alignItems="center" gap={1.5}>
-                                                    <Avatar
-                                                        sx={{
-                                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                                            color: theme.palette.primary.main,
-                                                            width: 48,
-                                                            height: 48,
-                                                        }}
-                                                    >
-                                                        <MedicationIcon />
-                                                    </Avatar>
-                                                    <Box>
-                                                        <Typography 
-                                                            variant="h6" 
-                                                            sx={{ 
-                                                                fontWeight: 600,
-                                                            }}
-                                                        >
-                                                            {medication.name}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            {medication.dosage}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                                <Chip
-                                                    label={medication.reminderEnabled ? 'Reminders On' : 'Reminders Off'}
-                                                    color={medication.reminderEnabled ? 'success' : 'default'}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: alpha(
-                                                            medication.reminderEnabled 
-                                                                ? theme.palette.success.main 
-                                                                : theme.palette.grey[500],
-                                                            0.1
-                                                        ),
-                                                        color: medication.reminderEnabled 
-                                                            ? theme.palette.success.main 
-                                                            : theme.palette.grey[700],
-                                                        fontWeight: 500,
-                                                    }}
-                                                />
-                                            </Box>
+    const dispatch = useDispatch();
 
-                                            {medication.reminderEnabled ? (
-                                                <Box 
-                                                    sx={{
-                                                        p: 2,
-                                                        borderRadius: 1,
-                                                        bgcolor: alpha(theme.palette.success.main, 0.05),
-                                                        border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
-                                                    }}
-                                                >
-                                                    <Typography 
-                                                        variant="subtitle2" 
-                                                        color="success" 
-                                                        gutterBottom
-                                                        sx={{ 
-                                                            display: 'flex', 
-                                                            alignItems: 'center', 
-                                                            gap: 0.5,
-                                                            fontWeight: 600,
-                                                        }}
-                                                    >
-                                                        <ScheduleIcon fontSize="small" />
-                                                        Reminder Schedule
-                                                    </Typography>
+    useEffect(() => {
+        // Simulate API call
+        const fetchMedications = async () => {
+            setIsLoading(true);
+            setApiError(null);
+            try {
+                // In a real app, you'd fetch from your backend
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+                dispatch(setActiveMedications(medications));
+            } catch (err) {
+                setApiError('Failed to load medications.');
+                showNotification('Failed to load medications.', 'error');
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-                                                    <Stack spacing={2}>
-                                                        <Box>
-                                                            <Typography 
-                                                                variant="caption" 
-                                                                color="text.secondary" 
-                                                                display="block" 
-                                                                gutterBottom
-                                                                sx={{ 
-                                                                    fontWeight: 500,
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 0.5,
-                                                                }}
-                                                            >
-                                                                <AccessTimeIcon fontSize="small" />
-                                                                Times:
-                                                            </Typography>
-                                                            <Chip
-                                                                label={medication.reminderTimes?.join(', ')}
-                                                                size="small"
-                                                                sx={{ 
-                                                                    m: 0.5,
-                                                                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                                    color: theme.palette.success.main,
-                                                                    fontWeight: 500,
-                                                                }}
-                                                            />
-                                                        </Box>
+        fetchMedications();
+    }, [dispatch]);
 
-                                                        <Box>
-                                                            <Typography 
-                                                                variant="caption" 
-                                                                color="text.secondary" 
-                                                                display="block" 
-                                                                gutterBottom
-                                                                sx={{ 
-                                                                    fontWeight: 500,
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 0.5,
-                                                                }}
-                                                            >
-                                                                <CalendarIcon fontSize="small" />
-                                                                Days:
-                                                            </Typography>
-                                                            <Chip
-                                                                label={
-                                                                    medication.reminderDays?.length === 7 
-                                                                        ? 'Everyday' 
-                                                                        : medication.reminderDays?.join(', ')
-                                                                }
-                                                                size="small"
-                                                                sx={{ 
-                                                                    m: 0.5,
-                                                                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                                    color: theme.palette.success.main,
-                                                                    fontWeight: 500,
-                                                                }}
-                                                            />
-                                                        </Box>
-                                                    </Stack>
-                                                </Box>
-                                            ) : (
-                                                <Box 
-                                                    sx={{
-                                                        p: 2,
-                                                        borderRadius: 1,
-                                                        bgcolor: alpha(theme.palette.grey[500], 0.05),
-                                                        border: `1px solid ${alpha(theme.palette.grey[500], 0.1)}`,
-                                                        textAlign: 'center',
-                                                    }}
-                                                >
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        No reminders set
-                                                    </Typography>
-                                                    <Button
-                                                        size="small"
-                                                        startIcon={<ScheduleIcon />}
-                                                        onClick={() => {
-                                                            setSelectedMedication(medication);
-                                                            setReminderDialogOpen(true);
-                                                        }}
-                                                        sx={{ 
-                                                            mt: 1,
-                                                            '&:hover': {
-                                                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                                            },
-                                                        }}
-                                                    >
-                                                        Set Reminders
-                                                    </Button>
-                                                </Box>
-                                            )}
-                                        </CardContent>
-                                        <CardActions sx={{ 
-                                            pt: 1, 
-                                            pb: 2, 
-                                            px: 2,
-                                            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                            display: 'flex',
-                                            justifyContent: 'flex-end',
-                                        }}>
-                                            <Button
-                                                size="small"
-                                                startIcon={<EditIcon />}
-                                                onClick={() => {
-                                                    setSelectedMedication(medication);
-                                                    setReminderDialogOpen(true);
-                                                }}
-                                                sx={{ 
-                                                    '&:hover': {
-                                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                                    },
-                                                }}
-                                            >
-                                                Edit Reminders
-                                            </Button>
-                                        </CardActions>
-                                    </Card>
-                                </Grid>
-                            ))}
-                    </Grid>
-                </Box>
-            )}
+    const handleAddMedication = () => {
+        setSelectedMedication(null);
+        setMedicationDialogOpen(true);
+    };
 
-            <ReminderDialog
-                open={reminderDialogOpen}
-                onClose={() => {
-                    setReminderDialogOpen(false);
-                    setSelectedMedication(null);
-                }}
-                medication={selectedMedication}
-                onSubmit={handleReminderUpdate}
+    const handleEditMedication = (medication) => {
+        setSelectedMedication(medication);
+        setMedicationDialogOpen(true);
+    };
+
+    const handleDeleteMedication = (id) => {
+        // In a real app, this would be an API call to delete
+        console.log('Deleting medication with ID:', id);
+        showNotification('Medication deleted successfully!', 'success');
+        // Optimistically update UI or re-fetch data
+    };
+
+    const handleSaveMedication = (formData) => {
+        console.log('Saving medication:', formData);
+        // In a real app, this would be an API call to save
+        setMedicationDialogOpen(false);
+    };
+
+    const handleRefill = (medication) => {
+        showNotification(`Requesting refill for ${medication.name}...`, 'info');
+        // Implement refill logic, likely API call
+    };
+
+    const handleViewDetails = (medication) => {
+        console.log('Viewing details for:', medication);
+        showNotification(`Viewing details for ${medication.name}`, 'info');
+    };
+
+    const handleSetReminder = (medication) => {
+        setSelectedMedication(medication);
+        setReminderDialogOpen(true);
+    };
+
+    const handleReminderUpdate = (formData) => {
+        // This would typically involve an API call to update reminder settings
+        console.log('Updating reminder for:', selectedMedication.name, formData);
+        setReminderDialogOpen(false);
+    };
+
+    const handleToggleReminder = (medication) => {
+        const newReminderStatus = !medication.remindersEnabled;
+        showNotification(`${newReminderStatus ? 'Enabled' : 'Disabled'} reminders for ${medication.name}`, 'info');
+        // In a real app, update this via API
+    };
+
+    const handleViewPrescriptions = () => {
+        router.push('/patient/prescriptions');
+    };
+
+    const filteredMedications = medications.filter(med => {
+        const matchesSearch = med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            med.prescribedBy.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || med.status.toLowerCase() === statusFilter.toLowerCase();
+        const matchesTab = activeTab === 'all' || med.status.toLowerCase() === activeTab.toLowerCase();
+        return matchesSearch && matchesStatus && matchesTab;
+    });
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col space-y-6">
+                <PageHeader
+                    title="Medications"
+                    description="Manage your prescribed medications and set reminders."
+                    breadcrumbs={[
+                        { label: 'Patient', href: '/patient/dashboard' },
+                        { label: 'Medications', href: '/patient/medications' }
+                    ]}
+                />
+                <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (apiError) {
+        return (
+            <div className="flex flex-col space-y-6">
+                <PageHeader
+                    title="Medications"
+                    description="Manage your prescribed medications and set reminders."
+                    breadcrumbs={[
+                        { label: 'Patient', href: '/patient/dashboard' },
+                        { label: 'Medications', href: '/patient/medications' }
+                    ]}
+                />
+                <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                    <AlertCircle className="h-16 w-16 mx-auto mb-6 text-destructive" />
+                    <h3 className="text-xl font-semibold mb-3 text-foreground">Error Loading Medications</h3>
+                    <p className="text-muted-foreground mb-6">{apiError}</p>
+                    <Button onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col space-y-6">
+            <PageHeader
+                title="Medications"
+                description="Manage your prescribed medications and set reminders."
+                breadcrumbs={[
+                    { label: 'Patient', href: '/patient/dashboard' },
+                    { label: 'Medications', href: '/patient/medications' }
+                ]}
             />
-        </Box>
+
+            {/* Actions Bar */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search medications..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 border-border focus:border-primary focus:ring-primary/20"
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <Button variant="outline" onClick={handleViewPrescriptions} className="w-full md:w-auto">
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Prescriptions
+                    </Button>
+                    <Button onClick={handleAddMedication} className="w-full md:w-auto">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Medication
+                    </Button>
+                </div>
+            </div>
+
+            <Separator />
+
+            {/* Medication List */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                    <TabsTrigger value="expired">Expired</TabsTrigger>
+                </TabsList>
+                <TabsContent value={activeTab} className="mt-6">
+                    {filteredMedications.length > 0 ? (
+                        <div className="grid gap-4">
+                            {filteredMedications.map((medication) => (
+                                <MedicationCard
+                                    key={medication.id}
+                                    medication={medication}
+                                    onRefill={handleRefill}
+                                    onViewDetails={handleViewDetails}
+                                    onSetReminder={handleSetReminder}
+                                    onToggleReminder={handleToggleReminder}
+                                    onEdit={handleEditMedication}
+                                    onDelete={handleDeleteMedication}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                            <Pill className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
+                            <h3 className="text-xl font-semibold mb-3 text-foreground">No Medications Found</h3>
+                            <p className="text-muted-foreground mb-6">
+                                {searchQuery || statusFilter !== 'all' || activeTab !== 'all'
+                                    ? 'Try adjusting your search or filters to find medications.'
+                                    : 'You don\'t have any medications here yet. Add your first medication!'}
+                            </p>
+                            <Button onClick={handleAddMedication}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add New Medication
+                            </Button>
+                        </div>
+                    )}
+                </TabsContent>
+            </Tabs>
+            <ReminderDialog open={reminderDialogOpen} onClose={() => setReminderDialogOpen(false)} medication={selectedMedication} onSubmit={handleReminderUpdate} />
+            <MedicationFormDialog open={medicationDialogOpen} onClose={() => setMedicationDialogOpen(false)} onSubmit={handleSaveMedication} medication={selectedMedication} />
+        </div>
     );
 };
 

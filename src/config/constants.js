@@ -1,10 +1,17 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+export default {
+    API_BASE_URL,
+};
+
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    VERIFY: '/auth/verify',
+    LOGIN: '/auth/v1/login',
+    REGISTER: '/auth/v1/register',
+    LOGOUT: '/auth/v1/logout',
+    REFRESH: '/auth/v1/refresh',
+    VERIFY: '/auth/v1/verify',
+    ME: '/auth/v1/me',
   },
   USER: {
     PROFILE: '/users/profile',
@@ -24,28 +31,26 @@ export const API_ENDPOINTS = {
     MEDICAL_FILE: '/patients/medical-file',
   },
 };
-
 export const ROLES = {
-  ADMIN: 'admin',
-  DOCTOR: 'doctor',
-  PATIENT: 'patient',
+  ADMIN: 'ADMIN',
+  DOCTOR: 'DOCTOR',
+  PATIENT: 'PATIENT',
+  PHARMACIST: 'PHARMACIST'
 };
-
 export const AUTH_CONSTANTS = {
-  API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
   API_ENDPOINTS: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    VERIFY: '/auth/verify',
-    CURRENT_USER: '/auth/me',
-    RESET_PASSWORD: '/auth/reset-password',
-    UPDATE_PASSWORD: '/auth/update-password',
+    LOGIN: '/api/v1/auth/login',
+    REGISTER: '/api/v1/auth/register',
+    LOGOUT: '/api/v1/auth/logout',
+    VERIFY: '/api/v1/auth/verify',
+    CURRENT_USER: '/api/v1/auth/me',
+    RESET_PASSWORD: '/api/v1/auth/reset-password',
+    UPDATE_PASSWORD: '/api/v1/auth/update-password',
   },
-  TOKEN_KEY: 'auth_token',
-  REFRESH_TOKEN_KEY: 'refresh_token',
-  TOKEN_EXPIRY: 24 * 60 * 60 * 1000, 
-  REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, 
+  TOKEN_KEY: 'safe_auth_token',
+  REFRESH_TOKEN_KEY: 'safe_refresh_token',
+  TOKEN_EXPIRY: 24 * 60 * 60 * 1000,
+  REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000,
   PASSWORD_MIN_LENGTH: 8,
   PASSWORD_REGEX: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
   ERROR_MESSAGES: {
@@ -65,7 +70,6 @@ export const AUTH_CONSTANTS = {
     EMAIL_VERIFIED: 'Email verified successfully',
   },
 };
-
 export const DOCTOR_CONSTANTS = {
   STATUS: {
     ACTIVE: 'active',
@@ -93,7 +97,6 @@ export const DOCTOR_CONSTANTS = {
     PHONE: 'phone',
   },
 };
-
 export const PATIENT_CONSTANTS = {
   STATUS: {
     ACTIVE: 'active',
@@ -106,7 +109,6 @@ export const PATIENT_CONSTANTS = {
     OTHER: 'other',
   },
 };
-
 export const APPOINTMENT_CONSTANTS = {
   STATUS: {
     PENDING: 'pending',
@@ -121,7 +123,6 @@ export const APPOINTMENT_CONSTANTS = {
     LONG: 60,
   },
 };
-
 export const PRESCRIPTION_CONSTANTS = {
   STATUS: {
     ACTIVE: 'active',
@@ -137,7 +138,6 @@ export const PRESCRIPTION_CONSTANTS = {
     AS_NEEDED: 'as_needed',
   },
 };
-
 export const CONSULTATION_CONSTANTS = {
   STATUS: {
     PENDING: 'pending',
@@ -151,7 +151,6 @@ export const CONSULTATION_CONSTANTS = {
     EMERGENCY: 'emergency',
   },
 };
-
 export const NOTIFICATION_CONSTANTS = {
   TYPES: {
     SUCCESS: 'success',

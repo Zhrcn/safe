@@ -1,190 +1,190 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAppDispatch } from '@/store/hooks';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLoginMutation } from '@/store/services/user/authApi';
-import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Box,
-  Alert,
-  CircularProgress
-} from '@mui/material';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
+import { Label } from '@/components/ui/Label';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { Eye, EyeOff, Mail, Lock, Github, Twitter } from 'lucide-react';
+import Link from 'next/link';
+import { Checkbox } from '@/components/ui/Checkbox';
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: 'patient' // Default role
-  });
-  const [error, setError] = useState('');
-  const [isNavigating, setIsNavigating] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const dispatch = useAppDispatch();
-  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+const LoginPage = () => {
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
+    const [login, { isLoading }] = useLoginMutation();
 
-  // Get role from URL if present
-  useEffect(() => {
-    const role = searchParams.get('role');
-    if (role) {
-      setFormData(prev => ({ ...prev, role }));
-    }
-  }, [searchParams]);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
 
-  const navigateToDashboard = useCallback((role) => {
-    console.log('Navigating to dashboard for role:', role);
-    const path = `/${role.toLowerCase()}/dashboard`;
-    console.log('Navigation path:', path);
-    router.push(path);
-  }, [router]);
+        try {
+            const result = await login({ email, password }).unwrap();
+            
+            if (result.success) {
+                if (result.user.role === 'patient') {
+                    router.push('/patient/dashboard');
+                } else if (result.user.role === 'doctor') {
+                    router.push('/doctor/dashboard');
+                } else if (result.user.role === 'admin') {
+                    router.push('/admin/dashboard');
+                }
+            } else {
+                setError(result.message || 'Login failed');
+            }
+        } catch (error) {
+            setError(error.message || 'Invalid email or password');
+        }
+    };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (error) {
-      setError('');
-    }
-  };
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-md space-y-8">
+                {/* Logo and Brand */}
+                <div className="text-center">
+                    <h1 className="text-4xl font-bold text-blue-600 mb-2">S.A.F.E</h1>
+                    <p className="text-gray-600">Secure Access For Everyone</p>
+                </div>
 
-  const validateForm = () => {
-    if (!formData.email) {
-      setError('Email is required');
-      return false;
-    }
-    if (!formData.password) {
-      setError('Password is required');
-      return false;
-    }
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-    return true;
-  };
+                <Card className="w-full shadow-lg border-0">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl font-bold text-center">
+                            Welcome back
+                        </CardTitle>
+                        <CardDescription className="text-center text-gray-500">
+                            Enter your credentials to access your account
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {error && (
+                                <Alert variant="destructive" className="animate-in fade-in duration-300">
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (isLoading) {
-      return;
-    }
+                            <div className="space-y-2">
+                                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="Enter your password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        className="pl-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
 
-    setError('');
-    setIsNavigating(false);
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="remember"
+                                        checked={rememberMe}
+                                        onCheckedChange={setRememberMe}
+                                    />
+                                    <Label htmlFor="remember" className="text-sm text-gray-600">
+                                        Remember me
+                                    </Label>
+                                </div>
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
 
-    if (!validateForm()) {
-      return;
-    }
+                            <Button
+                                type="submit"
+                                className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Signing in...' : 'Sign in'}
+                            </Button>
 
-    try {
-      console.log('Attempting login with:', { email: formData.email, role: formData.role });
-      const response = await login({
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      }).unwrap();
-      
-      console.log('Login response:', response);
-      
-      if (!response.success) {
-        throw new Error(response.message || 'Login failed');
-      }
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-200"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                </div>
+                            </div>
 
-      // Ensure we have a valid role from the response
-      const userRole = response.user?.role?.toLowerCase();
-      if (!userRole) {
-        throw new Error('Invalid user role received');
-      }
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => {/* Handle GitHub login */}}
+                                >
+                                    <Github className="h-4 w-4 mr-2" />
+                                    GitHub
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => {/* Handle Twitter login */}}
+                                >
+                                    <Twitter className="h-4 w-4 mr-2" />
+                                    Twitter
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                    <CardFooter className="flex justify-center border-t pt-4">
+                        <p className="text-sm text-gray-600">
+                            Don't have an account?{' '}
+                            <Link
+                                href="/register"
+                                className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                            >
+                                Sign up
+                            </Link>
+                        </p>
+                    </CardFooter>
+                </Card>
+            </div>
+        </div>
+    );
+};
 
-      console.log('Login successful, navigating to:', userRole);
-      navigateToDashboard(userRole);
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'Invalid email or password');
-    }
-  };
-
-  const isLoading = isLoginLoading || isNavigating;
-
-  return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          Login to S.A.F.E
-        </Typography>
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box 
-          component="form" 
-          onSubmit={handleSubmit} 
-          noValidate
-          name="login-form"
-          autoComplete="on"
-        >
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            type="email"
-            autoComplete="email"
-            autoFocus
-            value={formData.email}
-            onChange={handleChange}
-            disabled={isLoading}
-            error={!!error && error.includes('email')}
-          />
-          
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="password"
-            value={formData.password}
-            onChange={handleChange}
-            disabled={isLoading}
-            error={!!error && error.includes('password')}
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              'Login'
-            )}
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
-  );
-} 
+export default LoginPage; 

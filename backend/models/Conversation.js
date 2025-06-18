@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const MessageSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -32,11 +31,8 @@ const MessageSchema = new mongoose.Schema({
     }
   ]
 });
-
 const Message = mongoose.model('Message', MessageSchema);
 module.exports = Message;
-
-
 const ConversationSchema = new mongoose.Schema({
   participants: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -61,14 +57,11 @@ const ConversationSchema = new mongoose.Schema({
   timestamps: true, 
   collection: 'Conversations'
 });
-
 ConversationSchema.pre('save', function(next) {
   if (this.isModified('messages') && this.messages.length > 0) {
     this.lastMessageTimestamp = this.messages[this.messages.length - 1].timestamp;
   }
   next();
 });
-
 const Conversation = mongoose.model('Conversation', ConversationSchema);
-
 module.exports = Conversation;

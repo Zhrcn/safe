@@ -1,15 +1,31 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { setCredentials, logout } from '@/store/slices/user/authSlice';
+import { setCredentials, logout } from '@/store/slices/auth/authSlice';
 import { setToken, getToken, removeToken } from '@/utils/tokenUtils';
+import { AUTH_CONSTANTS } from '@/config/constants';
+import { ROLES } from '@/config/app-config';
+
+const logRequest = (request) => {
+    console.log('API Request:', {
+        url: request.url,
+        method: request.method,
+        headers: request.headers,
+        body: request.body
+    });
+};
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: 'http://localhost:5001/api/v1/auth',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
     credentials: 'include',
-    prepareHeaders: (headers, { getState }) => {
-        const token = getState().auth.token;
+    prepareHeaders: (headers) => {
+        const token = getToken();
+        console.log('Current token in prepareHeaders:', token);
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+        headers.set('Origin', 'http://localhost:3000');
+        console.log('Final headers:', headers);
         return headers;
     },
 });
@@ -20,29 +36,41 @@ export const authApi = createApi({
     tagTypes: ['Auth'],
     endpoints: (builder) => ({
         login: builder.mutation({
-            query: (credentials) => ({
-                url: '/login',
-                method: 'POST',
-                body: credentials,
-            }),
+            query: (credentials) => {
+                const request = {
+                    url: AUTH_CONSTANTS.API_ENDPOINTS.LOGIN,
+                    method: 'POST',
+                    body: {
+                        ...credentials,
+                        role: credentials.role?.toLowerCase()
+                    }
+                };
+                logRequest(request);
+                return request;
+            },
             transformResponse: (response) => {
+                console.log('Login response:', response);
                 if (response.success && response.data) {
+                    const userData = {
+                        ...response.data.user,
+                        role: response.data.user.role?.toLowerCase()
+                    };
                     setToken(response.data.token);
                     return {
                         success: true,
-                        user: response.data.user,
+                        user: userData,
                         token: response.data.token
                     };
                 }
                 return {
                     success: false,
-                    message: response.message || 'Login failed'
+                    message: response.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS
                 };
             },
             transformErrorResponse: (response) => {
                 return {
                     success: false,
-                    message: response.data?.message || 'Invalid email or password'
+                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS
                 };
             },
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -58,49 +86,54 @@ export const authApi = createApi({
             },
         }),
         verifyToken: builder.query({
-            query: () => ({
-                url: '/me',
-                method: 'GET',
-            }),
+            query: () => {
+                const request = {
+                    url: AUTH_CONSTANTS.API_ENDPOINTS.CURRENT_USER,
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             transformResponse: (response) => {
+                console.log('Token verification response:', response);
                 if (response.success && response.data) {
-                    // Ensure we have a valid user object with role
-                    const userData = response.data;
+                    const userData = {
+                        ...response.data,
+                        role: response.data.role?.toLowerCase()
+                    };
                     if (!userData.role) {
-                        // If role is not in the response, try to get it from the token
                         try {
                             const token = getToken();
                             if (token) {
                                 const payload = JSON.parse(atob(token.split('.')[1]));
-                                userData.role = payload.role;
+                                userData.role = payload.role?.toLowerCase();
                             }
                         } catch (error) {
                             console.error('Error parsing token:', error);
                         }
                     }
-
                     return {
                         success: true,
-                        user: userData,
-                        token: getToken()
+                        user: userData
                     };
                 }
                 return {
                     success: false,
-                    message: response.message || 'Token verification failed'
+                    message: response.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_TOKEN
                 };
             },
             transformErrorResponse: (response) => {
+                console.error('Token verification error:', response);
                 removeToken();
                 return {
                     success: false,
-                    message: response.data?.message || 'Invalid or expired token'
+                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_TOKEN
                 };
             },
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
-                    if (data.success && data.user && data.user.role) {
+                    if (data.success && data.user) {
                         dispatch(setCredentials(data));
                     } else {
                         dispatch(logout());
@@ -112,21 +145,25 @@ export const authApi = createApi({
             },
         }),
         logout: builder.mutation({
-            query: () => ({
-                url: '/logout',
-                method: 'POST',
-            }),
+            query: () => {
+                const request = {
+                    url: AUTH_CONSTANTS.API_ENDPOINTS.LOGOUT,
+                    method: 'POST'
+                };
+                logRequest(request);
+                return request;
+            },
             transformResponse: (response) => {
                 removeToken();
                 return {
                     success: true,
-                    message: response.message || 'Logged out successfully'
+                    message: response.message || AUTH_CONSTANTS.SUCCESS_MESSAGES.LOGOUT_SUCCESS
                 };
             },
             transformErrorResponse: (response) => {
                 return {
                     success: false,
-                    message: response.data?.message || 'Logout failed'
+                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.NETWORK_ERROR
                 };
             },
             async onQueryStarted(_, { dispatch, queryFulfilled }) {

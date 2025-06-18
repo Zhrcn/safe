@@ -7,16 +7,11 @@ const {
   cancelConsultation
 } = require('../controllers/consultation.controller');
 const { protect } = require('../middleware/auth.middleware');
-
 router.use(protect);
-
 router.route('/')
   .get(getConsultations)
   .post(requestConsultation);
-
 router.route('/:id')
   .patch(updateConsultation);
-
 router.post('/:id/cancel', cancelConsultation);
-
 module.exports = router;

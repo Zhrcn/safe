@@ -1,21 +1,18 @@
 'use client';
-
 import React, { createContext, useContext, useState } from 'react';
-import { Snackbar, Alert, Box, Paper, InputBase, IconButton } from '@mui/material';
 import {
     CheckCircle,
     AlertCircle,
     Info,
     AlertTriangle,
-    Search
+    Search,
+    X
 } from 'lucide-react';
-import { cn } from '@/utils/styles';
-
+import { cn } from '@/lib/utils';
 const NotificationContext = createContext({
     showNotification: () => {},
     hideNotification: () => {},
 });
-
 export const useNotification = () => {
     const context = useContext(NotificationContext);
     if (!context) {
@@ -23,7 +20,6 @@ export const useNotification = () => {
     }
     return context;
 };
-
 export function NotificationProvider({ children }) {
     const [notification, setNotification] = useState({
         open: false,
@@ -32,7 +28,6 @@ export function NotificationProvider({ children }) {
         duration: 6000,
         position: { vertical: 'bottom', horizontal: 'right' },
     });
-
     const showNotification = ({
         message,
         severity = 'info',
@@ -47,55 +42,45 @@ export function NotificationProvider({ children }) {
             position,
         });
     };
-
     const hideNotification = () => {
         setNotification(prev => ({ ...prev, open: false }));
     };
-
     const severityStyles = {
         success: 'bg-green-500 text-white',
         error: 'bg-red-500 text-white',
         warning: 'bg-yellow-500 text-gray-800',
         info: 'bg-blue-500 text-white',
     };
-
     return (
         <NotificationContext.Provider value={{ showNotification, hideNotification }}>
             {children}
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={notification.duration}
-                onClose={hideNotification}
-                anchorOrigin={notification.position}
+            <div
+                className={cn(
+                    'fixed z-50 transition-all duration-300 ease-in-out transform',
+                    notification.position.vertical === 'bottom' ? 'bottom-4' : 'top-4',
+                    notification.position.horizontal === 'right' ? 'right-4' : 'left-4',
+                    notification.open ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                )}
             >
-                <Alert
-                    onClose={hideNotification}
-                    severity={notification.severity}
+                <div
                     className={cn(
-                        'w-full shadow-lg rounded-lg',
-                        severityStyles[notification.severity],
-                        'transition-all duration-300 ease-in-out transform',
-                        notification.open ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                        'flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg',
+                        severityStyles[notification.severity]
                     )}
-                    sx={{
-                        '& .MuiAlert-icon': {
-                            color: 'inherit',
-                        },
-                        '& .MuiAlert-message': {
-                            color: 'inherit',
-                        },
-                        '& .MuiAlert-action': {
-                            color: 'inherit',
-                        },
-                    }}
                 >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
+                    {getIcon(notification.severity)}
+                    <p className="flex-1">{notification.message}</p>
+                    <button
+                        onClick={hideNotification}
+                        className="p-1 hover:bg-black/10 rounded-full transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+            </div>
         </NotificationContext.Provider>
     );
 }
-
 const getIcon = (type) => {
     switch (type) {
         case 'success':
@@ -109,65 +94,25 @@ const getIcon = (type) => {
             return <Info size={24} />;
     }
 };
-
-const Notification = ({
-    open,
-    message,
-    type = 'info',
-    duration = 6000,
-    onClose,
-}) => {
-    return (
-        <Snackbar
-            open={open}
-            autoHideDuration={duration}
-            onClose={onClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-            <Alert
-                severity={type}
-                variant="filled"
-                onClose={onClose}
-                icon={getIcon(type)}
-                sx={{
-                    width: '100%',
-                    alignItems: 'center',
-                    boxShadow: 3,
-                    '& .MuiAlert-icon': {
-                        fontSize: '1.5rem',
-                        alignItems: 'center',
-                        display: 'flex'
-                    }
-                }}
-            >
-                {message}
-            </Alert>
-        </Snackbar>
-    );
-};
-
-export default Notification;
-
-/**
- * Shared SearchField component that can be used across different roles
- * This eliminates duplicate SearchField implementations in role-specific components
- */
 export function SearchField({ value, onChange, placeholder = 'Search...', className = '' }) {
     return (
-        <Paper
-            component="form"
-            elevation={0}
-            className={`flex items-center px-3 py-1 border border-border bg-background rounded-md ${className}`}
-        >
-            <InputBase
+        <div className={cn(
+            'flex items-center px-3 py-1 border border-border bg-background rounded-md',
+            className
+        )}>
+            <input
+                type="text"
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className="ml-1 flex-1 text-foreground"
+                className="ml-1 flex-1 bg-transparent text-foreground outline-none"
             />
-            <IconButton type="button" size="small" className="text-muted-foreground">
+            <button
+                type="button"
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
                 <Search size={18} />
-            </IconButton>
-        </Paper>
+            </button>
+        </div>
     );
 } 

@@ -1,19 +1,33 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { API_BASE_URL } from '@/config/app-config';
 import { getToken } from '@/utils/tokenUtils';
+
+const logRequest = (request) => {
+    console.log('API Request:', {
+        url: request.url,
+        method: request.method,
+        headers: request.headers,
+        body: request.body
+    });
+};
+
+const baseQuery = fetchBaseQuery({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+        const token = getToken();
+        if (token) {
+            headers.set('authorization', `Bearer ${token}`);
+        }
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+        headers.set('Origin', 'http://localhost:3000');
+        return headers;
+    },
+});
 
 export const patientApi = createApi({
     reducerPath: 'patientApi',
-    baseQuery: fetchBaseQuery({
-        baseUrl: `${API_BASE_URL}/patients`,
-        prepareHeaders: (headers) => {
-            const token = getToken();
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
+    baseQuery,
     tagTypes: [
         'Profile',
         'MedicalFile',
@@ -32,196 +46,331 @@ export const patientApi = createApi({
         'ChronicConditions'
     ],
     endpoints: (builder) => ({
-        // Profile endpoints
         getProfile: builder.query({
-            query: () => '/profile',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/profile',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Profile'],
             transformResponse: (response) => response.data
         }),
         updateProfile: builder.mutation({
-            query: (data) => ({
-                url: '/profile',
-                method: 'PATCH',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/profile',
+                    method: 'PATCH',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Profile'],
         }),
         addAllergy: builder.mutation({
-            query: (allergyData) => ({
-                url: '/allergies',
-                method: 'POST',
-                body: allergyData,
-            }),
+            query: (allergyData) => {
+                const request = {
+                    url: '/api/v1/patients/allergies',
+                    method: 'POST',
+                    body: allergyData
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Profile'],
             transformResponse: (response) => response.data
         }),
         addChronicCondition: builder.mutation({
-            query: (conditionData) => ({
-                url: '/chronic-conditions',
-                method: 'POST',
-                body: conditionData,
-            }),
+            query: (conditionData) => {
+                const request = {
+                    url: '/api/v1/patients/chronic-conditions',
+                    method: 'POST',
+                    body: conditionData
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Profile'],
             transformResponse: (response) => response.data
         }),
-
-        // Medical file endpoints
         getMedicalFile: builder.query({
-            query: () => '/medical-file',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/medical-file',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['MedicalFile'],
         }),
         updateMedicalFile: builder.mutation({
-            query: (data) => ({
-                url: '/medical-file',
-                method: 'PUT',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/medical-file',
+                    method: 'PUT',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['MedicalFile'],
         }),
-
-        // Appointment endpoints
         getAppointments: builder.query({
-            query: () => '/appointments',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/appointments',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Appointments'],
             transformResponse: (response) => response.data
         }),
         createAppointment: builder.mutation({
-            query: (data) => ({
-                url: '/appointments',
-                method: 'POST',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/appointments',
+                    method: 'POST',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Appointments'],
         }),
         updateAppointment: builder.mutation({
-            query: ({ id, data }) => ({
-                url: `/appointments/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
+            query: ({ id, data }) => {
+                const request = {
+                    url: `/api/v1/patients/appointments/${id}`,
+                    method: 'PUT',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Appointments'],
         }),
         deleteAppointment: builder.mutation({
-            query: (id) => ({
-                url: `/appointments/${id}`,
-                method: 'DELETE',
-            }),
+            query: (id) => {
+                const request = {
+                    url: `/api/v1/patients/appointments/${id}`,
+                    method: 'DELETE'
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Appointments'],
         }),
-
-        // Medication endpoints
         getMedications: builder.query({
-            query: () => '/medications',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/medications',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Medications'],
             transformResponse: (response) => response.data
         }),
         addMedication: builder.mutation({
-            query: (medicationData) => ({
-                url: '/medications',
-                method: 'POST',
-                body: medicationData,
-            }),
+            query: (medicationData) => {
+                const request = {
+                    url: '/api/v1/patients/medications',
+                    method: 'POST',
+                    body: medicationData
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Profile', 'Medications'],
             transformResponse: (response) => response.data
         }),
         updateMedication: builder.mutation({
-            query: ({ id, data }) => ({
-                url: `/medications/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
+            query: ({ id, data }) => {
+                const request = {
+                    url: `/api/v1/patients/medications/${id}`,
+                    method: 'PUT',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Medications'],
         }),
         deleteMedication: builder.mutation({
-            query: (id) => ({
-                url: `/medications/${id}`,
-                method: 'DELETE',
-            }),
+            query: (id) => {
+                const request = {
+                    url: `/api/v1/patients/medications/${id}`,
+                    method: 'DELETE'
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Medications'],
         }),
-
-        // Consultation endpoints
         getConsultations: builder.query({
-            query: () => '/consultations',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/consultations',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Consultations'],
         }),
         createConsultation: builder.mutation({
-            query: (data) => ({
-                url: '/consultations',
-                method: 'POST',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/consultations',
+                    method: 'POST',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Consultations'],
         }),
         updateConsultation: builder.mutation({
-            query: ({ id, data }) => ({
-                url: `/consultations/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
+            query: ({ id, data }) => {
+                const request = {
+                    url: `/api/v1/patients/consultations/${id}`,
+                    method: 'PUT',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Consultations'],
         }),
-
-        // Prescription endpoints
         getPrescriptions: builder.query({
-            query: () => '/prescriptions',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/prescriptions',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Prescriptions'],
         }),
         getActivePrescriptions: builder.query({
-            query: () => '/prescriptions/active',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/prescriptions/active',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Prescriptions'],
         }),
-
-        // Message endpoints
         getMessages: builder.query({
-            query: () => '/messages',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/messages',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Messages'],
         }),
         sendMessage: builder.mutation({
-            query: (data) => ({
-                url: '/messages',
-                method: 'POST',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/messages',
+                    method: 'POST',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['Messages'],
         }),
-
-        // Provider endpoints
         getDoctors: builder.query({
-            query: () => '/doctors',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/doctors',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Doctors'],
         }),
         getDoctor: builder.query({
-            query: (id) => `/doctors/${id}`,
+            query: (id) => {
+                const request = {
+                    url: `/api/v1/patients/doctors/${id}`,
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Doctors'],
         }),
         getPharmacists: builder.query({
-            query: () => '/pharmacists',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/pharmacists',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Pharmacists'],
         }),
         getPharmacist: builder.query({
-            query: (id) => `/pharmacists/${id}`,
+            query: (id) => {
+                const request = {
+                    url: `/api/v1/patients/pharmacists/${id}`,
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Pharmacists'],
         }),
-
-        // Dashboard endpoint
         getDashboardSummary: builder.query({
-            query: () => '/dashboard',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/dashboard',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['Profile', 'Appointments', 'Medications'],
             transformResponse: (response) => response.data
         }),
-
-        // Emergency Contacts endpoints
         getEmergencyContacts: builder.query({
-            query: () => '/emergency-contacts',
+            query: () => {
+                const request = {
+                    url: '/api/v1/patients/emergency-contacts',
+                    method: 'GET'
+                };
+                logRequest(request);
+                return request;
+            },
             providesTags: ['EmergencyContacts'],
         }),
         addEmergencyContact: builder.mutation({
-            query: (data) => ({
-                url: '/emergency-contacts',
-                method: 'POST',
-                body: data,
-            }),
+            query: (data) => {
+                const request = {
+                    url: '/api/v1/patients/emergency-contacts',
+                    method: 'POST',
+                    body: data
+                };
+                logRequest(request);
+                return request;
+            },
             invalidatesTags: ['EmergencyContacts'],
         }),
         updateEmergencyContact: builder.mutation({
@@ -239,8 +388,6 @@ export const patientApi = createApi({
             }),
             invalidatesTags: ['EmergencyContacts'],
         }),
-
-        // Insurance endpoints
         getInsurance: builder.query({
             query: () => '/insurance',
             providesTags: ['Insurance'],
@@ -253,8 +400,6 @@ export const patientApi = createApi({
             }),
             invalidatesTags: ['Insurance'],
         }),
-
-        // Health Status endpoints
         getHealthStatus: builder.query({
             query: () => '/health-status',
             providesTags: ['HealthStatus'],
@@ -267,8 +412,6 @@ export const patientApi = createApi({
             }),
             invalidatesTags: ['HealthStatus'],
         }),
-
-        // Notification endpoints
         getNotifications: builder.query({
             query: () => '/notifications',
             providesTags: ['Notifications'],
@@ -291,65 +434,40 @@ export const patientApi = createApi({
 });
 
 export const {
-    // Profile
     useGetProfileQuery,
     useUpdateProfileMutation,
     useAddAllergyMutation,
     useAddChronicConditionMutation,
     useAddMedicationMutation,
-    
-    // Medical File
     useGetMedicalFileQuery,
     useUpdateMedicalFileMutation,
-    
-    // Appointments
     useGetAppointmentsQuery,
     useCreateAppointmentMutation,
     useUpdateAppointmentMutation,
     useDeleteAppointmentMutation,
-    
-    // Medications
     useGetMedicationsQuery,
     useUpdateMedicationMutation,
     useDeleteMedicationMutation,
-    
-    // Consultations
     useGetConsultationsQuery,
     useCreateConsultationMutation,
     useUpdateConsultationMutation,
-    
-    // Prescriptions
     useGetPrescriptionsQuery,
     useGetActivePrescriptionsQuery,
-    
-    // Messages
     useGetMessagesQuery,
     useSendMessageMutation,
-    
-    // Providers
     useGetDoctorsQuery,
     useGetDoctorQuery,
     useGetPharmacistsQuery,
     useGetPharmacistQuery,
-    
-    // Dashboard
     useGetDashboardSummaryQuery,
-    
-    // Emergency Contacts
     useGetEmergencyContactsQuery,
     useAddEmergencyContactMutation,
     useUpdateEmergencyContactMutation,
     useDeleteEmergencyContactMutation,
-    
-    // Insurance
     useGetInsuranceQuery,
     useUpdateInsuranceMutation,
-    
-    // Health Status
     useGetHealthStatusQuery,
     useUpdateHealthStatusMutation,
-    
-    // Notifications
     useGetNotificationsQuery,
     useMarkNotificationAsReadMutation,
     useDeleteNotificationMutation,

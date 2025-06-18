@@ -1,8 +1,8 @@
 export const consultations = [
   {
     id: '1',
-    patient: '1', // ID of the first patient from mockdata/patients.js
-    doctor: '2', // ID of the doctor from mockdata/doctors.js
+    patient: '1', 
+    doctor: '2', 
     reason: 'Regular checkup',
     preferredTime: '10:00 AM',
     status: 'Completed',
@@ -10,7 +10,7 @@ export const consultations = [
     attachments: [
       {
         name: 'Medical Report',
-        url: 'https://example.com/report.pdf',
+        url: 'https://example.com/medical-report.pdf',
         type: 'PDF',
         size: 1024,
       },

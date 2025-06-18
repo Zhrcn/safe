@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const express = require('express');
 const dotenv = require('dotenv');
 const colors = require('colors');
@@ -9,7 +8,7 @@ const mainRouter = require('./routes/index');
 const errorHandler = require('./middleware/error.middleware'); 
 const morgan = require('morgan');
 
-// Require all Mongoose models to ensure they are registered
+// Load models
 require('./models/User');
 require('./models/Medicine');
 require('./models/Doctor');
@@ -24,19 +23,19 @@ require('./models/Patient');
 require('./models/medication');
 
 dotenv.config({ path: './config/config.env' });
-
 connectDB();
 
 const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://192.168.1.100:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
 
+// Middleware
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
@@ -44,6 +43,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Mount routes
 app.use('/api/v1', mainRouter);
 
 app.get('/', (req, res) => {
@@ -53,7 +53,6 @@ app.get('/', (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001; 
-
 const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`.yellow.bold);
 });

@@ -1,28 +1,19 @@
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    CircularProgress,
-    Alert,
-    Paper,
-    InputAdornment,
-    IconButton
-} from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { useAppDispatch } from '@/store/hooks';
+import { Eye, EyeOff } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { useLoginMutation } from '@/store/services/user/authApi';
-import { setCredentials, setError, clearError } from '@/store/slices/user/authSlice';
+import { setCredentials, setError, clearError } from '@/store/slices/auth/authSlice';
 import { motion } from 'framer-motion';
 import { ROLE_ROUTES } from '@/config/app-config';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -35,6 +26,8 @@ export default function LoginForm({ role, redirectUrl }) {
     const [login, { isLoading }] = useLoginMutation();
     const [error, setLocalError] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
+    const userRole = useAppSelector(state => state.auth.role);
+    const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
 
     const {
         register,
@@ -44,25 +37,44 @@ export default function LoginForm({ role, redirectUrl }) {
         resolver: zodResolver(loginSchema),
     });
 
+    useEffect(() => {
+        if (isAuthenticated && userRole) {
+            const dashboardPath = ROLE_ROUTES[userRole.toLowerCase()]?.dashboard;
+            if (dashboardPath) {
+                console.log('Navigating to:', dashboardPath);
+                router.push(dashboardPath);
+            } else {
+                console.error('No dashboard path found for role:', userRole);
+                router.push('/dashboard');
+            }
+        }
+    }, [isAuthenticated, userRole, router]);
+
     const onSubmit = async (data) => {
         try {
             setLocalError(null);
             dispatch(clearError());
-
             const result = await login({
                 ...data,
-                role
+                role: role?.toLowerCase()
             }).unwrap();
-
             if (result.success && result.data) {
+                const userRole = result.data.user?.role?.toLowerCase() || 'patient';
                 dispatch(setCredentials({
-                    user: result.data.user,
+                    user: {
+                        ...result.data.user,
+                        role: userRole
+                    },
                     token: result.data.token
                 }));
-
-                // Navigate based on role
-                const userRole = result.data.user.role.toLowerCase();
-                router.push(redirectUrl || ROLE_ROUTES[userRole]?.dashboard || '/dashboard');
+                const dashboardPath = ROLE_ROUTES[userRole]?.dashboard;
+                if (dashboardPath) {
+                    console.log('Navigating to:', dashboardPath);
+                    router.push(dashboardPath);
+                } else {
+                    console.error('No dashboard path found for role:', userRole);
+                    router.push('/dashboard');
+                }
             } else {
                 throw new Error(result.message || 'Login failed');
             }
@@ -75,97 +87,72 @@ export default function LoginForm({ role, redirectUrl }) {
     };
 
     return (
-        <Box
-            component={motion.div}
+        <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: '100%',
-                maxWidth: 400,
-                mx: 'auto',
-                p: 3
-            }}
+            className="flex flex-col items-center w-full max-w-md mx-auto p-6"
         >
-            <Paper
-                elevation={3}
-                sx={{
-                    p: 4,
-                    width: '100%',
-                    borderRadius: 2,
-                    bgcolor: 'background.paper'
-                }}
-            >
-                <Typography variant="h5" component="h1" gutterBottom align="center">
-                    Welcome Back
-                </Typography>
-
-                {error && (
-                    <Alert 
-                        severity="error" 
-                        sx={{ mb: 2 }}
-                        onClose={() => {
-                            setLocalError(null);
-                            dispatch(clearError());
-                        }}
-                    >
-                        {error}
-                    </Alert>
-                )}
-
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        margin="normal"
-                        error={!!errors.email}
-                        helperText={errors.email?.message}
-                        {...register('email')}
-                    />
-
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        type={showPassword ? 'text' : 'password'}
-                        margin="normal"
-                        error={!!errors.password}
-                        helperText={errors.password?.message}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        edge="end"
-                                    >
-                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
-                        {...register('password')}
-                    />
-
-                    <Button
-                        fullWidth
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        disabled={isLoading}
-                        sx={{ mt: 3 }}
-                    >
-                        {isLoading ? (
-                            <CircularProgress size={24} color="inherit" />
-                        ) : (
-                            'Sign In'
-                        )}
-                    </Button>
-                </form>
-            </Paper>
-        </Box>
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle className="text-center text-2xl font-semibold">
+                        Welcome Back
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {error && (
+                        <Alert variant="destructive" className="mb-4">
+                            <AlertDescription>
+                                {error}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="space-y-2">
+                            <Input
+                                type="email"
+                                placeholder="Email"
+                                {...register('email')}
+                                className={errors.email ? 'border-red-500' : ''}
+                            />
+                            {errors.email && (
+                                <p className="text-sm text-red-500">{errors.email.message}</p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <div className="relative">
+                                <Input
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Password"
+                                    {...register('password')}
+                                    className={errors.password ? 'border-red-500' : ''}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <p className="text-sm text-red-500">{errors.password.message}</p>
+                            )}
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            ) : (
+                                'Sign In'
+                            )}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </motion.div>
     );
-} 
+}

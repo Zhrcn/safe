@@ -1,616 +1,236 @@
 'use client';
-
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setMedicalRecords, setLoading, setError } from '@/store/slices/patient/medicalRecordsSlice';
-import { medicalFiles } from '@/mockdata/medicalFiles';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import { 
-    Box, 
-    CircularProgress, 
-    Typography, 
-    Card, 
-    Grid, 
-    Chip,
-    Divider,
-    CardContent,
-    CardHeader,
-    Avatar,
-    IconButton,
-    Tooltip,
-    Paper,
-    Tabs,
-    Tab,
-    Breadcrumbs,
-    Link,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button
-} from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
-import DescriptionIcon from '@mui/icons-material/Description';
-import EventIcon from '@mui/icons-material/Event';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import PersonIcon from '@mui/icons-material/Person';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import DownloadIcon from '@mui/icons-material/Download';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import HomeIcon from '@mui/icons-material/Home';
-import ScienceIcon from '@mui/icons-material/Science';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import MedicationIcon from '@mui/icons-material/Medication';
-import VaccinesIcon from '@mui/icons-material/Vaccines';
-import HistoryIcon from '@mui/icons-material/History';
-import FolderIcon from '@mui/icons-material/Folder';
-import WarningIcon from '@mui/icons-material/Warning';
-import BloodtypeIcon from '@mui/icons-material/Bloodtype';
+    FileText, Download, Eye, Search, Filter, 
+    Plus, FileUp, Calendar as CalendarIcon,
+    FileType, FileArchive, FileImage
+} from 'lucide-react';
+import PageHeader from '@/components/patient/PageHeader';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { Separator } from '@/components/ui/Separator';
+import { medicalRecords } from '@/mockdata/medicalRecords';
+import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
-const MedicalRecordsPage = () => {
-    const dispatch = useDispatch();
-    const theme = useTheme();
-    const { records, loading, error } = useSelector((state) => state.medicalRecords);
-    const [selectedTab, setSelectedTab] = useState(0);
-    const [openModal, setOpenModal] = useState(false);
-    const [selectedRecord, setSelectedRecord] = useState(null);
-
-    const recordCategories = [
-        { id: 'all', label: 'All Records', icon: <FolderIcon /> },
-        { id: 'lab', label: 'Lab Results', icon: <ScienceIcon /> },
-        { id: 'imaging', label: 'Imaging Reports', icon: <LocalHospitalIcon /> },
-        { id: 'vital', label: 'Vital Signs', icon: <BloodtypeIcon /> },
-        { id: 'medication', label: 'Medications', icon: <MedicationIcon /> },
-        { id: 'vaccination', label: 'Immunizations', icon: <VaccinesIcon /> },
-        { id: 'surgery', label: 'Surgical History', icon: <HistoryIcon /> },
-        { id: 'allergy', label: 'Allergies', icon: <WarningIcon /> },
-        { id: 'condition', label: 'Chronic Conditions', icon: <MedicalServicesIcon /> }
-    ];
-
-    useEffect(() => {
-        const fetchRecords = async () => {
-            try {
-                dispatch(setLoading(true));
-                
-                // Transform medical file data into records format
-                const transformedRecords = [];
-                const medicalFile = medicalFiles[0]; // Using first medical file for now
-
-                // Add lab results
-                medicalFile.labResults.forEach(result => {
-                    transformedRecords.push({
-                        id: `lab-${result.testName}`,
-                        title: result.testName,
-                        type: 'lab',
-                        date: result.date,
-                        doctor: result.doctorId,
-                        location: result.labName,
-                        description: `Results: ${result.results} ${result.unit} (Normal Range: ${result.normalRange})`,
-                        attachments: result.documents
-                    });
-                });
-
-                // Add imaging reports
-                medicalFile.imagingReports.forEach(report => {
-                    transformedRecords.push({
-                        id: `imaging-${report.type}`,
-                        title: `${report.type} - ${report.location}`,
-                        type: 'imaging',
-                        date: report.date,
-                        doctor: report.doctorId,
-                        location: 'Imaging Center',
-                        description: report.findings,
-                        attachments: report.images
-                    });
-                });
-
-                // Add vital signs
-                medicalFile.vitalSigns.forEach(signs => {
-                    transformedRecords.push({
-                        id: `vital-${signs.date}`,
-                        title: 'Vital Signs Check',
-                        type: 'vital',
-                        date: signs.date,
-                        doctor: 'Dr. Smith',
-                        location: 'Main Clinic',
-                        description: `BP: ${signs.bloodPressure}, HR: ${signs.heartRate}, Temp: ${signs.temperature}°C, RR: ${signs.respiratoryRate}, SpO2: ${signs.oxygenSaturation}%`,
-                        attachments: []
-                    });
-                });
-
-                // Add medications
-                medicalFile.medicationHistory.forEach(med => {
-                    transformedRecords.push({
-                        id: `med-${med.medicine}`,
-                        title: med.name,
-                        type: 'medication',
-                        date: med.startDate,
-                        doctor: med.prescribedBy,
-                        location: 'Pharmacy',
-                        description: `${med.dose} ${med.frequency} - ${med.instructions}`,
-                        attachments: []
-                    });
-                });
-
-                // Add immunizations
-                medicalFile.immunizations.forEach(immunization => {
-                    transformedRecords.push({
-                        id: `vacc-${immunization.name}`,
-                        title: immunization.name,
-                        type: 'vaccination',
-                        date: immunization.dateAdministered,
-                        doctor: immunization.administeredBy,
-                        location: 'Vaccination Center',
-                        description: `Manufacturer: ${immunization.manufacturer}, Batch: ${immunization.batchNumber}`,
-                        attachments: []
-                    });
-                });
-
-                // Add surgical history
-                medicalFile.surgicalHistory.forEach(surgery => {
-                    transformedRecords.push({
-                        id: `surgery-${surgery.name}`,
-                        title: surgery.name,
-                        type: 'surgery',
-                        date: surgery.date,
-                        doctor: surgery.surgeon,
-                        location: surgery.hospital,
-                        description: `${surgery.notes} - Outcome: ${surgery.outcome}`,
-                        attachments: []
-                    });
-                });
-
-                // Add allergies
-                medicalFile.allergies.forEach(allergy => {
-                    transformedRecords.push({
-                        id: `allergy-${allergy.name}`,
-                        title: allergy.name,
-                        type: 'allergy',
-                        date: new Date(),
-                        doctor: 'Dr. Smith',
-                        location: 'Main Clinic',
-                        description: `Severity: ${allergy.severity}, Reaction: ${allergy.reaction}`,
-                        attachments: []
-                    });
-                });
-
-                // Add chronic conditions
-                medicalFile.chronicConditions.forEach(condition => {
-                    transformedRecords.push({
-                        id: `condition-${condition.name}`,
-                        title: condition.name,
-                        type: 'condition',
-                        date: condition.diagnosisDate,
-                        doctor: 'Dr. Smith',
-                        location: 'Main Clinic',
-                        description: `Status: ${condition.status}, Notes: ${condition.notes}`,
-                        attachments: []
-                    });
-                });
-
-                // Sort records by date
-                transformedRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                dispatch(setMedicalRecords(transformedRecords));
-            } catch (error) {
-                dispatch(setError(error.message));
-            } finally {
-                dispatch(setLoading(false));
-            }
-        };
-
-        fetchRecords();
-    }, [dispatch]);
-
-    const handleTabChange = (event, newValue) => {
-        setSelectedTab(newValue);
-    };
-
-    const filteredRecords = selectedTab === 0 
-        ? records 
-        : records.filter(record => record.type === recordCategories[selectedTab].id);
-
-    const handleOpenModal = (record) => {
-        setSelectedRecord(record);
-        setOpenModal(true);
-    };
-    const handleCloseModal = () => {
-        setOpenModal(false);
-        setSelectedRecord(null);
-    };
-
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box sx={{ p: 3, textAlign: 'center' }}>
-                <Typography variant="h6" color="error" gutterBottom>
-                    Error Loading Medical Records
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    {error}
-                </Typography>
-            </Box>
-        );
-    }
-
-    const getRecordTypeColor = (type) => {
+const RecordCard = ({ record, onView, onDownload }) => {
+    const getTypeIcon = (type) => {
         switch (type.toLowerCase()) {
-            case 'lab':
-                return 'success';
+            case 'lab result':
+                return <FileType className="h-4 w-4" />;
+            case 'prescription':
+                return <FileArchive className="h-4 w-4" />;
             case 'imaging':
-                return 'info';
-            case 'vital':
-                return 'primary';
-            case 'medication':
-                return 'warning';
-            case 'vaccination':
-                return 'secondary';
-            case 'surgery':
-                return 'error';
-            case 'allergy':
-                return 'error';
-            case 'condition':
-                return 'primary';
+                return <FileImage className="h-4 w-4" />;
             default:
-                return 'default';
+                return <FileText className="h-4 w-4" />;
         }
     };
 
-    const getRecordTypeIcon = (type) => {
+    const getTypeColor = (type) => {
         switch (type.toLowerCase()) {
-            case 'lab':
-                return <ScienceIcon />;
+            case 'lab result':
+                return 'bg-info/10 text-info border-info';
+            case 'prescription':
+                return 'bg-success/10 text-success border-success';
             case 'imaging':
-                return <LocalHospitalIcon />;
-            case 'vital':
-                return <BloodtypeIcon />;
-            case 'medication':
-                return <MedicationIcon />;
-            case 'vaccination':
-                return <VaccinesIcon />;
-            case 'surgery':
-                return <HistoryIcon />;
-            case 'allergy':
-                return <WarningIcon />;
-            case 'condition':
-                return <MedicalServicesIcon />;
+                return 'bg-warning/10 text-warning border-warning';
+            case 'note':
+                return 'bg-secondary/10 text-secondary border-secondary';
             default:
-                return <FolderIcon />;
+                return 'bg-secondary/10 text-secondary border-secondary';
         }
     };
 
     return (
-        <Box
-            sx={{
-                pt: { xs: 3, sm: 4, md: 6 },
-                pb: { xs: 8, sm: 10, md: 12 },
-                maxWidth: '2000px',
-                margin: '0 auto',
-                minHeight: '100vh',
-                bgcolor: 'background.default',
-            }}
-        >
-            {/* Breadcrumbs */}
-            <Breadcrumbs 
-                separator={<NavigateNextIcon fontSize="small" />} 
-                aria-label="breadcrumb"
-                sx={{ mb: 5 }}
-            >
-                <Link
-                    underline="hover"
-                    sx={{ display: 'flex', alignItems: 'center' }}
-                    color="inherit"
-                    href="/patient/dashboard"
-                >
-                    <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-                    Dashboard
-                </Link>
-                <Typography
-                    sx={{ display: 'flex', alignItems: 'center' }}
-                    color="text.primary"
-                >
-                    <FolderIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-                    Medical Records
-                </Typography>
-            </Breadcrumbs>
-
-            <Typography 
-                variant="h4" 
-                gutterBottom 
-                sx={{ 
-                    mb: 5,
-                    fontWeight: 700,
-                    color: 'text.primary',
-                    letterSpacing: '-0.5px'
-                }}
-            >
-                Medical Records
-            </Typography>
-
-            {/* Tabs */}
-            <Box sx={{ 
-                borderBottom: 1, 
-                borderColor: 'divider', 
-                mb: 5,
-                '& .MuiTabs-root': {
-                    minHeight: '56px'
-                }
-            }}>
-                <Tabs 
-                    value={selectedTab} 
-                    onChange={handleTabChange}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                    allowScrollButtonsMobile
-                    sx={{
-                        '& .MuiTab-root': {
-                            minHeight: '56px',
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            fontSize: '0.95rem',
-                            px: 3,
-                            '&.Mui-selected': {
-                                fontWeight: 600
-                            }
-                        },
-                        '& .MuiTabs-indicator': {
-                            height: 3
-                        }
-                    }}
-                >
-                    {recordCategories.map((category, index) => (
-                        <Tab
-                            key={category.id}
-                            icon={category.icon}
-                            label={category.label}
-                            iconPosition="start"
-                        />
-                    ))}
-                </Tabs>
-            </Box>
-
-            {/* Records Grid */}
-            {filteredRecords.length === 0 ? (
-                <Box sx={{ 
-                    p: 6, 
-                    textAlign: 'center',
-                    bgcolor: 'background.paper',
-                    borderRadius: 3,
-                    boxShadow: 2,
-                    border: '1px solid',
-                    borderColor: 'divider'
-                }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No Records Found
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        No {recordCategories[selectedTab].label.toLowerCase()} available.
-                    </Typography>
-                </Box>
-            ) : (
-                <Grid 
-                    container 
-                    spacing={4} 
-                    sx={{ 
-                        justifyContent: 'center',
-                        '& .MuiGrid-item': {
-                            width: { xs: '100%' },
-                            '@media (min-width: 600px)': {
-                                width: 'calc(50% - 16px)',
-                            },
-                            '@media (min-width: 900px)': {
-                                width: 'calc(33.33% - 22px)',
-                            }
-                        }
-                    }}
-                >
-                    {filteredRecords.map((record) => (
-                        <Grid item key={record.id}>
-                            <Card 
-                                sx={{ 
-                                    height: '100%',
-                                    minHeight: { 
-                                        xs: '460px',
-                                        sm: '440px',
-                                        md: '420px',
-                                        lg: '400px'
-                                    },
-                                    maxHeight: { 
-                                        xs: '460px',
-                                        sm: '440px',
-                                        md: '420px',
-                                        lg: '400px'
-                                    },
-                                    transition: 'all 0.3s ease-in-out',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: theme.shadows[8],
-                                    },
-                                    borderRadius: 3,
-                                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    bgcolor: 'background.paper',
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                <CardHeader
-                                    avatar={
-                                        <Avatar 
-                                            sx={{ 
-                                                bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
-                                                color: theme.palette[getRecordTypeColor(record.type)].main,
-                                                width: 40,
-                                                height: 40
-                                            }}
-                                        >
-                                            {getRecordTypeIcon(record.type)}
-                                        </Avatar>
-                                    }
-                                    action={
-                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                            {record.attachments && record.attachments.length > 0 && (
-                                                <Tooltip title="Download Attachments">
-                                                    <IconButton 
-                                                        size="small"
-                                                        onClick={() => window.open(record.attachments[0], '_blank')}
-                                                        sx={{ 
-                                                            color: theme.palette[getRecordTypeColor(record.type)].main,
-                                                            '&:hover': {
-                                                                bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
-                                                            },
-                                                        }}
-                                                    >
-                                                        <DownloadIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-                                            <Tooltip title="View Details">
-                                                <IconButton 
-                                                    size="small"
-                                                    onClick={() => handleOpenModal(record)}
-                                                    sx={{ 
-                                                        color: theme.palette[getRecordTypeColor(record.type)].main,
-                                                        '&:hover': {
-                                                            bgcolor: alpha(theme.palette[getRecordTypeColor(record.type)].main, 0.1),
-                                                        },
-                                                    }}
-                                                >
-                                                    <VisibilityIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
-                                    }
-                                    title={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                                                {record.title}
-                                            </Typography>
-                                            <Chip 
-                                                label={record.type}
-                                                size="small"
-                                                color={getRecordTypeColor(record.type)}
-                                                sx={{ 
-                                                    ml: 1,
-                                                    fontWeight: 500,
-                                                    height: '24px'
-                                                }}
-                                            />
-                                        </Box>
-                                    }
-                                    subheader={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                            <EventIcon fontSize="small" color="action" />
-                                            <Typography variant="body2" color="text.secondary">
-                                                {new Date(record.date).toLocaleDateString()}
-                                            </Typography>
-                                        </Box>
-                                    }
-                                    sx={{
-                                        pb: 1.5,
-                                        px: 3,
-                                        pt: 3,
-                                        '& .MuiCardHeader-content': {
-                                            overflow: 'hidden'
-                                        }
-                                    }}
-                                />
-                                <Divider />
-                                <CardContent sx={{ 
-                                    flexGrow: 1, 
-                                    overflow: 'auto',
-                                    p: 3,
-                                    '&:last-child': {
-                                        pb: 3
-                                    }
-                                }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <PersonIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-                                            <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
-                                                Doctor: {record.doctor}
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <LocationOnIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-                                            <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
-                                                Location: {record.location}
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                                            <DescriptionIcon sx={{ color: 'text.secondary', mt: 0.5, fontSize: '1.2rem' }} />
-                                            <Typography variant="body1" sx={{ 
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 3,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                lineHeight: 1.5
-                                            }}>
-                                                {record.description}
-                                            </Typography>
-                                        </Box>
-                                        {record.attachments && record.attachments.length > 0 && (
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <AttachFileIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-                                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                                    {record.attachments.length} attachment(s)
-                                                </Typography>
-                                            </Box>
-                                        )}
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
-
-            {/* Modal for full card details */}
-            <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-                <DialogTitle>Record Details</DialogTitle>
-                <DialogContent dividers>
-                    {selectedRecord && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>{selectedRecord.title}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <b>Type:</b> {selectedRecord.type}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <b>Date:</b> {new Date(selectedRecord.date).toLocaleDateString()}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <b>Doctor:</b> {selectedRecord.doctor}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <b>Location:</b> {selectedRecord.location}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mt: 2 }}>{selectedRecord.description}</Typography>
-                            {selectedRecord.attachments && selectedRecord.attachments.length > 0 && (
-                                <Box sx={{ mt: 2 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        <b>Attachments:</b> {selectedRecord.attachments.length}
-                                    </Typography>
-                                    {/* You can add download/view links for attachments here if needed */}
-                                </Box>
+        <Card className="transition-all duration-300 hover:shadow-lg">
+            <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                            {getTypeIcon(record.type)}
+                            <h3 className="text-lg font-bold text-foreground">{record.title}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Added by <span className="font-semibold">Dr. {record.provider}</span>
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                            <div className="flex items-center gap-1">
+                                <CalendarIcon className="h-4 w-4 text-primary" />
+                                <span>{format(new Date(record.date), 'PPP')}</span>
+                            </div>
+                            {record.attachments?.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                    <FileText className="h-4 w-4 text-primary" />
+                                    <span>{record.attachments.length} attachment(s)</span>
+                                </div>
                             )}
-                        </Box>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseModal} color="primary">Close</Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+                        </div>
+                    </div>
+                    <div className="flex flex-col md:items-end gap-3">
+                        <Badge className={getTypeColor(record.type)}>
+                            {record.type}
+                        </Badge>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onView(record)}
+                                className="flex items-center gap-2"
+                                asChild
+                            >
+                                <Link href={`/patient/medical-records/${record.id}`}>
+                                    <Eye className="h-4 w-4" />
+                                    View
+                                </Link>
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => onDownload(record)}
+                                className="flex items-center gap-2"
+                            >
+                                <Download className="h-4 w-4" />
+                                Download
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
-export default MedicalRecordsPage; 
+const MedicalRecordsPage = () => {
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [dateFilter, setDateFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('all');
+
+    const handleViewRecord = (record) => {
+        router.push(`/patient/medical-records/${record.id}`);
+    };
+
+    const handleDownloadRecord = (record) => {
+        // Implement download functionality
+        console.log('Downloading record:', record);
+    };
+
+    const filteredRecords = medicalRecords.filter(record => {
+        const matchesSearch = record.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            record.provider.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = typeFilter === 'all' || record.type.toLowerCase() === typeFilter.toLowerCase();
+        const matchesDate = dateFilter === 'all' || record.date.includes(dateFilter);
+        const matchesTab = activeTab === 'all' || record.type.toLowerCase() === activeTab.toLowerCase();
+        return matchesSearch && matchesType && matchesDate && matchesTab;
+    });
+
+    return (
+        <div className="flex flex-col space-y-6">
+            <PageHeader
+                title="Medical Records"
+                description="Access and manage your medical history and documents."
+                breadcrumbs={[
+                    { label: 'Patient', href: '/patient/dashboard' },
+                    { label: 'Medical Records', href: '/patient/medical-records' }
+                ]}
+            />
+
+            {/* Actions Bar */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search records by title or provider..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 border-border focus:border-primary focus:ring-primary/20"
+                        />
+                    </div>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="lab result">Lab Results</SelectItem>
+                            <SelectItem value="prescription">Prescriptions</SelectItem>
+                            <SelectItem value="imaging">Imaging</SelectItem>
+                            <SelectItem value="note">Notes</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Date" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Time</SelectItem>
+                            <SelectItem value="2024">2024</SelectItem>
+                            <SelectItem value="2023">2023</SelectItem>
+                            <SelectItem value="2022">2022</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <Button asChild className="w-full md:w-auto">
+                    <Link href="/patient/medical-records/upload">
+                        <FileUp className="h-4 w-4 mr-2" />
+                        Upload Record
+                    </Link>
+                </Button>
+            </div>
+
+            <Separator />
+
+            {/* Records Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="all">All Records</TabsTrigger>
+                    <TabsTrigger value="lab result">Lab Results</TabsTrigger>
+                    <TabsTrigger value="prescription">Prescriptions</TabsTrigger>
+                    <TabsTrigger value="imaging">Imaging</TabsTrigger>
+                    <TabsTrigger value="note">Notes</TabsTrigger>
+                </TabsList>
+                <TabsContent value={activeTab} className="mt-6">
+                    {/* Records List */}
+                    <div className="grid gap-4">
+                        {filteredRecords.length > 0 ? (
+                            filteredRecords.map((record) => (
+                                <RecordCard
+                                    key={record.id}
+                                    record={record}
+                                    onView={handleViewRecord}
+                                    onDownload={handleDownloadRecord}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                                <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
+                                <h3 className="text-xl font-semibold mb-3 text-foreground">No Medical Records Found</h3>
+                                <p className="text-muted-foreground mb-6">
+                                    {searchQuery || typeFilter !== 'all' || dateFilter !== 'all'
+                                        ? 'Try adjusting your search or filters to find records.'
+                                        : 'You don\'t have any medical records here yet. Upload your first document!'}
+                                </p>
+                                <Button asChild>
+                                    <Link href="/patient/medical-records/upload">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Upload New Record
+                                    </Link>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+};
+
+export default MedicalRecordsPage;

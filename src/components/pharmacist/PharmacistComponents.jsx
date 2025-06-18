@@ -1,79 +1,62 @@
 'use client';
-
-import { Typography, Box, Paper, Card, CardContent, CardHeader, Button, Divider } from '@mui/material';
 import { ChevronRight } from 'lucide-react';
-
-/**
- * PharmacistPageContainer - Consistent container for pharmacist pages
- */
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Separator } from '@/components/ui/Separator';
 export function PharmacistPageContainer({ title, description, children }) {
     return (
-        <Box className="p-6">
-            <Box className="mb-6">
-                <Typography variant="h4" className="font-bold text-foreground">
+        <div className="p-6">
+            <div className="mb-6">
+                <h2 className="font-bold text-3xl text-foreground mb-2">
                     {title}
-                </Typography>
-                <Typography variant="body1" className="text-muted-foreground">
+                </h2>
+                <p className="text-muted-foreground text-lg">
                     {description}
-                </Typography>
-            </Box>
+                </p>
+            </div>
             {children}
-        </Box>
+        </div>
     );
 }
-
-/**
- * PharmacistCard - Consistent card component for pharmacist pages
- */
 export function PharmacistCard({ title, children, actions }) {
     return (
-        <Paper className="p-6 bg-card border border-border rounded-lg mb-6">
-            <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                <Typography variant="h6" className="font-semibold text-foreground mb-2 sm:mb-0">
+        <Card className="p-6 bg-card border border-border rounded-lg mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                <h3 className="font-semibold text-xl text-foreground mb-2 sm:mb-0">
                     {title}
-                </Typography>
+                </h3>
                 {actions && (
-                    <Box className="flex space-x-2">
+                    <div className="flex space-x-2">
                         {actions}
-                    </Box>
+                    </div>
                 )}
-            </Box>
-            <Divider className="mb-4" />
+            </div>
+            <Separator className="mb-4" />
             {children}
-        </Paper>
+        </Card>
     );
 }
-
-/**
- * DashboardCard component
- */
 export function DashboardCard({ title, icon: IconComponent, children, actionButton }) {
     return (
         <Card className="shadow-sm border border-border bg-card overflow-hidden">
-            <CardHeader
-                title={
-                    <Box className="flex items-center">
-                        {IconComponent && <IconComponent className="mr-2 text-primary" size={24} />}
-                        <Typography variant="h6" className="font-semibold text-foreground">
-                            {title}
-                        </Typography>
-                    </Box>
-                }
-                action={actionButton}
-                className="pb-0"
-            />
+            <CardHeader className="pb-0">
+                <CardTitle className="flex items-center text-lg font-semibold text-foreground">
+                    {IconComponent && <IconComponent className="mr-2 text-primary" size={20} />}
+                    {title}
+                </CardTitle>
+                {actionButton}
+            </CardHeader>
             <CardContent>
                 {children}
                 {actionButton && (
-                    <Box className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-end">
                         <Button
-                            variant="text"
-                            endIcon={<ChevronRight size={16} />}
-                            className="text-primary"
+                            variant="link"
+                            className="text-primary p-0 h-auto"
                         >
-                            View All
+                            View All <ChevronRight className="ml-1 w-4 h-4" />
                         </Button>
-                    </Box>
+                    </div>
                 )}
             </CardContent>
         </Card>

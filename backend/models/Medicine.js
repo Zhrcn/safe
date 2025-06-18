@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const medicineSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -76,7 +75,5 @@ const medicineSchema = new mongoose.Schema({
   timestamps: true,
   collection: 'Medicines'
 });
-
 const Medicine = mongoose.model('Medicine', medicineSchema);
-
 module.exports = Medicine;

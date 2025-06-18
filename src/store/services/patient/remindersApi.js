@@ -1,41 +1,36 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { API_BASE_URL } from '@/config/app-config';
+import { AUTH_CONSTANTS } from '@/config/constants';
+import { getToken } from '@/utils/tokenUtils';
 
-const TOKEN_STORAGE_KEY = 'safe_auth_token'; // Or import from tokenUtils if centralized
+const baseQuery = fetchBaseQuery({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+        const token = getToken();
+        if (token) {
+            headers.set('authorization', `Bearer ${token}`);
+        }
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+        headers.set('Origin', 'http://localhost:3000');
+        return headers;
+    },
+});
 
 export const remindersApi = createApi({
     reducerPath: 'remindersApi',
-    baseQuery: fetchBaseQuery({
-        baseUrl: API_BASE_URL,
-        prepareHeaders: (headers, { getState }) => {
-            let token = getState().user?.token;
-            if (!token) {
-                try {
-                    const tokenFromStorage = localStorage.getItem(TOKEN_STORAGE_KEY);
-                    if (tokenFromStorage) {
-                        token = tokenFromStorage;
-                    }
-                } catch (e) {
-                    console.warn('remindersApi/prepareHeaders: localStorage not accessible or token not found.');
-                }
-            }
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
-    }),
-    tagTypes: ['Reminder'],
+    baseQuery,
+    tagTypes: ['Reminders'],
     endpoints: (builder) => ({
         getReminders: builder.query({
             query: () => 'reminders',
             providesTags: (result) =>
                 result
                     ? [
-                          ...result.map(({ id }) => ({ type: 'Reminder', id })),
-                          { type: 'Reminder', id: 'LIST' },
+                          ...result.map(({ id }) => ({ type: 'Reminders', id })),
+                          { type: 'Reminders', id: 'LIST' },
                       ]
-                    : [{ type: 'Reminder', id: 'LIST' }],
+                    : [{ type: 'Reminders', id: 'LIST' }],
         }),
         createReminder: builder.mutation({
             query: (newReminder) => ({
@@ -43,7 +38,7 @@ export const remindersApi = createApi({
                 method: 'POST',
                 body: newReminder,
             }),
-            invalidatesTags: [{ type: 'Reminder', id: 'LIST' }],
+            invalidatesTags: [{ type: 'Reminders', id: 'LIST' }],
         }),
         updateReminder: builder.mutation({
             query: ({ id, ...patch }) => ({
@@ -51,14 +46,14 @@ export const remindersApi = createApi({
                 method: 'PATCH',
                 body: patch,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'Reminder', id }],
+            invalidatesTags: (result, error, { id }) => [{ type: 'Reminders', id }],
         }),
         deleteReminder: builder.mutation({
             query: (id) => ({
                 url: `reminders/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: [{ type: 'Reminder', id: 'LIST' }],
+            invalidatesTags: [{ type: 'Reminders', id: 'LIST' }],
         }),
     }),
 });

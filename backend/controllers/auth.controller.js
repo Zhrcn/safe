@@ -8,28 +8,21 @@ const asyncHandler = require('../utils/asyncHandler');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
-
-// Password validation regex
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-// Rate limiting for failed login attempts
 const loginAttempts = new Map();
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-
+const LOCKOUT_DURATION = 15 * 60 * 1000; 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '30d',
   });
 };
-
 const validatePassword = (password) => {
   if (!PASSWORD_REGEX.test(password)) {
     throw new Error('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
   }
   return true;
 };
-
 const checkLoginAttempts = (email) => {
   const attempts = loginAttempts.get(email);
   if (attempts && attempts.count >= MAX_LOGIN_ATTEMPTS) {
@@ -40,18 +33,15 @@ const checkLoginAttempts = (email) => {
     loginAttempts.delete(email);
   }
 };
-
 const recordFailedLogin = (email) => {
   const attempts = loginAttempts.get(email) || { count: 0, timestamp: Date.now() };
   attempts.count += 1;
   attempts.timestamp = Date.now();
   loginAttempts.set(email, attempts);
 };
-
 const resetLoginAttempts = (email) => {
   loginAttempts.delete(email);
 };
-
 exports.registerUser = asyncHandler(async (req, res, next) => {
   const {
     firstName,
@@ -71,31 +61,26 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
     professionalBio,
     workingHours
   } = req.body;
-
   if (!firstName || !lastName || !email || !password || !role) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide firstName, lastName, email, password, and role.'));
   }
   if (!['patient', 'doctor', 'pharmacist'].includes(role)) {
     return res.status(400).json(new ApiResponse(400, null, 'Invalid role specified.'));
   }
-
   try {
     validatePassword(password);
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, null, error.message));
   }
-
   const userExists = await User.findOne({ email });
   if (userExists) {
     return res.status(400).json(new ApiResponse(400, null, 'User with this email already exists.'));
   }
-
   const verificationToken = crypto.randomBytes(20).toString('hex');
   const hashedToken = crypto
     .createHash('sha256')
     .update(verificationToken)
     .digest('hex');
-
   const user = await User.create({
     firstName,
     lastName,
@@ -107,9 +92,8 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
     phoneNumber,
     address,
     verificationToken: hashedToken,
-    verificationExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    verificationExpires: Date.now() + 24 * 60 * 60 * 1000
   });
-
   if (user) {
     if (role === 'patient') {
       const medicalFile = await MedicalFile.create({ patientId: user._id });
@@ -143,7 +127,6 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
         workingHours
       });
     }
-
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
     const message = `
       <h1>Welcome to SAFE Healthcare!</h1>
@@ -152,78 +135,52 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
       <p>This link will expire in 24 hours.</p>
       <p>If you did not create an account, please ignore this email.</p>
     `;
-
     await sendEmail({
       email: user.email,
       subject: 'Email Verification - SAFE Healthcare',
       html: message
     });
-
     const token = generateToken(user._id, user.role);
     const userResponse = user.toObject();
     delete userResponse.password;
-
     res.status(201).json(new ApiResponse(201, { user: userResponse, token }, 'User registered successfully. Please check your email for verification.'));
   } else {
     res.status(400).json(new ApiResponse(400, null, 'Invalid user data. Registration failed.'));
   }
 });
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
 exports.loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide email and password.'));
   }
-
   try {
     checkLoginAttempts(email);
   } catch (error) {
     return res.status(429).json(new ApiResponse(429, null, error.message));
   }
-
   const user = await User.findOne({ email }).select('+password');
-
   if (!user) {
     recordFailedLogin(email);
     return res.status(401).json(new ApiResponse(401, null, 'Invalid Email or Password.'));
   }
-
   const isMatch = await user.matchPassword(password);
   if (!isMatch) {
     recordFailedLogin(email);
     return res.status(401).json(new ApiResponse(401, null, 'Invalid Email or Password.'));
   }
-
   resetLoginAttempts(email);
-
   const token = generateToken(user._id, user.role);
   const userResponse = user.toObject();
   delete userResponse.password;
-
   res.status(200).json(new ApiResponse(200, { user: userResponse, token }, 'Login successful.'));
 });
-
-// @desc    Get current logged in user
-// @route   GET /api/auth/me
-// @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   let user = await User.findById(req.user.id).select('-password');
-
   if (!user) {
     return res.status(404).json(new ApiResponse(404, null, 'User not found.'));
   }
-
-  // Convert the Mongoose document to a plain JavaScript object
-  // so we can add new properties easily.
   let userResponse = user.toObject();
-
-  // Conditionally fetch and attach role-specific details
   if (userResponse.role === 'patient') {
-    // Populate medicalFile if it's referenced in the Patient model
     const patientDetails = await Patient.findOne({ user: user._id }).populate('medicalFile');
     if (patientDetails) {
       userResponse.patientInfo = patientDetails.toObject();
@@ -239,13 +196,8 @@ exports.getMe = asyncHandler(async (req, res, next) => {
       userResponse.pharmacistInfo = pharmacistDetails.toObject();
     }
   }
-
   res.status(200).json(new ApiResponse(200, { user: userResponse }, 'User data fetched successfully.'));
 });
-
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
 exports.updateProfile = asyncHandler(async (req, res, next) => {
   const fieldsToUpdate = {
     firstName: req.body.firstName,
@@ -255,56 +207,38 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     address: req.body.address,
     gender: req.body.gender
   };
-
   const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
     new: true,
     runValidators: true
   });
-
   res.status(200).json(new ApiResponse(200, user, 'Profile updated successfully'));
 });
-
-// @desc    Change password
-// @route   POST /api/auth/change-password
-// @access  Private
 exports.changePassword = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id).select('+password');
-
   if (!(await user.matchPassword(req.body.currentPassword))) {
     return res.status(401).json(new ApiResponse(401, null, 'Current password is incorrect'));
   }
-
   try {
     validatePassword(req.body.newPassword);
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, null, error.message));
   }
-
   user.password = req.body.newPassword;
   await user.save();
-
   res.status(200).json(new ApiResponse(200, null, 'Password changed successfully'));
 });
-
-// @desc    Forgot password
-// @route   POST /api/auth/forgot-password
-// @access  Public
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-
   if (!user) {
     return res.status(404).json(new ApiResponse(404, null, 'There is no user with that email'));
   }
-
   const resetToken = crypto.randomBytes(20).toString('hex');
   user.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
   await user.save();
-
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
   const message = `
     <h1>Password Reset Request</h1>
@@ -313,98 +247,70 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     <p>This link will expire in 10 minutes.</p>
     <p>If you did not request this, please ignore this email.</p>
   `;
-
   await sendEmail({
     email: user.email,
     subject: 'Password Reset - SAFE Healthcare',
     html: message
   });
-
   res.status(200).json(new ApiResponse(200, null, 'Password reset email sent'));
 });
-
-// @desc    Reset password
-// @route   POST /api/auth/reset-password
-// @access  Public
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   const resetPasswordToken = crypto
     .createHash('sha256')
     .update(req.body.token)
     .digest('hex');
-
   const user = await User.findOne({
     resetPasswordToken,
     resetPasswordExpire: { $gt: Date.now() }
   });
-
   if (!user) {
     return res.status(400).json(new ApiResponse(400, null, 'Invalid or expired token'));
   }
-
   try {
     validatePassword(req.body.password);
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, null, error.message));
   }
-
   user.password = req.body.password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
-
   res.status(200).json(new ApiResponse(200, null, 'Password reset successful'));
 });
-
-// @desc    Verify email
-// @route   POST /api/auth/verify-email
-// @access  Public
 exports.verifyEmail = asyncHandler(async (req, res, next) => {
   const hashedToken = crypto
     .createHash('sha256')
     .update(req.body.token)
     .digest('hex');
-
   const user = await User.findOne({
     verificationToken: hashedToken,
     verificationExpires: { $gt: Date.now() }
   });
-
   if (!user) {
     return res.status(400).json(new ApiResponse(400, null, 'Invalid or expired verification token'));
   }
-
   user.isVerified = true;
   user.verificationToken = undefined;
   user.verificationExpires = undefined;
   await user.save();
-
   res.status(200).json(new ApiResponse(200, null, 'Email verified successfully'));
 });
-
-// @desc    Resend verification email
-// @route   POST /api/auth/resend-verification
-// @access  Public
 exports.resendVerificationEmail = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-
   if (!user) {
     return res.status(404).json(new ApiResponse(404, null, 'User not found'));
   }
-
   if (user.isVerified) {
     return res.status(400).json(new ApiResponse(400, null, 'Email already verified'));
   }
-
   const verificationToken = crypto.randomBytes(20).toString('hex');
   const hashedToken = crypto
     .createHash('sha256')
     .update(verificationToken)
     .digest('hex');
-
   user.verificationToken = hashedToken;
-  user.verificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  user.verificationExpires = Date.now() + 24 * 60 * 60 * 1000; 
   await user.save();
-
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
   const message = `
     <h1>Email Verification</h1>
@@ -413,19 +319,13 @@ exports.resendVerificationEmail = asyncHandler(async (req, res, next) => {
     <p>This link will expire in 24 hours.</p>
     <p>If you did not create an account, please ignore this email.</p>
   `;
-
   await sendEmail({
     email: user.email,
     subject: 'Email Verification - SAFE Healthcare',
     html: message
   });
-
   res.status(200).json(new ApiResponse(200, null, 'Verification email sent'));
 });
-
-// @desc    Logout user
-// @route   POST /api/auth/logout
-// @access  Private
 exports.logoutUser = asyncHandler(async (req, res, next) => {
   res.status(200).json(new ApiResponse(200, null, 'Logged out successfully'));
 });

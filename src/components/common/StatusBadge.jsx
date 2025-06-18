@@ -1,86 +1,1 @@
-'use client';
-
-import React from 'react';
-import { Chip, Tooltip } from '@mui/material';
-import {
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  XCircle,
-  HelpCircle,
-  CircleSlash,
-  CircleDashed
-} from 'lucide-react';
-
-/**
- * StatusBadge component for displaying status indicators with consistent styling
- * 
- * @param {Object} props
- * @param {string} props.status - The status value to display
- * @param {Object} props.statusMap - Custom mapping of status values to configurations
- * @param {string} props.size - Size of the badge: 'small', 'medium'
- * @param {boolean} props.showIcon - Whether to show the status icon
- * @param {string} props.className - Additional class names
- * @param {string} props.variant - Chip variant: 'filled', 'outlined'
- * @param {string} props.tooltipText - Optional tooltip text
- */
-export default function StatusBadge({
-  status,
-  statusMap = {},
-  size = 'small',
-  showIcon = true,
-  className = '',
-  variant = 'filled',
-  tooltipText = '',
-}) {
-  // Default status configurations
-  const defaultStatusMap = {
-    active: { color: 'success', icon: <CheckCircle size={14} />, label: 'Active' },
-    inactive: { color: 'default', icon: <CircleSlash size={14} />, label: 'Inactive' },
-    pending: { color: 'warning', icon: <Clock size={14} />, label: 'Pending' },
-    warning: { color: 'warning', icon: <AlertCircle size={14} />, label: 'Warning' },
-    error: { color: 'error', icon: <XCircle size={14} />, label: 'Error' },
-    completed: { color: 'success', icon: <CheckCircle size={14} />, label: 'Completed' },
-    cancelled: { color: 'error', icon: <CircleSlash size={14} />, label: 'Cancelled' },
-    scheduled: { color: 'info', icon: <Clock size={14} />, label: 'Scheduled' },
-    confirmed: { color: 'success', icon: <CheckCircle size={14} />, label: 'Confirmed' },
-    rejected: { color: 'error', icon: <XCircle size={14} />, label: 'Rejected' },
-    processing: { color: 'info', icon: <CircleDashed size={14} />, label: 'Processing' },
-    unknown: { color: 'default', icon: <HelpCircle size={14} />, label: 'Unknown' },
-  };
-
-  // Merge default and custom status maps
-  const mergedStatusMap = { ...defaultStatusMap, ...statusMap };
-
-  // Normalize status key
-  const normalizedStatus = status?.toLowerCase() || 'unknown';
-
-  // Get status config or fallback to unknown
-  const statusConfig = mergedStatusMap[normalizedStatus] || mergedStatusMap.unknown;
-
-  // Determine the label to display
-  const displayLabel = statusConfig.label || status;
-
-  // Create the chip element
-  const chipElement = (
-    <Chip
-      label={displayLabel}
-      color={statusConfig.color}
-      size={size}
-      variant={variant}
-      icon={showIcon ? statusConfig.icon : undefined}
-      className={`font-medium ${className}`}
-    />
-  );
-
-  // Wrap with tooltip if tooltip text is provided
-  if (tooltipText) {
-    return (
-      <Tooltip title={tooltipText} arrow>
-        {chipElement}
-      </Tooltip>
-    );
-  }
-
-  return chipElement;
-} 
+'use client';import React from 'react';import {  CheckCircle,  Clock,  AlertCircle,  XCircle,  HelpCircle,  CircleSlash,  CircleDashed} from 'lucide-react';import { cn } from '@/utils/styles';const defaultStatusMap = {  active: {    label: 'Active',    color: 'bg-green-500/10 text-green-500 border-green-500/20',    icon: CheckCircle  },  pending: {    label: 'Pending',    color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',    icon: Clock  },  warning: {    label: 'Warning',    color: 'bg-orange-500/10 text-orange-500 border-orange-500/20',    icon: AlertCircle  },  error: {    label: 'Error',    color: 'bg-red-500/10 text-red-500 border-red-500/20',    icon: XCircle  },  unknown: {    label: 'Unknown',    color: 'bg-gray-500/10 text-gray-500 border-gray-500/20',    icon: HelpCircle  },  disabled: {    label: 'Disabled',    color: 'bg-gray-500/10 text-gray-500 border-gray-500/20',    icon: CircleSlash  },  loading: {    label: 'Loading',    color: 'bg-blue-500/10 text-blue-500 border-blue-500/20',    icon: CircleDashed  }};export default function StatusBadge({  status,  statusMap = {},  size = 'small',  showIcon = true,  className = '',  variant = 'filled',  tooltipText = ''}) {  const statusConfig = {    ...defaultStatusMap,    ...statusMap  }[status.toLowerCase()] || defaultStatusMap.unknown;  const Icon = statusConfig.icon;  const sizeClasses = {    small: 'text-xs px-2 py-0.5',    medium: 'text-sm px-2.5 py-1'  };  const badge = (    <div      className={cn(        'inline-flex items-center gap-1.5 rounded-full border font-medium',        sizeClasses[size],        variant === 'filled' ? statusConfig.color : 'bg-transparent border-current',        className      )}    >      {showIcon && <Icon className="h-3.5 w-3.5" />}      <span>{statusConfig.label}</span>    </div>  );  if (tooltipText) {    return (      <div className="group relative inline-block">        {badge}        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10">          {tooltipText}        </div>      </div>    );  }  return badge;} 

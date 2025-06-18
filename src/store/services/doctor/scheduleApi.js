@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
 export const scheduleApi = createApi({
     reducerPath: 'scheduleApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5001/api/doctors/schedule',
+        baseUrl: 'http://localhost:3000',
         prepareHeaders: (headers, { getState }) => {
             const token = getState().auth.token;
             if (token) {
@@ -71,7 +70,6 @@ export const scheduleApi = createApi({
         }),
     }),
 });
-
 export const {
     useGetScheduleQuery,
     useUpdateAvailabilityMutation,

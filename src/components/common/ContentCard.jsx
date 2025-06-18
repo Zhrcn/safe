@@ -1,66 +1,1 @@
-'use client';
-
-import React from 'react';
-import { Box, Typography, IconButton, Tooltip } from '@mui/material';
-import { Info } from 'lucide-react';
-import Card from '@/components/ui/Card';
-
-/**
- * Enhanced ContentCard component for displaying content in a card layout
- * 
- * @param {Object} props
- * @param {string} props.title - The card title
- * @param {string} props.subtitle - The card subtitle
- * @param {React.ReactNode} props.icon - Icon to display next to the title
- * @param {React.ReactNode} props.actions - Actions to display in the header
- * @param {React.ReactNode} props.children - Card content
- * @param {string} props.className - Additional class names
- * @param {boolean} props.hoverable - Whether the card should have hover effects
- * @param {Function} props.onClick - Click handler for the entire card
- * @param {string} props.infoTooltip - Info tooltip text
- * @param {boolean} props.noPadding - Whether to remove padding from the content area
- * @param {string} props.variant - Card variant: 'default', 'outlined', or 'elevated'
- * @param {boolean} props.bordered - Whether to add a border to the card
- */
-export default function ContentCard({ 
-  title, 
-  subtitle, 
-  icon, 
-  actions,
-  children,
-  className = '',
-  hoverable = false,
-  onClick,
-  infoTooltip,
-  noPadding = false,
-  variant = 'default',
-  bordered = false
-}) {
-  return (
-    <Card
-      title={title}
-      subtitle={subtitle}
-      icon={icon && (
-        <Box className="flex items-center">
-          {icon}
-          {infoTooltip && (
-            <Tooltip title={infoTooltip} arrow>
-              <IconButton size="small" className="ml-1 text-muted-foreground">
-                <Info size={16} />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      )}
-      actions={actions}
-      className={className}
-      hoverable={hoverable}
-      onClick={onClick}
-      noPadding={noPadding}
-      variant={variant}
-      bordered={bordered}
-    >
-      {children}
-    </Card>
-  );
-} 
+'use client';import React from 'react';import { Info } from 'lucide-react';import Card from '@/components/ui/Card';import { cn } from '@/utils/styles';export default function ContentCard({   title,   subtitle,   icon,   actions,  children,  className = '',  hoverable = false,  onClick,  infoTooltip,  noPadding = false,  variant = 'default',  bordered = false}) {  return (    <Card      className={cn(        'transition-all duration-200',        hoverable && 'hover:shadow-lg hover:translate-y-[-2px]',        className      )}      variant={variant}      bordered={bordered}      noPadding={noPadding}      onClick={onClick}    >      {(title || subtitle || icon || actions || infoTooltip) && (        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-border">          <div className="flex items-start gap-3">            {icon && (              <div className="text-primary">                {icon}              </div>            )}            <div className="space-y-1">              {title && (                <div className="flex items-center gap-2">                  <h3 className="text-lg font-semibold text-foreground">                    {title}                  </h3>                  {infoTooltip && (                    <div className="group relative">                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-10">                        {infoTooltip}                      </div>                    </div>                  )}                </div>              )}              {subtitle && (                <p className="text-sm text-muted-foreground">                  {subtitle}                </p>              )}            </div>          </div>          {actions && (            <div className="flex items-center gap-2">              {actions}            </div>          )}        </div>      )}      <div className={cn(        'transition-colors duration-200',        !noPadding && 'p-6'      )}>        {children}      </div>    </Card>  );} 

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const DoctorSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId,
@@ -64,10 +63,8 @@ const DoctorSchema = new mongoose.Schema({
   timestamps: true,
   collection: 'Doctors'
 });
-
 DoctorSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
-
 module.exports = mongoose.model('Doctor', DoctorSchema);

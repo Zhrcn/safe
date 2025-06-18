@@ -3,10 +3,9 @@ export * from './api';
 export * from './appointments';
 export * from './notifications';
 export * from './constants';
-
 export const CONFIG = {
   API: {
-    BASE_URL: 'http://localhost:5001/api'
+    BASE_URL: 'http://localhost:5001',
   },
   APP: {
     NAME: 'SAFE Health',

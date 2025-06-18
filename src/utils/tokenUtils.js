@@ -1,18 +1,14 @@
 import { jwtDecode } from 'jwt-decode';
 import { AUTH_CONSTANTS } from '@/config/constants';
+import { ROLES } from '@/config/app-config';
 
-// Token name from environment variable
-const TOKEN_KEY = process.env.NEXT_PUBLIC_TOKEN_NAME || 'safe_auth_token';
-
-// Check if we're in a browser environment
+const TOKEN_KEY = 'safe_auth_token';
 const isBrowser = typeof window !== 'undefined';
 
-// Clean up any existing tokens with different keys
 const cleanupOldTokens = () => {
     if (!isBrowser) return;
     localStorage.removeItem('token');
     localStorage.removeItem('auth_token');
-    // Add any other old token keys here if needed
 };
 
 export const verifyToken = (token) => {
@@ -26,43 +22,29 @@ export const verifyToken = (token) => {
   }
 };
 
-/**
- * Set the authentication token in localStorage
- * @param {string} token - The JWT token to store
- */
 export const setToken = (token) => {
-    if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
-    } else {
-        localStorage.removeItem(TOKEN_KEY);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, token);
     }
 };
 
-/**
- * Get the authentication token from localStorage
- * @returns {string|null} The stored token or null if not found
- */
 export const getToken = () => {
-    return localStorage.getItem(TOKEN_KEY);
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY);
+    }
+    return null;
 };
 
-/**
- * Remove the authentication token from localStorage
- */
 export const removeToken = () => {
-    localStorage.removeItem(TOKEN_KEY);
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem(AUTH_CONSTANTS.TOKEN_KEY);
+    }
 };
 
-/**
- * Check if a token exists and is valid
- * @returns {boolean} True if token exists and is valid
- */
 export const hasValidToken = () => {
     const token = getToken();
     if (!token) return false;
-    
     try {
-        // Check if token is expired
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.exp * 1000 > Date.now();
     } catch (error) {
@@ -70,33 +52,34 @@ export const hasValidToken = () => {
     }
 };
 
-// Get token expiration time
 export const getTokenExpiration = () => {
     const token = getToken();
     if (!token) return null;
-
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.exp * 1000; // Convert to milliseconds
+        return payload.exp * 1000; 
     } catch (error) {
         console.error('Error getting token expiration:', error);
         return null;
     }
 };
 
-// Check if token is about to expire (within 5 minutes)
 export const isTokenExpiringSoon = () => {
     const expirationTime = getTokenExpiration();
     if (!expirationTime) return true;
-
-    const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const fiveMinutes = 5 * 60 * 1000; 
     return expirationTime - Date.now() < fiveMinutes;
 };
 
 export const getUserData = () => {
   try {
     const userData = localStorage.getItem(AUTH_CONSTANTS.USER_STORAGE_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    const parsedData = JSON.parse(userData);
+    return {
+      ...parsedData,
+      role: parsedData.role?.toLowerCase() || ROLES.PATIENT
+    };
   } catch (error) {
     console.error('Error getting user data from storage:', error);
     return null;
@@ -105,7 +88,11 @@ export const getUserData = () => {
 
 export const setUserData = (userData) => {
   try {
-    localStorage.setItem(AUTH_CONSTANTS.USER_STORAGE_KEY, JSON.stringify(userData));
+    const dataToStore = {
+      ...userData,
+      role: userData.role?.toLowerCase() || ROLES.PATIENT
+    };
+    localStorage.setItem(AUTH_CONSTANTS.USER_STORAGE_KEY, JSON.stringify(dataToStore));
   } catch (error) {
     console.error('Error setting user data in storage:', error);
   }
@@ -119,10 +106,9 @@ export const removeUserData = () => {
   }
 };
 
-// Check if token exists
 export const hasToken = () => {
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(TOKEN_KEY);
         console.log('Checking token:', !!token);
         return !!token;
     }

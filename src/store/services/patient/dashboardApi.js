@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'http://localhost:5001/api/v1/patients',
+  baseUrl: 'http://localhost:5001',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
@@ -11,7 +10,6 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
-
 export const dashboardApi = createApi({
   reducerPath: 'dashboardApi',
   baseQuery,
@@ -36,7 +34,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['Dashboard']
     }),
-
     getUpcomingAppointments: builder.query({
       query: () => ({
         url: '/appointments/upcoming',
@@ -56,7 +53,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['Appointments']
     }),
-
     getActiveMedications: builder.query({
       query: () => ({
         url: '/medications/active',
@@ -76,7 +72,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['Medications']
     }),
-
     getMedicalFile: builder.query({
       query: () => ({
         url: '/medical-file',
@@ -96,7 +91,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['MedicalFile']
     }),
-
     getRecentLabResults: builder.query({
       query: () => ({
         url: '/lab-results/recent',
@@ -116,7 +110,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['MedicalFile']
     }),
-
     getVitalSigns: builder.query({
       query: () => ({
         url: '/vital-signs',
@@ -136,7 +129,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['MedicalFile']
     }),
-
     getChronicConditions: builder.query({
       query: () => ({
         url: '/chronic-conditions',
@@ -156,7 +148,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['MedicalFile']
     }),
-
     getAllergies: builder.query({
       query: () => ({
         url: '/allergies',
@@ -176,7 +167,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['MedicalFile']
     }),
-
     getRecentMessages: builder.query({
       query: () => ({
         url: '/messages/recent',
@@ -196,7 +186,6 @@ export const dashboardApi = createApi({
       },
       providesTags: ['Messages']
     }),
-
     getRecentConsultations: builder.query({
       query: () => ({
         url: '/consultations/recent',
@@ -218,7 +207,6 @@ export const dashboardApi = createApi({
     }),
   }),
 });
-
 export const {
   useGetDashboardSummaryQuery,
   useGetUpcomingAppointmentsQuery,

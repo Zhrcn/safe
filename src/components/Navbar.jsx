@@ -1,23 +1,12 @@
 'use client';
-
-import { useState } from 'react';
-import { 
-  AppBar, 
-  Box, 
-  Toolbar, 
-  IconButton, 
-  Typography, 
-  Menu, 
-  Container, 
-  Button, 
-  MenuItem,
-  useScrollTrigger,
-  Slide
-} from '@mui/material';
+import { useState, useEffect } from 'react';
 import { Menu as MenuIcon, X } from 'lucide-react';
-import { useTheme } from './ThemeProviderWrapper';
 import Link from 'next/link';
 import { APP_NAME } from '@/config/app-config';
+import { Button } from '@/components/ui/Button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/Sheet';
+import { cn } from '@/lib/utils';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const pages = [
   { name: 'Features', href: '#features' },
@@ -25,31 +14,35 @@ const pages = [
   { name: 'About', href: '#about' },
 ];
 
-function HideOnScroll(props) {
-  const { children } = props;
-  const trigger = useScrollTrigger();
+function HideOnScroll({ children }) {
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsVisible(currentScrollY < lastScrollY || currentScrollY < 10);
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <Slide appear={false} direction="down" in={!trigger}>
+    <div className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-transform duration-300",
+      isVisible ? "translate-y-0" : "-translate-y-full"
+    )}>
       {children}
-    </Slide>
+    </div>
   );
 }
 
 export default function Navbar() {
-  const [anchorElNav, setAnchorElNav] = useState(null);
-  const { mode, toggleTheme } = useTheme();
-
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const scrollToSection = (sectionId) => {
-    handleCloseNavMenu();
+    setIsMenuOpen(false);
     const section = document.getElementById(sectionId.substring(1));
     if (section) {
       section.scrollIntoView({ behavior: 'smooth' });
@@ -58,134 +51,77 @@ export default function Navbar() {
 
   return (
     <HideOnScroll>
-      <AppBar position="sticky" elevation={0} sx={{
-        backdropFilter: 'blur(10px)',
-        backgroundColor: mode === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      }}>
-        <Container maxWidth="lg">
-          <Toolbar disableGutters>
-            {/* Logo - Desktop */}
-            <Typography
-              variant="h6"
-              noWrap
-              component="a"
+      <nav className="sticky top-0 backdrop-blur-md bg-background/70 border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link
               href="/"
-              sx={{
-                mr: 2,
-                display: { xs: 'none', md: 'flex' },
-                fontWeight: 700,
-                color: 'primary.main',
-                textDecoration: 'none',
-              }}
+              className="flex items-center text-xl font-bold text-primary hover:text-primary/90 transition-colors"
             >
               {APP_NAME}
-            </Typography>
+            </Link>
 
-            {/* Mobile menu */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-              <IconButton
-                size="large"
-                aria-label="menu"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleOpenNavMenu}
-                color="inherit"
-                sx={{ color: 'text.primary' }}
-              >
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElNav}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
-                open={Boolean(anchorElNav)}
-                onClose={handleCloseNavMenu}
-                sx={{
-                  display: { xs: 'block', md: 'none' },
-                  '& .MuiPaper-root': {
-                    backgroundColor: mode === 'dark' ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(8px)',
-                  },
-                }}
-              >
-                {pages.map((page) => (
-                  <MenuItem key={page.name} onClick={() => scrollToSection(page.href)}>
-                    <Typography textAlign="center" sx={{ color: 'text.primary' }}>{page.name}</Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Box>
-
-            {/* Logo - Mobile */}
-            <Typography
-              variant="h6"
-              noWrap
-              component="a"
-              href="/"
-              sx={{
-                mr: 2,
-                display: { xs: 'flex', md: 'none' },
-                flexGrow: 1,
-                fontWeight: 700,
-                color: 'primary.main',
-                textDecoration: 'none',
-              }}
-            >
-              {APP_NAME}
-            </Typography>
-
-            {/* Desktop menu */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+            <div className="hidden md:flex md:items-center md:space-x-4">
               {pages.map((page) => (
                 <Button
                   key={page.name}
+                  variant="ghost"
                   onClick={() => scrollToSection(page.href)}
-                  sx={{
-                    mx: 1,
-                    color: 'text.primary',
-                    display: 'block',
-                    '&:hover': { backgroundColor: 'primary.main', color: 'primary.contrastText' },
-                  }}
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   {page.name}
                 </Button>
               ))}
-            </Box>
+            </div>
 
-            {/* Auth buttons */}
-            <Box sx={{ flexGrow: 0 }}>
-              <Button
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 1, display: { xs: 'none', sm: 'inline-flex' }, borderColor: 'primary.main', color: 'primary.main' }}
-                component={Link}
-                href="/login"
-              >
-                Login
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                href="/register"
-                sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}
-              >
-                Sign Up
-              </Button>
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
+            <div className="flex items-center space-x-2">
+              <ThemeSwitcher />
+
+              <div className="hidden sm:flex sm:items-center sm:space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/register">Sign Up</Link>
+                </Button>
+              </div>
+
+              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <MenuIcon className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col space-y-4 mt-4">
+                    {pages.map((page) => (
+                      <Button
+                        key={page.name}
+                        variant="ghost"
+                        onClick={() => scrollToSection(page.href)}
+                        className="justify-start"
+                      >
+                        {page.name}
+                      </Button>
+                    ))}
+                    <div className="flex flex-col space-y-2 pt-4 border-t">
+                      <Button variant="outline" asChild>
+                        <Link href="/login">Login</Link>
+                      </Button>
+                      <Button asChild>
+                        <Link href="/register">Sign Up</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+        </div>
+      </nav>
     </HideOnScroll>
   );
 } 

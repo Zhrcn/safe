@@ -4,9 +4,8 @@ import { userApi } from './services/user/userApi';
 import { patientApi } from './services/patient/patientApi';
 import { api } from './services/api';
 import { authApi } from './services/user/authApi';
-import authReducer from './slices/user/authSlice';
-
-// Patient
+import { doctorApi } from './services/doctor/doctorApi';
+import authReducer from './slices/auth/authSlice';
 import patientProfileReducer from './slices/patient/profileSlice';
 import patientDashboardReducer from './slices/patient/dashboardSlice';
 import patientAppointmentsReducer from './slices/patient/appointmentsSlice';
@@ -16,28 +15,20 @@ import patientMedicationsReducer from './slices/patient/medicationsSlice';
 import patientConversationsReducer from './slices/patient/conversationsSlice';
 import patientProvidersReducer from './slices/patient/providersSlice';
 import medicalRecordsReducer from './slices/patient/medicalRecordsSlice';
-
-// Doctor
 import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
 import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice';
 import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
 import doctorAppointmentsReducer from './slices/doctor/doctorAppointmentsSlice';
-
-// UI
 import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
     reducer: {
-        // APIs
         [userApi.reducerPath]: userApi.reducer,
         [patientApi.reducerPath]: patientApi.reducer,
         [api.reducerPath]: api.reducer,
         [authApi.reducerPath]: authApi.reducer,
-        
-        // Auth
+        [doctorApi.reducerPath]: doctorApi.reducer,
         auth: authReducer,
-        
-        // Patient
         patientProfile: patientProfileReducer,
         patientDashboard: patientDashboardReducer,
         patientAppointments: patientAppointmentsReducer,
@@ -47,14 +38,10 @@ export const store = configureStore({
         patientConversations: patientConversationsReducer,
         patientProviders: patientProvidersReducer,
         medicalRecords: medicalRecordsReducer,
-        
-        // Doctor
         doctorPatients: doctorPatientsReducer,
         doctorConsultations: doctorConsultationsReducer,
         doctorPrescriptions: doctorPrescriptionsReducer,
         doctorAppointments: doctorAppointmentsReducer,
-        
-        // UI
         ui: uiReducer,
     },
     middleware: (getDefaultMiddleware) =>
@@ -62,7 +49,8 @@ export const store = configureStore({
             userApi.middleware,
             patientApi.middleware,
             api.middleware,
-            authApi.middleware
+            authApi.middleware,
+            doctorApi.middleware
         ),
 });
 

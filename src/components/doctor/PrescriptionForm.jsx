@@ -1,485 +1,1 @@
-'use client';
-
-import { useState } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  Paper,
-  Alert,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Autocomplete,
-  FormHelperText,
-  Divider,
-  Card,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
-} from '@mui/material';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { X, Plus, Trash2, Edit2, Info } from 'lucide-react';
-
-const commonMedications = [
-  { name: 'Lisinopril 10mg', type: 'Tablet', dosage: '10mg', frequency: ['Once daily', 'Twice daily'] },
-  { name: 'Metformin 500mg', type: 'Tablet', dosage: '500mg', frequency: ['Twice daily', 'Three times daily'] },
-  { name: 'Atorvastatin 10mg', type: 'Tablet', dosage: '10mg', frequency: ['Once daily'] },
-  { name: 'Levothyroxine 50mcg', type: 'Tablet', dosage: '50mcg', frequency: ['Once daily'] },
-  { name: 'Amlodipine 5mg', type: 'Tablet', dosage: '5mg', frequency: ['Once daily'] },
-  { name: 'Omeprazole 20mg', type: 'Capsule', dosage: '20mg', frequency: ['Once daily'] },
-  { name: 'Simvastatin 20mg', type: 'Tablet', dosage: '20mg', frequency: ['Once daily'] },
-  { name: 'Metoprolol 25mg', type: 'Tablet', dosage: '25mg', frequency: ['Twice daily'] },
-  { name: 'Albuterol 90mcg', type: 'Inhaler', dosage: '90mcg', frequency: ['As needed'] },
-  { name: 'Sertraline 50mg', type: 'Tablet', dosage: '50mg', frequency: ['Once daily'] }
-];
-
-const defaultFrequencyOptions = [
-  'Once daily',
-  'Twice daily',
-  'Three times daily',
-  'As needed',
-  'Before meals',
-  'After meals',
-  'At bedtime'
-];
-
-const prescriptionSchema = z.object({
-  medications: z.array(z.object({
-    name: z.string(),
-    dosage: z.string(),
-    frequency: z.string(),
-    type: z.string(),
-    instructions: z.string().optional()
-  })).min(1, 'At least one medication is required'),
-  instructions: z.string().min(5, 'Instructions must be at least 5 characters'),
-  duration: z.string().min(1, 'Duration is required'),
-  notes: z.string().optional()
-});
-
-export default function PrescriptionForm({ patientId, patientName, onClose, onSuccess }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [medications, setMedications] = useState([]);
-  const [newMedication, setNewMedication] = useState('');
-  const [medicationError, setMedicationError] = useState('');
-  const [newFrequency, setNewFrequency] = useState('');
-  const [newDosage, setNewDosage] = useState('');
-  const [editIndex, setEditIndex] = useState(null);
-  const [editInstructions, setEditInstructions] = useState('');
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue
-  } = useForm({
-    resolver: zodResolver(prescriptionSchema),
-    defaultValues: {
-      medications: [],
-      instructions: '',
-      duration: '',
-      notes: ''
-    }
-  });
-
-  // Auto-fill frequency/dosage when medication is selected
-  const handleMedicationChange = (value) => {
-    setNewMedication(value || '');
-    const medObj = commonMedications.find(m => m.name === value);
-    if (medObj) {
-      setNewDosage(medObj.dosage);
-      setNewFrequency(medObj.frequency[0] || '');
-    } else {
-      setNewDosage('');
-      setNewFrequency('');
-    }
-  };
-
-  const handleAddMedication = () => {
-    if (!newMedication || newMedication.trim() === '') {
-      setMedicationError('Please select a medication');
-      return;
-    }
-    const medObj = commonMedications.find(m => m.name === newMedication);
-    if (!medObj) {
-      setMedicationError('Please select a valid medication');
-      return;
-    }
-    if (!newFrequency) {
-      setMedicationError('Please select a frequency');
-      return;
-    }
-    const updatedMedications = [
-      ...medications,
-      { ...medObj, frequency: newFrequency, dosage: newDosage || medObj.dosage, instructions: '' }
-    ];
-    setMedications(updatedMedications);
-    setValue('medications', updatedMedications);
-    setNewMedication('');
-    setNewFrequency('');
-    setNewDosage('');
-    setMedicationError('');
-  };
-
-  const handleRemoveMedication = (index) => {
-    const updatedMedications = medications.filter((_, i) => i !== index);
-    setMedications(updatedMedications);
-    setValue('medications', updatedMedications);
-  };
-
-  // Edit medication instructions modal
-  const handleEditMedication = (index) => {
-    setEditIndex(index);
-    setEditInstructions(medications[index].instructions || '');
-    setEditDialogOpen(true);
-  };
-  const handleEditDialogSave = () => {
-    const updatedMedications = [...medications];
-    updatedMedications[editIndex].instructions = editInstructions;
-    setMedications(updatedMedications);
-    setValue('medications', updatedMedications);
-    setEditDialogOpen(false);
-  };
-
-  const handleReset = () => {
-    reset();
-    setMedications([]);
-    setNewMedication('');
-    setNewFrequency('');
-    setNewDosage('');
-    setError('');
-    setSuccess('');
-  };
-
-  const handleSaveDraft = () => {
-    setSuccess('Draft saved (not submitted)');
-    setTimeout(() => setSuccess(''), 1500);
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      setIsSubmitting(true);
-      setError('');
-      if (data.medications.length === 0) {
-        setError('At least one medication is required');
-        return;
-      }
-      setSuccess('Prescription created successfully');
-      reset();
-      setMedications([]);
-      if (onSuccess) onSuccess(data);
-      setTimeout(() => {
-        if (onClose) onClose();
-      }, 1500);
-    } catch (err) {
-      setError('An error occurred while creating the prescription');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Section header helper
-  const SectionHeader = ({ icon, children }) => (
-    <Box display="flex" alignItems="center" gap={1} mb={1} mt={3}>
-      {icon}
-      <Typography variant="subtitle1" fontWeight={600}>{children}</Typography>
-    </Box>
-  );
-
-  return (
-    <Box maxWidth={540} mx="auto">
-      <Card elevation={3} sx={{ borderRadius: 3, p: 0, background: '#fafbfc' }}>
-        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box>
-              <Typography variant="h6" fontWeight={700} mb={0.5}>
-                New Prescription
-              </Typography>
-              {patientName && (
-                <Typography variant="body2" color="text.secondary">
-                  for {patientName}
-                </Typography>
-              )}
-            </Box>
-            {onClose && (
-              <IconButton onClick={onClose} size="small">
-                <X size={20} />
-              </IconButton>
-            )}
-          </Box>
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-          )}
-          {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
-          )}
-
-          <SectionHeader icon={<Info size={18} color="#1976d2" />}>
-            Medications
-          </SectionHeader>
-          <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, boxShadow: 'none', borderRadius: 2 }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ background: '#f5f7fa' }}>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Dosage</TableCell>
-                  <TableCell>Frequency</TableCell>
-                  <TableCell align="center">Edit</TableCell>
-                  <TableCell align="right">Remove</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {medications.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                      No medications added
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  medications.map((med, idx) => (
-                    <TableRow key={idx} hover sx={{ transition: 'background 0.2s' }}>
-                      <TableCell>{med.name}</TableCell>
-                      <TableCell>{med.type}</TableCell>
-                      <TableCell>{med.dosage}</TableCell>
-                      <TableCell>{med.frequency}</TableCell>
-                      <TableCell align="center">
-                        <IconButton size="small" onClick={() => handleEditMedication(idx)}>
-                          <Edit2 size={16} />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton size="small" onClick={() => handleRemoveMedication(idx)}>
-                          <Trash2 size={16} />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Grid container spacing={1} alignItems="center" mb={2}>
-            <Grid item xs={12} sm={5}>
-              <Autocomplete
-                options={commonMedications.map(m => m.name)}
-                value={newMedication}
-                onChange={(_, value) => handleMedicationChange(value)}
-                onInputChange={(_, value) => handleMedicationChange(value)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Medication" size="small" />
-                )}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Frequency</InputLabel>
-                <Select
-                  value={newFrequency}
-                  label="Frequency"
-                  onChange={e => setNewFrequency(e.target.value)}
-                >
-                  {(commonMedications.find(m => m.name === newMedication)?.frequency || defaultFrequencyOptions).map(opt => (
-                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} sm={2}>
-              <TextField
-                label="Dosage"
-                size="small"
-                value={newDosage}
-                onChange={e => setNewDosage(e.target.value)}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                size="medium"
-                sx={{ minWidth: 0, px: 0, fontWeight: 600 }}
-                onClick={handleAddMedication}
-                startIcon={<Plus size={18} />}
-                disabled={!newMedication || !newFrequency}
-              >
-                Add
-              </Button>
-            </Grid>
-            {medicationError && (
-              <Grid item xs={12}>
-                <FormHelperText error>{medicationError}</FormHelperText>
-              </Grid>
-            )}
-          </Grid>
-
-          <Divider sx={{ my: 3 }} />
-
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <SectionHeader icon={<Info size={18} color="#1976d2" />}>General Instructions</SectionHeader>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Controller
-                  name="instructions"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="General Instructions"
-                      variant="outlined"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      error={!!errors.instructions}
-                      helperText={errors.instructions?.message}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="duration"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth variant="outlined" error={!!errors.duration} disabled={isSubmitting} size="small">
-                      <InputLabel>Duration</InputLabel>
-                      <Select
-                        {...field}
-                        label="Duration"
-                      >
-                        <MenuItem value="7 days">7 days</MenuItem>
-                        <MenuItem value="14 days">14 days</MenuItem>
-                        <MenuItem value="30 days">30 days</MenuItem>
-                        <MenuItem value="60 days">60 days</MenuItem>
-                        <MenuItem value="90 days">90 days</MenuItem>
-                        <MenuItem value="As needed">As needed</MenuItem>
-                        <MenuItem value="Until finished">Until finished</MenuItem>
-                        <MenuItem value="Indefinitely">Indefinitely</MenuItem>
-                      </Select>
-                      {errors.duration && (
-                        <FormHelperText>{errors.duration.message}</FormHelperText>
-                      )}
-                    </FormControl>
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="notes"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Additional Notes (Optional)"
-                      variant="outlined"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      error={!!errors.notes}
-                      helperText={errors.notes?.message}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
-                  <Button variant="outlined" color="secondary" onClick={handleReset} disabled={isSubmitting}>
-                    Reset
-                  </Button>
-                  <Button variant="outlined" color="primary" onClick={handleSaveDraft} disabled={isSubmitting}>
-                    Save as Draft
-                  </Button>
-                  {onClose && (
-                    <Button variant="outlined" onClick={onClose} disabled={isSubmitting}>
-                      Cancel
-                    </Button>
-                  )}
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    disabled={isSubmitting || medications.length === 0}
-                    sx={{ fontWeight: 600 }}
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Prescription'}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Medication Edit Dialog */}
-      <Dialog 
-        open={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)} 
-        maxWidth="xs" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: 8,
-            background: '#fff',
-            p: 0
-          }
-        }}
-      >
-        <DialogTitle sx={{ pb: 0, pt: 3, fontWeight: 700, fontSize: 20, background: 'transparent' }}>
-          Edit Medication Instructions
-        </DialogTitle>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ px: 3, pt: 0.5, pb: 0, background: 'transparent' }}>
-          Add any special instructions for this medication (e.g., take with food, avoid alcohol).
-        </Typography>
-        <DialogContent sx={{ pt: 3, pb: 3, px: 3, background: 'transparent' }}>
-          <TextField
-            label="Special Instructions"
-            value={editInstructions}
-            onChange={e => setEditInstructions(e.target.value)}
-            fullWidth
-            multiline
-            minRows={3}
-            autoFocus
-            variant="outlined"
-            sx={{ background: '#fff', borderRadius: 2 }}
-            placeholder="e.g., Take with food, avoid sunlight, ..."
-          />
-        </DialogContent>
-        <Divider sx={{ my: 0 }} />
-        <DialogActions sx={{ px: 3, py: 3, justifyContent: 'space-between', background: 'transparent' }}>
-          <Button onClick={() => setEditDialogOpen(false)} color="secondary" variant="outlined">
-            Cancel
-          </Button>
-          <Button onClick={handleEditDialogSave} variant="contained" color="primary" sx={{ fontWeight: 600, px: 4 }}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-} 
+'use client';import { useState } from 'react';import {  X, Plus, Trash2, Edit2, Info} from 'lucide-react';import { useForm, Controller } from 'react-hook-form';import { zodResolver } from '@hookform/resolvers/zod';import { z } from 'zod';const commonMedications = [  { name: 'Lisinopril 10mg', type: 'Tablet', dosage: '10mg', frequency: ['Once daily', 'Twice daily'] },  { name: 'Metformin 500mg', type: 'Tablet', dosage: '500mg', frequency: ['Twice daily', 'Three times daily'] },  { name: 'Atorvastatin 10mg', type: 'Tablet', dosage: '10mg', frequency: ['Once daily'] },  { name: 'Levothyroxine 50mcg', type: 'Tablet', dosage: '50mcg', frequency: ['Once daily'] },  { name: 'Amlodipine 5mg', type: 'Tablet', dosage: '5mg', frequency: ['Once daily'] },  { name: 'Omeprazole 20mg', type: 'Capsule', dosage: '20mg', frequency: ['Once daily'] },  { name: 'Simvastatin 20mg', type: 'Tablet', dosage: '20mg', frequency: ['Once daily'] },  { name: 'Metoprolol 25mg', type: 'Tablet', dosage: '25mg', frequency: ['Twice daily'] },  { name: 'Albuterol 90mcg', type: 'Inhaler', dosage: '90mcg', frequency: ['As needed'] },  { name: 'Sertraline 50mg', type: 'Tablet', dosage: '50mg', frequency: ['Once daily'] }];const defaultFrequencyOptions = [  'Once daily',  'Twice daily',  'Three times daily',  'As needed',  'Before meals',  'After meals',  'At bedtime'];const prescriptionSchema = z.object({  medications: z.array(z.object({    name: z.string(),    dosage: z.string(),    frequency: z.string(),    type: z.string(),    instructions: z.string().optional()  })).min(1, 'At least one medication is required'),  instructions: z.string().min(5, 'Instructions must be at least 5 characters'),  duration: z.string().min(1, 'Duration is required'),  notes: z.string().optional()});export default function PrescriptionForm({ patientId, patientName, onClose, onSuccess }) {  const [isSubmitting, setIsSubmitting] = useState(false);  const [error, setError] = useState('');  const [success, setSuccess] = useState('');  const [medications, setMedications] = useState([]);  const [newMedication, setNewMedication] = useState('');  const [medicationError, setMedicationError] = useState('');  const [newFrequency, setNewFrequency] = useState('');  const [newDosage, setNewDosage] = useState('');  const [editIndex, setEditIndex] = useState(null);  const [editInstructions, setEditInstructions] = useState('');  const [editDialogOpen, setEditDialogOpen] = useState(false);  const {    control,    handleSubmit,    formState: { errors },    reset,    setValue  } = useForm({    resolver: zodResolver(prescriptionSchema),    defaultValues: {      medications: [],      instructions: '',      duration: '',      notes: ''    }  });  const handleMedicationChange = (value) => {    setNewMedication(value || '');    const medObj = commonMedications.find(m => m.name === value);    if (medObj) {      setNewDosage(medObj.dosage);      setNewFrequency(medObj.frequency[0] || '');    } else {      setNewDosage('');      setNewFrequency('');    }  };  const handleAddMedication = () => {    if (!newMedication || newMedication.trim() === '') {      setMedicationError('Please select a medication');      return;    }    const medObj = commonMedications.find(m => m.name === newMedication);    if (!medObj) {      setMedicationError('Please select a valid medication');      return;    }    if (!newFrequency) {      setMedicationError('Please select a frequency');      return;    }    const updatedMedications = [      ...medications,      { ...medObj, frequency: newFrequency, dosage: newDosage || medObj.dosage, instructions: '' }    ];    setMedications(updatedMedications);    setValue('medications', updatedMedications);    setNewMedication('');    setNewFrequency('');    setNewDosage('');    setMedicationError('');  };  const handleRemoveMedication = (index) => {    const updatedMedications = medications.filter((_, i) => i !== index);    setMedications(updatedMedications);    setValue('medications', updatedMedications);  };  const handleEditMedication = (index) => {    setEditIndex(index);    setEditInstructions(medications[index].instructions || '');    setEditDialogOpen(true);  };  const handleEditDialogSave = () => {    const updatedMedications = [...medications];    updatedMedications[editIndex].instructions = editInstructions;    setMedications(updatedMedications);    setValue('medications', updatedMedications);    setEditDialogOpen(false);  };  const handleReset = () => {    reset();    setMedications([]);    setNewMedication('');    setNewFrequency('');    setNewDosage('');    setError('');    setSuccess('');  };  const handleSaveDraft = () => {    setSuccess('Draft saved (not submitted)');    setTimeout(() => setSuccess(''), 1500);  };  const onSubmit = async (data) => {    try {      setIsSubmitting(true);      setError('');      if (data.medications.length === 0) {        setError('At least one medication is required');        return;      }      setSuccess('Prescription created successfully');      reset();      setMedications([]);      if (onSuccess) onSuccess(data);      setTimeout(() => {        if (onClose) onClose();      }, 1500);    } catch (err) {      setError('An error occurred while creating the prescription');    } finally {      setIsSubmitting(false);    }  };  const SectionHeader = ({ icon, children }) => (    <div className="flex items-center gap-2 mb-2 mt-4">      {icon}      <h3 className="text-lg font-semibold text-gray-800">{children}</h3>    </div>  );  return (    <div className="max-w-xl mx-auto p-0">      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-0">        <div className="p-6 sm:p-8">          <div className="flex justify-between items-center mb-4">            <div>              <h2 className="text-2xl font-bold text-gray-900 mb-1">                New Prescription              </h2>              {patientName && (                <p className="text-sm text-gray-600">                  for {patientName}                </p>              )}            </div>            {onClose && (              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-700">                <X className="h-5 w-5" />              </button>            )}          </div>          {error && (            <div className="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50">              {error}            </div>          )}          {success && (            <div className="p-3 mb-4 text-sm text-green-800 rounded-lg bg-green-50">              {success}            </div>          )}          <SectionHeader icon={<Info size={18} className="text-blue-600" />}>            Medications          </SectionHeader>          <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">            <table className="min-w-full divide-y divide-gray-200">              <thead className="bg-gray-50">                <tr>                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosage</th>                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Edit</th>                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remove</th>                </tr>              </thead>              <tbody className="bg-white divide-y divide-gray-200">                {medications.length === 0 ? (                  <tr>                    <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 italic">                      No medications added yet.                    </td>                  </tr>                ) : (                  medications.map((med, index) => (                    <tr key={index}>                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{med.name}</td>                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.type}</td>                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.dosage}</td>                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.frequency}</td>                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">                        <button                          type="button"                          onClick={() => handleEditMedication(index)}                          className="text-blue-600 hover:text-blue-900 inline-flex items-center justify-center p-1 rounded-full hover:bg-blue-50"                        >                          <Edit2 className="h-4 w-4" />                        </button>                      </td>                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">                        <button                          type="button"                          onClick={() => handleRemoveMedication(index)}                          className="text-red-600 hover:text-red-900 inline-flex items-center justify-center p-1 rounded-full hover:bg-red-50"                        >                          <Trash2 className="h-4 w-4" />                        </button>                      </td>                    </tr>                  ))                )}              </tbody>            </table>          </div>          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">            <div>              <label htmlFor="newMedication" className="block text-sm font-medium text-gray-700">Medication</label>              <select                id="newMedication"                value={newMedication}                onChange={(e) => handleMedicationChange(e.target.value)}                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"              >                <option value="">Select medication</option>                {commonMedications.map((med) => (                  <option key={med.name} value={med.name}>{med.name}</option>                ))}              </select>              {medicationError && <p className="mt-1 text-sm text-red-600">{medicationError}</p>}            </div>            <div>              <label htmlFor="newDosage" className="block text-sm font-medium text-gray-700">Dosage</label>              <input                type="text"                id="newDosage"                value={newDosage}                onChange={(e) => setNewDosage(e.target.value)}                placeholder="Dosage"                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"              />            </div>            <div>              <label htmlFor="newFrequency" className="block text-sm font-medium text-gray-700">Frequency</label>              <select                id="newFrequency"                value={newFrequency}                onChange={(e) => setNewFrequency(e.target.value)}                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"              >                <option value="">Select frequency</option>                {defaultFrequencyOptions.map((freq) => (                  <option key={freq} value={freq}>{freq}</option>                ))}              </select>            </div>            <div className="flex items-end">              <button                type="button"                onClick={handleAddMedication}                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"              >                <Plus className="h-5 w-5 mr-2" />Add Medication              </button>            </div>          </div>          <div className="border-t border-gray-200 my-6" />          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">            <SectionHeader icon={<Info size={18} className="text-blue-600" />}>              Prescription Details            </SectionHeader>            <div>              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Overall Instructions</label>              <Controller                name="instructions"                control={control}                render={({ field }) => (                  <textarea                    id="instructions"                    rows="4"                    {...field}                    disabled={isSubmitting}                    placeholder="e.g., Take with food, complete the full course..."                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}                  ></textarea>                )}              />              {errors.instructions && (                <p className="mt-1 text-sm text-red-600">{errors.instructions.message}</p>              )}            </div>            <div>              <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duration</label>              <Controller                name="duration"                control={control}                render={({ field }) => (                  <input                    type="text"                    id="duration"                    {...field}                    disabled={isSubmitting}                    placeholder="e.g., 7 days, 2 weeks, indefinitely"                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.duration ? 'border-red-500' : 'border-gray-300'}`}                  />                )}              />              {errors.duration && (                <p className="mt-1 text-sm text-red-600">{errors.duration.message}</p>              )}            </div>            <div>              <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>              <Controller                name="notes"                control={control}                render={({ field }) => (                  <textarea                    id="notes"                    rows="3"                    {...field}                    disabled={isSubmitting}                    placeholder="Any additional notes for the pharmacist or patient"                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"                  ></textarea>                )}              />            </div>            <div className="flex justify-end space-x-3 mt-6">              <button                type="button"                onClick={handleReset}                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                disabled={isSubmitting}              >                Reset              </button>              <button                type="button"                onClick={handleSaveDraft}                className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-transparent rounded-md shadow-sm hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                disabled={isSubmitting}              >                Save Draft              </button>              <button                type="submit"                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"                disabled={isSubmitting}              >                {isSubmitting ? 'Creating...' : 'Create Prescription'}              </button>            </div>          </form>        </div>      </div>      {editDialogOpen && (        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">          <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Medication Instructions</h3>            <form className="space-y-4">              <div>                <label htmlFor="editInstructions" className="block text-sm font-medium text-gray-700">Instructions</label>                <textarea                  id="editInstructions"                  rows="4"                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                  value={editInstructions}                  onChange={(e) => setEditInstructions(e.target.value)}                ></textarea>              </div>            </form>            <div className="mt-6 flex justify-end space-x-3">              <button                type="button"                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                onClick={() => setEditDialogOpen(false)}              >                Cancel              </button>              <button                type="button"                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                onClick={handleEditDialogSave}              >                Save Changes              </button>            </div>          </div>        </div>      )}    </div>  );}

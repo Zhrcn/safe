@@ -1,5 +1,3 @@
-// Helper class or functions for standardizing API responses
-
 class ApiResponse {
   constructor(statusCode, data, message = "Success"){
     this.statusCode = statusCode;
@@ -8,5 +6,4 @@ class ApiResponse {
     this.success = statusCode < 400;
   }
 }
-
 module.exports = ApiResponse;

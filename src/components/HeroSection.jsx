@@ -1,171 +1,78 @@
 'use client';
-
 import React from 'react';
-import { Box, Container, Typography, Button, Grid, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
 import { APP_NAME, APP_DESCRIPTION } from '@/config/app-config';
-
 export default function HeroSection() {
-  const theme = useTheme();
-  
   const scrollToSection = (sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
   return (
-    <Box 
-      className="relative overflow-hidden"
-      sx={{
-        background: (theme) => 
-          theme.palette.mode === 'dark' 
-            ? 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)' 
-            : 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-        color: 'white',
-        pt: { xs: 10, md: 12 },
-        pb: { xs: 12, md: 16 },
-      }}
-    >
-      <Box 
-        className="absolute bottom-0 left-0 w-full"
-        sx={{
-          height: { xs: '70px', sm: '100px', md: '120px' },
-          zIndex: 1,
-        }}
-      >
+    <div className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+      <div className="absolute bottom-0 left-0 w-full h-[70px] sm:h-[100px] md:h-[120px] z-10">
         <svg 
-          xmlns="http://www.w3.org/2000/svg" 
+          xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1440 320"
-          style={{ 
-            position: 'absolute', 
-            bottom: 0,
-            width: '100%',
-            height: '100%',
-          }}
+          className="absolute bottom-0 w-full h-full"
         >
           <path 
-            fill={theme.palette.mode === 'dark' ? '#111827' : '#f9fafb'} 
+            fill="#fff" 
             fillOpacity="1" 
-            d="M0,128L48,144C96,160,192,192,288,186.7C384,181,480,139,576,138.7C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
+            d="M0,224L48,197.3C96,171,192,117,288,122.7C384,128,480,192,576,197.3C672,203,768,149,864,133.3C960,117,1056,139,1152,154.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+          </path>
         </svg>
-      </Box>
-
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={6} sx={{ gridColumn: { xs: '1 / -1', md: '1 / span 6' } }}>
+      </div>
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-12 pb-12 md:pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          <div className="md:col-span-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Typography 
-                variant="h2" 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 800,
-                  mb: 2,
-                  fontSize: { xs: '2.5rem', md: '3.5rem' },
-                  lineHeight: 1.2,
-                }}
-              >
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
                 {APP_NAME} Medical Platform
-              </Typography>
-              
-              <Typography 
-                variant="h5" 
-                component="p" 
-                sx={{ 
-                  mb: 4,
-                  opacity: 0.9,
-                  maxWidth: '600px',
-                  fontWeight: 400,
-                }}
-              >
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-2xl font-normal">
                 {APP_DESCRIPTION}
-              </Typography>
-              
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  size="large"
-                  sx={{ 
-                    px: 4, 
-                    py: 1.5,
-                    fontWeight: 600,
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                  }}
+              </p>
+              <div className="flex flex-wrap sm:flex-nowrap gap-4">
+                <button
                   onClick={() => scrollToSection('roles')}
+                  className="px-6 py-3 text-base font-semibold rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors shadow-lg"
                 >
                   Get Started
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  sx={{ 
-                    px: 4, 
-                    py: 1.5,
-                    fontWeight: 600,
-                    color: 'white',
-                    borderColor: 'white',
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    }
-                  }}
+                </button>
+                <button
                   onClick={() => scrollToSection('features')}
+                  className="px-6 py-3 text-base font-semibold rounded-md border border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
                 >
                   Learn More
-                </Button>
-              </Box>
+                </button>
+              </div>
             </motion.div>
-          </Grid>
-          
-          <Grid item xs={12} md={6} sx={{ gridColumn: { xs: '1 / -1', md: '7 / span 6' }, display: { xs: 'none', md: 'block' } }}>
+          </div>
+          <div className="hidden md:block md:col-span-6">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <Box 
-                sx={{ 
-                  position: 'relative',
-                  width: '100%',
-                  height: '400px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                }}
-              >
-                {/* Placeholder for illustration - replace with actual image */}
-                <Box 
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Typography variant="h5" sx={{ opacity: 0.7 }}>
+              <div className="relative w-full h-[400px] flex justify-center">
+                {}
+                <div className="w-full h-full rounded-xl overflow-hidden shadow-2xl bg-white/10 backdrop-blur-md flex items-center justify-center">
+                  <p className="text-xl opacity-70">
                     Medical Dashboard Illustration
-                  </Typography>
-                </Box>
-              </Box>
+                  </p>
+                </div>
+              </div>
             </motion.div>
-          </Grid>
-        </Grid>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 } 

@@ -1,375 +1,256 @@
 'use client';
-
 import React, { useState } from 'react';
-import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    Button,
-    Grid,
-    Chip,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Stack,
-    Avatar,
-    Tooltip,
-    useTheme,
-    alpha,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    InputAdornment,
-    Paper,
-    Divider,
-    Badge,
-} from '@mui/material';
-import {
-    AccessTime as TimeIcon,
-    Add as PlusIcon,
-    Check as CheckIcon,
-    Close as XIcon,
-    Delete as TrashIcon,
-    Edit as EditIcon,
-    Event as CalendarIcon,
-    LocationOn as MapPinIcon,
-    Person as UserIcon,
-    Search as SearchIcon,
-    Warning as AlertCircleIcon,
-    VideoCall as VideoIcon,
-    Phone as PhoneIcon,
-    Business as BuildingIcon,
-    ChevronRight as ChevronRightIcon,
-    RefreshCw as RefreshIcon,
-} from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { mockPatientData } from '@/mockdata/patientData';
+import { 
+    Calendar, Clock, MapPin, Video, Phone, 
+    User, ChevronRight, Plus, Search, Filter,
+    Calendar as CalendarIcon, List, Grid
+} from 'lucide-react';
 import PageHeader from '@/components/patient/PageHeader';
-import { useNotification } from '@/components/ui/Notification';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { Separator } from '@/components/ui/Separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import Link from 'next/link';
 
-const AppointmentCard = ({ appointment, onViewDetails }) => {
-    const theme = useTheme();
+const AppointmentCard = ({ appointment }) => {
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return 'info';
+        switch (status.toLowerCase()) {
+            case 'upcoming':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
             case 'completed':
-                return 'success';
+                return 'bg-green-100 text-green-800 border-green-200';
             case 'cancelled':
-                return 'error';
+                return 'bg-red-100 text-red-800 border-red-200';
             default:
-                return 'default';
+                return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return <TimeIcon />;
-            case 'completed':
-                return <CheckIcon />;
-            case 'cancelled':
-                return <XIcon />;
-            default:
-                return <AlertCircleIcon />;
-        }
-    };
-
-    const getAppointmentTypeIcon = (type) => {
-        switch (type) {
+    const getTypeIcon = (type) => {
+        switch (type.toLowerCase()) {
             case 'video':
-                return <VideoIcon />;
+                return <Video className="h-4 w-4" />;
             case 'phone':
-                return <PhoneIcon />;
-            case 'in-person':
-                return <BuildingIcon />;
+                return <Phone className="h-4 w-4" />;
             default:
-                return <CalendarIcon />;
+                return <MapPin className="h-4 w-4" />;
         }
     };
 
     return (
-        <Card 
-            sx={{ 
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[4],
-                },
-                position: 'relative',
-                overflow: 'visible',
-                borderRadius: 2,
-            }}
-        >
-            <Box
-                sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    zIndex: 1,
-                }}
-            >
-                <Chip
-                    icon={getStatusIcon(appointment.status)}
-                    label={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                    color={getStatusColor(appointment.status)}
-                    size="small"
-                    sx={{
-                        fontWeight: 600,
-                        '& .MuiChip-icon': {
-                            color: 'inherit',
-                        },
-                    }}
-                />
-            </Box>
-
-            <CardContent sx={{ flexGrow: 1, pt: 3 }}>
-                <Stack spacing={2}>
-                    {/* Doctor Info */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                        <Avatar
-                            src={appointment.doctorPhoto}
-                            alt={appointment.doctorName}
-                            sx={{ width: 56, height: 56 }}
-                        />
-                        <Box>
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                {appointment.doctorName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {appointment.specialty}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Appointment Details */}
-                    <Stack spacing={1.5}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CalendarIcon sx={{ color: theme.palette.primary.main }} />
-                            <Typography variant="body2">
-                                {format(new Date(appointment.date), 'EEEE, MMMM d, yyyy')}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TimeIcon sx={{ color: theme.palette.primary.main }} />
-                            <Typography variant="body2">
-                                {appointment.time} ({appointment.duration} min)
-                            </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {getAppointmentTypeIcon(appointment.type)}
-                            <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                                {appointment.type} Appointment
-                            </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <MapPinIcon sx={{ color: theme.palette.primary.main }} />
-                            <Typography variant="body2" noWrap>
-                                {appointment.location}
-                            </Typography>
-                        </Box>
-                    </Stack>
-
-                    {appointment.notes && (
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                            <AlertCircleIcon sx={{ color: theme.palette.primary.main }} />
-                            <Typography variant="body2" color="text.secondary">
-                                {appointment.notes}
-                            </Typography>
-                        </Box>
-                    )}
-                </Stack>
+        <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-primary/10">
+                                <Calendar className="h-5 w-5 text-primary" />
+                            </div>
+                            <h3 className="text-lg font-bold text-primary">{appointment.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <User className="h-4 w-4" />
+                            <span>Dr. {appointment.doctor}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                <span>{format(new Date(appointment.date), 'PPP')} at {appointment.time}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                {getTypeIcon(appointment.type)}
+                                <span>{appointment.type === 'video' ? 'Video Consultation' : 
+                                       appointment.type === 'phone' ? 'Phone Consultation' : 
+                                       appointment.location}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-3">
+                        <Badge className={getStatusColor(appointment.status)}>
+                            {appointment.status}
+                        </Badge>
+                        <div className="flex gap-2">
+                            {appointment.status === 'upcoming' && (
+                                <>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/patient/appointments/${appointment.id}/reschedule`}>
+                                            Reschedule
+                                        </Link>
+                                    </Button>
+                                    <Button variant="secondary" size="sm">
+                                        Cancel
+                                    </Button>
+                                </>
+                            )}
+                            <Button variant="destructive" size="sm" asChild>
+                                <Link href={`/patient/appointments/${appointment.id}`}>
+                                    View Details
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </CardContent>
-
-            <Box sx={{ p: 2, pt: 0 }}>
-                <Button
-                            fullWidth
-                    variant="outlined"
-                    endIcon={<ChevronRightIcon />}
-                    onClick={() => onViewDetails(appointment)}
-                    sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                    }}
-                >
-                    View Details
-                </Button>
-            </Box>
         </Card>
     );
 };
 
-const AppointmentDetailDialog = ({ open, onClose, appointment }) => {
-    const theme = useTheme();
-
-    if (!appointment) return null;
-
-    return (
-        <Dialog 
-            open={open} 
-            onClose={onClose}
-            maxWidth="sm"
-                            fullWidth
-            PaperProps={{
-                sx: {
-                    borderRadius: 2,
-                }
-            }}
-        >
-            <DialogTitle>
-                <Typography component="span" variant="h6" sx={{ fontWeight: 600 }}>
-                    Appointment Details
-                </Typography>
-            </DialogTitle>
-            <DialogContent>
-                <Stack spacing={3}>
-                    {/* Doctor Info */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar
-                            src={appointment.doctorPhoto}
-                            alt={appointment.doctorName}
-                            sx={{ width: 64, height: 64 }}
-                        />
-                        <Box>
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                {appointment.doctorName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {appointment.specialty}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Appointment Details */}
-                    <Stack spacing={2}>
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Date & Time
-                            </Typography>
-                            <Typography variant="body1">
-                                {format(new Date(appointment.date), 'EEEE, MMMM d, yyyy')} at {appointment.time}
-                            </Typography>
-                        </Box>
-
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Location
-                            </Typography>
-                            <Typography variant="body1">
-                                {appointment.location}
-                            </Typography>
-                        </Box>
-
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Type
-                            </Typography>
-                            <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
-                                {appointment.type} Appointment
-                            </Typography>
-                        </Box>
-
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Reason
-                            </Typography>
-                            <Typography variant="body1">
-                                {appointment.reason}
-                            </Typography>
-                        </Box>
-
-                        {appointment.notes && (
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                    Notes
-                                </Typography>
-                                <Typography variant="body1">
-                                    {appointment.notes}
-                                </Typography>
-                            </Box>
-                        )}
-                    </Stack>
-                </Stack>
-                </DialogContent>
-            <DialogActions sx={{ px: 3, py: 2 }}>
-                <Button onClick={onClose} variant="outlined">
-                    Close
-                    </Button>
-                </DialogActions>
-        </Dialog>
-    );
-};
-
 const AppointmentsPage = () => {
-    const [appointments] = useState(mockPatientData.appointments);
-    const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const { showNotification } = useNotification();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [viewMode, setViewMode] = useState('list');
 
-    const handleViewDetails = (appointment) => {
-        setSelectedAppointment(appointment);
-        setDialogOpen(true);
-    };
+    // Mock data - replace with actual data from your API
+    const appointments = [
+        {
+            id: 1,
+            title: 'Annual Check-up',
+            doctor: 'Sarah Johnson',
+            date: '2024-03-20',
+            time: '10:00 AM',
+            type: 'in-person',
+            location: 'Main Clinic, Room 101',
+            status: 'upcoming'
+        },
+        {
+            id: 2,
+            title: 'Follow-up Consultation',
+            doctor: 'Michael Chen',
+            date: '2024-03-22',
+            time: '2:30 PM',
+            type: 'video',
+            location: 'Virtual Meeting',
+            status: 'upcoming'
+        },
+        {
+            id: 3,
+            title: 'Lab Results Review',
+            doctor: 'Emily Rodriguez',
+            date: '2024-03-15',
+            time: '11:00 AM',
+            type: 'phone',
+            location: 'Phone Consultation',
+            status: 'completed'
+        }
+    ];
 
-    const handleCloseDialog = () => {
-            setDialogOpen(false);
-            setSelectedAppointment(null);
-    };
+    const filteredAppointments = appointments.filter(appointment => {
+        const matchesSearch = appointment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            appointment.doctor.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+        const matchesType = typeFilter === 'all' || appointment.type === typeFilter;
+        return matchesSearch && matchesStatus && matchesType;
+    });
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="flex flex-col space-y-6">
             <PageHeader
                 title="Appointments"
-                subtitle="View and manage your upcoming appointments"
-                action={
-                <Button
-                    variant="contained"
-                        startIcon={<PlusIcon />}
-                        sx={{
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 600,
-                        }}
-                >
-                        Book Appointment
-                </Button>
-                }
+                description="Schedule and manage your healthcare appointments."
+                breadcrumbs={[
+                    { label: 'Patient', href: '/patient/dashboard' },
+                    { label: 'Appointments', href: '/patient/appointments' }
+                ]}
             />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-                {appointments.map((appointment) => (
-                    <Box key={appointment.id}>
-                        <AppointmentCard
-                            appointment={appointment}
-                            onViewDetails={handleViewDetails}
+            {/* Actions Bar */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search appointments..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9"
                         />
-                    </Box>
-                ))}
-            </Box>
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="in-person">In-Person</SelectItem>
+                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="phone">Phone</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="icon" onClick={() => setViewMode('list')}>
+                        <List className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => setViewMode('calendar')}>
+                        <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                    <Button asChild>
+                        <Link href="/patient/appointments/new">
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Appointment
+                        </Link>
+                    </Button>
+                </div>
+            </div>
 
-            <AppointmentDetailDialog
-                open={dialogOpen}
-                onClose={handleCloseDialog}
-                appointment={selectedAppointment}
-            />
-        </Box>
+            <Separator />
+
+            {/* Appointments List/Calendar */}
+            <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                    <TabsTrigger value="past">Past</TabsTrigger>
+                    <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upcoming" className="space-y-4">
+                    {filteredAppointments.length > 0 ? (
+                        filteredAppointments.map((appointment) => (
+                            <AppointmentCard key={appointment.id} appointment={appointment} />
+                        ))
+                    ) : (
+                        <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                            <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
+                            <h3 className="text-xl font-semibold mb-3">No Appointments Found</h3>
+                            <p className="text-muted-foreground mb-6">
+                                {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
+                                    ? 'Try adjusting your search or filters to find appointments.'
+                                    : 'You don\'t have any upcoming appointments. Schedule your first appointment!'}
+                            </p>
+                            <Button asChild>
+                                <Link href="/patient/appointments/new">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Schedule New Appointment
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+                </TabsContent>
+                <TabsContent value="past" className="space-y-4">
+                    {/* Past appointments content */}
+                </TabsContent>
+                <TabsContent value="cancelled" className="space-y-4">
+                    {/* Cancelled appointments content */}
+                </TabsContent>
+            </Tabs>
+        </div>
     );
 };
 

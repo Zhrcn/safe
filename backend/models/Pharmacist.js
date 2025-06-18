@@ -1,12 +1,10 @@
 const mongoose = require('mongoose');
-
 const workingHoursSchema = new mongoose.Schema({
   day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], required: true },
   startTime: { type: String, match: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'] }, 
   endTime: { type: String, match: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'] },  
   isClosed: { type: Boolean, default: false }
 }, { _id: false });
-
 const pharmacistSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId,
@@ -50,7 +48,5 @@ const pharmacistSchema = new mongoose.Schema({
   timestamps: true,
   collection: 'Pharmacists'
 });
-
 const Pharmacist = mongoose.model('Pharmacist', pharmacistSchema);
-
 module.exports = Pharmacist;

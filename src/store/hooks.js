@@ -1,5 +1,1 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { store } from '@/store/store';
-
-export const useAppDispatch = () => useDispatch();
-export const useAppSelector = useSelector; 
+import { useDispatch, useSelector } from 'react-redux';import { store } from '@/store/store';export const useAppDispatch = () => useDispatch();export const useAppSelector = useSelector; 

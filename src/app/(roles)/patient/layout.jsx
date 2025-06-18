@@ -1,76 +1,63 @@
 'use client';
-
-import { 
-    Home, Calendar, Users, MessageSquare, 
-    FileText, Pill, User, Stethoscope,
-    MessageCircle
-} from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { 
+    Home, Calendar, Users, MessageCircle, FileText, Pill, Stethoscope
+} from 'lucide-react';
 
-const sidebarItems = [
+const patientSidebarItems = [
     {
-        name: 'Dashboard',
-        icon: Home,
-        link: '/patient/dashboard'
+        path: '/patient/dashboard',
+        label: 'Dashboard',
+        icon: <Home className="h-5 w-5" />
     },
     {
-        name: 'Appointments',
-        icon: Calendar,
-        link: '/patient/appointments'
+        path: '/patient/appointments',
+        label: 'Appointments',
+        icon: <Calendar className="h-5 w-5" />
     },
     {
-        name: 'Providers',
-        icon: Users,
-        link: '/patient/providers',
-        subItems: [
-            {
-                name: 'Doctors',
-                link: '/patient/providers/doctors'
-            },
-            {
-                name: 'Pharmacists',
-                link: '/patient/providers/pharmacists'
-            }
-        ]
+        path: '/patient/consultations',
+        label: 'Consultations',
+        icon: <Stethoscope className="h-5 w-5" />
     },
     {
-        name: 'Consultations',
-        icon: Stethoscope,
-        link: '/patient/consultations'
+        path: '/patient/providers',
+        label: 'Providers',
+        icon: <Users className="h-5 w-5" />
     },
     {
-        name: 'Medications',
-        icon: Pill,
-        link: '/patient/medications'
+        path: '/patient/medications',
+        label: 'Medications',
+        icon: <Pill className="h-5 w-5" />
     },
     {
-        name: 'Medical Records',
-        icon: FileText,
-        link: '/patient/medical-records'
+        path: '/patient/medical-records',
+        label: 'Medical Records',
+        icon: <FileText className="h-5 w-5" />
     },
     {
-        name: 'Messages',
-        icon: MessageCircle,
-        link: '/patient/messaging'
+        path: '/patient/prescriptions',
+        label: 'Prescriptions',
+        icon: <FileText className="h-5 w-5" />
     },
     {
-        name: 'Prescriptions',
-        icon: FileText,
-        link: '/patient/prescriptions'
-    },
-    {
-        name: 'Profile',
-        icon: User,
-        link: '/patient/profile'
+        path: '/patient/messaging',
+        label: 'Messages',
+        icon: <MessageCircle className="h-5 w-5" />
     }
 ];
 
-export default function PatientLayout({ children }) {
+export default function Layout({ children }) {
     return (
         <AppLayout
+            headerBg="bg-primary"
+            sidebarBg="bg-card"
+            logoBg="bg-muted"
             title="Patient Portal"
-            sidebarItems={sidebarItems}
+            sidebarItems={patientSidebarItems}
             allowedRoles={['patient']}
+            headerRightContent={<ThemeSwitcher />}
         >
             {children}
         </AppLayout>

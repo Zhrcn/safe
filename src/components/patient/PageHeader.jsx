@@ -1,88 +1,85 @@
+'use client';
 import React from 'react';
-import { Box, Typography, Breadcrumbs, Link, useTheme, alpha } from '@mui/material';
-import { ChevronRight as ChevronRightIcon, Home as HomeIcon } from '@mui/icons-material';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  ChevronRight as ChevronRightIcon,
+  Home as HomeIcon,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
+import { Separator } from '@/components/ui/Separator';
+import { useAppSelector } from '@/store/hooks';
+import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 
 export default function PageHeader({
-    title,
-    description,
-    breadcrumbs = [],
-    actions,
-    className,
+  title,
+  description,
+  breadcrumbs = [],
+  actions,
+  className,
 }) {
-    const theme = useTheme();
+  const pathname = usePathname();
+  const user = useAppSelector(selectCurrentUser);
 
-    return (
-        <Box sx={{ mb: 2, ...className }}>
-            <Breadcrumbs
-                separator={<ChevronRightIcon fontSize="small" sx={{ color: 'text.secondary' }} />}
-                aria-label="breadcrumb"
-                sx={{ mb: 2 }}
+  // Generate breadcrumbs based on the current path
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const generatedBreadcrumbs = pathSegments.map((segment, index) => {
+    const href = '/' + pathSegments.slice(0, index + 1).join('/');
+    const label = segment.charAt(0).toUpperCase() + segment.slice(1);
+    return { href, label };
+  });
+
+  // Use provided breadcrumbs or generated ones
+  const finalBreadcrumbs = breadcrumbs.length > 0 ? breadcrumbs : generatedBreadcrumbs;
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Breadcrumbs */}
+      <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
+        <Link
+          href={`/${user?.role?.toLowerCase() || 'patient'}/dashboard`}
+          className="flex items-center hover:text-foreground transition-colors"
+        >
+          <HomeIcon className="h-4 w-4 mr-1" />
+          Dashboard
+        </Link>
+        {finalBreadcrumbs.map((crumb, index) => (
+          <React.Fragment key={crumb.href}>
+            <ChevronRightIcon className="h-4 w-4" />
+            <Link
+              href={crumb.href}
+              className={cn(
+                "hover:text-foreground transition-colors",
+                index === finalBreadcrumbs.length - 1 && "text-foreground font-medium"
+              )}
             >
-                <Link
-                    href="/patient/dashboard"
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.secondary',
-                        textDecoration: 'none',
-                        '&:hover': {
-                            color: 'text.primary',
-                        },
-                    }}
-                >
-                    <HomeIcon fontSize="small" sx={{ mr: 0.5 }} />
-                    Dashboard
-                </Link>
-                {breadcrumbs.map((crumb, index) => (
-                    <Link
-                        key={index}
-                        href={crumb.href}
-                        sx={{
-                            color: index === breadcrumbs.length - 1 ? 'text.primary' : 'text.secondary',
-                            textDecoration: 'none',
-                            fontWeight: index === breadcrumbs.length - 1 ? 500 : 400,
-                            '&:hover': {
-                                color: 'text.primary',
-                            },
-                        }}
-                    >
-                        {crumb.label}
-                    </Link>
-                ))}
-            </Breadcrumbs>
+              {crumb.label}
+            </Link>
+          </React.Fragment>
+        ))}
+      </nav>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            fontWeight: 'bold',
-                            fontSize: { xs: '1.5rem', md: '1.875rem' },
-                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                        }}
-                    >
-                        {title}
-                    </Typography>
-                    {description && (
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                mt: 1,
-                                color: 'text.secondary',
-                            }}
-                        >
-                            {description}
-                        </Typography>
-                    )}
-                </Box>
-                {actions && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {actions}
-                    </Box>
-                )}
-            </Box>
-        </Box>
-    );
+      <Separator />
+
+      {/* Header Content */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {title}
+          </h1>
+          {description && (
+            <p className="text-muted-foreground mt-1">
+              {description}
+            </p>
+          )}
+        </div>
+        {actions && (
+          <div className="flex items-center gap-3">
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 } 

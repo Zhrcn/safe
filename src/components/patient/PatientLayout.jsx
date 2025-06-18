@@ -1,0 +1,1 @@
+// This file is now unused. Patient layout now uses AppLayout directly from src/app/(roles)/patient/layout.jsx. 

@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../config.env' });
+require('dotenv').config({ path: __dirname + '/../config/config.env' });
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -11,28 +11,44 @@ const Prescription = require('../models/Prescription');
 const Medicine = require('../models/Medicine');
 const Conversation = require('../models/Conversation');
 const Notification = require('../models/Notification');
+const Pharmacist = require('../models/Pharmacist');
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected for seeding...'))
-  .catch(err => {
+// Debug environment variables
+console.log('Environment variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    MONGO_URI: process.env.MONGO_URI,
+    PORT: process.env.PORT
+});
+
+console.log('Loaded MONGO_URI:', process.env.MONGO_URI);
+
+// Ensure MONGO_URI is defined
+if (!process.env.MONGO_URI) {
+    console.error('MONGO_URI is not defined in environment variables');
+    process.exit(1);
+}
+
+// Connect to MongoDB with options
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB Connected for seeding...'))
+.catch(err => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
-  });
+});
 
-// Helper function to generate random date within a range
 const randomDate = (start, end) => {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 };
 
-// Helper function to generate random time
 const randomTime = () => {
-  const hours = Math.floor(Math.random() * 12) + 8; // Between 8 AM and 8 PM
-  const minutes = Math.floor(Math.random() * 4) * 15; // 15-minute intervals
+  const hours = Math.floor(Math.random() * 12) + 8; 
+  const minutes = Math.floor(Math.random() * 4) * 15; 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
-// Sample data
 const syrianCities = ['Damascus', 'Aleppo', 'Homs', 'Latakia', 'Hama', 'Tartus', 'Deir ez-Zor', 'Al-Hasakah', 'Raqqa', 'Daraa'];
 const syrianHospitals = [
   'Al-Mouwasat University Hospital',
@@ -63,7 +79,6 @@ const commonSyrianNames = {
 
 const commonSyrianLastNames = ['Al-Assad', 'Al-Kurdi', 'Al-Halabi', 'Al-Homsi', 'Al-Dimashqi', 'Al-Hamwi', 'Al-Aleppo', 'Al-Lataki'];
 
-// Generate random Syrian name
 const generateSyrianName = () => {
   const gender = Math.random() > 0.5 ? 'male' : 'female';
   const firstName = commonSyrianNames[gender][Math.floor(Math.random() * commonSyrianNames[gender].length)];
@@ -71,10 +86,8 @@ const generateSyrianName = () => {
   return { firstName, lastName, gender };
 };
 
-// Seed function
 const seedDatabase = async () => {
   try {
-    // Clear existing data
     await Promise.all([
       User.deleteMany({}),
       Doctor.deleteMany({}),
@@ -85,12 +98,11 @@ const seedDatabase = async () => {
       Prescription.deleteMany({}),
       Medicine.deleteMany({}),
       Conversation.deleteMany({}),
-      Notification.deleteMany({})
+      Notification.deleteMany({}),
+      Pharmacist.deleteMany({})
     ]);
-
     console.log('Cleared existing data');
 
-    // Create admin user
     const adminUser = await User.create({
       firstName: 'Admin',
       lastName: 'User',
@@ -101,7 +113,43 @@ const seedDatabase = async () => {
       gender: 'male'
     });
 
-    // Create doctors
+    // Create pharmacist user and profile
+    const pharmacistUser = await User.create({
+      firstName: 'Pharmacist',
+      lastName: 'User',
+      email: 'pharmacist@safemedical.com',
+      password: 'pharm123',
+      role: 'pharmacist',
+      phoneNumber: '+963987654321',
+      gender: 'male',
+      address: 'Damascus, Syria'
+    });
+
+    const workingHours = [
+      { day: 'Monday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Tuesday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Wednesday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Thursday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Friday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Saturday', startTime: '09:00', endTime: '21:00' },
+      { day: 'Sunday', startTime: '09:00', endTime: '21:00' }
+    ];
+
+    const pharmacist = await Pharmacist.create({
+      user: pharmacistUser._id,
+      licenseNumber: 'PHARM12345',
+      pharmacyName: 'Safe Medical Pharmacy',
+      pharmacyAddress: 'Damascus, Syria',
+      workingHours,
+      specialties: ['General Pharmacy', 'Clinical Pharmacy'],
+      experienceYears: 5,
+      education: [{
+        degree: 'PharmD',
+        institution: 'University of Damascus',
+        yearCompleted: 2018
+      }]
+    });
+
     const doctors = [];
     for (let i = 0; i < 5; i++) {
       const { firstName, lastName, gender } = generateSyrianName();
@@ -115,7 +163,6 @@ const seedDatabase = async () => {
         gender,
         address: `${syrianCities[Math.floor(Math.random() * syrianCities.length)]}, Syria`
       });
-
       const doctor = await Doctor.create({
         user: doctorUser._id,
         medicalLicenseNumber: `MD${Math.floor(Math.random() * 10000)}`,
@@ -132,11 +179,9 @@ const seedDatabase = async () => {
           phoneNumber: `+963${Math.floor(Math.random() * 900000000) + 100000000}`
         }
       });
-
       doctors.push({ user: doctorUser, doctor });
     }
 
-    // Create patients
     const patients = [];
     for (let i = 0; i < 10; i++) {
       const { firstName, lastName, gender } = generateSyrianName();
@@ -150,11 +195,10 @@ const seedDatabase = async () => {
         gender,
         address: `${syrianCities[Math.floor(Math.random() * syrianCities.length)]}, Syria`
       });
-
-      // Create medical file
+      const bloodType = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'][Math.floor(Math.random() * 8)];
       const medicalFile = await MedicalFile.create({
         patientId: patientUser._id,
-        bloodType: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'][Math.floor(Math.random() * 8)],
+        bloodType,
         allergies: [
           {
             name: 'Penicillin',
@@ -195,21 +239,17 @@ const seedDatabase = async () => {
           expiryDate: new Date(2025, 11, 31)
         }
       });
-
       const patient = await Patient.create({
         user: patientUser._id,
         medicalFile: medicalFile._id,
+        bloodType,
         doctorsList: [doctors[Math.floor(Math.random() * doctors.length)].doctor._id]
       });
-
       patients.push({ user: patientUser, patient, medicalFile });
     }
-
-    // Create appointments
     for (const { patient } of patients) {
       const doctor = doctors[Math.floor(Math.random() * doctors.length)].doctor;
       const appointmentDate = randomDate(new Date(), new Date(2024, 11, 31));
-      
       await Appointment.create({
         patient: patient._id,
         doctor: doctor._id,
@@ -221,33 +261,23 @@ const seedDatabase = async () => {
         notes: 'Please bring previous medical reports'
       });
     }
-
-    // Create consultations
     for (const { patient } of patients) {
       const doctor = doctors[Math.floor(Math.random() * doctors.length)].doctor;
-      
       await Consultation.create({
-        patientId: patient.user,
-        doctorId: doctor.user,
+        patient: patient._id,
+        doctor: doctor.user._id,
         reason: 'Follow-up consultation',
-        preferredResponseTime: '24hours',
-        status: 'inProgress',
+        preferredTime: '09:00',
+        status: 'In Progress',
         messages: [
           {
-            sender: doctor.user,
-            content: 'Hello, how are you feeling today?',
-            timestamp: new Date()
-          },
-          {
-            sender: patient.user,
-            content: 'I am feeling better, thank you for asking.',
+            sender: patient.user._id,
+            content: 'Hello, I need a follow-up consultation.',
             timestamp: new Date()
           }
         ]
       });
     }
-
-    // Create medicines
     const medicines = [
       {
         name: 'Paracetamol',
@@ -268,15 +298,11 @@ const seedDatabase = async () => {
         manufacturer: 'Syrian Pharmaceutical Industries'
       }
     ];
-
     for (const medicine of medicines) {
       await Medicine.create(medicine);
     }
-
-    // Create prescriptions
     for (const { patient } of patients) {
       const doctor = doctors[Math.floor(Math.random() * doctors.length)].doctor;
-      
       await Prescription.create({
         patientId: patient.user,
         doctorId: doctor.user,
@@ -295,11 +321,8 @@ const seedDatabase = async () => {
         status: 'active'
       });
     }
-
-    // Create conversations
     for (const { patient } of patients) {
       const doctor = doctors[Math.floor(Math.random() * doctors.length)].doctor;
-      
       await Conversation.create({
         participants: [patient.user, doctor.user],
         messages: [
@@ -320,8 +343,6 @@ const seedDatabase = async () => {
         status: 'active'
       });
     }
-
-    // Create notifications
     for (const { patient } of patients) {
       await Notification.create({
         user: patient.user,
@@ -331,7 +352,6 @@ const seedDatabase = async () => {
         isRead: false
       });
     }
-
     console.log('Database seeded successfully');
     process.exit(0);
   } catch (error) {
@@ -339,5 +359,4 @@ const seedDatabase = async () => {
     process.exit(1);
   }
 };
-
 seedDatabase(); 

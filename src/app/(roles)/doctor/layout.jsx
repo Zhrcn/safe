@@ -1,55 +1,69 @@
 'use client';
-
-import { 
-    Home, Calendar, FileText, Users, 
-    MessageSquare, Settings, Bell, LogOut, BarChart2, User, Pill 
-} from 'lucide-react';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
+import { 
+    Home, Calendar, Stethoscope, Users, Pill, FileText, MessageCircle,
+    ClipboardList, Settings, UserCircle
+} from 'lucide-react';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
-const sidebarItems = [
+const doctorSidebarItems = [
     {
-        name: 'Dashboard',
-        icon: Home,
-        link: '/doctor/dashboard'
+        path: '/doctor/dashboard',
+        label: 'Dashboard',
+        icon: <Home className="h-5 w-5" />
     },
     {
-        name: 'Appointments',
-        icon: Calendar,
-        link: '/doctor/appointments'
+        path: '/doctor/appointments',
+        label: 'Appointments',
+        icon: <Calendar className="h-5 w-5" />
     },
     {
-        name: 'Patients',
-        icon: Users,
-        link: '/doctor/patients'
+        path: '/doctor/consultations',
+        label: 'Consultations',
+        icon: <Stethoscope className="h-5 w-5" />
     },
     {
-        name: 'Medicine',
-        icon: Pill,
-        link: '/doctor/medicine'
+        path: '/doctor/patients',
+        label: 'Patients',
+        icon: <Users className="h-5 w-5" />
     },
     {
-        name: 'Analytics',
-        icon: BarChart2,
-        link: '/doctor/analytics'
+        path: '/doctor/prescriptions',
+        label: 'Prescriptions',
+        icon: <Pill className="h-5 w-5" />
     },
     {
-        name: 'Messaging',
-        icon: MessageSquare,
-        link: '/doctor/messaging'
+        path: '/doctor/medical-records',
+        label: 'Medical Records',
+        icon: <FileText className="h-5 w-5" />
     },
     {
-        name: 'Profile',
-        icon: User,
-        link: '/doctor/profile'
+        path: '/doctor/messaging',
+        label: 'Messages',
+        icon: <MessageCircle className="h-5 w-5" />
+    },
+    {
+        path: '/doctor/tasks',
+        label: 'Tasks',
+        icon: <ClipboardList className="h-5 w-5" />
     }
 ];
 
 export default function DoctorLayout({ children }) {
+    const pathname = usePathname();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
     return (
         <AppLayout
+            headerBg="bg-primary"
+            sidebarBg="bg-card"
+            logoBg="bg-muted"
             title="Doctor Portal"
-            sidebarItems={sidebarItems}
+            sidebarItems={doctorSidebarItems}
             allowedRoles={['doctor']}
+            headerRightContent={<ThemeSwitcher />}
         >
             {children}
         </AppLayout>

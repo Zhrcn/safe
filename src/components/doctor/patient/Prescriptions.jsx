@@ -1,291 +1,1 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-    Box,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    Divider,
-    Chip,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    IconButton,
-    Grid,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Print as PrintIcon
-} from '@mui/icons-material';
-import { fetchPrescriptionsByPatient } from '../../../store/slices/doctor/doctorPrescriptionsSlice';
-import { createPrescription, updatePrescription } from '../../../store/slices/doctor/doctorPrescriptionsSlice';
-
-const PrescriptionPaper = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: theme.shape.borderRadius
-}));
-
-const Prescriptions = ({ patientId }) => {
-    const dispatch = useDispatch();
-    const { prescriptions, loading } = useSelector((state) => state.doctorPrescriptions);
-    const [openDialog, setOpenDialog] = React.useState(false);
-    const [selectedPrescription, setSelectedPrescription] = React.useState(null);
-    const [formData, setFormData] = React.useState({
-        medication: '',
-        dosage: '',
-        frequency: '',
-        duration: '',
-        instructions: '',
-        status: 'active'
-    });
-
-    useEffect(() => {
-        dispatch(fetchPrescriptionsByPatient(patientId));
-    }, [dispatch, patientId]);
-
-    const handleOpenDialog = (prescription = null) => {
-        if (prescription) {
-            setSelectedPrescription(prescription);
-            setFormData({
-                medication: prescription.medication,
-                dosage: prescription.dosage,
-                frequency: prescription.frequency,
-                duration: prescription.duration,
-                instructions: prescription.instructions,
-                status: prescription.status
-            });
-        } else {
-            setSelectedPrescription(null);
-            setFormData({
-                medication: '',
-                dosage: '',
-                frequency: '',
-                duration: '',
-                instructions: '',
-                status: 'active'
-            });
-        }
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-        setSelectedPrescription(null);
-        setFormData({
-            medication: '',
-            dosage: '',
-            frequency: '',
-            duration: '',
-            instructions: '',
-            status: 'active'
-        });
-    };
-
-    const handleSubmit = () => {
-        const prescriptionData = {
-            ...formData,
-            patientId,
-            date: new Date().toISOString()
-        };
-
-        if (selectedPrescription) {
-            dispatch(updatePrescription({
-                id: selectedPrescription.id,
-                ...prescriptionData
-            }));
-        } else {
-            dispatch(createPrescription(prescriptionData));
-        }
-        handleCloseDialog();
-    };
-
-    const handlePrint = (prescription) => {
-        // Implement print functionality
-        console.log('Printing prescription:', prescription);
-    };
-
-    const formatDate = (dateString) => {
-        const options = {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'active':
-                return 'success';
-            case 'completed':
-                return 'info';
-            case 'cancelled':
-                return 'error';
-            default:
-                return 'default';
-        }
-    };
-
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                <Typography>Loading prescriptions...</Typography>
-            </Box>
-        );
-    }
-
-    return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Prescriptions</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenDialog()}
-                >
-                    New Prescription
-                </Button>
-            </Box>
-
-            <List>
-                {prescriptions.map((prescription, index) => (
-                    <React.Fragment key={prescription.id}>
-                        <PrescriptionPaper>
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                <Box>
-                                    <Typography variant="subtitle1">
-                                        {prescription.medication}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Prescribed on: {formatDate(prescription.date)}
-                                    </Typography>
-                                    <Box display="flex" gap={1} mt={1}>
-                                        <Chip
-                                            label={prescription.status}
-                                            color={getStatusColor(prescription.status)}
-                                            size="small"
-                                        />
-                                        <Chip
-                                            label={`${prescription.dosage} - ${prescription.frequency}`}
-                                            variant="outlined"
-                                            size="small"
-                                        />
-                                    </Box>
-                                </Box>
-                                <Box>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleOpenDialog(prescription)}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handlePrint(prescription)}
-                                    >
-                                        <PrintIcon />
-                                    </IconButton>
-                                </Box>
-                            </Box>
-
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Duration: {prescription.duration}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Instructions: {prescription.instructions}
-                            </Typography>
-                        </PrescriptionPaper>
-                        {index < prescriptions.length - 1 && <Divider />}
-                    </React.Fragment>
-                ))}
-            </List>
-
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {selectedPrescription ? 'Edit Prescription' : 'New Prescription'}
-                </DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label="Medication"
-                                value={formData.medication}
-                                onChange={(e) => setFormData({ ...formData, medication: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Dosage"
-                                value={formData.dosage}
-                                onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Frequency"
-                                value={formData.frequency}
-                                onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Duration"
-                                value={formData.duration}
-                                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>Status</InputLabel>
-                                <Select
-                                    value={formData.status}
-                                    label="Status"
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                >
-                                    <MenuItem value="active">Active</MenuItem>
-                                    <MenuItem value="completed">Completed</MenuItem>
-                                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
-                                label="Instructions"
-                                value={formData.instructions}
-                                onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">
-                        {selectedPrescription ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
-};
-
-export default Prescriptions; 
+import React, { useEffect, useState } from 'react';import { useDispatch, useSelector } from 'react-redux';import {    Plus as AddIcon,    Edit as EditIcon,    Printer as PrinterIcon} from 'lucide-react';import { fetchPrescriptionsByPatient, createPrescription, updatePrescription } from '../../../store/slices/doctor/doctorPrescriptionsSlice';const Prescriptions = ({ patientId }) => {    const dispatch = useDispatch();    const { prescriptions, loading } = useSelector((state) => state.doctorPrescriptions);    const [openDialog, setOpenDialog] = useState(false);    const [selectedPrescription, setSelectedPrescription] = useState(null);    const [formData, setFormData] = useState({        medication: '',        dosage: '',        frequency: '',        duration: '',        instructions: '',        status: 'active'    });    useEffect(() => {        dispatch(fetchPrescriptionsByPatient(patientId));    }, [dispatch, patientId]);    const handleOpenDialog = (prescription = null) => {        if (prescription) {            setSelectedPrescription(prescription);            setFormData({                medication: prescription.medication,                dosage: prescription.dosage,                frequency: prescription.frequency,                duration: prescription.duration,                instructions: prescription.instructions,                status: prescription.status            });        } else {            setSelectedPrescription(null);            setFormData({                medication: '',                dosage: '',                frequency: '',                duration: '',                instructions: '',                status: 'active'            });        }        setOpenDialog(true);    };    const handleCloseDialog = () => {        setOpenDialog(false);        setSelectedPrescription(null);        setFormData({            medication: '',            dosage: '',            frequency: '',            duration: '',            instructions: '',            status: 'active'        });    };    const handleSubmit = () => {        const prescriptionData = {            ...formData,            patientId,            date: new Date().toISOString()        };        if (selectedPrescription) {            dispatch(updatePrescription({                id: selectedPrescription.id,                ...prescriptionData            }));        } else {            dispatch(createPrescription(prescriptionData));        }        handleCloseDialog();    };    const handlePrint = (prescription) => {        console.log('Printing prescription:', prescription);    };    const formatDate = (dateString) => {        const options = {            year: 'numeric',            month: 'short',            day: 'numeric'        };        return new Date(dateString).toLocaleDateString(undefined, options);    };    const getStatusColorClass = (status) => {        switch (status) {            case 'active':                return 'bg-green-100 text-green-800';            case 'completed':                return 'bg-blue-100 text-blue-800';            case 'cancelled':                return 'bg-red-100 text-red-800';            default:                return 'bg-gray-100 text-gray-800';        }    };    if (loading) {        return (            <div className="flex justify-center items-center h-48">                <p className="text-gray-500">Loading prescriptions...</p>            </div>        );    }    return (        <div className="p-4 bg-white rounded-lg shadow-sm">            <div className="flex justify-between items-center mb-4">                <h2 className="text-xl font-semibold text-gray-900">Prescriptions</h2>                <button                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"                    onClick={() => handleOpenDialog()}                >                    <AddIcon className="h-5 w-5" />                    <span>New Prescription</span>                </button>            </div>            <div className="divide-y divide-gray-200">                {prescriptions.map((prescription, index) => (                    <div key={prescription.id} className="py-4">                        <div className="flex justify-between items-start">                            <div>                                <p className="text-lg font-medium text-gray-900">                                    {prescription.medication}                                </p>                                <p className="text-sm text-gray-600">                                    Prescribed on: {formatDate(prescription.date)}                                </p>                                <div className="flex gap-2 mt-2">                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColorClass(prescription.status)}`}>                                        {prescription.status}                                    </span>                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">                                        {`${prescription.dosage} - ${prescription.frequency}`}                                    </span>                                </div>                            </div>                            <div className="flex space-x-2">                                <button                                    className="p-1 text-gray-500 hover:text-gray-700"                                    onClick={() => handleOpenDialog(prescription)}                                >                                    <EditIcon className="h-5 w-5" />                                </button>                                <button                                    className="p-1 text-gray-500 hover:text-gray-700"                                    onClick={() => handlePrint(prescription)}                                >                                    <PrinterIcon className="h-5 w-5" />                                </button>                            </div>                        </div>                        <p className="text-sm text-gray-600 mt-2">                            Duration: {prescription.duration}                        </p>                        <p className="text-sm text-gray-600">                            Instructions: {prescription.instructions}                        </p>                    </div>                ))}            </div>            {openDialog && (                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">                    <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">                        <h3 className="text-lg font-semibold text-gray-900 mb-4">                            {selectedPrescription ? 'Edit Prescription' : 'New Prescription'}                        </h3>                        <form className="space-y-4">                            <div>                                <label htmlFor="medication" className="block text-sm font-medium text-gray-700">Medication</label>                                <input                                    type="text"                                    id="medication"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.medication}                                    onChange={(e) => setFormData({ ...formData, medication: e.target.value })}                                />                            </div>                            <div>                                <label htmlFor="dosage" className="block text-sm font-medium text-gray-700">Dosage</label>                                <input                                    type="text"                                    id="dosage"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.dosage}                                    onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}                                />                            </div>                            <div>                                <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">Frequency</label>                                <input                                    type="text"                                    id="frequency"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.frequency}                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}                                />                            </div>                            <div>                                <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duration</label>                                <input                                    type="text"                                    id="duration"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.duration}                                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}                                />                            </div>                            <div>                                <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>                                <textarea                                    id="instructions"                                    rows="3"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.instructions}                                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}                                ></textarea>                            </div>                            <div>                                <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>                                <select                                    id="status"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={formData.status}                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}                                >                                    <option value="active">Active</option>                                    <option value="completed">Completed</option>                                    <option value="cancelled">Cancelled</option>                                </select>                            </div>                        </form>                        <div className="mt-6 flex justify-end space-x-3">                            <button                                type="button"                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                                onClick={handleCloseDialog}                            >                                Cancel                            </button>                            <button                                type="submit"                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                                onClick={handleSubmit}                            >                                {selectedPrescription ? 'Save Changes' : 'Create Prescription'}                            </button>                        </div>                    </div>                </div>            )}        </div>    );};export default Prescriptions; 

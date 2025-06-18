@@ -1,7 +1,7 @@
 export const medicalFiles = [
   {
     id: '1',
-    patientId: '3', // ID of the first patient from mockdata/patients.js
+    patientId: '3', 
     bloodType: 'A+',
     status: 'active',
     allergies: [
@@ -27,7 +27,7 @@ export const medicalFiles = [
         normalRange: '120/80',
         unit: 'mmHg',
         labName: 'City Lab',
-        doctorId: '2', // ID of the doctor from mockdata/doctors.js
+        doctorId: '2', 
         documents: [],
       },
     ],
@@ -37,7 +37,7 @@ export const medicalFiles = [
         date: new Date('2023-01-01'),
         findings: 'Normal',
         location: 'Chest',
-        doctorId: '2', // ID of the doctor from mockdata/doctors.js
+        doctorId: '2', 
         images: [],
       },
     ],
@@ -58,7 +58,7 @@ export const medicalFiles = [
     prescriptionsList: [],
     medicationHistory: [
       {
-        medicine: '1', // ID of the medicine from mockdata/medicines.js
+        medicine: '1', 
         name: 'Lisinopril',
         dose: '10mg',
         frequency: 'Once daily',
@@ -67,7 +67,7 @@ export const medicalFiles = [
         endDate: new Date('2023-12-31'),
         active: true,
         instructions: 'Take with food',
-        prescribedBy: '2', // ID of the doctor from mockdata/doctors.js
+        prescribedBy: '2', 
         reminders: [
           {
             time: '08:00',
@@ -92,7 +92,7 @@ export const medicalFiles = [
       {
         title: 'Medical Report',
         type: 'PDF',
-        url: 'https://example.com/report.pdf',
+        url: 'https:labName',
         uploadDate: new Date('2023-01-01'),
         tags: ['report', 'medical'],
       },
@@ -100,7 +100,7 @@ export const medicalFiles = [
     diagnoses: [
       {
         conditionName: 'Hypertension',
-        diagnosedBy: '2', // ID of the doctor from mockdata/doctors.js
+        diagnosedBy: '2', 
         date: new Date('2020-01-01'),
         notes: 'Regular monitoring required',
         treatmentPlan: 'Medication and lifestyle changes',
@@ -134,7 +134,7 @@ export const medicalFiles = [
     generalMedicalHistory: [
       {
         date: new Date('2023-01-01'),
-        doctorId: '2', // ID of the doctor from mockdata/doctors.js
+        doctorId: '2', 
         visitReason: 'Regular checkup',
         diagnosisSummary: 'Healthy',
         treatmentSummary: 'None',
@@ -156,4 +156,61 @@ export const medicalFiles = [
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+  {
+    id: '2',
+    patientId: '4',
+    bloodType: 'O-',
+    status: 'inactive',
+    allergies: [
+      {
+        name: 'None',
+        severity: '',
+        reaction: '',
+      },
+    ],
+    chronicConditions: [
+      {
+        name: 'Diabetes',
+        diagnosisDate: new Date('2018-05-10'),
+        status: 'controlled',
+        notes: 'On medication',
+      },
+    ],
+    labResults: [
+      {
+        testName: 'Glucose',
+        date: new Date('2023-02-15'),
+        results: '90',
+        normalRange: '70-99',
+        unit: 'mg/dL',
+        labName: 'Central Lab',
+        doctorId: '3',
+        documents: [],
+      },
+    ],
+    imagingReports: [
+      {
+        type: 'MRI',
+        date: new Date('2023-03-20'),
+        findings: 'No abnormalities',
+        location: 'Brain',
+        doctorId: '3',
+        images: [],
+      },
+    ],
+    vitalSigns: [
+      {
+        date: new Date('2023-03-20'),
+        bloodPressure: '130/85',
+        heartRate: 80,
+        temperature: 36.8,
+        respiratoryRate: 18,
+        weight: 80,
+        height: 180,
+        bmi: 24.7,
+        oxygenSaturation: 97,
+        notes: 'Slightly elevated BP',
+      },
+    ]
+  }
 ]; 

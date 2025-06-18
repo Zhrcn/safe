@@ -1,50 +1,48 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    TextField, 
-    Button, 
-    Grid, 
-    Autocomplete, 
-    Alert, 
-    FormControl, 
-    InputLabel, 
-    Select, 
-    MenuItem, 
-    List, 
-    ListItem, 
-    ListItemText, 
-    ListItemIcon, 
-    Divider,
-    Card,
-    CardContent,
-    Chip
-} from '@mui/material';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Separator } from '@/components/ui/Separator';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { UserRound, Send, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
-
+import { UserRound, Send, Clock, CheckCircle2, XCircle, AlertCircle, FileText, Calendar, Info, MapPin } from 'lucide-react'; 
+import { cn } from '@/lib/utils';
 const referralSchema = z.object({
     doctorId: z.string().min(1, 'Doctor is required'),
     reason: z.string().min(5, 'Reason must be at least 5 characters'),
     notes: z.string().optional(),
     urgency: z.enum(['Low', 'Medium', 'High', 'Emergency'])
 });
-
 export default function ReferralForm({ patientId, patientName, previousReferrals = [], onClose, onSuccess }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const { 
-        control, 
-        handleSubmit, 
+    const {
+        control,
+        handleSubmit,
         formState: { errors },
         reset
     } = useForm({
@@ -56,12 +54,10 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
             urgency: 'Medium'
         }
     });
-
     useEffect(() => {
         const loadDoctors = async () => {
             try {
                 setLoading(true);
-                // Use local state and mock data for getAvailableDoctors and createReferral logic.
                 setDoctors([
                     { id: '1', name: 'Dr. John Doe', specialty: 'Cardiologist' },
                     { id: '2', name: 'Dr. Jane Smith', specialty: 'Dermatologist' },
@@ -74,27 +70,24 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 setLoading(false);
             }
         };
-        
         loadDoctors();
     }, []);
-
     const getStatusColor = (status) => {
-        switch(status.toLowerCase()) {
+        switch(status?.toLowerCase()) {
             case 'pending':
-                return 'warning';
+                return 'bg-yellow-100 text-yellow-800';
             case 'accepted':
-                return 'success';
+                return 'bg-green-100 text-green-800';
             case 'rejected':
-                return 'error';
+                return 'bg-red-100 text-red-800';
             case 'completed':
-                return 'info';
+                return 'bg-blue-100 text-blue-800';
             default:
-                return 'default';
+                return 'bg-gray-100 text-gray-800';
         }
     };
-
     const getStatusIcon = (status) => {
-        switch(status.toLowerCase()) {
+        switch(status?.toLowerCase()) {
             case 'pending':
                 return <Clock size={16} className="text-amber-500" />;
             case 'accepted':
@@ -107,18 +100,15 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 return <AlertCircle size={16} className="text-gray-500" />;
         }
     };
-
     const onSubmit = async (data) => {
         try {
             setIsSubmitting(true);
             setError('');
-            
             const doctor = doctors.find(d => d.id === data.doctorId);
             if (!doctor) {
                 setError('Selected doctor not found');
                 return;
             }
-            
             const referralData = {
                 doctorId: data.doctorId,
                 doctorName: doctor.name,
@@ -127,18 +117,13 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 notes: data.notes || '',
                 urgency: data.urgency
             };
-            
-            // Use local state and mock data for createReferral logic.
             const result = { success: true, referral: referralData };
-            
             if (result.success) {
                 setSuccess('Referral created successfully');
                 reset();
-                
                 if (onSuccess) {
                     onSuccess(result.referral);
                 }
-                
                 setTimeout(() => {
                     if (onClose) onClose();
                 }, 2000);
@@ -152,240 +137,150 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
             setIsSubmitting(false);
         }
     };
-
     return (
-        <Paper className="p-6 bg-card border border-border rounded-lg">
-            <Box className="flex justify-between items-center mb-6">
-                <Box>
-                    <Typography variant="h5" component="h2" className="text-foreground font-bold">
+        <div className="p-6 bg-card border border-border rounded-lg">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h2 className="text-2xl text-foreground font-bold mb-1">
                         Create Referral
-                    </Typography>
+                    </h2>
                     {patientName && (
-                        <Typography variant="subtitle1" className="text-muted-foreground">
+                        <p className="text-muted-foreground text-base">
                             for {patientName}
-                        </Typography>
+                        </p>
                     )}
-                </Box>
-            </Box>
-
+                </div>
+            </div>
             {error && (
-                <Alert severity="error" className="mb-4">
-                    {error}
-                </Alert>
+                <div className="bg-red-100 text-red-800 border border-red-200 rounded-md p-3 mb-4 flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    <p className="text-sm">{error}</p>
+                </div>
             )}
-
             {success && (
-                <Alert severity="success" className="mb-4">
-                    {success}
-                </Alert>
+                <div className="bg-green-100 text-green-800 border border-green-200 rounded-md p-3 mb-4 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <p className="text-sm">{success}</p>
+                </div>
             )}
-
             {previousReferrals && previousReferrals.length > 0 && (
-                <Box className="mb-6">
-                    <Typography variant="subtitle1" className="text-foreground font-medium mb-2">
+                <div className="mb-6">
+                    <h3 className="text-lg text-foreground font-semibold mb-3">
                         Previous Referrals
-                    </Typography>
-                    <Grid container spacing={2}>
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {previousReferrals.map((referral, index) => (
-                            <Grid item xs={12} md={6} key={index}>
-                                <Card className="border border-border">
-                                    <CardContent>
-                                        <Box className="flex items-center justify-between mb-2">
-                                            <Typography variant="subtitle1" className="font-medium text-foreground">
-                                                {referral.doctorName}
-                                            </Typography>
-                                            <Chip 
-                                                label={referral.status} 
-                                                size="small" 
-                                                color={getStatusColor(referral.status)}
-                                                icon={getStatusIcon(referral.status)}
-                                            />
-                                        </Box>
-                                        <Typography variant="body2" className="text-muted-foreground mb-2">
-                                            {referral.doctorSpecialty} • {referral.date}
-                                        </Typography>
-                                        <Typography variant="body2" className="text-foreground">
-                                            <span className="font-medium">Reason:</span> {referral.reason}
-                                        </Typography>
-                                        {referral.notes && (
-                                            <Typography variant="body2" className="text-foreground mt-1">
-                                                <span className="font-medium">Notes:</span> {referral.notes}
-                                            </Typography>
-                                        )}
-                                        <Box className="mt-2">
-                                            <Chip 
-                                                label={`Urgency: ${referral.urgency}`} 
-                                                size="small" 
-                                                color={
-                                                    referral.urgency === 'High' || referral.urgency === 'Emergency' 
-                                                        ? 'error' 
-                                                        : referral.urgency === 'Medium' ? 'warning' : 'default'
-                                                }
-                                                variant="outlined"
-                                            />
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                            <Card key={index} className="border border-border p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="font-medium text-foreground text-base">
+                                        {referral.doctorName}
+                                    </p>
+                                    <Badge className={getStatusColor(referral.status)}>
+                                        {referral.status}
+                                    </Badge>
+                                </div>
+                                <div className="space-y-1 text-sm text-muted-foreground">
+                                    <p><strong>Reason:</strong> {referral.reason}</p>
+                                    {referral.notes && <p><strong>Notes:</strong> {referral.notes}</p>}
+                                    <p><strong>Urgency:</strong> {referral.urgency}</p>
+                                    <p className="flex items-center gap-1">
+                                        {getStatusIcon(referral.status)}
+                                        <span>Status: {referral.status}</span>
+                                    </p>
+                                </div>
+                            </Card>
                         ))}
-                    </Grid>
-                </Box>
+                    </div>
+                </div>
             )}
-
-            <Divider className="my-4" />
-
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-                <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                        <Controller
-                            name="doctorId"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl 
-                                    fullWidth 
-                                    variant="outlined" 
-                                    error={!!errors.doctorId}
-                                    disabled={isSubmitting || loading}
-                                >
-                                    <InputLabel className="text-muted-foreground">Refer to Doctor</InputLabel>
-                                    <Select
-                                        {...field}
-                                        label="Refer to Doctor"
-                                        className="text-foreground bg-background"
-                                    >
-                                        {loading ? (
-                                            <MenuItem disabled>Loading doctors...</MenuItem>
-                                        ) : doctors.length === 0 ? (
-                                            <MenuItem disabled>No doctors available</MenuItem>
-                                        ) : (
-                                            doctors.map(doctor => (
-                                                <MenuItem key={doctor.id} value={doctor.id}>
-                                                    {doctor.name} - {doctor.specialty}
-                                                </MenuItem>
-                                            ))
-                                        )}
-                                    </Select>
-                                    {errors.doctorId && (
-                                        <Typography variant="caption" color="error">
-                                            {errors.doctorId.message}
-                                        </Typography>
-                                    )}
-                                </FormControl>
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Controller
-                            name="reason"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Reason for Referral"
-                                    variant="outlined"
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    error={!!errors.reason}
-                                    helperText={errors.reason?.message}
-                                    disabled={isSubmitting}
-                                    placeholder="Please describe the reason for this referral"
-                                    className="bg-background"
-                                    InputProps={{
-                                        className: "text-foreground"
-                                    }}
-                                    InputLabelProps={{
-                                        className: "text-muted-foreground"
-                                    }}
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Controller
-                            name="urgency"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl 
-                                    fullWidth 
-                                    variant="outlined" 
-                                    error={!!errors.urgency}
-                                    disabled={isSubmitting}
-                                >
-                                    <InputLabel className="text-muted-foreground">Urgency</InputLabel>
-                                    <Select
-                                        {...field}
-                                        label="Urgency"
-                                        className="text-foreground bg-background"
-                                    >
-                                        <MenuItem value="Low">Low</MenuItem>
-                                        <MenuItem value="Medium">Medium</MenuItem>
-                                        <MenuItem value="High">High</MenuItem>
-                                        <MenuItem value="Emergency">Emergency</MenuItem>
-                                    </Select>
-                                    {errors.urgency && (
-                                        <Typography variant="caption" color="error">
-                                            {errors.urgency.message}
-                                        </Typography>
-                                    )}
-                                </FormControl>
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Controller
-                            name="notes"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Additional Notes (Optional)"
-                                    variant="outlined"
-                                    fullWidth
-                                    multiline
-                                    rows={2}
-                                    error={!!errors.notes}
-                                    helperText={errors.notes?.message}
-                                    disabled={isSubmitting}
-                                    className="bg-background"
-                                    InputProps={{
-                                        className: "text-foreground"
-                                    }}
-                                    InputLabelProps={{
-                                        className: "text-muted-foreground"
-                                    }}
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} className="flex justify-end gap-2 mt-4">
-                        {onClose && (
-                            <Button 
-                                variant="outlined" 
-                                onClick={onClose}
-                                disabled={isSubmitting}
-                                className="text-muted-foreground border-muted-foreground hover:bg-muted/50"
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="doctorId">Referral To Doctor</Label>
+                    <Controller
+                        name="doctorId"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
                             >
-                                Cancel
-                            </Button>
+                                <SelectTrigger className={cn({ 'border-destructive': errors.doctorId })}>
+                                    <SelectValue placeholder="Select a doctor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {loading ? (
+                                        <SelectItem value="" disabled>Loading doctors...</SelectItem>
+                                    ) : doctors.length > 0 ? (
+                                        doctors.map((doctor) => (
+                                            <SelectItem key={doctor.id} value={doctor.id}>
+                                                {doctor.name} ({doctor.specialty})
+                                            </SelectItem>
+                                        ))
+                                    ) : (
+                                        <SelectItem value="" disabled>No doctors available</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
                         )}
-                        <Button 
-                            type="submit" 
-                            variant="contained" 
-                            color="primary"
-                            disabled={isSubmitting || loading}
-                            startIcon={<Send size={16} />}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                            {isSubmitting ? 'Creating...' : 'Create Referral'}
-                        </Button>
-                    </Grid>
-                </Grid>
+                    />
+                    {errors.doctorId && (
+                        <p className="text-sm text-destructive">{errors.doctorId.message}</p>
+                    )}
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="reason">Reason for Referral</Label>
+                    <Textarea
+                        id="reason"
+                        {...control.register('reason')}
+                        className={cn({ 'border-destructive': errors.reason })}
+                        rows={4}
+                        placeholder="Explain the reason for referral..."
+                    />
+                    {errors.reason && (
+                        <p className="text-sm text-destructive">{errors.reason.message}</p>
+                    )}
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                    <Textarea
+                        id="notes"
+                        {...control.register('notes')}
+                        rows={4}
+                        placeholder="Any additional notes for the doctor..."
+                    />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="urgency">Urgency</Label>
+                    <Controller
+                        name="urgency"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select urgency" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Low">Low</SelectItem>
+                                    <SelectItem value="Medium">Medium</SelectItem>
+                                    <SelectItem value="High">High</SelectItem>
+                                    <SelectItem value="Emergency">Emergency</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Submitting...' : 'Submit Referral'}
+                    </Button>
+                </div>
             </form>
-        </Paper>
+        </div>
     );
 } 

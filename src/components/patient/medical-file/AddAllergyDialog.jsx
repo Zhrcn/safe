@@ -1,137 +1,160 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Box
-} from '@mui/material';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
 import { addAllergy } from '@/store/slices/patient/profileSlice';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/Calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
+import { format } from 'date-fns';
+import { CalendarIcon, Plus } from 'lucide-react';
+import { useNotification } from '@/components/ui/Notification';
 
 const AddAllergyDialog = ({ open, onClose }) => {
-    const dispatch = useDispatch();
-    const [formData, setFormData] = useState({
-        name: '',
-        severity: '',
-        notes: ''
-    });
-    const [errors, setErrors] = useState({});
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
-
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData.name.trim()) {
-            newErrors.name = 'Allergy name is required';
-        }
-        if (!formData.severity) {
-            newErrors.severity = 'Severity level is required';
-        }
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (validateForm()) {
-            try {
-                await dispatch(addAllergy(formData)).unwrap();
-                onClose();
-                setFormData({
-                    name: '',
-                    severity: '',
-                    notes: ''
-                });
-            } catch (error) {
-                setErrors({
-                    submit: error
-                });
-            }
-        }
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Add New Allergy</DialogTitle>
-            <form onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Box display="flex" flexDirection="column" gap={2}>
-                        <TextField
-                            name="name"
-                            label="Allergy Name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            error={!!errors.name}
-                            helperText={errors.name}
-                            fullWidth
-                            required
-                        />
-
-                        <FormControl fullWidth error={!!errors.severity} required>
-                            <InputLabel>Severity</InputLabel>
-                            <Select
-                                name="severity"
-                                value={formData.severity}
-                                onChange={handleChange}
-                                label="Severity"
-                            >
-                                <MenuItem value="mild">Mild</MenuItem>
-                                <MenuItem value="moderate">Moderate</MenuItem>
-                                <MenuItem value="severe">Severe</MenuItem>
-                            </Select>
-                            {errors.severity && (
-                                <Box color="error.main" fontSize="0.75rem" mt={1}>
-                                    {errors.severity}
-                                </Box>
-                            )}
-                        </FormControl>
-
-                        <TextField
-                            name="notes"
-                            label="Additional Notes"
-                            value={formData.notes}
-                            onChange={handleChange}
-                            multiline
-                            rows={4}
-                            fullWidth
-                        />
-
-                        {errors.submit && (
-                            <Box color="error.main" fontSize="0.75rem">
-                                {errors.submit}
-                            </Box>
-                        )}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cancel</Button>
-                    <Button type="submit" variant="contained" color="primary">
-                        Add Allergy
-                    </Button>
-                </DialogActions>
-            </form>
-        </Dialog>
-    );
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState({
+    name: '',
+    severity: '',
+    notes: '',
+  });
+  const [errors, setErrors] = useState({});
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+  const handleSelectChange = (name) => (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = 'Allergy name is required';
+    }
+    if (!formData.severity) {
+      newErrors.severity = 'Severity level is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        await dispatch(addAllergy(formData)).unwrap();
+        onClose();
+        setFormData({
+          name: '',
+          severity: '',
+          notes: '',
+        });
+      } catch (error) {
+        setErrors({
+          submit: error.message || 'An unexpected error occurred',
+        });
+      }
+    }
+  };
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Allergy</DialogTitle>
+          <DialogDescription>
+            Fill in the details for the new allergy.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Allergy Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={cn({ 'border-destructive': errors.name })}
+              required
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="severity">Severity</Label>
+            <Select
+              name="severity"
+              value={formData.severity}
+              onValueChange={handleSelectChange('severity')}
+            >
+              <SelectTrigger className={cn({ 'border-destructive': errors.severity })}>
+                <SelectValue placeholder="Select severity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mild">Mild</SelectItem>
+                <SelectItem value="moderate">Moderate</SelectItem>
+                <SelectItem value="severe">Severe</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.severity && (
+              <p className="text-sm text-destructive">{errors.severity}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="notes">Additional Notes</Label>
+            <Textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows={4}
+            />
+          </div>
+          {errors.submit && (
+            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Add Allergy</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 };
-
 export default AddAllergyDialog; 

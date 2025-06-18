@@ -1,11 +1,10 @@
 'use client';
-
 import { useState, useEffect } from 'react';
-import { Box, Grid, Typography, Button, Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { Users, Activity, Bell, Server, UserPlus, Settings, BarChart2, PieChart } from 'lucide-react';
+import { Users, Activity, Bell, Server, UserPlus, Settings } from 'lucide-react';
 import { AdminPageContainer, AdminCard, StatCard, ChartContainer, UserRoleBadge, UserStatusBadge, ActivityLogItem, NotificationItem } from '@/components/admin/AdminComponents';
 import { getUsers, getSystemStats, getActivityLogs, getNotifications } from '@/services/adminService';
-import { BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Grid, Box, Typography } from '@mui/material';
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -25,7 +24,6 @@ export default function AdminDashboard() {
           getActivityLogs(),
           getNotifications()
         ]);
-
         setUsers(usersData);
         setSystemStats(statsData);
         setActivityLogs(logsData);
@@ -36,16 +34,14 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     }
-
     loadDashboardData();
   }, []);
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
   };
 
   const handleMarkAsRead = async (id) => {
-    console.log(`Marking notification ${id} as read`);
     setNotifications(notifications.map(notification =>
       notification.id === id ? { ...notification, isRead: true } : notification
     ));
@@ -59,77 +55,59 @@ export default function AdminDashboard() {
       description="Monitor system health, user activity, and manage platform settings."
     >
       {loading ? (
-        <Box className="flex justify-center items-center h-64">
-          <Typography className="text-muted-foreground">Loading dashboard data...</Typography>
-        </Box>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
       ) : (
         <>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            className="mb-6 border-b border-border"
-            TabIndicatorProps={{ style: { backgroundColor: 'var(--primary)' } }}
-          >
-            <Tab
-              label="Overview"
-              value="overview"
-              className={activeTab === 'overview' ? 'text-primary' : 'text-muted-foreground'}
-            />
-            <Tab
-              label="Users"
-              value="users"
-              className={activeTab === 'users' ? 'text-primary' : 'text-muted-foreground'}
-            />
-            <Tab
-              label="Activity"
-              value="activity"
-              className={activeTab === 'activity' ? 'text-primary' : 'text-muted-foreground'}
-            />
-            <Tab
-              label="System"
-              value="system"
-              className={activeTab === 'system' ? 'text-primary' : 'text-muted-foreground'}
-            />
-          </Tabs>
+          <div className="mb-6 border-b border-border">
+            <div className="flex space-x-4">
+              {['overview', 'users', 'activity', 'system'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-4 py-2 font-medium ${
+                    activeTab === tab 
+                      ? 'text-primary border-b-2 border-primary' 
+                      : 'text-muted-foreground hover:text-primary'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {activeTab === 'overview' && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6} lg={3}>
-                <StatCard
-                  title="Total Users"
-                  value={systemStats.users.total}
-                  icon={<Users />}
-                  description={`${systemStats.users.active} active users`}
-                  onClick={() => setActiveTab('users')}
-                />
-              </Grid>
-              <Grid item xs={12} md={6} lg={3}>
-                <StatCard
-                  title="Appointments"
-                  value={systemStats.appointments.total}
-                  icon={<Activity />}
-                  description={`${systemStats.appointments.scheduled} scheduled`}
-                />
-              </Grid>
-              <Grid item xs={12} md={6} lg={3}>
-                <StatCard
-                  title="Prescriptions"
-                  value={systemStats.prescriptions.total}
-                  icon={<Bell />}
-                  description={`${systemStats.prescriptions.active} active`}
-                />
-              </Grid>
-              <Grid item xs={12} md={6} lg={3}>
-                <StatCard
-                  title="System Health"
-                  value={systemStats.systemHealth.status}
-                  icon={<Server />}
-                  description={`${systemStats.systemHealth.uptime} uptime`}
-                  onClick={() => setActiveTab('system')}
-                />
-              </Grid>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard
+                title="Total Users"
+                value={systemStats.users.total}
+                icon={<Users />}
+                description={`${systemStats.users.active} active users`}
+                onClick={() => setActiveTab('users')}
+              />
+              <StatCard
+                title="Appointments"
+                value={systemStats.appointments.total}
+                icon={<Activity />}
+                description={`${systemStats.appointments.scheduled} scheduled`}
+              />
+              <StatCard
+                title="Prescriptions"
+                value={systemStats.prescriptions.total}
+                icon={<Bell />}
+                description={`${systemStats.prescriptions.active} active`}
+              />
+              <StatCard
+                title="System Health"
+                value={systemStats.systemHealth.status}
+                icon={<Server />}
+                description={`${systemStats.systemHealth.uptime} uptime`}
+                onClick={() => setActiveTab('system')}
+              />
 
-              <Grid item xs={12} md={6}>
+              <div className="col-span-1 md:col-span-2">
                 <ChartContainer title="User Distribution by Role">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -158,9 +136,9 @@ export default function AdminDashboard() {
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-              </Grid>
+              </div>
 
-              <Grid item xs={12} md={6}>
+              <div className="col-span-1 md:col-span-2">
                 <ChartContainer title="Appointment Status">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
@@ -181,20 +159,18 @@ export default function AdminDashboard() {
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-              </Grid>
+              </div>
 
-              <Grid item xs={12} md={6}>
+              <div className="col-span-1 md:col-span-2">
                 <AdminCard
                   title="Recent Activity"
                   actions={
-                    <Button
-                      variant="text"
-                      size="small"
-                      className="text-primary hover:bg-primary/10"
+                    <button
                       onClick={() => setActiveTab('activity')}
+                      className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
                       View All
-                    </Button>
+                    </button>
                   }
                 >
                   {activityLogs.slice(0, 3).map((log) => (
@@ -208,19 +184,17 @@ export default function AdminDashboard() {
                     />
                   ))}
                 </AdminCard>
-              </Grid>
+              </div>
 
-              <Grid item xs={12} md={6}>
+              <div className="col-span-1 md:col-span-2">
                 <AdminCard
                   title="Notifications"
                   actions={
-                    <Button
-                      variant="text"
-                      size="small"
-                      className="text-primary hover:bg-primary/10"
+                    <button
+                      className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
                       Mark All Read
-                    </Button>
+                    </button>
                   }
                 >
                   {notifications.slice(0, 3).map((notification) => (
@@ -235,21 +209,20 @@ export default function AdminDashboard() {
                     />
                   ))}
                 </AdminCard>
-              </Grid>
-            </Grid>
+              </div>
+            </div>
           )}
 
           {activeTab === 'users' && (
             <AdminCard
               title="User Management"
               actions={
-                <Button
-                  variant="contained"
-                  startIcon={<UserPlus size={20} />}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                <button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md flex items-center gap-2"
                 >
+                  <UserPlus size={20} />
                   Add User
-                </Button>
+                </button>
               }
             >
               <TableContainer component={Paper} elevation={0} className="bg-transparent">
@@ -295,7 +268,6 @@ export default function AdminDashboard() {
               </TableContainer>
             </AdminCard>
           )}
-
           {activeTab === 'activity' && (
             <AdminCard title="Activity Logs">
               {activityLogs.map((log) => (
@@ -310,7 +282,6 @@ export default function AdminDashboard() {
               ))}
             </AdminCard>
           )}
-
           {activeTab === 'system' && (
             <Grid container spacing={3}>
               <Grid item xs={12}>

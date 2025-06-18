@@ -1,100 +1,84 @@
 'use client';
-
 import React from 'react';
-import { Box, Typography, Paper, InputBase, IconButton, Tooltip, Card, CardContent, CardHeader, Chip } from '@mui/material';
 import { Search, TrendingUp, TrendingDown, Minus, Calendar, Clock, MapPin } from 'lucide-react';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Separator } from '@/components/ui/Separator'; 
 const DEFAULT_AVATAR_PATH = '/avatars/default-avatar.svg';
-
-/**
- * Container component for patient pages with consistent styling
- */
 export function PatientPageContainer({ children }) {
     return (
-        <Box className="container mx-auto px-4 py-2">
+        <div className="container mx-auto px-4 py-6 space-y-6 bg-background min-h-screen">
             {children}
-        </Box>
+        </div>
     );
 }
-
-/**
- * Card component for patient interface with consistent styling
- */
 export function PatientCard({ title, subtitle, status, date, time, location, actions }) {
     return (
-        <Paper className="p-6 hover:shadow-lg transition-shadow">
-            <Box className="flex justify-between items-start mb-4">
-                <Box>
-                    <Typography variant="h6" className="font-semibold mb-1">
+        <Card className="p-6 hover:shadow-lg transition-all duration-200 rounded-lg border-border/50 bg-card">
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h3 className="text-lg font-semibold mb-1 text-foreground">
                         {title}
-                    </Typography>
-                    <Typography color="text.secondary" className="mb-2">
+                    </h3>
+                    <p className="text-muted-foreground mb-2">
                         {subtitle}
-                    </Typography>
-                </Box>
+                    </p>
+                </div>
                 {status}
-            </Box>
-
-            <Box className="space-y-3">
+            </div>
+            <div className="space-y-3">
                 {date && (
-                    <Box className="flex items-center text-gray-600">
-                        <Calendar size={18} className="mr-2" />
-                        <Typography variant="body2">{date}</Typography>
-                    </Box>
+                    <div className="flex items-center text-muted-foreground">
+                        <Calendar className="h-4 w-4 mr-2 text-primary" />
+                        <p className="text-sm">{date}</p>
+                    </div>
                 )}
-
                 {time && (
-                    <Box className="flex items-center text-gray-600">
-                        <Clock size={18} className="mr-2" />
-                        <Typography variant="body2">{time}</Typography>
-                    </Box>
+                    <div className="flex items-center text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-2 text-primary" />
+                        <p className="text-sm">{time}</p>
+                    </div>
                 )}
-
                 {location && (
-                    <Box className="flex items-center text-gray-600">
-                        <MapPin size={18} className="mr-2" />
-                        <Typography variant="body2">{location}</Typography>
-                    </Box>
+                    <div className="flex items-center text-muted-foreground">
+                        <MapPin className="h-4 w-4 mr-2 text-primary" />
+                        <p className="text-sm">{location}</p>
+                    </div>
                 )}
-            </Box>
-
+            </div>
             {actions && (
-                <Box className="mt-4 pt-4 border-t">
+                <div className="mt-4 pt-4 border-t border-border/50">
                     {actions}
-                </Box>
+                </div>
             )}
-        </Paper>
+        </Card>
     );
 }
-
-/**
- * Dashboard stat card component for patient interface
- */
 export function StatCard({ title, value, trend = null, icon, description, className = '' }) {
     const getTrendIcon = () => {
-        if (trend === 'up') return <TrendingUp size={16} className="text-green-500" />;
-        if (trend === 'down') return <TrendingDown size={16} className="text-red-500" />;
-        if (trend === 'neutral') return <Minus size={16} className="text-yellow-500" />;
+        if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-500" />;
+        if (trend === 'down') return <TrendingDown className="h-4 w-4 text-red-500" />;
+        if (trend === 'neutral') return <Minus className="h-4 w-4 text-yellow-500" />;
         return null;
     };
-
     return (
-        <Card className={`border border-border bg-card shadow-sm ${className}`}>
-            <CardContent>
-                <Box className="flex justify-between items-start">
-                    <Box>
-                        <Typography variant="body2" className="text-muted-foreground">
+        <Card className={`border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
+            <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm text-muted-foreground">
                             {title}
-                        </Typography>
-                        <Typography variant="h5" className="font-bold mt-1 text-foreground">
+                        </p>
+                        <h4 className="text-2xl font-bold mt-1 text-foreground">
                             {value}
-                        </Typography>
+                        </h4>
                         {trend && (
-                            <Box className="flex items-center mt-1">
+                            <div className="flex items-center mt-1">
                                 {getTrendIcon()}
-                                <Typography
-                                    variant="body2"
-                                    className={`ml-1 ${
+                                <p
+                                    className={`ml-1 text-sm ${
                                         trend === 'up'
                                             ? 'text-green-500'
                                             : trend === 'down'
@@ -103,48 +87,40 @@ export function StatCard({ title, value, trend = null, icon, description, classN
                                     }`}
                                 >
                                     {trend === 'up' ? 'Up' : trend === 'down' ? 'Down' : 'Stable'}
-                                </Typography>
-                            </Box>
+                                </p>
+                            </div>
                         )}
                         {description && (
-                            <Typography variant="body2" className="mt-1 text-muted-foreground">
+                            <p className="text-sm mt-1 text-muted-foreground">
                                 {description}
-                            </Typography>
+                            </p>
                         )}
-                    </Box>
+                    </div>
                     {icon && (
-                        <Box className="p-2 rounded-full bg-primary/10">
+                        <div className="p-3 rounded-full bg-primary/10 text-primary">
                             {icon}
-                        </Box>
+                        </div>
                     )}
-                </Box>
+                </div>
             </CardContent>
         </Card>
     );
 }
-
-/**
- * Chart container component for patient interface
- */
 export function ChartContainer({ title, subtitle, children, className = '' }) {
     return (
-        <Card className={`border border-border bg-card shadow-sm ${className}`}>
-            <CardContent>
+        <Card className={`border border-border/50 bg-card shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
+            <CardContent className="p-6">
                 {(title || subtitle) && (
-                    <Box className="mb-4">
-                        {title && <Typography variant="h6" className="font-medium text-foreground">{title}</Typography>}
-                        {subtitle && <Typography variant="body2" className="text-muted-foreground">{subtitle}</Typography>}
-                    </Box>
+                    <div className="mb-6">
+                        {title && <h3 className="text-lg font-medium text-foreground">{title}</h3>}
+                        {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+                    </div>
                 )}
                 {children}
             </CardContent>
         </Card>
     );
 }
-
-/**
- * Health indicator component for patient interface
- */
 export function HealthIndicator({ value, type, className = '' }) {
     const getIndicatorInfo = () => {
         switch (type) {
@@ -165,74 +141,56 @@ export function HealthIndicator({ value, type, className = '' }) {
                 return { label: 'Unknown', color: 'bg-gray-500' };
         }
     };
-
     const info = getIndicatorInfo();
-
     return (
-        <Box className={`flex items-center ${className}`}>
-            <Box className={`w-3 h-3 rounded-full ${info.color} mr-2`}></Box>
-            <Typography variant="body2" className="text-muted-foreground">
+        <div className={`flex items-center ${className}`}>
+            <div className={`w-3 h-3 rounded-full ${info.color} mr-2`}></div>
+            <p className="text-sm text-muted-foreground">
                 {info.label}
-            </Typography>
-        </Box>
+            </p>
+        </div>
     );
 }
-
-/**
- * Medication status badge component
- */
 export function MedicationStatusBadge({ status }) {
     const getStatusClasses = () => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'active':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'completed':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
             case 'discontinued':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300';
         }
     };
-
     return (
-        <Chip
-            label={status.charAt(0).toUpperCase() + status.slice(1)}
-            size="small"
-            className={`${getStatusClasses()}`}
-        />
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses()}`}>
+            {status}
+        </span>
     );
 }
-
-/**
- * Appointment status badge component
- */
 export function AppointmentStatusBadge({ status }) {
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
             case 'scheduled':
-                return 'success';
-            case 'pending':
-                return 'warning';
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
             case 'completed':
-                return 'info';
+                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'cancelled':
-                return 'error';
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
             case 'rescheduled':
-                return 'secondary';
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
             default:
-                return 'default';
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300';
         }
     };
-
     const getStatusLabel = (status) => {
         switch (status?.toLowerCase()) {
             case 'scheduled':
                 return 'Scheduled';
-            case 'pending':
-                return 'Pending';
             case 'completed':
                 return 'Completed';
             case 'cancelled':
@@ -240,16 +198,12 @@ export function AppointmentStatusBadge({ status }) {
             case 'rescheduled':
                 return 'Rescheduled';
             default:
-                return status || 'Unknown';
+                return status;
         }
     };
-
     return (
-        <Chip
-            label={getStatusLabel(status)}
-            color={getStatusColor(status)}
-            size="small"
-            className="capitalize"
-        />
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+            {getStatusLabel(status)}
+        </span>
     );
 } 

@@ -1,123 +1,1 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import {
-    List,
-    ListItem,
-    ListItemText,
-    Typography,
-    Box,
-    Chip,
-    Divider
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-
-const AppointmentCalendar = () => {
-    const { appointments } = useSelector((state) => state.doctorSchedule);
-    const { patients } = useSelector((state) => state.doctorPatients);
-    const navigate = useNavigate();
-
-    const today = new Date();
-    const todayAppointments = appointments
-        .filter(appointment => {
-            const appointmentDate = new Date(appointment.date);
-            return appointmentDate.toDateString() === today.toDateString();
-        })
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const formatTime = (dateString) => {
-        const options = { hour: '2-digit', minute: '2-digit' };
-        return new Date(dateString).toLocaleTimeString(undefined, options);
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return 'primary';
-            case 'in-progress':
-                return 'warning';
-            case 'completed':
-                return 'success';
-            case 'cancelled':
-                return 'error';
-            default:
-                return 'default';
-        }
-    };
-
-    const handleAppointmentClick = (appointmentId) => {
-        navigate(`/doctor/appointments/${appointmentId}`);
-    };
-
-    if (todayAppointments.length === 0) {
-        return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                minHeight={200}
-            >
-                <Typography variant="body1" color="text.secondary">
-                    No appointments scheduled for today
-                </Typography>
-            </Box>
-        );
-    }
-
-    return (
-        <List>
-            {todayAppointments.map((appointment, index) => {
-                const patient = patients.find(p => p.id === appointment.patientId);
-                return (
-                    <React.Fragment key={appointment.id}>
-                        <ListItem
-                            button
-                            onClick={() => handleAppointmentClick(appointment.id)}
-                            sx={{
-                                '&:hover': {
-                                    backgroundColor: 'action.hover'
-                                }
-                            }}
-                        >
-                            <ListItemText
-                                primary={
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <Typography variant="subtitle1">
-                                            {patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient'}
-                                        </Typography>
-                                        <Chip
-                                            size="small"
-                                            label={appointment.status}
-                                            color={getStatusColor(appointment.status)}
-                                        />
-                                    </Box>
-                                }
-                                secondary={
-                                    <Box>
-                                        <Typography
-                                            component="span"
-                                            variant="body2"
-                                            color="text.primary"
-                                        >
-                                            {formatTime(appointment.date)}
-                                        </Typography>
-                                        <Typography
-                                            component="span"
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ ml: 1 }}
-                                        >
-                                            {appointment.type}
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
-                        </ListItem>
-                        {index < todayAppointments.length - 1 && <Divider />}
-                    </React.Fragment>
-                );
-            })}
-        </List>
-    );
-};
-
-export default AppointmentCalendar; 
+import React from 'react';import { useSelector } from 'react-redux';import { useNavigate } from 'react-router-dom';import { Clock, User } from 'lucide-react';const AppointmentCalendar = () => {    const { appointments } = useSelector((state) => state.doctorSchedule);    const { patients } = useSelector((state) => state.doctorPatients);    const navigate = useNavigate();    const today = new Date();    const todayAppointments = appointments        .filter(appointment => {            const appointmentDate = new Date(appointment.date);            return appointmentDate.toDateString() === today.toDateString();        })        .sort((a, b) => new Date(a.date) - new Date(b.date));    const formatTime = (dateString) => {        const options = { hour: '2-digit', minute: '2-digit' };        return new Date(dateString).toLocaleTimeString(undefined, options);    };    const getStatusColor = (status) => {        switch (status) {            case 'scheduled':                return 'bg-blue-100 text-blue-800';            case 'in-progress':                return 'bg-yellow-100 text-yellow-800';            case 'completed':                return 'bg-green-100 text-green-800';            case 'cancelled':                return 'bg-red-100 text-red-800';            default:                return 'bg-gray-100 text-gray-800';        }    };    const handleAppointmentClick = (appointmentId) => {        navigate(`/doctor/appointments/${appointmentId}`);    };    if (todayAppointments.length === 0) {        return (            <div className="flex justify-center items-center min-h-[200px]">                <p className="text-gray-500">                    No appointments scheduled for today                </p>            </div>        );    }    return (        <ul className="divide-y divide-gray-200">            {todayAppointments.map((appointment, index) => {                const patient = patients.find(p => p.id === appointment.patientId);                return (                    <li                         key={appointment.id}                        onClick={() => handleAppointmentClick(appointment.id)}                        className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"                    >                        <div className="flex items-center justify-between">                            <div className="flex items-center space-x-3">                                <User className="h-5 w-5 text-gray-400" />                                <div>                                    <h3 className="text-sm font-medium text-gray-900">                                        {patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient'}                                    </h3>                                    <div className="flex items-center mt-1 space-x-2">                                        <div className="flex items-center text-sm text-gray-500">                                            <Clock className="h-4 w-4 mr-1" />                                            {formatTime(appointment.date)}                                        </div>                                        <span className="text-sm text-gray-500">                                            {appointment.type}                                        </span>                                    </div>                                </div>                            </div>                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>                                {appointment.status}                            </span>                        </div>                    </li>                );            })}        </ul>    );};export default AppointmentCalendar;

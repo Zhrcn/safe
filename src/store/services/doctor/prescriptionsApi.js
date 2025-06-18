@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
 export const prescriptionsApi = createApi({
     reducerPath: 'prescriptionsApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5001/api/doctors/prescriptions',
+        baseUrl: 'http://localhost:5001',
         prepareHeaders: (headers, { getState }) => {
             const token = getState().auth.token;
             if (token) {
@@ -89,7 +88,6 @@ export const prescriptionsApi = createApi({
         }),
     }),
 });
-
 export const {
     useGetPrescriptionsQuery,
     useGetPrescriptionDetailsQuery,

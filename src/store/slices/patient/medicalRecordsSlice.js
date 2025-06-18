@@ -1,30 +1,1 @@
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-    records: [],
-    loading: false,
-    error: null
-};
-
-const medicalRecordsSlice = createSlice({
-    name: 'medicalRecords',
-    initialState,
-    reducers: {
-        setMedicalRecords: (state, action) => {
-            state.records = action.payload;
-        },
-        setLoading: (state, action) => {
-            state.loading = action.payload;
-        },
-        setError: (state, action) => {
-            state.error = action.payload;
-        },
-        clearError: (state) => {
-            state.error = null;
-        }
-    }
-});
-
-export const { setMedicalRecords, setLoading, setError, clearError } = medicalRecordsSlice.actions;
-
-export default medicalRecordsSlice.reducer; 
+import { createSlice } from '@reduxjs/toolkit';const initialState = {    records: [],    loading: false,    error: null};const medicalRecordsSlice = createSlice({    name: 'medicalRecords',    initialState,    reducers: {        setMedicalRecords: (state, action) => {            state.records = action.payload;        },        setLoading: (state, action) => {            state.loading = action.payload;        },        setError: (state, action) => {            state.error = action.payload;        },        clearError: (state) => {            state.error = null;        }    }});export const { setMedicalRecords, setLoading, setError, clearError } = medicalRecordsSlice.actions;export default medicalRecordsSlice.reducer; 

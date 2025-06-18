@@ -1,21 +1,10 @@
 'use client';
-
 import React from 'react';
-import { Box, Typography, Breadcrumbs } from '@mui/material';
 import { Home, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { cn } from '@/utils/styles';
 
-/**
- * A container component for page content with consistent styling
- * 
- * @param {Object} props
- * @param {string} props.title - The page title
- * @param {string} [props.description] - Optional page description
- * @param {React.ReactNode} [props.actions] - Optional action buttons to display in the header
- * @param {boolean} [props.showBreadcrumbs=false] - Whether to show breadcrumbs
- * @param {React.ReactNode} props.children - The page content
- */
 export default function PageContainer({ 
   title, 
   description, 
@@ -24,80 +13,79 @@ export default function PageContainer({
   children 
 }) {
   const pathname = usePathname();
-  
-  // Generate breadcrumbs from the current path
+
   const generateBreadcrumbs = () => {
-    const paths = pathname.split('/').filter(Boolean);
+    if (!pathname) return [{ label: 'Home', href: '/' }];
     
-    return [
-      { label: 'Home', href: '/' },
-      ...paths.map((path, index) => {
-        const href = `/${paths.slice(0, index + 1).join('/')}`;
-        return {
-          label: path.charAt(0).toUpperCase() + path.slice(1),
-          href
-        };
-      })
+    const paths = pathname.split('/').filter(Boolean);
+    const breadcrumbs = [
+      { label: 'Home', href: '/' }
     ];
+
+    let currentPath = '';
+    paths.forEach((path, index) => {
+      currentPath += `/${path}`;
+      breadcrumbs.push({
+        label: path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' '),
+        href: currentPath
+      });
+    });
+
+    return breadcrumbs;
   };
-  
+
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <Box className="p-4 md:p-6">
-      {/* Page Header */}
-      <Box className="mb-6">
-        {showBreadcrumbs && (
-          <Breadcrumbs 
-            separator={<ChevronRight size={16} />} 
-            aria-label="breadcrumb"
-            className="mb-4"
-          >
-            {breadcrumbs.map((crumb, index) => (
-              <Link 
-                key={crumb.href} 
-                href={crumb.href}
-                className={`flex items-center text-sm ${
-                  index === breadcrumbs.length - 1 
-                    ? 'text-foreground font-medium' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {index === 0 ? (
-                  <>
-                    <Home size={14} className="mr-1" />
-                    {crumb.label}
-                  </>
-                ) : (
-                  crumb.label
-                )}
-              </Link>
-            ))}
-          </Breadcrumbs>
-        )}
-        
-        <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <Box>
-            <Typography variant="h4" component="h1" className="font-bold text-foreground">
-              {title}
-            </Typography>
-            {description && (
-              <Typography variant="body1" className="text-muted-foreground mt-1">
-                {description}
-              </Typography>
-            )}
-          </Box>
-          
-          {actions && (
-            <Box className="mt-4 sm:mt-0 flex items-center space-x-2">
-              {actions}
-            </Box>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          {showBreadcrumbs && (
+            <nav className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
+              {breadcrumbs.map((crumb, index) => (
+                <React.Fragment key={crumb.href}>
+                  {index > 0 && (
+                    <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                  )}
+                  <Link
+                    href={crumb.href}
+                    className={cn(
+                      "hover:text-foreground transition-colors",
+                      index === breadcrumbs.length - 1 ? "text-foreground font-medium" : ""
+                    )}
+                  >
+                    {index === 0 ? (
+                      <Home className="h-4 w-4" />
+                    ) : (
+                      crumb.label
+                    )}
+                  </Link>
+                </React.Fragment>
+              ))}
+            </nav>
           )}
-        </Box>
-      </Box>
-      
-      {/* Page Content */}
-      {children}
-    </Box>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                {title}
+              </h1>
+              {description && (
+                <p className="text-muted-foreground">
+                  {description}
+                </p>
+              )}
+            </div>
+            {actions && (
+              <div className="flex items-center space-x-2">
+                {actions}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="bg-background rounded-lg border border-border shadow-sm">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 } 

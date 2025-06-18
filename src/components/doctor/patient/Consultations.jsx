@@ -1,198 +1,1 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-    Box,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    Divider,
-    Chip,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    IconButton
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    AttachFile as AttachmentIcon
-} from '@mui/icons-material';
-import { fetchConsultationsByPatient } from '../../../store/slices/doctor/doctorConsultationsSlice';
-import { createConsultation, updateConsultation, addConsultationNote } from '../../../store/slices/doctor/doctorConsultationsSlice';
-
-const ConsultationPaper = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: theme.shape.borderRadius
-}));
-
-const Consultations = ({ patientId }) => {
-    const dispatch = useDispatch();
-    const { consultations, loading } = useSelector((state) => state.doctorConsultations);
-    const [openDialog, setOpenDialog] = React.useState(false);
-    const [selectedConsultation, setSelectedConsultation] = React.useState(null);
-    const [note, setNote] = React.useState('');
-
-    useEffect(() => {
-        dispatch(fetchConsultationsByPatient(patientId));
-    }, [dispatch, patientId]);
-
-    const handleOpenDialog = (consultation = null) => {
-        setSelectedConsultation(consultation);
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-        setSelectedConsultation(null);
-        setNote('');
-    };
-
-    const handleAddNote = () => {
-        if (selectedConsultation && note.trim()) {
-            dispatch(addConsultationNote({
-                consultationId: selectedConsultation.id,
-                note: note.trim()
-            }));
-            setNote('');
-        }
-    };
-
-    const formatDate = (dateString) => {
-        const options = {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return 'primary';
-            case 'in-progress':
-                return 'warning';
-            case 'completed':
-                return 'success';
-            case 'cancelled':
-                return 'error';
-            default:
-                return 'default';
-        }
-    };
-
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                <Typography>Loading consultations...</Typography>
-            </Box>
-        );
-    }
-
-    return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Consultations</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenDialog()}
-                >
-                    New Consultation
-                </Button>
-            </Box>
-
-            <List>
-                {consultations.map((consultation, index) => (
-                    <React.Fragment key={consultation.id}>
-                        <ConsultationPaper>
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                <Box>
-                                    <Typography variant="subtitle1">
-                                        {formatDate(consultation.date)}
-                                    </Typography>
-                                    <Chip
-                                        label={consultation.status}
-                                        color={getStatusColor(consultation.status)}
-                                        size="small"
-                                        sx={{ mt: 1 }}
-                                    />
-                                </Box>
-                                <Box>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleOpenDialog(consultation)}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton size="small">
-                                        <AttachmentIcon />
-                                    </IconButton>
-                                </Box>
-                            </Box>
-
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                {consultation.notes}
-                            </Typography>
-
-                            {consultation.attachments?.length > 0 && (
-                                <Box mt={1}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Attachments:
-                                    </Typography>
-                                    <Box display="flex" gap={1} mt={0.5}>
-                                        {consultation.attachments.map((attachment) => (
-                                            <Chip
-                                                key={attachment.id}
-                                                label={attachment.name}
-                                                size="small"
-                                                icon={<AttachmentIcon />}
-                                                onClick={() => window.open(attachment.url)}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            )}
-                        </ConsultationPaper>
-                        {index < consultations.length - 1 && <Divider />}
-                    </React.Fragment>
-                ))}
-            </List>
-
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {selectedConsultation ? 'Edit Consultation' : 'New Consultation'}
-                </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        label="Notes"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        margin="normal"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleAddNote} variant="contained">
-                        {selectedConsultation ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
-};
-
-export default Consultations; 
+import React, { useEffect, useState } from 'react';import { useDispatch, useSelector } from 'react-redux';import {    Plus as AddIcon,    Edit as EditIcon,    Paperclip as AttachmentIcon} from 'lucide-react';import { fetchConsultationsByPatient, createConsultation, updateConsultation, addConsultationNote } from '../../../store/slices/doctor/doctorConsultationsSlice';const Consultations = ({ patientId }) => {    const dispatch = useDispatch();    const { consultations, loading } = useSelector((state) => state.doctorConsultations);    const [openDialog, setOpenDialog] = useState(false);    const [selectedConsultation, setSelectedConsultation] = useState(null);    const [note, setNote] = useState('');    useEffect(() => {        dispatch(fetchConsultationsByPatient(patientId));    }, [dispatch, patientId]);    const handleOpenDialog = (consultation = null) => {        setSelectedConsultation(consultation);        setOpenDialog(true);    };    const handleCloseDialog = () => {        setOpenDialog(false);        setSelectedConsultation(null);        setNote('');    };    const handleAddNote = () => {        if (selectedConsultation && note.trim()) {            dispatch(addConsultationNote({                consultationId: selectedConsultation.id,                note: note.trim()            }));            setNote('');        }    };    const formatDate = (dateString) => {        const options = {            year: 'numeric',            month: 'short',            day: 'numeric',            hour: '2-digit',            minute: '2-digit'        };        return new Date(dateString).toLocaleDateString(undefined, options);    };    const getStatusColorClass = (status) => {        switch (status) {            case 'scheduled':                return 'bg-blue-100 text-blue-800';            case 'in-progress':                return 'bg-yellow-100 text-yellow-800';            case 'completed':                return 'bg-green-100 text-green-800';            case 'cancelled':                return 'bg-red-100 text-red-800';            default:                return 'bg-gray-100 text-gray-800';        }    };    if (loading) {        return (            <div className="flex justify-center items-center h-48">                <p className="text-gray-500">Loading consultations...</p>            </div>        );    }    return (        <div className="p-4 bg-white rounded-lg shadow-sm">            <div className="flex justify-between items-center mb-4">                <h2 className="text-xl font-semibold text-gray-900">Consultations</h2>                <button                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"                    onClick={() => handleOpenDialog()}                >                    <AddIcon className="h-5 w-5" />                    <span>New Consultation</span>                </button>            </div>            <div className="divide-y divide-gray-200">                {consultations.map((consultation, index) => (                    <div key={consultation.id} className="py-4">                        <div className="flex justify-between items-start">                            <div>                                <p className="text-lg font-medium text-gray-900">                                    {formatDate(consultation.date)}                                </p>                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${getStatusColorClass(consultation.status)}`}>                                    {consultation.status}                                </span>                            </div>                            <div className="flex space-x-2">                                <button                                    className="p-1 text-gray-500 hover:text-gray-700"                                    onClick={() => handleOpenDialog(consultation)}                                >                                    <EditIcon className="h-5 w-5" />                                </button>                                <button className="p-1 text-gray-500 hover:text-gray-700">                                    <AttachmentIcon className="h-5 w-5" />                                </button>                            </div>                        </div>                        <p className="text-sm text-gray-600 mt-2">                            {consultation.notes}                        </p>                        {consultation.attachments?.length > 0 && (                            <div className="mt-2">                                <p className="text-sm text-gray-600">                                    Attachments:                                </p>                                <div className="flex flex-wrap gap-2 mt-1">                                    {consultation.attachments.map((attachment) => (                                        <a                                            key={attachment.id}                                            href={attachment.url}                                            target="_blank"                                            rel="noopener noreferrer"                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"                                        >                                            <AttachmentIcon className="h-3 w-3 mr-1" />                                            {attachment.name}                                        </a>                                    ))}                                </div>                            </div>                        )}                    </div>                ))}            </div>            {openDialog && (                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">                    <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">                        <h3 className="text-lg font-semibold text-gray-900 mb-4">                            {selectedConsultation ? 'Edit Consultation' : 'New Consultation'}                        </h3>                        <form className="space-y-4">                            <div>                                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>                                <textarea                                    id="notes"                                    rows="4"                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"                                    value={note}                                    onChange={(e) => setNote(e.target.value)}                                ></textarea>                            </div>                        </form>                        <div className="mt-6 flex justify-end space-x-3">                            <button                                type="button"                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                                onClick={handleCloseDialog}                            >                                Cancel                            </button>                            <button                                type="submit"                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"                                onClick={handleAddNote}                            >                                {selectedConsultation ? 'Update' : 'Create'}                            </button>                        </div>                    </div>                </div>            )}        </div>    );};export default Consultations; 

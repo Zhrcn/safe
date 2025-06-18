@@ -1,120 +1,1 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Typography, Box, Grid, TextField, InputAdornment, Avatar, Card, CardContent } from '@mui/material';
-import { User, Mail, Phone, MapPin } from 'lucide-react';
-import { PharmacistPageContainer } from '@/components/pharmacist/PharmacistComponents';
-import { getPharmacistProfile } from '@/services/pharmacistService';
-
-export default function PharmacistProfilePage() {
-  const [pharmacist, setPharmacist] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        setLoading(true);
-        const data = await getPharmacistProfile();
-        setPharmacist(data);
-      } catch (error) {
-        console.error('Error loading pharmacist profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProfile();
-  }, []);
-
-  if (loading) {
-    return (
-      <PharmacistPageContainer
-        title="Pharmacist Profile"
-        description="Loading profile information..."
-      >
-        <Box className="flex justify-center items-center h-64">
-          <Typography>Loading profile data...</Typography>
-        </Box>
-      </PharmacistPageContainer>
-    );
-  }
-
-  return (
-    <PharmacistPageContainer
-      title="Pharmacist Profile"
-      description="This page displays your profile information."
-    >
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          {/* Avatar and basic info card */}
-          <Card className="h-full shadow-lg rounded-lg border border-border bg-card">
-            <CardContent className="flex flex-col items-center text-center">
-              <Avatar sx={{ bgcolor: 'primary.main', mb: 2, width: 80, height: 80 }} className="bg-green-500 dark:bg-green-700">
-                <User size={40} className="text-white dark:text-gray-200" />
-              </Avatar>
-              <Typography variant="h5" component="div" className="font-bold mb-1 text-foreground">{pharmacist.name}</Typography>
-              <Typography variant="body1" className="text-muted-foreground">License: {pharmacist.licenseNumber}</Typography>
-              <Typography variant="body1" className="text-muted-foreground flex items-center justify-center mt-1">
-                <MapPin size={16} className="mr-1 text-muted-foreground" />
-                {pharmacist.location}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={8}>
-          {/* Contact Info Card */}
-          <Card className="h-full shadow-lg rounded-lg border border-border bg-card">
-            <CardContent>
-              <Typography variant="h6" gutterBottom className="font-semibold mb-4 text-foreground">Contact Information</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Email"
-                    value={pharmacist.contact.email}
-                    fullWidth
-                    InputProps={{
-                      readOnly: true,
-                      startAdornment: (<InputAdornment position="start"><Mail size={20} className="text-muted-foreground" /></InputAdornment>),
-                      className: 'text-foreground'
-                    }}
-                    InputLabelProps={{ style: { color: 'inherit' } }}
-                    variant="outlined"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: 'var(--border)' },
-                        '&:hover fieldset': { borderColor: 'var(--border)' },
-                        '&.Mui-focused fieldset': { borderColor: 'var(--primary)' },
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phone"
-                    value={pharmacist.contact.phone}
-                    fullWidth
-                    InputProps={{
-                      readOnly: true,
-                      startAdornment: (<InputAdornment position="start"><Phone size={20} className="text-muted-foreground" /></InputAdornment>),
-                      className: 'text-foreground'
-                    }}
-                    InputLabelProps={{ style: { color: 'inherit' } }}
-                    variant="outlined"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': { borderColor: 'var(--border)' },
-                        '&:hover fieldset': { borderColor: 'var(--border)' },
-                        '&.Mui-focused fieldset': { borderColor: 'var(--primary)' },
-                      }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </PharmacistPageContainer>
-  );
-} 
+'use client';import { useState, useEffect } from 'react';import { User, Mail, Phone, MapPin } from 'lucide-react';import { PharmacistPageContainer } from '@/components/pharmacist/PharmacistComponents';import { getPharmacistProfile } from '@/services/pharmacistService';import { Card, CardContent } from '@/components/ui/Card';import { Input } from '@/components/ui/Input';import { Label } from '@/components/ui/Label';export default function PharmacistProfilePage() {  const [pharmacist, setPharmacist] = useState(null);  const [loading, setLoading] = useState(true);  useEffect(() => {    async function loadProfile() {      try {        setLoading(true);        const data = await getPharmacistProfile();        setPharmacist(data);      } catch (error) {        console.error('Error loading pharmacist profile:', error);      } finally {        setLoading(false);      }    }    loadProfile();  }, []);  if (loading) {    return (      <PharmacistPageContainer        title="Pharmacist Profile"        description="Loading profile information..."      >        <div className="flex justify-center items-center h-64">          <p>Loading profile data...</p>        </div>      </PharmacistPageContainer>    );  }  return (    <PharmacistPageContainer      title="Pharmacist Profile"      description="This page displays your profile information."    >      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">        <div className="md:col-span-4">          {}          <Card className="h-full">            <CardContent className="flex flex-col items-center text-center p-6">              <div className="w-20 h-20 rounded-full bg-green-500 dark:bg-green-700 flex items-center justify-center mb-4">                <User size={40} className="text-white dark:text-gray-200" />              </div>              <h2 className="text-xl font-bold mb-1 text-foreground">{pharmacist.name}</h2>              <p className="text-muted-foreground">License: {pharmacist.licenseNumber}</p>              <p className="text-muted-foreground flex items-center justify-center mt-1">                <MapPin size={16} className="mr-1 text-muted-foreground" />                {pharmacist.location}              </p>            </CardContent>          </Card>        </div>        <div className="md:col-span-8">          {}          <Card className="h-full">            <CardContent className="p-6">              <h3 className="text-lg font-semibold mb-4 text-foreground">Contact Information</h3>              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">                <div className="space-y-2">                  <Label htmlFor="email">Email</Label>                  <div className="relative">                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />                    <Input                      id="email"                      value={pharmacist.contact.email}                      readOnly                      className="pl-10 bg-background"                    />                  </div>                </div>                <div className="space-y-2">                  <Label htmlFor="phone">Phone</Label>                  <div className="relative">                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />                    <Input                      id="phone"                      value={pharmacist.contact.phone}                      readOnly                      className="pl-10 bg-background"                    />                  </div>                </div>              </div>            </CardContent>          </Card>        </div>      </div>    </PharmacistPageContainer>  );}

@@ -1,9 +1,7 @@
-// src/store/userSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { userApi } from '@/store/services/user/userApi';
 import { getToken, setToken, removeToken } from '@/utils/tokenUtils';
 import { handleAuthError } from '@/utils/errorHandling';
-
 const initialState = {
   user: null,
   token: null,
@@ -11,13 +9,10 @@ const initialState = {
   loading: false,
   error: null,
 };
-
-// Selectors
 export const selectCurrentUser = (state) => state?.user?.user ?? null;
 export const selectIsAuthenticated = (state) => state?.user?.isAuthenticated ?? false;
 export const selectUserLoading = (state) => state?.user?.loading ?? false;
 export const selectUserError = (state) => state?.user?.error ?? null;
-
 export const loginUser = createAsyncThunk(
   'user/loginUser',
   async ({ email, password, role }, { rejectWithValue }) => {
@@ -34,7 +29,6 @@ export const loginUser = createAsyncThunk(
     }
   }
 );
-
 export const registerUser = createAsyncThunk(
   'user/registerUser',
   async (userData, { rejectWithValue }) => {
@@ -51,7 +45,6 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
-
 export const logoutUser = createAsyncThunk(
   'user/logoutUser',
   async (_, { rejectWithValue }) => {
@@ -64,7 +57,6 @@ export const logoutUser = createAsyncThunk(
     }
   }
 );
-
 const userSlice = createSlice({
   name: 'user',
   initialState,
@@ -135,7 +127,5 @@ const userSlice = createSlice({
       });
   },
 });
-
 export const { setCurrentUser, clearError, setIsLoading } = userSlice.actions;
-
 export default userSlice.reducer;

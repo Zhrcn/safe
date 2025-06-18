@@ -1,228 +1,90 @@
 'use client';
-
-import { useState } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    TextField, 
-    Button, 
-    Grid, 
-    Chip, 
-    Alert, 
-    CircularProgress,
-    Autocomplete,
-    Card,
-    CardContent,
-    Divider
-} from '@mui/material';
-import { Search, Check, X, AlertCircle } from 'lucide-react';
-import { queryMedicineAvailability } from '@/services/doctorService';
-
-const commonMedications = [
-    'Lisinopril',
-    'Metformin',
-    'Atorvastatin',
-    'Levothyroxine',
-    'Amlodipine',
-    'Omeprazole',
-    'Simvastatin',
-    'Metoprolol',
-    'Albuterol',
-    'Fluticasone',
-    'Sertraline',
-    'Gabapentin',
-    'Hydrochlorothiazide',
-    'Losartan',
-    'Furosemide',
-    'Escitalopram',
-    'Pantoprazole',
-    'Montelukast',
-    'Prednisone',
-    'Tramadol'
-];
-
-export default function MedicineQuery() {
-    const [query, setQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [result, setResult] = useState(null);
-    const [searchHistory, setSearchHistory] = useState([]);
-
-    const handleSearch = async () => {
-        if (!query.trim()) {
-            setError('Please enter a medicine name');
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            setError('');
-            setResult(null);
-            
-            const response = await queryMedicineAvailability(query);
-            
-            setResult(response);
-            
-            if (!searchHistory.some(item => item.medicine === response.medicine)) {
-                setSearchHistory(prev => [response, ...prev].slice(0, 5)); 
-            }
-        } catch (err) {
-            setError('Failed to query medicine availability');
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    };
-
-    const handleHistoryItemClick = (medicine) => {
-        setQuery(medicine);
-    };
-
-    return (
-        <Paper className="p-6 bg-card border border-border rounded-lg">
-            <Typography variant="h5" component="h1" className="font-bold text-foreground mb-6">
-                Medicine Availability Query
-            </Typography>
-
-            <Grid container spacing={3}>
-                <Grid item xs={12}>
-                    <Box className="flex gap-2">
-                        <Autocomplete
-                            freeSolo
-                            options={commonMedications}
-                            value={query}
-                            onChange={(_, value) => setQuery(value || '')}
-                            onInputChange={(_, value) => setQuery(value || '')}
-                            renderInput={(params) => (
-                                <TextField 
-                                    {...params}
-                                    label="Medicine Name"
-                                    variant="outlined"
-                                    fullWidth
-                                    error={!!error}
-                                    helperText={error}
-                                    onKeyPress={handleKeyPress}
-                                    className="bg-background"
-                                    InputProps={{
-                                        ...params.InputProps,
-                                        className: "text-foreground"
-                                    }}
-                                    InputLabelProps={{
-                                        className: "text-muted-foreground"
-                                    }}
-                                />
-                            )}
-                            className="flex-grow"
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSearch}
-                            disabled={isLoading || !query.trim()}
-                            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Search />}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap"
-                        >
-                            {isLoading ? 'Checking...' : 'Check Availability'}
-                        </Button>
-                    </Box>
-                </Grid>
-
-                {result && (
-                    <Grid item xs={12}>
-                        <Card 
-                            className={`border ${
-                                result.availability 
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                                    : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                            }`}
-                        >
-                            <CardContent>
-                                <Box className="flex items-center mb-3">
-                                    {result.availability ? (
-                                        <Check size={24} className="mr-2 text-green-500" />
-                                    ) : (
-                                        <AlertCircle size={24} className="mr-2 text-amber-500" />
-                                    )}
-                                    <Typography variant="h6" className="font-semibold">
-                                        {result.medicine}
-                                    </Typography>
-                                    <Chip 
-                                        label={result.availability ? 'Available' : 'Not Available'} 
-                                        color={result.availability ? 'success' : 'warning'}
-                                        size="small"
-                                        className="ml-auto"
-                                    />
-                                </Box>
-                                
-                                <Typography variant="body1" className="mb-3">
-                                    {result.message}
-                                </Typography>
-                                
-                                {!result.availability && result.alternatives?.length > 0 && (
-                                    <Box>
-                                        <Typography variant="subtitle2" className="font-medium mb-2">
-                                            Available Alternatives:
-                                        </Typography>
-                                        <Box className="flex flex-wrap gap-2">
-                                            {result.alternatives.map((alt, index) => (
-                                                <Chip 
-                                                    key={index} 
-                                                    label={alt} 
-                                                    color="primary" 
-                                                    variant="outlined"
-                                                    onClick={() => setQuery(alt)}
-                                                    clickable
-                                                    className="cursor-pointer"
-                                                />
-                                            ))}
-                                        </Box>
-                                    </Box>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                )}
-
-                {searchHistory.length > 0 && (
-                    <Grid item xs={12}>
-                        <Box className="mt-4">
-                            <Typography variant="subtitle1" className="font-medium mb-2 text-foreground">
-                                Recent Searches
-                            </Typography>
-                            <Divider className="mb-3" />
-                            <Box className="flex flex-wrap gap-2">
-                                {searchHistory.map((item, index) => (
-                                    <Chip 
-                                        key={index} 
-                                        label={item.medicine} 
-                                        onClick={() => handleHistoryItemClick(item.medicine)}
-                                        icon={item.availability ? <Check size={16} /> : <X size={16} />}
-                                        color={item.availability ? 'success' : 'default'}
-                                        variant="outlined"
-                                        className="cursor-pointer"
-                                    />
-                                ))}
-                            </Box>
-                        </Box>
-                    </Grid>
-                )}
-
-                <Grid item xs={12}>
-                    <Alert severity="info" className="mt-4">
-                        <Typography variant="body2">
-                            This tool allows you to check if specific medications are available at partner pharmacies.
-                            For urgent medication needs, please contact the pharmacy directly.
-                        </Typography>
-                    </Alert>
-                </Grid>
-            </Grid>
-        </Paper>
-    );
-} 
+import React, { useState } from 'react';
+import { Search, X } from 'lucide-react';
+const MedicineQuery = () => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/medicine/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error('Failed to fetch results');
+      const data = await response.json();
+      setResults(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="p-6 bg-white rounded-lg shadow-sm">
+      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Medicine Query</h2>
+      <div className="relative mb-6">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search for medicines..."
+              className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
+          {error}
+        </div>
+      )}
+      {results.length > 0 && (
+        <div className="space-y-4">
+          {results.map((medicine) => (
+            <div key={medicine.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <h3 className="text-lg font-medium text-gray-900">{medicine.name}</h3>
+              <p className="text-sm text-gray-600 mt-1">{medicine.description}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {medicine.tags?.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && !error && results.length === 0 && query && (
+        <div className="text-center py-8 text-gray-500">
+          No results found for "{query}"
+        </div>
+      )}
+    </div>
+  );
+};
+export default MedicineQuery; 

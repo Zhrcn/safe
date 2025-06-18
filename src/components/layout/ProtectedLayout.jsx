@@ -1,26 +1,24 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/store/hooks';
 import { useVerifyTokenQuery } from '@/store/services/user/authApi';
-import { logout } from '@/store/slices/user/authSlice';
+import { logout } from '@/store/slices/auth/authSlice';
 import { getToken, removeToken } from '@/utils/tokenUtils';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { ROLES } from '@/config/app-config';
 
 export default function ProtectedLayout({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const { user, token } = useSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const hasToken = !!getToken();
-
   const { data: verifyData, isLoading: isVerifying, error: verifyError } = useVerifyTokenQuery(undefined, {
     skip: !hasToken,
   });
 
-  // Log state for debugging
   useEffect(() => {
     console.log('ProtectedLayout state:', {
       isAuthenticated: !!user,
@@ -56,15 +54,13 @@ export default function ProtectedLayout({ children }) {
 
       if (verifyData?.success && verifyData?.user) {
         console.log('Token verified successfully');
-        
-        // Get user role from verification data or token
-        let userRole = verifyData.user.role?.toLowerCase();
+        let userRole = verifyData.user.role?.toUpperCase();
         if (!userRole) {
           try {
             const token = getToken();
             if (token) {
               const payload = JSON.parse(atob(token.split('.')[1]));
-              userRole = payload.role?.toLowerCase();
+              userRole = payload.role?.toUpperCase();
             }
           } catch (error) {
             console.error('Error parsing token:', error);
@@ -79,10 +75,10 @@ export default function ProtectedLayout({ children }) {
           return;
         }
 
-        const pathRole = pathname.split('/')[1]?.toLowerCase();
+        const pathRole = pathname.split('/')[1]?.toUpperCase();
         if (pathRole && pathRole !== userRole) {
           console.log(`User role (${userRole}) does not match path role (${pathRole})`);
-          router.replace(`/${userRole}/dashboard`);
+          router.replace(`/${userRole.toLowerCase()}/dashboard`);
           return;
         }
 
@@ -100,29 +96,19 @@ export default function ProtectedLayout({ children }) {
 
   if (isVerifying) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
   if (!isAuthorized) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h6" color="error">
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg text-destructive">
           Unauthorized access. Redirecting to login...
-        </Typography>
-      </Box>
+        </p>
+      </div>
     );
   }
 

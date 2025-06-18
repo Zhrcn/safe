@@ -1,230 +1,1 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip } from '@mui/material';
-import { FileText, Eye, CheckCircle, X } from 'lucide-react';
-import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
-import { SearchField } from '@/components/ui/Notification';
-import { getPrescriptions, updatePrescriptionStatus } from '@/services/pharmacistService';
-
-function PrescriptionDetailDialog({ open, onClose, prescription }) {
-  if (!prescription) return null;
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle className="flex justify-between items-center">
-        <Typography variant="h6" className="font-bold">
-          Prescription Details
-        </Typography>
-        <IconButton onClick={onClose}>
-          <X size={20} />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <Box className="mt-4 space-y-4">
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Patient</Typography>
-            <Typography variant="body1" className="font-medium">{prescription.patientName}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Medication</Typography>
-            <Typography variant="body1" className="font-medium">{prescription.medication}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Dosage</Typography>
-            <Typography variant="body1">{prescription.dosage}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Frequency</Typography>
-            <Typography variant="body1">{prescription.frequency}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Issue Date</Typography>
-            <Typography variant="body1">{prescription.issueDate}</Typography>
-          </Box>
-
-          <Box className="space-y-1">
-            <Typography variant="body2" className="text-muted-foreground">Status</Typography>
-            <Chip
-              label={prescription.status}
-              color={prescription.status === 'Pending' ? 'warning' : 'success'}
-              size="small"
-            />
-          </Box>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} className="text-muted-foreground">
-          Close
-        </Button>
-        {prescription.status === 'Pending' && (
-          <Button
-            variant="contained"
-            startIcon={<CheckCircle size={16} />}
-            onClick={onClose}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            Mark as Filled
-          </Button>
-        )}
-      </DialogActions>
-    </Dialog>
-  );
-}
-
-export default function PharmacistPrescriptionsPage() {
-  const [prescriptions, setPrescriptions] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-
-  useEffect(() => {
-    async function loadPrescriptions() {
-      try {
-        setLoading(true);
-        const data = await getPrescriptions();
-        setPrescriptions(data);
-      } catch (error) {
-        console.error('Error loading prescriptions:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadPrescriptions();
-  }, []);
-
-  const filteredPrescriptions = searchTerm
-    ? prescriptions.filter(prescription =>
-      prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prescription.medication.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : prescriptions;
-
-  const handleViewDetails = (prescriptionId) => {
-    const prescription = prescriptions.find(p => p.id === prescriptionId);
-    if (prescription) {
-      setSelectedPrescription(prescription);
-      setDetailDialogOpen(true);
-    }
-  };
-
-  const handleMarkAsFilled = async (prescriptionId) => {
-    try {
-      const updatedPrescription = await updatePrescriptionStatus(prescriptionId, 'Filled');
-      setPrescriptions(prev => prev.map(prescription =>
-        prescription.id === prescriptionId ? updatedPrescription : prescription
-      ));
-    } catch (error) {
-      console.error('Error updating prescription status:', error);
-    }
-  };
-
-  return (
-    <PharmacistPageContainer
-      title="Prescription Management"
-      description="View and manage prescriptions to be filled."
-    >
-      <PharmacistCard
-        title="Prescriptions List"
-        actions={
-          <SearchField
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search Prescriptions"
-          />
-        }
-      >
-        <TableContainer component={Paper} elevation={2} className="bg-card rounded-md">
-          <Table>
-            <TableHead>
-              <TableRow className="bg-muted">
-                <TableCell className="text-foreground font-semibold">Patient</TableCell>
-                <TableCell className="text-foreground font-semibold">Medication</TableCell>
-                <TableCell className="text-foreground font-semibold">Dosage</TableCell>
-                <TableCell className="text-foreground font-semibold">Frequency</TableCell>
-                <TableCell className="text-foreground font-semibold">Issue Date</TableCell>
-                <TableCell className="text-foreground font-semibold">Status</TableCell>
-                <TableCell align="right" className="text-foreground font-semibold">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" className="text-muted-foreground">
-                    Loading prescriptions data...
-                  </TableCell>
-                </TableRow>
-              ) : filteredPrescriptions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" className="text-muted-foreground">
-                    No prescriptions found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPrescriptions.map((prescription) => (
-                  <TableRow
-                    key={prescription.id}
-                    className="hover:bg-muted/40 transition-colors duration-200"
-                  >
-                    <TableCell className="text-foreground">{prescription.patientName}</TableCell>
-                    <TableCell className="text-foreground">{prescription.medication}</TableCell>
-                    <TableCell className="text-foreground">{prescription.dosage}</TableCell>
-                    <TableCell className="text-foreground">{prescription.frequency}</TableCell>
-                    <TableCell className="text-foreground">{prescription.issueDate}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={prescription.status}
-                        color={prescription.status === 'Pending' ? 'warning' : 'success'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="right" className="space-x-2">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Eye size={16} />}
-                        onClick={() => handleViewDetails(prescription.id)}
-                        className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
-                      >
-                        View
-                      </Button>
-                      {prescription.status === 'Pending' && (
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<CheckCircle size={16} />}
-                          onClick={() => handleMarkAsFilled(prescription.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          Mark as Filled
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </PharmacistCard>
-
-      {/* Prescription Detail Dialog */}
-      <PrescriptionDetailDialog
-        open={detailDialogOpen}
-        onClose={() => setDetailDialogOpen(false)}
-        prescription={selectedPrescription}
-      />
-    </PharmacistPageContainer>
-  );
-} 
+'use client';import { useState, useEffect } from 'react';import { Eye, CheckCircle, X } from 'lucide-react';import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';import { SearchField } from '@/components/ui/Notification';import { getPrescriptions, updatePrescriptionStatus } from '@/services/pharmacistService';import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';import { Button } from '@/components/ui/Button';import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';import { Badge } from '@/components/ui/Badge';function PrescriptionDetailDialog({ open, onClose, prescription }) {  if (!prescription) return null;  return (    <Dialog open={open} onOpenChange={onClose}>      <DialogContent className="sm:max-w-md">        <DialogHeader>          <DialogTitle className="flex justify-between items-center">            <span className="font-bold">Prescription Details</span>            <Button variant="ghost" size="icon" onClick={onClose}>              <X className="h-4 w-4" />            </Button>          </DialogTitle>        </DialogHeader>        <div className="mt-4 space-y-4">          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Patient</p>            <p className="font-medium">{prescription.patientName}</p>          </div>          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Medication</p>            <p className="font-medium">{prescription.medication}</p>          </div>          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Dosage</p>            <p>{prescription.dosage}</p>          </div>          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Frequency</p>            <p>{prescription.frequency}</p>          </div>          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Issue Date</p>            <p>{prescription.issueDate}</p>          </div>          <div className="space-y-1">            <p className="text-sm text-muted-foreground">Status</p>            <Badge variant={prescription.status === 'Pending' ? 'warning' : 'success'}>              {prescription.status}            </Badge>          </div>        </div>        <DialogFooter>          <Button variant="outline" onClick={onClose}>            Close          </Button>          {prescription.status === 'Pending' && (            <Button              className="bg-green-600 hover:bg-green-700 text-white"              onClick={onClose}            >              <CheckCircle className="mr-2 h-4 w-4" />              Mark as Filled            </Button>          )}        </DialogFooter>      </DialogContent>    </Dialog>  );}export default function PharmacistPrescriptionsPage() {  const [prescriptions, setPrescriptions] = useState([]);  const [searchTerm, setSearchTerm] = useState('');  const [loading, setLoading] = useState(true);  const [selectedPrescription, setSelectedPrescription] = useState(null);  const [detailDialogOpen, setDetailDialogOpen] = useState(false);  useEffect(() => {    async function loadPrescriptions() {      try {        setLoading(true);        const data = await getPrescriptions();        setPrescriptions(data);      } catch (error) {        console.error('Error loading prescriptions:', error);      } finally {        setLoading(false);      }    }    loadPrescriptions();  }, []);  const filteredPrescriptions = searchTerm    ? prescriptions.filter(prescription =>      prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||      prescription.medication.toLowerCase().includes(searchTerm.toLowerCase())    )    : prescriptions;  const handleViewDetails = (prescriptionId) => {    const prescription = prescriptions.find(p => p.id === prescriptionId);    if (prescription) {      setSelectedPrescription(prescription);      setDetailDialogOpen(true);    }  };  const handleMarkAsFilled = async (prescriptionId) => {    try {      const updatedPrescription = await updatePrescriptionStatus(prescriptionId, 'Filled');      setPrescriptions(prev => prev.map(prescription =>        prescription.id === prescriptionId ? updatedPrescription : prescription      ));    } catch (error) {      console.error('Error updating prescription status:', error);    }  };  return (    <PharmacistPageContainer      title="Prescription Management"      description="View and manage prescriptions to be filled."    >      <PharmacistCard        title="Prescriptions List"        actions={          <SearchField            value={searchTerm}            onChange={(e) => setSearchTerm(e.target.value)}            placeholder="Search Prescriptions"          />        }      >        <div className="rounded-md border">          <Table>            <TableHeader>              <TableRow>                <TableHead>Patient</TableHead>                <TableHead>Medication</TableHead>                <TableHead>Dosage</TableHead>                <TableHead>Frequency</TableHead>                <TableHead>Issue Date</TableHead>                <TableHead>Status</TableHead>                <TableHead className="text-right">Actions</TableHead>              </TableRow>            </TableHeader>            <TableBody>              {loading ? (                <TableRow>                  <TableCell colSpan={7} className="text-center text-muted-foreground">                    Loading prescriptions data...                  </TableCell>                </TableRow>              ) : filteredPrescriptions.length === 0 ? (                <TableRow>                  <TableCell colSpan={7} className="text-center text-muted-foreground">                    No prescriptions found.                  </TableCell>                </TableRow>              ) : (                filteredPrescriptions.map((prescription) => (                  <TableRow                    key={prescription.id}                    className="hover:bg-muted/40 transition-colors duration-200"                  >                    <TableCell>{prescription.patientName}</TableCell>                    <TableCell>{prescription.medication}</TableCell>                    <TableCell>{prescription.dosage}</TableCell>                    <TableCell>{prescription.frequency}</TableCell>                    <TableCell>{prescription.issueDate}</TableCell>                    <TableCell>                      <Badge variant={prescription.status === 'Pending' ? 'warning' : 'success'}>                        {prescription.status}                      </Badge>                    </TableCell>                    <TableCell className="text-right space-x-2">                      <Button                        variant="outline"                        size="sm"                        onClick={() => handleViewDetails(prescription.id)}                        className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"                      >                        <Eye className="mr-2 h-4 w-4" />                        View                      </Button>                      {prescription.status === 'Pending' && (                        <Button                          size="sm"                          onClick={() => handleMarkAsFilled(prescription.id)}                          className="bg-green-600 hover:bg-green-700 text-white"                        >                          <CheckCircle className="mr-2 h-4 w-4" />                          Mark as Filled                        </Button>                      )}                    </TableCell>                  </TableRow>                ))              )}            </TableBody>          </Table>        </div>      </PharmacistCard>      <PrescriptionDetailDialog        open={detailDialogOpen}        onClose={() => setDetailDialogOpen(false)}        prescription={selectedPrescription}      />    </PharmacistPageContainer>  );}

@@ -1,6 +1,5 @@
 console.log('Loading Prescription model...');
 const mongoose = require('mongoose');
-
 const prescribedMedicationSchema = new mongoose.Schema({
   name: { 
     type: String,
@@ -32,7 +31,6 @@ const prescribedMedicationSchema = new mongoose.Schema({
     trim: true
   }
 }, { _id: false });
-
 const prescriptionSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -88,16 +86,11 @@ const prescriptionSchema = new mongoose.Schema({
       trim: true
     }
   }],
-  
 }, {
   timestamps: true,
   collection: 'Prescriptions'
 });
-
 prescriptionSchema.index({ expiryDate: 1 });
 prescriptionSchema.index({ status: 1, patientId: 1 });
-
-
 const Prescription = mongoose.model('Prescription', prescriptionSchema);
-
 module.exports = Prescription;

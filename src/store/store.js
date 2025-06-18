@@ -8,7 +8,7 @@ import { scheduleApi } from './services/doctor/scheduleApi';
 import { patientsApi } from './services/doctor/patientsApi';
 import { consultationsApi as doctorConsultationsApi } from './services/doctor/consultationsApi';
 import { prescriptionsApi as doctorPrescriptionsApi } from './services/doctor/prescriptionsApi';
-import authReducer from './slices/user/authSlice';
+import authReducer from './slices/auth/authSlice';
 import userReducer from './slices/user/userSlice';
 import doctorProfileReducer from './slices/doctor/doctorProfileSlice';
 import doctorScheduleReducer from './slices/doctor/doctorScheduleSlice';
@@ -17,27 +17,9 @@ import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice
 import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
 import dashboardReducer from './slices/patient/dashboardSlice';
 import { dashboardApi } from './services/patient/dashboardApi';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query';
-
-// Create a root API that will be used as the base for all other APIs
-const rootApi = createApi({
-  reducerPath: 'rootApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5001/api/v1',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  endpoints: () => ({}),
-});
 
 const store = configureStore({
   reducer: {
-    [rootApi.reducerPath]: rootApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [patientApi.reducerPath]: patientApi.reducer,
@@ -61,7 +43,6 @@ const store = configureStore({
       serializableCheck: false,
       immutableCheck: false,
     }).concat(
-      rootApi.middleware,
       authApi.middleware,
       userApi.middleware,
       patientApi.middleware,
@@ -76,5 +57,4 @@ const store = configureStore({
 });
 
 setupListeners(store.dispatch);
-
 export default store; 
