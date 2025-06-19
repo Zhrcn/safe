@@ -194,11 +194,11 @@ function PersonalInfoForm({ profile, onSave }) {
                             <input
                                 id="profileImageInput"
                                 type="file"
-                                accept="image }}
-                            onDelete={handleDeleteEducation}
-                            onAdd={() => setOpenEducationDialog(true)}
-                        />
-                    )}
+                                accept="image/*"
+                                onChange={handleImageChange}
+                            />
+                        </div>
+                    </div>
                     {tabValue === 2 && (
                         <AchievementsList 
                             achievements={doctorProfile.achievements}
@@ -207,8 +207,8 @@ function PersonalInfoForm({ profile, onSave }) {
                             onAdd={() => setOpenAchievementDialog(true)}
                         />
                     )}
-                </div>
-            </div>
+                </form>
+            )}
             <AddEducationDialog
                 open={openEducationDialog}
                 onClose={() => setOpenEducationDialog(false)}

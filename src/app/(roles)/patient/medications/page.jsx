@@ -48,6 +48,7 @@ import { Calendar } from '@/components/ui/Calendar';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 
 const FREQUENCY_OPTIONS = [
     { value: 'once_daily', label: 'Once a day' },
@@ -279,18 +280,20 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="frequency">Frequency</Label>
-                        <Select value={selectedFrequency} onValueChange={handleFrequencyChange}>
-                            <SelectTrigger id="frequency">
-                                <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                            <SelectContent>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between">
+                                    {FREQUENCY_OPTIONS.find(option => option.value === selectedFrequency)?.label || 'Select frequency'}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
                                 {FREQUENCY_OPTIONS.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <DropdownMenuItem key={option.value} onClick={() => handleFrequencyChange(option.value)}>
                                         {option.label}
-                                    </SelectItem>
+                                    </DropdownMenuItem>
                                 ))}
-                            </SelectContent>
-                        </Select>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     {selectedFrequency !== 'as_needed' && (
                         <div className="space-y-2">
@@ -419,18 +422,20 @@ const MedicationFormDialog = ({ open, onClose, onSubmit, medication }) => {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="frequency" className="text-right">Frequency</Label>
-                        <Select value={formData.frequency} onValueChange={(value) => handleChange({ target: { name: 'frequency', value } })}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                            <SelectContent>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between">
+                                    {FREQUENCY_OPTIONS.find(option => option.value === formData.frequency)?.label || 'Select frequency'}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
                                 {FREQUENCY_OPTIONS.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <DropdownMenuItem key={option.value} onClick={() => handleChange({ target: { name: 'frequency', value: option.value } })}>
                                         {option.label}
-                                    </SelectItem>
+                                    </DropdownMenuItem>
                                 ))}
-                            </SelectContent>
-                        </Select>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="prescribedBy" className="text-right">Prescribed By</Label>
@@ -463,16 +468,20 @@ const MedicationFormDialog = ({ open, onClose, onSubmit, medication }) => {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="status" className="text-right">Status</Label>
-                        <Select value={formData.status} onValueChange={(value) => handleChange({ target: { name: 'status', value } })}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="expired">Expired</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full justify-between">
+                                    {['Active', 'Completed', 'Expired'].find(label => label.toLowerCase() === formData.status) || 'Select status'}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {['active', 'completed', 'expired'].map(status => (
+                                    <DropdownMenuItem key={status} onClick={() => handleChange({ target: { name: 'status', value: status } })}>
+                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="notes" className="text-right">Notes</Label>
