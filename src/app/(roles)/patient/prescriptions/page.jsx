@@ -44,7 +44,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
             <CardContent className="pt-6 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 bg-primary/10 border-2 border-primary/20">
+                        <Avatar className="h-12 w-12 bg-primary border-2 border-primary/20">
                             <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
                             <AvatarFallback>
                                 <User className="h-6 w-6 text-primary" />

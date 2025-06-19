@@ -35,8 +35,8 @@ const ConversationCard = ({ conversation, onSelect, isActive }) => {
         <Card 
             className={`transition-all duration-300 hover:shadow-lg cursor-pointer ${
                 isActive 
-                    ? 'bg-accent/30 border-primary' 
-                    : 'border-transparent hover:border-secondary/30'
+                    ? 'bg-accent border-primary' 
+                    : 'border-transparent hover:border-secondary'
             }`}
             onClick={() => onSelect(conversation)}
         >
@@ -44,7 +44,7 @@ const ConversationCard = ({ conversation, onSelect, isActive }) => {
                 <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12 border-2 border-primary/20">
                         <AvatarImage src={conversation?.avatar} alt={title} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
+                        <AvatarFallback className="bg-primary text-primary">
                             {initials}
                         </AvatarFallback>
                     </Avatar>
@@ -223,7 +223,7 @@ const MessagingPage = () => {
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-10 w-10 border-2 border-primary/20">
                                                     <AvatarImage src={selectedConversation.avatar} alt={selectedConversation.title} />
-                                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                                    <AvatarFallback className="bg-primary text-primary">
                                                         {selectedConversation.title[0]}
                                                     </AvatarFallback>
                                                 </Avatar>

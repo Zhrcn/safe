@@ -72,8 +72,8 @@ const DashboardLayout = ({ children }) => {
   const currentPath = window.location.pathname;
   const roleRoute = ROLE_ROUTES[user.role];
   
-  if (roleRoute && !currentPath.startsWith(roleRoute)) {
-    router.push(roleRoute);
+  if (roleRoute && typeof currentPath === 'string' && !currentPath.startsWith(roleRoute)) {
+    router.push(typeof roleRoute === 'string' ? roleRoute : '/');
     return null;
   }
 
@@ -86,7 +86,7 @@ const DashboardLayout = ({ children }) => {
   };
   const activePath = router.pathname; 
   const sidebarContent = (
-    <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm">
+    <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm rounded-lg">
       <div className="flex h-16 items-center px-4">
         <h1 className="text-xl font-semibold text-foreground">SAFE Health</h1>
       </div>
@@ -99,10 +99,12 @@ const DashboardLayout = ({ children }) => {
                 variant="ghost"
                 className={cn(
                   "w-full justify-start gap-3",
-                  router.pathname.startsWith(item.path) && "bg-muted text-primary"
+                  typeof router.pathname === 'string' && router.pathname.startsWith(item.path) && "bg-muted text-primary"
                 )}
                 onClick={() => {
-                  router.push(item.path);
+                  if (typeof item.path === 'string') {
+                    router.push(item.path);
+                  }
                   if (mobileOpen) {
                     handleDrawerToggle();
                   }

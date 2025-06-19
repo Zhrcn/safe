@@ -3,19 +3,10 @@ import '@/styles/globals.css';
 import { Inter } from 'next/font/google';
 import { Providers } from '@/store/provider';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { ThemeProvider } from '@/context/ThemeContext.jsx';
 import { useSession } from '@/hooks/useSession';
+import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
-
-// Client component for theme handling
-function ThemeWrapper({ children }) {
-  return (
-    <ThemeProvider>
-      {children}
-    </ThemeProvider>
-  );
-}
 
 // Client component for session management
 function SessionWrapper({ children }) {
@@ -24,17 +15,25 @@ function SessionWrapper({ children }) {
 }
 
 export default function RootLayout({ children }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <Providers>
-          <ErrorBoundary>
-            <SessionWrapper>
-              <ThemeWrapper>{children}</ThemeWrapper>
-            </SessionWrapper>
-          </ErrorBoundary>
-        </Providers>
+        {mounted && (
+          <Providers>
+            <ErrorBoundary>
+              <SessionWrapper>
+                {children}
+              </SessionWrapper>
+            </ErrorBoundary>
+          </Providers>
+        )}
       </body>
     </html>
   );
-}
+} 

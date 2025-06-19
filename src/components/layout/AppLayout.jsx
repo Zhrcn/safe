@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 import { APP_NAME } from '@/config/app-config';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout, selectCurrentUser } from '@/store/slices/auth/authSlice';
@@ -112,8 +112,7 @@ export default function AppLayout({
     title = 'S.A.F.E Portal',
     sidebarItems,
     children,
-    allowedRoles = [],
-    headerRightContent
+    allowedRoles = []
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -158,7 +157,7 @@ export default function AppLayout({
         <>
             <div className={`h-16 ${logoBg} flex items-center justify-between px-4 transition-colors duration-300`}>
                 <div className="flex items-center">
-                    <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                    <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
                         {APP_NAME}
                     </h1>
                     <span className="ml-2 opacity-75 text-sm">
@@ -250,29 +249,110 @@ export default function AppLayout({
                                         onClick={() => setMobileOpen(true)}
                                         className="text-foreground hover:text-foreground/80 transition-colors"
                                     >
-                                        <MenuIcon className="h-6 w-6" />
+                                        <MenuIcon className="w-6 h-6" />
+                                    </button>
+                                )}
+                                {isDesktop && (
+                                    <button
+                                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                                        className="text-foreground hover:text-foreground/80 transition-colors"
+                                    >
+                                        <MenuIcon className="w-6 h-6" />
                                     </button>
                                 )}
                             </div>
                             <div className="flex items-center gap-4">
-                                {headerRightContent}
-                                <button
-                                    onClick={() => setNotificationsMenuOpen(!notificationsMenuOpen)}
-                                    className="relative text-foreground hover:text-foreground/80 transition-colors"
-                                >
-                                    <Bell className="h-6 w-6" />
-                                    {unreadNotificationsCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-error text-error-foreground text-xs flex items-center justify-center">
-                                            {unreadNotificationsCount}
-                                        </span>
+                                <ThemeSwitcher />
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setNotificationsMenuOpen(!notificationsMenuOpen)}
+                                        className="relative p-2 text-foreground hover:text-foreground/80 transition-colors"
+                                    >
+                                        <Bell className="w-5 h-5" />
+                                        {unreadNotificationsCount > 0 && (
+                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                                                {unreadNotificationsCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {notificationsMenuOpen && (
+                                        <div className="absolute right-0 mt-2 w-80 rounded-lg border border-border bg-card shadow-lg">
+                                            <div className="p-2">
+                                                <h3 className="px-2 py-1.5 text-sm font-semibold">Notifications</h3>
+                                                <div className="mt-1 max-h-96 overflow-y-auto">
+                                                    {notifications.map((notification) => (
+                                                        <button
+                                                            key={notification.id}
+                                                            className={`w-full px-2 py-1.5 text-left text-sm hover:bg-muted/40 transition-colors ${
+                                                                !notification.read ? 'font-medium' : ''
+                                                            }`}
+                                                            onClick={() => {
+                                                                setNotifications(notifications.map(n =>
+                                                                    n.id === notification.id ? { ...n, read: true } : n
+                                                                ));
+                                                            }}
+                                                        >
+                                                            <div className="font-medium">{notification.title}</div>
+                                                            <div className="text-muted-foreground">{notification.message}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
-                                </button>
-                                <button
-                                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                                    className="relative text-foreground hover:text-foreground/80 transition-colors"
-                                >
-                                    <User className="h-6 w-6" />
-                                </button>
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                                        className="flex items-center gap-2 p-2 text-foreground hover:text-foreground/80 transition-colors"
+                                    >
+                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                            <span className="text-sm font-medium text-primary">
+                                                {user?.firstName?.[0] || 'U'}
+                                            </span>
+                                        </div>
+                                        <span className="text-sm font-medium hidden md:inline-block">
+                                            {user?.firstName || 'User'}
+                                        </span>
+                                        <ChevronRight className={`w-4 h-4 transition-transform ${
+                                            profileMenuOpen ? 'rotate-90' : ''
+                                        }`} />
+                                    </button>
+                                    {profileMenuOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg">
+                                            <div className="p-1">
+                                                <button
+                                                    onClick={() => {
+                                                        router.push('/profile');
+                                                        setProfileMenuOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors"
+                                                >
+                                                    <User className="mr-2 h-4 w-4" />
+                                                    Profile
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        router.push('/settings');
+                                                        setProfileMenuOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors"
+                                                >
+                                                    <Settings className="mr-2 h-4 w-4" />
+                                                    Settings
+                                                </button>
+                                                <div className="h-px bg-border my-1" />
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors text-destructive"
+                                                >
+                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </header>

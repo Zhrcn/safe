@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 const testimonials = [
   {
@@ -52,7 +52,7 @@ export default function TestimonialsSection() {
     if (autoplay) {
       interval = setInterval(() => {
         setActiveIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
-      }, 5000);
+      }, 6000);
     }
     return () => clearInterval(interval);
   }, [autoplay]);
@@ -69,117 +69,112 @@ export default function TestimonialsSection() {
     setActiveIndex(index);
   };
   return (
-    <section 
-      id="testimonials" 
-      className="relative overflow-hidden py-8 md:py-12 bg-muted"
+    <section
+      id="testimonials"
+      className="relative overflow-hidden py-12 md:py-20 bg-gradient-to-br from-background to-muted/60"
     >
-      <div
-        className="absolute inset-0 opacity-[0.03]"
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none select-none" aria-hidden="true"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239CA3AF' fill-opacity='0.4'%3E%3Cpath d='M0 0h60v60H0z'/%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239CA3AF' fill-opacity='0.2'%3E%3Cpath d='M0 0h60v60H0z'/%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center mb-6 md:mb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center mb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <p className="text-primary font-semibold tracking-wider mb-2">
-              TESTIMONIALS
+            <p className="text-primary font-semibold tracking-widest mb-2 text-xs md:text-sm uppercase">
+              Testimonials
             </p>
-            <h2 className="font-bold mb-2 text-3xl md:text-4xl text-foreground">
+            <h2 className="font-extrabold mb-2 text-3xl md:text-4xl text-foreground tracking-tight">
               What Our Users Say
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-2">
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-base md:text-lg">
               Discover how our platform is making a difference in healthcare management
             </p>
           </motion.div>
         </div>
-        <div className="relative max-w-3xl mx-auto">
-          
-          <div className="relative h-[400px] md:h-[300px] overflow-hidden">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.id}
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ 
-                  opacity: activeIndex === index ? 1 : 0,
-                  x: activeIndex === index ? 0 : 100,
-                  position: activeIndex === index ? 'relative' : 'absolute',
-                }}
-                transition={{ duration: 0.5 }}
-                className="w-full h-full top-0 left-0"
-                style={{
-                  visibility: activeIndex === index ? 'visible' : 'hidden',
-                }}
-              >
-                <div className="p-3 md:p-5 rounded-xl h-full flex flex-col relative overflow-hidden bg-card shadow-md">
-                  <Quote 
-                    className="w-10 h-10 opacity-10 absolute top-5 left-5" 
-                  />
-                  <p className="mb-4 text-base md:text-lg italic relative z-10 text-card-foreground">
-                    "{testimonial.text}"
-                  </p>
-                  <div className="mt-auto flex items-center">
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-                      <img
-                        src={testimonial.avatar}
-                        alt={testimonial.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-card-foreground">
-                        {testimonial.name}
+        <div className="relative max-w-2xl mx-auto">
+          <div className="relative h-[420px] md:h-[320px] flex items-center justify-center">
+            <AnimatePresence initial={false} mode="wait">
+              {testimonials.map((testimonial, index) => (
+                activeIndex === index && (
+                  <motion.div
+                    key={testimonial.id}
+                    initial={{ opacity: 0, scale: 0.96, y: 30 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: -30 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute w-full h-full flex items-center justify-center"
+                  >
+                    <div className="relative bg-card border-2 border-primary/70 shadow-xl rounded-3xl p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
+                      <Quote className="w-10 h-10 opacity-10 absolute top-6 left-6 text-primary" />
+                      <p className="mb-6 text-lg md:text-xl italic relative z-10 text-card-foreground font-medium">
+                        "{testimonial.text}"
                       </p>
-                      <p className="text-muted-foreground text-sm">
-                        {testimonial.role}
-                      </p>
-                      <div className="flex mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'
-                            }`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
+                      <div className="mt-auto flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background">
+                          <img
+                            src={testimonial.avatar}
+                            alt={testimonial.name}
+                            className="w-full h-full rounded-full object-cover border-2 border-primary/30"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-card-foreground">
+                            {testimonial.name}
+                          </p>
+                          <p className="text-muted-foreground text-sm font-medium">
+                            {testimonial.role}
+                          </p>
+                          <div className="flex mt-1" aria-label={`Rating: ${testimonial.rating} out of 5`}>
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`w-4 h-4 ${i < testimonial.rating ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                )
+              ))}
+            </AnimatePresence>
           </div>
-          {}
-          <div className="flex justify-center items-center mt-4 gap-2">
-            <button 
+          <div className="flex justify-center items-center mt-8 gap-3">
+            <button
               onClick={handlePrev}
-              className="p-2 rounded-full bg-card shadow-sm hover:shadow-md transition-shadow"
+              aria-label="Previous testimonial"
+              className="p-2 rounded-full bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => handleDotClick(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/30'
+                  aria-label={`Go to testimonial ${index + 1}`}
+                  className={`w-3 h-3 rounded-full border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
+                    activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/20'
                   }`}
                 />
               ))}
             </div>
-            <button 
+            <button
               onClick={handleNext}
-              className="p-2 rounded-full bg-card shadow-sm hover:shadow-md transition-shadow"
+              aria-label="Next testimonial"
+              className="p-2 rounded-full bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

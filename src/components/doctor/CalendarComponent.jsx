@@ -13,7 +13,7 @@ import {
   isToday,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext.jsx';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 const getComputedCssVariable = (variableName) => {
   if (typeof window !== 'undefined') {

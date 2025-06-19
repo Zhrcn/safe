@@ -29,7 +29,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import { patients } from '@/mockdata/patients';
 import { appointments } from '@/mockdata/appointments';
 import { doctors } from '@/mockdata/doctors';
-import { useTheme } from '@/context/ThemeContext.jsx';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 const getComputedCssVariable = (variableName) => {
   if (typeof window !== 'undefined') {
@@ -138,47 +138,47 @@ export default function DoctorDashboard() {
     console.log('New Patient Distribution Chart Data:', newPatientDistributionChartData);
 
     const newChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-          grid: {
-            display: true,
-            color: borderColor,
-          },
-            ticks: {
-            color: mutedForeground,
-          },
-        },
-        x: {
-          grid: {
-            display: false,
-          },
-          ticks: {
-            color: mutedForeground,
-          },
-        },
-          },
-      };
-    
-    const newDoughnutOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-          position: 'bottom',
-          labels: {
-            color: mutedForeground,
-          },
-        },
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
       },
-    };
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      grid: {
+        display: true,
+            color: borderColor,
+      },
+        ticks: {
+            color: mutedForeground,
+      },
+    },
+    x: {
+      grid: {
+        display: false,
+      },
+      ticks: {
+            color: mutedForeground,
+      },
+    },
+      },
+  };
+
+    const newDoughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+      position: 'bottom',
+      labels: {
+            color: mutedForeground,
+      },
+    },
+  },
+};
 
     setChartData({
       appointments: newAppointmentsChartData,
@@ -232,26 +232,26 @@ export default function DoctorDashboard() {
     <div className="p-8 bg-background min-h-screen text-foreground flex justify-center">
       <div className="w-full max-w-screen-xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-card-foreground">Dashboard</h1>
           <p className="text-lg text-muted-foreground">Welcome back, {doctorName}</p>
         </div>
 
         <div className="grid grid-cols-12 gap-8 mb-8">
 
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <div className="bg-card rounded-xl shadow-lg border border-border flex-grow">
+            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
               <div className="p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-card-foreground">Recent Patients</h2>
                   <Link 
                     href="/doctor/patients"
-                    className="text-primary hover:text-primary-dark text-base font-medium flex items-center gap-1 transition-colors duration-200"
+                    className="text-primary hover:text-secondary text-base font-medium flex items-center gap-1 transition-colors duration-200"
                   >
                     View All
                     <ChevronRight size={18} />
                   </Link>
                 </div>
-                <div className="border-b border-border mb-4" />
+                <div className="border-b border-muted mb-4" />
                 {recentPatients.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Users size={64} className="mx-auto mb-4 opacity-50" />
@@ -261,7 +261,7 @@ export default function DoctorDashboard() {
                   <div className="flex flex-col gap-4 flex-grow">
                     {recentPatients.map((patient) => (
                       <div key={patient._id} className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-card-foreground font-semibold text-lg">
                           {patient.firstName?.[0]}{patient.lastName?.[0]}
                         </div>
                         <div className="flex-grow">
@@ -272,7 +272,7 @@ export default function DoctorDashboard() {
                         </div>
                         <Link
                           href={`/doctor/patients/${patient._id}`}
-                          className="text-primary hover:text-primary-dark text-sm font-medium px-4 py-2 rounded-lg hover:bg-muted/40 transition-colors duration-200"
+                          className="text-primary hover:text-secondary text-sm font-medium px-4 py-2 rounded-full hover:bg-muted transition-colors duration-200"
                         >
                           View
                         </Link>
@@ -285,38 +285,34 @@ export default function DoctorDashboard() {
           </div>
 
           <div className="col-span-12 md:col-span-3 flex flex-col">
-            <div className="bg-card rounded-xl shadow-lg border border-border flex-grow">
+            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
               <div className="p-6 flex flex-col flex-grow">
                 <h2 className="text-xl font-semibold text-card-foreground mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-2 gap-4 flex-grow">
                   <Link
                     href="/doctor/patients/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 hover:bg-muted/40 transition-colors duration-200 text-sm font-medium h-24"
-                    style={{ borderColor: quickActionColors.primary, color: quickActionColors.primary }}
+                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-primary hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-primary"
                   >
                     <UserPlus size={24} />
                     <span>New Patient</span>
                   </Link>
                   <Link
                     href="/doctor/appointments/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 hover:bg-muted/40 transition-colors duration-200 text-sm font-medium h-24"
-                    style={{ borderColor: quickActionColors.success, color: quickActionColors.success }}
+                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-success hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-success"
                   >
                     <CalendarClock size={24} />
                     <span>Schedule</span>
                   </Link>
                   <Link
                     href="/doctor/prescriptions/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 hover:bg-muted/40 transition-colors duration-200 text-sm font-medium h-24"
-                    style={{ borderColor: quickActionColors.warning, color: quickActionColors.warning }}
+                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-warning hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-warning"
                   >
                     <FileText size={24} />
                     <span>Prescription</span>
                   </Link>
                   <Link
                     href="/doctor/messages"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 hover:bg-muted/40 transition-colors duration-200 text-sm font-medium h-24"
-                    style={{ borderColor: quickActionColors.destructive, color: quickActionColors.destructive }}
+                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-error hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-error"
                   >
                     <MessageSquare size={24} />
                     <span>Messages</span>
@@ -334,7 +330,7 @@ export default function DoctorDashboard() {
         <div className="grid grid-cols-12 gap-8">
 
           <div className="col-span-12 md:col-span-7 flex flex-col">
-            <div className="bg-card rounded-xl shadow-lg border border-border flex-grow">
+            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
               <div className="p-6 flex flex-col flex-grow">
                 <h2 className="text-xl font-semibold text-card-foreground mb-4">Appointments Overview</h2>
                 <div className="flex-grow min-h-0">
@@ -345,7 +341,7 @@ export default function DoctorDashboard() {
           </div>
 
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <div className="bg-card rounded-xl shadow-lg border border-border flex-grow">
+            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
               <div className="p-6 flex flex-col flex-grow">
                 <h2 className="text-xl font-semibold text-card-foreground mb-4">Patient Distribution</h2>
                 <div className="flex-grow min-h-0">

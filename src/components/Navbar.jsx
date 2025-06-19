@@ -51,44 +51,40 @@ export default function Navbar() {
 
   return (
     <HideOnScroll>
-      <nav className="sticky top-0 backdrop-blur-md bg-background/70 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="sticky top-0 w-full bg-white border-b border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <Link
               href="/"
-              className="flex items-center text-xl font-bold text-primary hover:text-primary/90 transition-colors"
+              className="flex items-center text-2xl font-bold text-primary hover:text-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {APP_NAME}
             </Link>
-
-            <div className="hidden md:flex md:items-center md:space-x-4">
+            <div className="hidden md:flex md:items-center md:space-x-2">
               {pages.map((page) => (
                 <Button
                   key={page.name}
                   variant="ghost"
                   onClick={() => scrollToSection(page.href)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="rounded-md px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
                 >
                   {page.name}
                 </Button>
               ))}
             </div>
-
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
-
               <div className="hidden sm:flex sm:items-center sm:space-x-2">
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
                   <Link href="/login">Login</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
                   <Link href="/register">Sign Up</Link>
                 </Button>
               </div>
-
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden">
+                  <Button variant="ghost" size="icon" className="md:hidden rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                     <MenuIcon className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
@@ -102,16 +98,16 @@ export default function Navbar() {
                         key={page.name}
                         variant="ghost"
                         onClick={() => scrollToSection(page.href)}
-                        className="justify-start"
+                        className="rounded-md justify-start px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
                       >
                         {page.name}
                       </Button>
                     ))}
                     <div className="flex flex-col space-y-2 pt-4 border-t">
-                      <Button variant="outline" asChild>
+                      <Button variant="outline" asChild className="rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
                         <Link href="/login">Login</Link>
                       </Button>
-                      <Button asChild>
+                      <Button asChild className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
                         <Link href="/register">Sign Up</Link>
                       </Button>
                     </div>

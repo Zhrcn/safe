@@ -1,9 +1,9 @@
 export default function LoadingSpinner() {
     return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen" role="status" aria-label="Loading">
             <div className="relative">
-                <div className="w-12 h-12 rounded-full absolute border-4 border-solid border-gray-200"></div>
-                <div className="w-12 h-12 rounded-full animate-spin absolute border-4 border-solid border-primary border-t-transparent"></div>
+                <div className="w-14 h-14 rounded-full absolute border-4 border-solid border-muted animate-spin-slow shadow-inner"></div>
+                <div className="w-14 h-14 rounded-full animate-spin absolute border-4 border-solid border-primary border-t-transparent shadow-lg"></div>
             </div>
         </div>
     );

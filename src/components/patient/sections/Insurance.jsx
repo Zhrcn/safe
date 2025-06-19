@@ -1,1 +1,140 @@
-'use client';import React from 'react';import {    Building2,    CreditCard,    FileText,    Phone,    Mail,    MapPin,    Calendar,    CheckCircle2} from 'lucide-react';const InfoItem = ({ icon: Icon, label, value }) => (    <div className="flex items-center gap-2 mb-3">        <Icon className="w-4 h-4 text-muted-foreground" />        <span className="text-sm text-muted-foreground">{label}:</span>        <span className="text-sm text-foreground">{value}</span>    </div>);const Insurance = ({ patient }) => {    if (!patient) return null;    const formatDate = (dateString) => {        if (!dateString) return 'N/A';        const options = { year: 'numeric', month: 'long', day: 'numeric' };        return new Date(dateString).toLocaleDateString(undefined, options);    };    return (        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">            {}            <div className="bg-card text-card-foreground rounded-lg border border-border p-6">                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                    <Building2 className="w-5 h-5" />                    Insurance Information                </h2>                <div className="space-y-4">                    <div>                        <span className="text-sm text-muted-foreground">Provider</span>                        <p className="text-sm text-foreground mt-1">                            {patient.insurance?.provider || 'N/A'}                        </p>                    </div>                    <div className="h-px bg-border" />                    <div>                        <span className="text-sm text-muted-foreground">Policy Number</span>                        <p className="text-sm text-foreground mt-1">                            {patient.insurance?.policyNumber || 'N/A'}                        </p>                    </div>                    <div className="h-px bg-border" />                    <div>                        <span className="text-sm text-muted-foreground">Group Number</span>                        <p className="text-sm text-foreground mt-1">                            {patient.insurance?.groupNumber || 'N/A'}                        </p>                    </div>                    <div className="h-px bg-border" />                    <div>                        <span className="text-sm text-muted-foreground">Coverage Type</span>                        <p className="text-sm text-foreground mt-1">                            {patient.insurance?.coverageType || 'N/A'}                        </p>                    </div>                    <div className="h-px bg-border" />                    <div>                        <span className="text-sm text-muted-foreground">Status</span>                        <div className="mt-1">                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${                                patient.insurance?.status === 'active'                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'                                    : 'bg-destructive/10 text-destructive border-destructive/20'                            }`}>                                <CheckCircle2 className="w-3 h-3" />                                {patient.insurance?.status || 'N/A'}                            </span>                        </div>                    </div>                </div>            </div>            {}            <div className="bg-card text-card-foreground rounded-lg border border-border p-6">                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                    <FileText className="w-5 h-5" />                    Coverage Details                </h2>                <div className="space-y-3">                    <InfoItem                        icon={CreditCard}                        label="Deductible"                        value={`$${patient.insurance?.deductible || '0'}`}                    />                    <InfoItem                        icon={CreditCard}                        label="Co-pay"                        value={`$${patient.insurance?.copay || '0'}`}                    />                    <InfoItem                        icon={CreditCard}                        label="Out-of-pocket Maximum"                        value={`$${patient.insurance?.outOfPocketMax || '0'}`}                    />                    <InfoItem                        icon={Calendar}                        label="Effective Date"                        value={formatDate(patient.insurance?.effectiveDate)}                    />                    <InfoItem                        icon={Calendar}                        label="Expiration Date"                        value={formatDate(patient.insurance?.expirationDate)}                    />                </div>            </div>            {}            <div className="bg-card text-card-foreground rounded-lg border border-border p-6">                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                    <Phone className="w-5 h-5" />                    Contact Information                </h2>                <div className="space-y-3">                    <InfoItem                        icon={Phone}                        label="Phone"                        value={patient.insurance?.contactPhone || 'N/A'}                    />                    <InfoItem                        icon={Mail}                        label="Email"                        value={patient.insurance?.contactEmail || 'N/A'}                    />                    <InfoItem                        icon={MapPin}                        label="Address"                        value={patient.insurance?.contactAddress || 'N/A'}                    />                </div>            </div>        </div>    );};export default Insurance; 
+'use client';
+import React from 'react';
+import {
+    Building2,
+    CreditCard,
+    FileText,
+    Phone,
+    Mail,
+    MapPin,
+    Calendar,
+    CheckCircle2
+} from 'lucide-react';
+const InfoItem = ({ icon: Icon, label, value }) => (
+    <div className="flex items-center gap-3 mb-2">
+        <Icon className="w-5 h-5 text-primary" />
+        <span className="text-sm text-muted-foreground font-medium">{label}:</span>
+        <span className="text-sm text-foreground font-semibold">{value}</span>
+    </div>
+);
+const Insurance = ({ patient }) => {
+    if (!patient) return null;
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    };
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Insurance Information */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+                <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                    <Building2 className="w-6 h-6" />
+                    Insurance Information
+                </h2>
+                <div className="space-y-5">
+                    <div>
+                        <span className="text-sm text-muted-foreground font-semibold">Provider</span>
+                        <p className="text-base text-foreground font-medium mt-1">
+                            {patient.insurance?.provider || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="h-px bg-border" />
+                    <div>
+                        <span className="text-sm text-muted-foreground font-semibold">Policy Number</span>
+                        <p className="text-base text-foreground font-medium mt-1">
+                            {patient.insurance?.policyNumber || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="h-px bg-border" />
+                    <div>
+                        <span className="text-sm text-muted-foreground font-semibold">Group Number</span>
+                        <p className="text-base text-foreground font-medium mt-1">
+                            {patient.insurance?.groupNumber || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="h-px bg-border" />
+                    <div>
+                        <span className="text-sm text-muted-foreground font-semibold">Coverage Type</span>
+                        <p className="text-base text-foreground font-medium mt-1">
+                            {patient.insurance?.coverageType || 'N/A'}
+                        </p>
+                    </div>
+                    <div className="h-px bg-border" />
+                    <div>
+                        <span className="text-sm text-muted-foreground font-semibold">Status</span>
+                        <div className="mt-1">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${
+                                patient.insurance?.status === 'active'
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                    : 'bg-destructive/10 text-destructive border-destructive/20'
+                            }`}>
+                                <CheckCircle2 className="w-3 h-3" />
+                                {patient.insurance?.status || 'N/A'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Coverage Details */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+                <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                    <FileText className="w-6 h-6" />
+                    Coverage Details
+                </h2>
+                <div className="space-y-4">
+                    <InfoItem
+                        icon={CreditCard}
+                        label="Deductible"
+                        value={`$${patient.insurance?.deductible || '0'}`}
+                    />
+                    <InfoItem
+                        icon={CreditCard}
+                        label="Co-pay"
+                        value={`$${patient.insurance?.copay || '0'}`}
+                    />
+                    <InfoItem
+                        icon={CreditCard}
+                        label="Out-of-pocket Maximum"
+                        value={`$${patient.insurance?.outOfPocketMax || '0'}`}
+                    />
+                    <InfoItem
+                        icon={Calendar}
+                        label="Effective Date"
+                        value={formatDate(patient.insurance?.effectiveDate)}
+                    />
+                    <InfoItem
+                        icon={Calendar}
+                        label="Expiration Date"
+                        value={formatDate(patient.insurance?.expirationDate)}
+                    />
+                </div>
+            </div>
+            {/* Contact Information */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+                <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                    <Phone className="w-6 h-6" />
+                    Contact Information
+                </h2>
+                <div className="space-y-4">
+                    <InfoItem
+                        icon={Phone}
+                        label="Phone"
+                        value={patient.insurance?.contactPhone || 'N/A'}
+                    />
+                    <InfoItem
+                        icon={Mail}
+                        label="Email"
+                        value={patient.insurance?.contactEmail || 'N/A'}
+                    />
+                    <InfoItem
+                        icon={MapPin}
+                        label="Address"
+                        value={patient.insurance?.contactAddress || 'N/A'}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+export default Insurance; 

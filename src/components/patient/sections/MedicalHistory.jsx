@@ -75,17 +75,17 @@ const RecordCard = ({ record }) => {
             case 'imaging':
                 return 'bg-secondary/10 text-secondary border-secondary/20';
             case 'vitals':
-                return 'bg-green-500/10 text-green-500 border-green-500/20';
+                return 'bg-success/10 text-success border-success/20';
             case 'medication':
-                return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                return 'bg-info/10 text-info border-info/20';
             case 'immunization':
-                return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                return 'bg-warning/10 text-warning border-warning/20';
             case 'surgery':
-                return 'bg-destructive/10 text-destructive border-destructive/20';
+                return 'bg-error/10 text-error border-error/20';
             case 'allergy':
-                return 'bg-destructive/10 text-destructive border-destructive/20';
+                return 'bg-error/10 text-error border-error/20';
             case 'condition':
-                return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                return 'bg-warning/10 text-warning border-warning/20';
             default:
                 return 'bg-muted text-muted-foreground border-border';
         }
@@ -96,7 +96,7 @@ const RecordCard = ({ record }) => {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-border p-4 hover:shadow-lg transition-shadow duration-200">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-4 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {getIcon(record.type)}

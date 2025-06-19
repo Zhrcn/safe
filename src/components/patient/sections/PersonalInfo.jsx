@@ -1,1 +1,141 @@
-'use client';import React from 'react';import {    User,    Mail,    Phone,    Home,    Calendar,    MapPin,    Building,    Briefcase,    GraduationCap,    Heart} from 'lucide-react';const InfoItem = ({ icon: Icon, label, value }) => (    <div className="flex items-center gap-2 mb-2">        <Icon className="w-4 h-4 text-muted-foreground" />        <span className="text-sm text-muted-foreground">{label}:</span>        <span className="text-sm text-foreground">{value}</span>    </div>);const PersonalInfo = ({ patient }) => {    if (!patient) return null;    const formatDate = (dateString) => {        if (!dateString) return 'N/A';        const options = { year: 'numeric', month: 'long', day: 'numeric' };        return new Date(dateString).toLocaleDateString(undefined, options);    };    return (        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">            {}            <div className="bg-card text-card-foreground rounded-lg border border-border shadow-sm">                <div className="p-6">                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                        <User className="w-5 h-5 text-primary" />                        Basic Information                    </h2>                    <div className="space-y-4">                        <div className="space-y-1">                            <span className="text-sm font-medium text-foreground">Full Name</span>                            <p className="text-sm text-muted-foreground">                                {`${patient.user?.firstName} ${patient.user?.lastName}`}                            </p>                        </div>                        <div className="h-px bg-border" />                        <div className="space-y-1">                            <span className="text-sm font-medium text-foreground">Date of Birth</span>                            <p className="text-sm text-muted-foreground">                                {formatDate(patient.user?.dateOfBirth)}                            </p>                        </div>                        <div className="h-px bg-border" />                        <div className="space-y-1">                            <span className="text-sm font-medium text-foreground">Gender</span>                            <p className="text-sm text-muted-foreground">                                {patient.user?.gender}                            </p>                        </div>                        <div className="h-px bg-border" />                        <div className="space-y-1">                            <span className="text-sm font-medium text-foreground">Blood Type</span>                            <div className="mt-1">                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">                                    {patient.bloodType}                                </span>                            </div>                        </div>                    </div>                </div>            </div>            {}            <div className="bg-card text-card-foreground rounded-lg border border-border shadow-sm">                <div className="p-6">                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                        <Mail className="w-5 h-5 text-primary" />                        Contact Information                    </h2>                    <div className="space-y-4">                        <InfoItem                            icon={Mail}                            label="Email"                            value={patient.user?.email}                        />                        <InfoItem                            icon={Phone}                            label="Phone"                            value={patient.user?.phoneNumber}                        />                        <InfoItem                            icon={Home}                            label="Address"                            value={patient.user?.address}                        />                        <InfoItem                            icon={MapPin}                            label="City"                            value={patient.user?.city}                        />                        <InfoItem                            icon={Building}                            label="State"                            value={patient.user?.state}                        />                        <InfoItem                            icon={Calendar}                            label="Member Since"                            value={formatDate(patient.user?.createdAt)}                        />                    </div>                </div>            </div>            {}            <div className="bg-card text-card-foreground rounded-lg border border-border shadow-sm">                <div className="p-6">                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">                        <Briefcase className="w-5 h-5 text-primary" />                        Additional Information                    </h2>                    <div className="space-y-4">                        <InfoItem                            icon={GraduationCap}                            label="Education"                            value={patient.user?.education}                        />                        <InfoItem                            icon={Briefcase}                            label="Occupation"                            value={patient.user?.occupation}                        />                        <InfoItem                            icon={Heart}                            label="Marital Status"                            value={patient.user?.maritalStatus}                        />                    </div>                </div>            </div>        </div>    );};export default PersonalInfo; 
+'use client';
+import React from 'react';
+import {
+    User,
+    Mail,
+    Phone,
+    Home,
+    Calendar,
+    MapPin,
+    Building,
+    Briefcase,
+    GraduationCap,
+    Heart
+} from 'lucide-react';
+const InfoItem = ({ icon: Icon, label, value }) => (
+    <div className="flex items-center gap-3 mb-2">
+        <Icon className="w-5 h-5 text-primary" />
+        <span className="text-sm text-muted-foreground font-medium">{label}:</span>
+        <span className="text-sm text-foreground font-semibold">{value}</span>
+    </div>
+);
+const PersonalInfo = ({ patient }) => {
+    if (!patient) return null;
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    };
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Basic Information */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg">
+                <div className="p-8">
+                    <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                        <User className="w-6 h-6" />
+                        Basic Information
+                    </h2>
+                    <div className="space-y-5">
+                        <div className="space-y-1">
+                            <span className="text-sm font-semibold text-foreground">Full Name</span>
+                            <p className="text-base text-muted-foreground font-medium">
+                                {`${patient.user?.firstName} ${patient.user?.lastName}`}
+                            </p>
+                        </div>
+                        <div className="h-px bg-border" />
+                        <div className="space-y-1">
+                            <span className="text-sm font-semibold text-foreground">Date of Birth</span>
+                            <p className="text-base text-muted-foreground font-medium">
+                                {formatDate(patient.user?.dateOfBirth)}
+                            </p>
+                        </div>
+                        <div className="h-px bg-border" />
+                        <div className="space-y-1">
+                            <span className="text-sm font-semibold text-foreground">Gender</span>
+                            <p className="text-base text-muted-foreground font-medium">
+                                {patient.user?.gender}
+                            </p>
+                        </div>
+                        <div className="h-px bg-border" />
+                        <div className="space-y-1">
+                            <span className="text-sm font-semibold text-foreground">Blood Type</span>
+                            <div className="mt-1">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-destructive/10 text-destructive border border-destructive/20 shadow-sm">
+                                    {patient.bloodType}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Contact Information */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg">
+                <div className="p-8">
+                    <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                        <Mail className="w-6 h-6" />
+                        Contact Information
+                    </h2>
+                    <div className="space-y-5">
+                        <InfoItem
+                            icon={Mail}
+                            label="Email"
+                            value={patient.user?.email}
+                        />
+                        <InfoItem
+                            icon={Phone}
+                            label="Phone"
+                            value={patient.user?.phoneNumber}
+                        />
+                        <InfoItem
+                            icon={Home}
+                            label="Address"
+                            value={patient.user?.address}
+                        />
+                        <InfoItem
+                            icon={MapPin}
+                            label="City"
+                            value={patient.user?.city}
+                        />
+                        <InfoItem
+                            icon={Building}
+                            label="State"
+                            value={patient.user?.state}
+                        />
+                        <InfoItem
+                            icon={Calendar}
+                            label="Member Since"
+                            value={formatDate(patient.user?.createdAt)}
+                        />
+                    </div>
+                </div>
+            </div>
+            {/* Additional Information */}
+            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg md:col-span-2">
+                <div className="p-8">
+                    <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
+                        <Briefcase className="w-6 h-6" />
+                        Additional Information
+                    </h2>
+                    <div className="space-y-5">
+                        <InfoItem
+                            icon={GraduationCap}
+                            label="Education"
+                            value={patient.user?.education}
+                        />
+                        <InfoItem
+                            icon={Briefcase}
+                            label="Occupation"
+                            value={patient.user?.occupation}
+                        />
+                        <InfoItem
+                            icon={Heart}
+                            label="Marital Status"
+                            value={patient.user?.maritalStatus}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+export default PersonalInfo; 

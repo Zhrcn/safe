@@ -5,213 +5,113 @@
 /* Base Theme Configuration */
 @layer base {
     :root {
-        --radius: 0.5rem;
-        --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
-        --primary: 142.1 76.2% 36.3%;
-        --primary-foreground: 355.7 100% 97.3%;
-        --secondary: 220 14.3% 95.9%;
-        --secondary-foreground: 220.9 39.3% 11%;
-        --accent: 220 14.3% 95.9%;
-        --accent-foreground: 220.9 39.3% 11%;
-        --neutral: 220 14.3% 95.9%;
-        --neutral-foreground: 220.9 39.3% 11%;
-        --info: 199 89% 48%;
-        --info-foreground: 210 40% 98%;
-        --success: 142.1 76.2% 36.3%;
-        --success-foreground: 355.7 100% 97.3%;
-        --warning: 38 92% 50%;
-        --warning-foreground: 48 96% 89%;
-        --error: 0 84.2% 60.2%;
-        --error-foreground: 210 40% 98%;
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --ring: 142.1 76.2% 36.3%;
-    }
-
-    .dark {
-        --background: 220 10% 10%;
-        --foreground: 210 40% 98%;
-        --card: 220 12% 15%;
-        --card-foreground: 210 40% 98%;
-        --popover: 220 12% 15%;
-        --popover-foreground: 210 40% 98%;
-        --primary: 217.2 91.2% 59.8%;
-        --primary-foreground: 222.2 47.4% 11.2%;
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 220 15% 25%;
-        --input: 220 15% 25%;
-        --ring: 224.3 76.3% 48%;
-    }
-
-    /* Base Reset Styles */
-    * {
-        @apply border-border;
-    }
-
-    *,
-    *::before,
-    *::after {
-        @apply box-border;
+        --color-radius: 0.5rem;
+        /* All color variables are set by JS ThemeProvider */
     }
 
     body {
-        @apply bg-background text-foreground m-0 p-0 min-h-screen antialiased;
+        background: var(--color-background);
+        color: var(--color-foreground);
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    p,
-    ul,
-    ol {
-        @apply m-0;
+    .card {
+        background: var(--color-card);
+        color: var(--color-card-foreground);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+        border: 1px solid var(--color-border);
+        padding: 1.5rem;
     }
 
-    img {
-        @apply max-w-full h-auto;
+    .button-primary {
+        background: var(--color-primary);
+        color: #fff;
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        border: none;
+        transition: background 0.2s;
+    }
+    .button-primary:hover, .button-primary:focus {
+        background: var(--color-secondary);
+    }
+
+    .navbar {
+        background: var(--color-navbar);
+        color: var(--color-navbar-foreground);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--color-border);
     }
 
     a {
-        @apply text-primary no-underline hover:underline focus:outline-none focus:ring-2 focus:ring-primary/40;
+        color: var(--color-primary);
+        text-decoration: none;
+        transition: color 0.2s;
     }
-
-    button {
-        @apply cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40;
+    a:hover, a:focus {
+        color: var(--color-secondary);
+        text-decoration: underline;
     }
 }
 
 /* Custom Utilities */
 @layer utilities {
-
-    /* Scrollbar styles */
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
     }
-
     ::-webkit-scrollbar-track {
-        background: hsl(var(--muted));
+        background: var(--color-muted);
         border-radius: 10px;
     }
-
     ::-webkit-scrollbar-thumb {
-        background: hsl(var(--muted-foreground));
+        background: var(--color-muted-foreground);
         border-radius: 10px;
-        border: 2px solid hsl(var(--muted));
+        border: 2px solid var(--color-muted);
     }
 }
 
-.theme-hopeCare {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 0 84.2% 60.2%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 142.1 76.2% 36.3%;
-    --accent-foreground: 355.7 100% 97.3%;
-    --neutral: 215 25% 27%;
-    --neutral-foreground: 210 40% 98%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --error: 0 84.2% 60.2%;
-    --error-foreground: 210 40% 98%;
-}
+/* Remove old theme-* classes and HSL-based variables */
+/* .theme-hopeCare, .theme-pureCare, .theme-syriaWarm, .theme-safeNight { ... } */
 
-.theme-pureCare {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --accent: 221.2 83.2% 53.3%;
-    --accent-foreground: 210 40% 98%;
-    --neutral: 215 25% 27%;
-    --neutral-foreground: 210 40% 98%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --error: 0 84.2% 60.2%;
-    --error-foreground: 210 40% 98%;
-}
+/* Semantic color utility classes for theme variables */
+.bg-primary { background-color: var(--color-primary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.bg-accent { background-color: var(--color-accent) !important; }
+.bg-background { background-color: var(--color-background) !important; }
+.bg-card { background-color: var(--color-card) !important; }
+.bg-success { background-color: var(--color-success) !important; }
+.bg-warning { background-color: var(--color-warning) !important; }
+.bg-error { background-color: var(--color-error) !important; }
+.bg-muted { background-color: var(--color-muted) !important; }
+.bg-navbar { background-color: var(--color-navbar) !important; }
 
-.theme-syriaWarm {
-    --background: 30 20% 97%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 20 30% 40%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 20 20% 60%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --accent: 20 30% 40%;
-    --accent-foreground: 210 40% 98%;
-    --neutral: 20 30% 40%;
-    --neutral-foreground: 210 40% 98%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --error: 0 84.2% 60.2%;
-    --error-foreground: 210 40% 98%;
-}
+.text-primary { color: var(--color-primary) !important; }
+.text-secondary { color: var(--color-secondary) !important; }
+.text-accent { color: var(--color-accent) !important; }
+.text-background { color: var(--color-background) !important; }
+.text-card { color: var(--color-card) !important; }
+.text-card-foreground { color: var(--color-card-foreground) !important; }
+.text-success { color: var(--color-success) !important; }
+.text-warning { color: var(--color-warning) !important; }
+.text-error { color: var(--color-error) !important; }
+.text-muted { color: var(--color-muted) !important; }
+.text-muted-foreground { color: var(--color-muted-foreground) !important; }
+.text-navbar { color: var(--color-navbar) !important; }
+.text-navbar-foreground { color: var(--color-navbar-foreground) !important; }
 
-.theme-safeNight {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 180 100% 25%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 20 100% 65%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 180 100% 25%;
-    --accent-foreground: 210 40% 98%;
-    --neutral: 215 25% 27%;
-    --neutral-foreground: 210 40% 98%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --error: 0 84.2% 60.2%;
-    --error-foreground: 210 40% 98%;
-}
+.border-primary { border-color: var(--color-primary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
+.border-background { border-color: var(--color-background) !important; }
+.border-card { border-color: var(--color-card) !important; }
+.border-success { border-color: var(--color-success) !important; }
+.border-warning { border-color: var(--color-warning) !important; }
+.border-error { border-color: var(--color-error) !important; }
+.border-muted { border-color: var(--color-muted) !important; }
+.border-navbar { border-color: var(--color-navbar) !important; }

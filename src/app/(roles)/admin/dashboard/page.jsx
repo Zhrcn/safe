@@ -53,6 +53,7 @@ export default function AdminDashboard() {
     <AdminPageContainer
       title="Admin Dashboard"
       description="Monitor system health, user activity, and manage platform settings."
+      className="bg-background min-h-screen text-foreground"
     >
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="mb-6 border-b border-border">
+          <div className="mb-6 border-b border-muted">
             <div className="flex space-x-4">
               {['overview', 'users', 'activity', 'system'].map((tab) => (
                 <button
@@ -108,7 +109,7 @@ export default function AdminDashboard() {
               />
 
               <div className="col-span-1 md:col-span-2">
-                <ChartContainer title="User Distribution by Role">
+                <ChartContainer title="User Distribution by Role" className="bg-card border border-border rounded-xl">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <ChartContainer title="Appointment Status">
+                <ChartContainer title="Appointment Status" className="bg-card border border-border rounded-xl">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={Object.entries(systemStats.appointments).filter(([key]) => key !== 'total').map(([name, value]) => ({ name, value }))}
@@ -172,6 +173,7 @@ export default function AdminDashboard() {
                       View All
                     </button>
                   }
+                  className="bg-card border border-border rounded-xl"
                 >
                   {activityLogs.slice(0, 3).map((log) => (
                     <ActivityLogItem
@@ -196,6 +198,7 @@ export default function AdminDashboard() {
                       Mark All Read
                     </button>
                   }
+                  className="bg-card border border-border rounded-xl"
                 >
                   {notifications.slice(0, 3).map((notification) => (
                     <NotificationItem
@@ -292,9 +295,9 @@ export default function AdminDashboard() {
                         <Typography variant="h6" className="text-foreground mb-2">Status</Typography>
                         <Typography variant="body1" className="text-foreground">
                           {systemStats.systemHealth.status === 'healthy' ? (
-                            <span className="text-green-500">● Healthy</span>
+                            <span className="text-success">● Healthy</span>
                           ) : (
-                            <span className="text-red-500">● Issues Detected</span>
+                            <span className="text-error">● Issues Detected</span>
                           )}
                         </Typography>
                       </Box>

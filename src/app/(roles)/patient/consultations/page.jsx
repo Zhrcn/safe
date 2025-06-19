@@ -101,7 +101,7 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
             <div className="relative">
               <Avatar className="h-16 w-16">
                 <AvatarImage src={consultation.doctorAvatar || '/images/default-avatar.png'} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                <AvatarFallback className="bg-primary text-primary text-xl font-semibold">
                   {consultation.doctorName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -119,7 +119,7 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
                   <span>{getTypeLabel(consultation.type)}</span>
               </div>
             </div>
-            <Badge className={statusColors[consultation.status] || 'bg-gray-100 text-gray-800 border-gray-200'}>
+            <Badge className={statusColors[consultation.status] || 'bg-muted text-muted-foreground border-border'}>
                 <StatusIconComponent className="w-3 h-3 mr-1" />
                 {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
             </Badge>

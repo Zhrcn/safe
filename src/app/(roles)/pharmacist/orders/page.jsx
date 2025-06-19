@@ -9,16 +9,9 @@ import {
   getOrders,
   updateOrderStatus,
 } from '@/services/pharmacistService';
-import { SearchField } from '@/components/ui/SearchField';
-import { TableContainer } from '@/components/ui/TableContainer';
-import { Table } from '@/components/ui/Table';
-import { TableHead } from '@/components/ui/TableHead';
-import { TableBody } from '@/components/ui/TableBody';
-import { TableRow } from '@/components/ui/TableRow';
-import { TableCell } from '@/components/ui/TableCell';
+import { SearchField } from '@/components/ui/Notification';
+import { Table, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
-import { Paper } from '@/components/ui/Paper';
 
 function OrderDetailDialog({ open, onClose, order, onMarkAsProcessed }) {
   if (!order) return null;
@@ -149,7 +142,7 @@ export default function PharmacistOrdersPage() {
           />
         }
       >
-        <TableContainer component={Paper} elevation={2}>
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-2">
           <Table>
             <TableHead>
               <TableRow>
@@ -211,7 +204,7 @@ export default function PharmacistOrdersPage() {
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </div>
       </PharmacistCard>
       <OrderDetailDialog
         open={detailDialogOpen}

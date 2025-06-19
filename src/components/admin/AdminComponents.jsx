@@ -38,9 +38,9 @@ export function AdminCard({ title, subtitle, actions, children, className = '' }
 
 export function StatCard({ title, value, trend = null, icon, description, className = '', onClick }) {
   const getTrendIcon = () => {
-    if (trend === 'up') return <TrendingUp size={16} className="text-green-500" />;
-    if (trend === 'down') return <TrendingDown size={16} className="text-red-500" />;
-    if (trend === 'neutral') return <Minus size={16} className="text-yellow-500" />;
+    if (trend === 'up') return <TrendingUp size={16} className="text-success" />;
+    if (trend === 'down') return <TrendingDown size={16} className="text-error" />;
+    if (trend === 'neutral') return <Minus size={16} className="text-warning" />;
     return null;
   };
 
@@ -65,10 +65,10 @@ export function StatCard({ title, value, trend = null, icon, description, classN
               <span
                 className={`ml-1 text-sm ${
                   trend === 'up'
-                    ? 'text-green-500'
+                    ? 'text-success'
                     : trend === 'down'
-                    ? 'text-red-500'
-                    : 'text-yellow-500'
+                    ? 'text-error'
+                    : 'text-warning'
                 }`}
               >
                 {trend === 'up' ? 'Increase' : trend === 'down' ? 'Decrease' : 'No change'}
@@ -99,66 +99,24 @@ export function ChartContainer({ title, subtitle, children, className = '' }) {
 }
 
 export function UserRoleBadge({ role }) {
-  const getRoleClasses = () => {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'doctor':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'pharmacist':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'patient':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleClasses()}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
       {role.charAt(0).toUpperCase() + role.slice(1)}
     </span>
   );
 }
 
 export function UserStatusBadge({ status }) {
-  const getStatusClasses = () => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-      case 'suspended':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses()}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
 
 export function NotificationSeverityBadge({ severity }) {
-  const getSeverityClasses = () => {
-    switch (severity.toLowerCase()) {
-      case 'info':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'error':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'success':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSeverityClasses()}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
       {severity.charAt(0).toUpperCase() + severity.slice(1)}
     </span>
   );
@@ -190,7 +148,7 @@ export function ActivityLogItem({ user, action, timestamp, details, category }) 
         <div className="flex items-center">
           <span className="font-medium text-foreground">{user}</span>
           {category && (
-            <span className={`ml-2 text-xs px-2 py-1 rounded ${getCategoryStyle()}`}>
+            <span className={`ml-2 text-xs px-2 py-1 rounded bg-muted text-muted-foreground`}>
               {category.charAt(0).toUpperCase() + category.slice(1)}
             </span>
           )}

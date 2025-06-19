@@ -378,7 +378,6 @@ const PatientPageContent = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden border border-border">
-                {}
                 <div className="p-6 border-b border-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -388,7 +387,7 @@ const PatientPageContent = () => {
                                     alt={patient.user?.name}
                                     className="w-16 h-16 rounded-full object-cover border-2 border-border"
                                 />
-                                <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-background rounded-full"></span>
+                                <span className="absolute bottom-0 right-0 w-4 h-4 bg-success border-2 border-background rounded-full"></span>
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-foreground">{patient.user?.name}</h1>
@@ -414,7 +413,6 @@ const PatientPageContent = () => {
                         </div>
                     </div>
                 </div>
-                {}
                 <div className="border-b border-border">
                     <div className="flex space-x-8 px-6">
                         {['Personal Info', 'Medical History', 'Medications', 'Appointments', 'Insurance', 'Emergency Contact'].map((tab, index) => (
@@ -432,7 +430,6 @@ const PatientPageContent = () => {
                         ))}
                     </div>
                 </div>
-                {}
                 <div className="p-6">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -455,7 +452,6 @@ const PatientPageContent = () => {
                 </div>
             </div>
             {console.log('Patient medicalHistory being passed to MedicalHistory:', patient?.medicalHistory)}
-            {}
             <PrescriptionForm
                 open={isPrescriptionModalOpen}
                 onClose={() => setIsPrescriptionModalOpen(false)}

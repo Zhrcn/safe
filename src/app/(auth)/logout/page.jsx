@@ -17,10 +17,12 @@ export default function LogoutPage() {
   }, [isAuthenticated, dispatch, router]);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      <h2 className="mt-4 text-lg font-medium text-foreground">
-        Logging out...
-      </h2>
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <h2 className="mt-4 text-lg font-medium text-foreground">
+          Logging out...
+        </h2>
+      </div>
     </div>
   );
 } 

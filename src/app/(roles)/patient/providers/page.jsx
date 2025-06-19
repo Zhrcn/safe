@@ -56,7 +56,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                     <div className="flex items-center gap-4 mb-4">
                         <Avatar className="h-16 w-16">
                             <AvatarImage src={provider.image || provider.profileImage} />
-                            <AvatarFallback className={cn("text-xl font-semibold", avatarBg)}>
+                            <AvatarFallback className={cn("text-xl font-semibold bg-primary text-primary")}>
                                 {provider.name.charAt(0)}
                             </AvatarFallback>
                         </Avatar>
@@ -147,7 +147,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                             <h4 className="text-sm font-semibold text-foreground mb-2">Specialties:</h4>
                             <div className="flex flex-wrap gap-2">
                                 {provider.specialties.map((specialty, index) => (
-                                    <Badge key={index} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                                    <Badge key={index} variant="secondary" className="bg-primary text-primary hover:bg-primary/20">
                                         {specialty}
                                     </Badge>
                                 ))}

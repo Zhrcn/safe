@@ -125,20 +125,20 @@ export function HealthIndicator({ value, type, className = '' }) {
     const getIndicatorInfo = () => {
         switch (type) {
             case 'bloodPressure':
-                if (value.systolic < 120 && value.diastolic < 80) return { label: 'Normal', color: 'bg-green-500' };
-                if (value.systolic < 130 && value.diastolic < 85) return { label: 'Elevated', color: 'bg-yellow-500' };
-                if (value.systolic < 140 && value.diastolic < 90) return { label: 'Stage 1', color: 'bg-orange-500' };
-                return { label: 'Stage 2', color: 'bg-red-500' };
+                if (value.systolic < 120 && value.diastolic < 80) return { label: 'Normal', color: 'bg-success' };
+                if (value.systolic < 130 && value.diastolic < 85) return { label: 'Elevated', color: 'bg-warning' };
+                if (value.systolic < 140 && value.diastolic < 90) return { label: 'Stage 1', color: 'bg-warning' };
+                return { label: 'Stage 2', color: 'bg-error' };
             case 'heartRate':
-                if (value >= 60 && value <= 100) return { label: 'Normal', color: 'bg-green-500' };
-                if (value > 100) return { label: 'Elevated', color: 'bg-yellow-500' };
-                return { label: 'Low', color: 'bg-blue-500' };
+                if (value >= 60 && value <= 100) return { label: 'Normal', color: 'bg-success' };
+                if (value > 100) return { label: 'Elevated', color: 'bg-warning' };
+                return { label: 'Low', color: 'bg-info' };
             case 'bloodGlucose':
-                if (value < 100) return { label: 'Normal', color: 'bg-green-500' };
-                if (value < 126) return { label: 'Prediabetes', color: 'bg-yellow-500' };
-                return { label: 'Diabetes', color: 'bg-red-500' };
+                if (value < 100) return { label: 'Normal', color: 'bg-success' };
+                if (value < 126) return { label: 'Prediabetes', color: 'bg-warning' };
+                return { label: 'Diabetes', color: 'bg-error' };
             default:
-                return { label: 'Unknown', color: 'bg-gray-500' };
+                return { label: 'Unknown', color: 'bg-muted' };
         }
     };
     const info = getIndicatorInfo();
@@ -152,22 +152,8 @@ export function HealthIndicator({ value, type, className = '' }) {
     );
 }
 export function MedicationStatusBadge({ status }) {
-    const getStatusClasses = () => {
-        switch (status?.toLowerCase()) {
-            case 'active':
-                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-            case 'completed':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-            case 'discontinued':
-                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300';
-        }
-    };
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses()}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
             {status}
         </span>
     );

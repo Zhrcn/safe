@@ -26,7 +26,7 @@ const AppointmentCard = ({ appointment, onChat, onCall, onVideo }) => {
         }
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-border p-4 mb-4">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-4 mb-4">
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-lg font-semibold mb-2">{appointment.type}</h3>
@@ -52,21 +52,21 @@ const AppointmentCard = ({ appointment, onChat, onCall, onVideo }) => {
             <div className="flex gap-2">
                 <button
                     onClick={() => onChat(appointment)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                     <MessageSquare className="w-4 h-4" />
                     Chat
                 </button>
                 <button
                     onClick={() => onCall(appointment)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                     <Phone className="w-4 h-4" />
                     Call
                 </button>
                 <button
                     onClick={() => onVideo(appointment)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                     <Video className="w-4 h-4" />
                     Video
@@ -92,7 +92,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-card text-card-foreground rounded-lg border border-border w-full max-w-md p-6 shadow-lg">
+            <div className="relative bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg w-full max-w-md p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold">Schedule New Appointment</h2>
                     <button
@@ -108,7 +108,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                         <select
                             value={formData.type}
                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         >
                             <option value="">Select type</option>
@@ -124,7 +124,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="date"
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -134,7 +134,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="time"
                             value={formData.time}
                             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -144,7 +144,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="text"
                             value={formData.location}
                             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -154,20 +154,20 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             value={formData.notes}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                             rows={4}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                     </div>
                     <div className="flex justify-end gap-2 mt-6">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium rounded-md bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                            className="px-4 py-2 text-sm font-medium rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            className="px-4 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                         >
                             Schedule
                         </button>
@@ -202,12 +202,12 @@ const Appointments = ({ patient }) => {
         setAppointments([...appointments, newAppointment]);
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-border p-6">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold">Appointments</h2>
                 <button
                     onClick={() => setIsFormOpen(true)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
                     New Appointment

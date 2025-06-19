@@ -1004,13 +1004,4 @@ const LoadingSpinner = () => (
     </div>
 );
 
-const ErrorState = ({ message, onRetry }) => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-        <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-        <h3 className="text-lg font-semibold text-destructive mb-2">Error Loading Data</h3>
-        <p className="text-muted-foreground mb-4">{message || 'Something went wrong. Please try again.'}</p>
-        <Button onClick={onRetry}>Retry</Button>
-    </div>
-);
-
 export default ProfilePage;

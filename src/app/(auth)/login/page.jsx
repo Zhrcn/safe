@@ -44,20 +44,20 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-md space-y-8">
                 {/* Logo and Brand */}
                 <div className="text-center">
-                    <h1 className="text-4xl font-bold text-blue-600 mb-2">S.A.F.E</h1>
-                    <p className="text-gray-600">Secure Access For Everyone</p>
+                    <h1 className="text-4xl font-bold text-primary mb-2">S.A.F.E</h1>
+                    <p className="text-muted-foreground">Secure Access For Everyone</p>
                 </div>
 
-                <Card className="w-full shadow-lg border-0">
+                <Card className="w-full shadow-lg border-0 rounded-2xl">
                     <CardHeader className="space-y-1">
                         <CardTitle className="text-2xl font-bold text-center">
                             Welcome back
                         </CardTitle>
-                        <CardDescription className="text-center text-gray-500">
+                        <CardDescription className="text-center text-muted-foreground">
                             Enter your credentials to access your account
                         </CardDescription>
                     </CardHeader>
