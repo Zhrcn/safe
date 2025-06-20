@@ -107,6 +107,14 @@ const getSidebarItems = (role) => {
     return roleItems[roleLower] || roleItems.patient;
 };
 
+// Fallback mock user for demo if user is missing or incomplete
+const fallbackUser = {
+  firstName: "John",
+  lastName: "Doe",
+  email: "john.doe@example.com",
+  profile: { avatar: "/avatars/default-avatar.svg" }
+};
+
 export default function AppLayout({
     headerBg = 'bg-primary',
     sidebarBg = 'bg-card',
@@ -124,7 +132,8 @@ export default function AppLayout({
     const router = useRouter();
     const pathname = usePathname();
     const dispatch = useAppDispatch();
-    const user = useAppSelector(selectCurrentUser);
+    const userRaw = useAppSelector(selectCurrentUser);
+    const user = userRaw && userRaw.email ? userRaw : fallbackUser;
     const [logout] = useLogoutMutation();
     const [notifications, setNotifications] = useState([
         { id: 1, title: 'New appointment', message: 'You have a new appointment scheduled', read: false },
@@ -168,7 +177,7 @@ export default function AppLayout({
                 {user && (
                   <div className="flex flex-col items-center gap-1 mt-2">
                     <div className="rounded-full overflow-hidden border border-border mb-1">
-                      <img src={user?.profile?.avatar} alt="User Avatar" className="h-10 w-10 object-cover" />
+                      <img src={user?.profile?.avatar || "/avatars/default-avatar.svg"} alt="User Avatar" className="h-10 w-10 object-cover" />
                     </div>
                     <div className="font-bold text-base text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
                     <div className="text-xs text-gray-400 dark:text-gray-400 text-center break-all">{user?.email}</div>

@@ -77,16 +77,16 @@ const RoleCard = ({ icon: Icon, title, description, features, role, color, bgGra
       viewport={{ once: true, margin: '-50px' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ y: -6, scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)' }}
+      whileHover={{ y: -10, scale: 1.05, boxShadow: '0 12px 40px 0 rgba(31, 38, 135, 0.13)' }}
       className="h-full group"
       tabIndex={0}
       aria-label={title}
     >
-      <div className="h-full overflow-hidden rounded-3xl transition-all duration-300 ease-in-out shadow-md group-hover:shadow-2xl bg-card min-h-[520px] focus-within:ring-2 focus-within:ring-primary outline-none flex flex-col">
+      <div className="h-full overflow-hidden rounded-3xl transition-all duration-300 ease-in-out shadow-lg group-hover:shadow-2xl bg-card min-h-[520px] focus-within:ring-2 focus-within:ring-primary outline-none flex flex-col border border-border">
         <div
           className="relative h-44 sm:h-52 overflow-hidden rounded-t-3xl transition-all duration-300"
           style={{
-            background: `var(--dark) ? ${darkBgGradient} : ${bgGradient}`,
+            background: isHovered ? darkBgGradient : bgGradient,
           }}
         >
           <div
@@ -111,7 +111,7 @@ const RoleCard = ({ icon: Icon, title, description, features, role, color, bgGra
         </div>
         <div className="p-7 flex flex-col h-full">
           <h3
-            className="mb-3 text-center font-bold text-xl sm:text-2xl md:text-3xl transition-colors duration-300 group-hover:text-primary text-card-foreground"
+            className="mb-3 text-center font-bold text-2xl sm:text-3xl md:text-4xl transition-colors duration-300 group-hover:text-primary text-card-foreground"
           >
             {title}
           </h3>
@@ -158,9 +158,15 @@ export default function RolesSection() {
   return (
     <section
       id="roles"
-      className="relative overflow-hidden py-20 sm:py-28 w-full bg-muted"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+      className="relative overflow-hidden py-20 sm:py-28 w-full bg-muted">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(circle at 30% 70%, var(--color-success) 0%, transparent 70%)',
+        }}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

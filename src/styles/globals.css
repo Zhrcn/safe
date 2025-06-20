@@ -115,3 +115,22 @@
 .border-error { border-color: var(--color-error) !important; }
 .border-muted { border-color: var(--color-muted) !important; }
 .border-navbar { border-color: var(--color-navbar) !important; }
+
+.calendar-today {
+  border: 2px solid var(--color-primary) !important;
+  border-radius: 50% !important;
+  color: var(--color-primary) !important;
+  background: transparent !important;
+}
+.calendar-selected {
+  background: var(--color-primary) !important;
+  color: var(--color-card) !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--color-primary) !important;
+}
+.calendar-bg {
+  background: var(--color-card) !important;
+  color: var(--color-card-foreground) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+}

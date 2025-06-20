@@ -20,16 +20,17 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import CalendarComponent from '@/components/doctor/CalendarComponent';
-// import { useGetPatientsQuery, useGetAppointmentsQuery, useGetProfileQuery } from '@/store/services/doctor/doctorApi';
-// import { useAppSelector } from '@/store/hooks';
-// import { selectCurrentUser } from '@/store/slices/auth/authSlice';
+import dynamic from 'next/dynamic';
+const Calendar = dynamic(() => import('react-calendar'), { ssr: false });
+import 'react-calendar/dist/Calendar.css';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
 import { patients } from '@/mockdata/patients';
 import { appointments } from '@/mockdata/appointments';
 import { doctors } from '@/mockdata/doctors';
 import { useTheme } from '@/components/ThemeProviderWrapper';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 const getComputedCssVariable = (variableName) => {
   if (typeof window !== 'undefined') {
@@ -38,7 +39,7 @@ const getComputedCssVariable = (variableName) => {
     if (value.includes('%')) {
       value = value.replace(/\s+/g, ', ');
     }
-    console.log(`CSS Variable ${variableName}:`, value);
+    // console.log(`CSS Variable ${variableName}:`, value);
     return value;
   }
   return ''; 
@@ -79,19 +80,17 @@ export default function DoctorDashboard() {
     destructive: '',
   });
 
+  // State for calendar (simulate with just a date picker)
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   useEffect(() => {
-    console.log('Theme mode changed:', mode);
+    // console.log('Theme mode changed:', mode);
     const primaryColorComponents = getComputedCssVariable('--primary');
     const successColorComponents = getComputedCssVariable('--success');
     const warningColorComponents = getComputedCssVariable('--warning');
     const errorColorComponents = getComputedCssVariable('--error');
     const borderColor = getComputedCssVariable('--border');
     const mutedForeground = getComputedCssVariable('--muted-foreground');
-
-    console.log('Primary Color Components:', primaryColorComponents);
-    console.log('Success Color Components:', successColorComponents);
-    console.log('Warning Color Components:', warningColorComponents);
-    console.log('Error Color Components:', errorColorComponents);
 
     // Colors for quick action Buttons (using hsl() directly)
     const primaryColor = `hsl(${primaryColorComponents})`;
@@ -134,51 +133,48 @@ export default function DoctorDashboard() {
       ],
     };
 
-    console.log('New Appointments Chart Data:', newAppointmentsChartData);
-    console.log('New Patient Distribution Chart Data:', newPatientDistributionChartData);
-
     const newChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      grid: {
-        display: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            display: true,
             color: borderColor,
-      },
-        ticks: {
+          },
+          ticks: {
             color: mutedForeground,
-      },
-    },
-    x: {
-      grid: {
-        display: false,
-      },
-      ticks: {
+          },
+        },
+        x: {
+          grid: {
+            display: false,
+          },
+          ticks: {
             color: mutedForeground,
+          },
+        },
       },
-    },
-      },
-  };
+    };
 
     const newDoughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-      position: 'bottom',
-      labels: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
             color: mutedForeground,
+          },
+        },
       },
-    },
-  },
-};
+    };
 
     setChartData({
       appointments: newAppointmentsChartData,
@@ -193,9 +189,6 @@ export default function DoctorDashboard() {
       warning: warningColor,
       destructive: destructiveColor,
     });
-
-    console.log('Updated Chart Options:', newChartOptions);
-    console.log('Updated Doughnut Options:', newDoughnutOptions);
 
   }, [mode]);
 
@@ -220,6 +213,30 @@ export default function DoctorDashboard() {
   const overallLoading = false;
   const overallError = false;
 
+  // Helper: get appointment dates for calendar
+  const appointmentDates = appointments.map(app => {
+    // Try to parse as Date
+    const d = new Date(app.date);
+    if (!isNaN(d)) return d.toDateString();
+    return null;
+  }).filter(Boolean);
+
+  // Helper: highlight days with appointments (not used since no calendar)
+  // function tileClassName({ date, view }) {
+  //   if (view === 'month') {
+  //     if (appointmentDates.includes(date.toDateString())) {
+  //       return 'bg-primary/20 rounded-full text-primary font-semibold';
+  //     }
+  //   }
+  //   return null;
+  // }
+
+  // Helper: show appointments for selected date
+  const appointmentsForSelectedDate = appointments.filter(app => {
+    const d = new Date(app.date);
+    return d.toDateString() === selectedDate.toDateString();
+  });
+
   if (overallLoading) {
     return <LoadingSpinner />;
   }
@@ -237,20 +254,19 @@ export default function DoctorDashboard() {
         </div>
 
         <div className="grid grid-cols-12 gap-8 mb-8">
-
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
-              <div className="p-6 flex flex-col flex-grow">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-card-foreground">Recent Patients</h2>
-                  <Link 
-                    href="/doctor/patients"
-                    className="text-primary hover:text-secondary text-base font-medium flex items-center gap-1 transition-colors duration-200"
-                  >
-                    View All
-                    <ChevronRight size={18} />
-                  </Link>
+            <Card className="flex-grow rounded-xl shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between mb-2 p-4 pb-2">
+                <div>
+                  <CardTitle className="text-xl">Recent Patients</CardTitle>
                 </div>
+                <Button asChild variant="link" size="sm" className="px-0 py-0 h-auto">
+                  <Link href="/doctor/patients" className="flex items-center gap-1">
+                    View All <ChevronRight size={18} />
+                  </Link>
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="border-b border-muted mb-4" />
                 {recentPatients.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
@@ -270,85 +286,122 @@ export default function DoctorDashboard() {
                             Last visit: {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'N/A'}
                           </p>
                         </div>
-                        <Link
-                          href={`/doctor/patients/${patient._id}`}
-                          className="text-primary hover:text-secondary text-sm font-medium px-4 py-2 rounded-full hover:bg-muted transition-colors duration-200"
-                        >
-                          View
-                        </Link>
+                        <Button asChild variant="outline" size="sm" className="rounded-full px-4 py-2">
+                          <Link href={`/doctor/patients/${patient._id}`}>View</Link>
+                        </Button>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="col-span-12 md:col-span-3 flex flex-col">
-            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
-              <div className="p-6 flex flex-col flex-grow">
-                <h2 className="text-xl font-semibold text-card-foreground mb-4">Quick Actions</h2>
+            <Card className="flex-grow rounded-xl shadow-lg">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-xl mb-2">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="grid grid-cols-2 gap-4 flex-grow">
-                  <Link
-                    href="/doctor/patients/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-primary hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-primary"
-                  >
-                    <UserPlus size={24} />
-                    <span>New Patient</span>
-                  </Link>
-                  <Link
-                    href="/doctor/appointments/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-success hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-success"
-                  >
-                    <CalendarClock size={24} />
-                    <span>Schedule</span>
-                  </Link>
-                  <Link
-                    href="/doctor/prescriptions/new"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-warning hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-warning"
-                  >
-                    <FileText size={24} />
-                    <span>Prescription</span>
-                  </Link>
-                  <Link
-                    href="/doctor/messages"
-                    className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-full border-2 border-error hover:bg-muted transition-colors duration-200 text-sm font-medium h-24 text-error"
-                  >
-                    <MessageSquare size={24} />
-                    <span>Messages</span>
-                  </Link>
+                  <Button asChild variant="outline" className="flex flex-col items-center justify-center gap-2 rounded-xl h-24 border-primary text-primary">
+                    <Link href="/doctor/patients/new">
+                      <UserPlus size={24} />
+                      <span>New Patient</span>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="flex flex-col items-center justify-center gap-2 rounded-xl h-24 border-success text-success">
+                    <Link href="/doctor/appointments/new">
+                      <CalendarClock size={24} />
+                      <span>Schedule</span>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="flex flex-col items-center justify-center gap-2 rounded-xl h-24 border-warning text-warning">
+                    <Link href="/doctor/prescriptions/new">
+                      <FileText size={24} />
+                      <span>Prescription</span>
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="flex flex-col items-center justify-center gap-2 rounded-xl h-24 border-error text-error">
+                    <Link href="/doctor/messages">
+                      <MessageSquare size={24} />
+                      <span>Messages</span>
+                    </Link>
+                  </Button>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="col-span-12 md:col-span-4 flex flex-col">
-            <CalendarComponent appointments={upcomingAppointments} />
+            <Card className="flex-grow rounded-xl shadow-lg p-0">
+              <CardContent className="p-0">
+                <div className="p-4">
+                  <label className="block mb-2 font-medium text-card-foreground" htmlFor="dashboard-calendar">
+                    Calendar
+                  </label>
+                  <Calendar
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    className="calendar-bg"
+                    tileClassName={({ date, view }) => {
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
+                      if (isSelected) return 'calendar-selected';
+                      if (isToday) return 'calendar-today';
+                      return null;
+                    }}
+                  />
+                  <div className="mt-4">
+                    <div className="font-semibold mb-2 text-card-foreground">
+                      Appointments on {selectedDate.toLocaleDateString()}:
+                    </div>
+                    {appointmentsForSelectedDate.length === 0 ? (
+                      <div className="text-muted-foreground text-sm">No appointments</div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {appointmentsForSelectedDate.map(app => (
+                          <li key={app.id} className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">{app.time}</span>
+                            <span className="text-muted-foreground">-</span>
+                            <span>{app.patient.firstName} {app.patient.lastName}</span>
+                            <span className="ml-auto px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">{app.status}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
         <div className="grid grid-cols-12 gap-8">
-
           <div className="col-span-12 md:col-span-7 flex flex-col">
-            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
-              <div className="p-6 flex flex-col flex-grow">
-                <h2 className="text-xl font-semibold text-card-foreground mb-4">Appointments Overview</h2>
+            <Card className="flex-grow rounded-xl shadow-lg">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-xl mb-2">Appointments Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="flex-grow min-h-0">
                   <Bar key={mode} data={chartData.appointments} options={chartOptions} />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <div className="bg-card rounded-2xl shadow-lg border border-border flex-grow">
-              <div className="p-6 flex flex-col flex-grow">
-                <h2 className="text-xl font-semibold text-card-foreground mb-4">Patient Distribution</h2>
+            <Card className="flex-grow rounded-xl shadow-lg">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-xl mb-2">Patient Distribution</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="flex-grow min-h-0">
                   <Doughnut key={mode} data={chartData.patientDistribution} options={doughnutOptions} />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

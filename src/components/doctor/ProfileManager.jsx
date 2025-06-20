@@ -221,4 +221,5 @@ function PersonalInfoForm({ profile, onSave }) {
             />
         </div>
     );
-} 
+}
+export default PersonalInfoForm; 

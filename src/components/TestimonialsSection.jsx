@@ -74,12 +74,14 @@ export default function TestimonialsSection() {
       id="testimonials"
       className="relative overflow-hidden py-12 md:py-20 bg-gradient-to-br from-background to-muted/60"
     >
-      <div className="absolute inset-0 opacity-[0.04] pointer-events-none select-none" aria-hidden="true"
+      {/* Soft background pattern/gradient */}
+      <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239CA3AF' fill-opacity='0.2'%3E%3Cpath d='M0 0h60v60H0z'/%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          background:
+            'radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 70%)',
         }}
       />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -111,17 +113,23 @@ export default function TestimonialsSection() {
                     transition={{ duration: 0.5 }}
                     className="absolute w-full h-full flex items-center justify-center"
                   >
-                    <div className="relative bg-card border-2 border-primary/70 shadow-xl rounded-lg p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
+                    <div className="relative bg-card border-2 border-primary/70 shadow-2xl rounded-3xl p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
                       <Quote className="w-10 h-10 opacity-10 absolute top-6 left-6 text-primary" />
                       <p className="mb-6 text-lg md:text-xl italic relative z-10 text-card-foreground font-medium">
                         "{testimonial.text}"
                       </p>
                       <div className="mt-auto flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background relative">
+                          <motion.div
+                            initial={{ boxShadow: '0 0 0 0 rgba(56,189,248,0.7)' }}
+                            animate={{ boxShadow: '0 0 24px 4px rgba(56,189,248,0.25)' }}
+                            transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
+                            className="absolute inset-0 rounded-full z-0"
+                          />
                           <img
                             src={testimonial.avatar}
                             alt={testimonial.name}
-                            className="w-full h-full rounded-lg object-cover border-2 border-primary/30"
+                            className="w-full h-full rounded-full object-cover border-2 border-primary/30 relative z-10"
                           />
                         </div>
                         <div>

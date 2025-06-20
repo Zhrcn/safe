@@ -48,19 +48,19 @@ const FeatureCard = ({ icon: Icon, title, description, color, index }) => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true, margin: '-50px' }}
-      whileHover={{ y: -5, scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)' }}
+      whileHover={{ y: -8, scale: 1.04, boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12)' }}
       className="h-full w-full"
       tabIndex={0}
       aria-label={title}
     >
       <div 
-        className="h-full p-6 sm:p-8 rounded-3xl flex flex-col relative overflow-hidden transition-all duration-300 ease-in-out bg-card hover:shadow-xl focus-within:ring-2 focus-within:ring-primary outline-none border shadow-md"
+        className="h-full p-8 rounded-3xl flex flex-col relative overflow-hidden transition-all duration-300 ease-in-out bg-card hover:shadow-2xl focus-within:ring-2 focus-within:ring-primary outline-none border shadow-lg"
         style={{
           borderTop: `4px solid ${color}`,
         }}
       >
         <div 
-          className="mb-4 inline-flex p-3 rounded-xl"
+          className="mb-4 inline-flex p-3 rounded-xl shadow-md"
           style={{
             backgroundColor: `${color}15`,
             color: color,
@@ -68,7 +68,7 @@ const FeatureCard = ({ icon: Icon, title, description, color, index }) => {
         >
           <Icon className="w-8 h-8" strokeWidth={2} />
         </div>
-        <h3 className="mb-2 font-bold text-lg sm:text-xl md:text-2xl text-card-foreground">
+        <h3 className="mb-2 font-bold text-xl sm:text-2xl md:text-3xl text-card-foreground">
           {title}
         </h3>
         <p className="text-muted-foreground text-base flex-grow">
@@ -83,9 +83,16 @@ export default function FeaturesSection() {
   return (
     <section 
       id="features" 
-      className="py-20 sm:py-28 bg-background"
+      className="py-20 sm:py-28 bg-background relative overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col items-center justify-center">
+      {/* Soft background accent */}
+      <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(circle at 60% 40%, var(--color-primary) 0%, transparent 70%)',
+        }}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col items-center justify-center relative z-10">
         <div className="text-center mb-12 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -105,7 +112,7 @@ export default function FeaturesSection() {
             </p>
           </motion.div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full">
           {features.map((feature, index) => (
             <div key={feature.title} className="w-full">
               <FeatureCard {...feature} index={index} />

@@ -429,9 +429,8 @@ const UnifiedLayout = ({ children }) => {
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          <div className="bg-card rounded-3xl shadow-2xl p-6 md:p-10 min-h-[calc(100vh-7rem)] mx-0 mt-6 border border-border transition-all duration-300">
-            {children}
-          </div>
+          {children}
+          
         </main>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { conversations as mockConversations } from "@/mockdata/conversations";
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
+import { Card, CardContent } from '@/components/ui/Card';
 
 export default function DoctorMessagingPage() {
   const [conversations, setConversations] = useState([]);
@@ -65,27 +66,35 @@ export default function DoctorMessagingPage() {
     if (!selected) {
       return (
         <div className="min-h-screen bg-background p-2">
-          <ChatList
-            conversations={filtered}
-            selectedId={selected?.id}
-            onSelect={handleSelect}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onNewChat={handleNewChat}
-          />
+          <Card className="rounded-xl shadow-lg">
+            <CardContent className="p-2">
+              <ChatList
+                conversations={filtered}
+                selectedId={selected?.id}
+                onSelect={handleSelect}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                onNewChat={handleNewChat}
+              />
+            </CardContent>
+          </Card>
         </div>
       );
     } else {
       return (
         <div className="min-h-screen bg-background p-2">
-          <ChatPage
-            conversation={selected}
-            onSend={handleSend}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            isMobile={true}
-            onBack={() => setSelected(null)}
-          />
+          <Card className="rounded-xl shadow-lg">
+            <CardContent className="p-2">
+              <ChatPage
+                conversation={selected}
+                onSend={handleSend}
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                isMobile={true}
+                onBack={() => setSelected(null)}
+              />
+            </CardContent>
+          </Card>
         </div>
       );
     }
@@ -95,30 +104,38 @@ export default function DoctorMessagingPage() {
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto grid grid-cols-12 gap-4 h-[calc(100vh-120px)]">
         <div className="col-span-12 md:col-span-4 lg:col-span-3 h-full">
-          <ChatList
-            conversations={filtered}
-            selectedId={selected?.id}
-            onSelect={handleSelect}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onNewChat={handleNewChat}
-          />
+          <Card className="rounded-xl shadow-lg h-full">
+            <CardContent className="p-2 h-full">
+              <ChatList
+                conversations={filtered}
+                selectedId={selected?.id}
+                onSelect={handleSelect}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                onNewChat={handleNewChat}
+              />
+            </CardContent>
+          </Card>
         </div>
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full">
-          {selected ? (
-            <ChatPage
-              conversation={selected}
-              onSend={handleSend}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              isMobile={false}
-              onBack={() => setSelected(null)}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
-              Select a conversation to start chatting.
-            </div>
-          )}
+          <Card className="rounded-xl shadow-lg h-full">
+            <CardContent className="p-2 h-full">
+              {selected ? (
+                <ChatPage
+                  conversation={selected}
+                  onSend={handleSend}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  isMobile={false}
+                  onBack={() => setSelected(null)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
+                  Select a conversation to start chatting.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

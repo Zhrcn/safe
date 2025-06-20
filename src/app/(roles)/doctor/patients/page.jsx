@@ -6,8 +6,8 @@ import AddPatientForm from '@/components/doctor/AddPatientForm';
 import PatientCard from '@/components/doctor/PatientCard';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Card } from '@/components/ui/Card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Loader2 } from 'lucide-react';
@@ -85,84 +85,87 @@ export default function PatientsPage() {
   };
   return (
     <div className="p-6">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-foreground">
-          Patient Management
-        </h1>
-        <Button
-          onClick={handleOpenAddDialog}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add New Patient
-        </Button>
-      </div>
+      <Card className="mb-6 rounded-xl shadow-lg">
+        <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
+          <h1 className="text-2xl font-bold text-foreground">Patient Management</h1>
+          <Button onClick={handleOpenAddDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add New Patient
+          </Button>
+        </CardContent>
+      </Card>
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 rounded-lg">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Card className="p-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search patients by name, condition, or ID..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-10 bg-background"
-            />
-          </div>
-          <Button
-            variant="outline"
-            className="whitespace-nowrap text-muted-foreground border-muted-foreground hover:bg-muted/50"
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            Advanced Filters
-          </Button>
-        </div>
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">{tabLabels.all}</TabsTrigger>
-            <TabsTrigger value="active">{tabLabels.active}</TabsTrigger>
-            <TabsTrigger value="urgent">{tabLabels.urgent}</TabsTrigger>
-            <TabsTrigger value="inactive">{tabLabels.inactive}</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : filteredPatients.length === 0 ? (
-          <div className="py-12 text-center">
-            <UserRound className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              No patients found
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {searchTerm 
-                ? 'Try a different search term or clear the filters'
-                : 'Add a new patient to get started'
-              }
-            </p>
+      <Card className="p-6 rounded-xl shadow-lg">
+        <CardContent className="p-0">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search patients by name, condition, or ID..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="pl-10 bg-background rounded-lg"
+              />
+            </div>
             <Button
               variant="outline"
-              onClick={handleOpenAddDialog}
-              className="text-primary border-primary hover:bg-primary/10"
+              className="whitespace-nowrap text-muted-foreground border-muted-foreground hover:bg-muted/50 rounded-lg"
             >
-              Add New Patient
+              <Filter className="mr-2 h-4 w-4" />
+              Advanced Filters
             </Button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {filteredPatients.map((patient) => (
-              <PatientCard key={patient.id} patient={patient} />
-            ))}
-          </div>
-        )}
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
+            <TabsList>
+              <TabsTrigger value="all">{tabLabels.all}</TabsTrigger>
+              <TabsTrigger value="active">{tabLabels.active}</TabsTrigger>
+              <TabsTrigger value="urgent">{tabLabels.urgent}</TabsTrigger>
+              <TabsTrigger value="inactive">{tabLabels.inactive}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="py-12 text-center">
+              <UserRound className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
+              <h2 className="text-lg font-semibold text-foreground mb-2">
+                No patients found
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                {searchTerm 
+                  ? 'Try a different search term or clear the filters'
+                  : 'Add a new patient to get started'
+                }
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleOpenAddDialog}
+                className="text-primary border-primary hover:bg-primary/10 rounded-lg"
+              >
+                Add New Patient
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {filteredPatients.map((patient) => (
+                <Card key={patient.id} className="rounded-xl shadow-md">
+                  <CardContent className="p-4">
+                    <PatientCard patient={patient} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
       </Card>
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-xl">
           <AddPatientForm 
             onClose={handleCloseAddDialog} 
             onSuccess={handlePatientAdded} 

@@ -18,7 +18,10 @@ const DropdownMenuSubTrigger = React.forwardRef(
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-all duration-150 focus:bg-accent/80 focus:text-accent-foreground data-[state=open]:bg-accent/90 hover:bg-accent/60 active:bg-accent/70",
+        // Use theme tokens for background/text
+        "flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
+        "bg-popover text-popover-foreground", // theme background
+        "focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent/80 hover:bg-accent/70 active:bg-accent/80",
         inset && "pl-10",
         className
       )}
@@ -37,10 +40,11 @@ const DropdownMenuSubContent = React.forwardRef(
     <DropdownMenuPrimitive.SubContent
       ref={ref}
       className={cn(
-        "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border !bg-white bg-opacity-100 !backdrop-blur-none dark:!bg-neutral-900 p-2 text-popover-foreground shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        // Use theme tokens for background and border
+        "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-2xl",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
-      style={{ backgroundColor: 'white', backgroundImage: 'none' }}
       {...props}
     />
   )
@@ -55,10 +59,10 @@ const DropdownMenuContent = React.forwardRef(
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border !bg-white bg-opacity-100 !backdrop-blur-none dark:!bg-neutral-900 text-popover-foreground shadow-2xl animate-in fade-in-80 p-2",
+          // Use theme tokens for background and border
+          "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-2xl animate-in fade-in-80 p-2",
           className
         )}
-        style={{ backgroundColor: 'white', backgroundImage: 'none' }}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -72,7 +76,11 @@ const DropdownMenuItem = React.forwardRef(
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-all duration-150 focus:bg-primary/90 focus:text-primary-foreground hover:bg-primary/80 active:bg-primary/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted/40 data-[disabled]:text-muted-foreground",
+        // Use theme tokens for background/text/disabled
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
+        "bg-popover text-popover-foreground", // theme background
+        "focus:bg-accent focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/90",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted data-[disabled]:text-muted-foreground",
         inset && "pl-10",
         className
       )}
@@ -91,7 +99,11 @@ const DropdownMenuCheckboxItem = React.forwardRef(
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150 focus:bg-accent/90 focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted/40 data-[disabled]:text-muted-foreground",
+        // Use theme tokens for background/text/disabled
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "bg-popover text-popover-foreground", // theme background
+        "focus:bg-accent focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/90",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted data-[disabled]:text-muted-foreground",
         className
       )}
       checked={checked}
@@ -99,7 +111,7 @@ const DropdownMenuCheckboxItem = React.forwardRef(
     >
       <span className="absolute left-3 flex h-5 w-5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-primary/90 text-white">
+          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -130,14 +142,18 @@ const DropdownMenuRadioItem = React.forwardRef(
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150 focus:bg-accent/90 focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted/40 data-[disabled]:text-muted-foreground",
+        // Use theme tokens for background/text/disabled
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "bg-popover text-popover-foreground", // theme background
+        "focus:bg-accent focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/90",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted data-[disabled]:text-muted-foreground",
         className
       )}
       {...props}
     >
       <span className="absolute left-3 flex h-5 w-5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <span className="flex h-4 w-4 items-center justify-center rounded-lg bg-primary/90 text-white">
+          <span className="flex h-4 w-4 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -164,7 +180,8 @@ const DropdownMenuLabel = React.forwardRef(
     <DropdownMenuPrimitive.Label
       ref={ref}
       className={cn(
-        "px-3 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground/80",
+        "px-3 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground",
+        "bg-popover", // theme background
         inset && "pl-10",
         className
       )}
@@ -179,7 +196,7 @@ const DropdownMenuSeparator = React.forwardRef(
   ({ className, ...props }, ref) => (
     <DropdownMenuPrimitive.Separator
       ref={ref}
-      className={cn("-mx-2 my-2 h-px bg-muted/60", className)}
+      className={cn("-mx-2 my-2 h-px bg-muted", className)}
       {...props}
     />
   )
@@ -190,7 +207,7 @@ DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
 const DropdownMenuShortcut = ({ className, ...props }) => (
   <span
     className={cn(
-      "ml-auto rounded-lg bg-muted px-2 py-0.5 text-xs font-mono tracking-widest text-muted-foreground/80 shadow-inner",
+      "ml-auto rounded-lg bg-muted px-2 py-0.5 text-xs font-mono tracking-widest text-muted-foreground shadow-inner",
       className
     )}
     {...props}
@@ -215,4 +232,4 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-}; 
+};

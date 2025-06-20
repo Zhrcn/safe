@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import ProfileManager from '@/components/doctor/ProfileManager';
 export default function ProfilePage() {
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Doctor Profile
-        </h1>
-        <p className="text-muted-foreground">
-          Manage your personal information, education, and professional achievements.
-        </p>
-      </div>
-      <ProfileManager />
-    </div>
+    <Card className="p-8 rounded-xl shadow-lg">
+      <CardHeader>
+        <CardTitle>Doctor Profile</CardTitle>
+        <CardDescription>Manage your personal information, education, and professional achievements.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ProfileManager />
+      </CardContent>
+    </Card>
   );
 }

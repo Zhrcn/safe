@@ -7,20 +7,18 @@ import {
   Paper,
 } from '@mui/material';
 import MedicineQuery from '@/components/doctor/MedicineQuery';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 
 export default function MedicinePage() {
   return (
-    <Box className="p-6">
-      <Box className="mb-6">
-        <Typography variant="h4" component="h1" className="font-bold text-foreground">
-          Medicine Availability
-        </Typography>
-        <Typography variant="body1" className="text-muted-foreground">
-          Check the availability of medicines at partner pharmacies and find alternatives when needed.
-        </Typography>
-      </Box>
-      
-      <MedicineQuery />
-    </Box>
+    <Card className="p-8 rounded-xl shadow-lg">
+      <CardHeader>
+        <CardTitle>Medicine Availability</CardTitle>
+        <CardDescription>Check the availability of medicines at partner pharmacies and find alternatives when needed.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <MedicineQuery />
+      </CardContent>
+    </Card>
   );
 } 
