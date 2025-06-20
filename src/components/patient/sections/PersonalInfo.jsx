@@ -12,6 +12,7 @@ import {
     GraduationCap,
     Heart
 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 const InfoItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-center gap-3 mb-2">
         <Icon className="w-5 h-5 text-primary" />
@@ -29,7 +30,7 @@ const PersonalInfo = ({ patient }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Basic Information */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                         <User className="w-6 h-6" />
@@ -60,7 +61,7 @@ const PersonalInfo = ({ patient }) => {
                         <div className="space-y-1">
                             <span className="text-sm font-semibold text-foreground">Blood Type</span>
                             <div className="mt-1">
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-destructive/10 text-destructive border border-destructive/20 shadow-sm">
+                                <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-destructive/10 text-destructive border border-destructive/20 shadow-sm">
                                     {patient.bloodType}
                                 </span>
                             </div>
@@ -69,7 +70,7 @@ const PersonalInfo = ({ patient }) => {
                 </div>
             </div>
             {/* Contact Information */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                         <Mail className="w-6 h-6" />
@@ -110,7 +111,7 @@ const PersonalInfo = ({ patient }) => {
                 </div>
             </div>
             {/* Additional Information */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg md:col-span-2">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg md:col-span-2">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                         <Briefcase className="w-6 h-6" />

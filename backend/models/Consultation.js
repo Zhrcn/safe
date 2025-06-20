@@ -10,44 +10,17 @@ const ConsultationSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  reason: {
+  question: {
     type: String,
-    required: [true, 'Please provide a reason for the consultation']
+    required: [true, 'Please provide your question']
   },
-  preferredTime: {
-    type: String,
-    required: [true, 'Please provide a preferred time']
+  answer: {
+    type: String
   },
   status: {
     type: String,
-    enum: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
+    enum: ['Pending', 'Answered'],
     default: 'Pending'
-  },
-  response: {
-    type: String
-  },
-  attachments: [{
-    name: String,
-    url: String,
-    type: String,
-    size: Number
-  }],
-  requestedAt: {
-    type: Date,
-    default: Date.now
-  },
-  startedAt: {
-    type: Date
-  },
-  completedAt: {
-    type: Date
-  },
-  cancelledAt: {
-    type: Date
-  },
-  cancelledBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
   }
 }, {
   timestamps: true

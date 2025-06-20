@@ -1,4 +1,7 @@
-'use client';
+
+
+
+import { Separator } from '@/components/ui/Separator';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Menu as MenuIcon,
@@ -51,11 +54,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
-import { Separator } from '@/components/ui/Separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
 import { cn } from '@/lib/utils';
 import { ThemeButton } from '@/components/ThemeButton';
 import Link from 'next/link';
+import Image from 'next/image';
+
+// Import user from userSlice.js
+import { useSelector as useUserSelector } from 'react-redux';
 
 const drawerWidth = 240;
 
@@ -131,7 +137,10 @@ const UnifiedLayout = ({ children }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const user = useSelector((state) => state.auth.user);
+  // Fetch user from userSlice.js (assuming it's at state.user)
+  const userFromUserSlice = useUserSelector((state) => state.user?.user);
+  // Fallback to auth.user if userSlice is not available
+  const user = useSelector((state) => state.auth.user) || userFromUserSlice;
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const menuItems = useMemo(() => {
@@ -197,32 +206,62 @@ const UnifiedLayout = ({ children }) => {
       {!isMobile && (
         <aside
           className={cn(
-            'relative fixed z-40 top-0 left-0 h-screen bg-white/90 dark:bg-gray-900/90 shadow-2xl border-r border-border flex flex-col transition-all duration-300',
+            'relative fixed z-40 top-0 left-0 h-screen border-r border-border flex flex-col transition-all duration-300',
             sidebarCollapsed ? 'w-16' : 'w-[270px]'
           )}
+          style={{
+            background: 'var(--color-navbar)',
+            color: 'var(--color-navbar-foreground)'
+          }}
         >
-          {/* Collapse/expand arrow button at right edge, vertically centered */}
-          <button
+          {/* Collapse/expand arrow Button at right edge, vertically centered */}
+          <Button
             onClick={() => setSidebarCollapsed((c) => !c)}
-            className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {sidebarCollapsed ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
-          </button>
-          <div className={cn('flex items-center justify-center py-6 border-b border-border transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-4')}> 
-            <img src="/favicon.svg" alt="App Logo" className={cn('h-8 w-8', sidebarCollapsed ? '' : 'mr-2')} />
+          </Button>
+          <div className={cn('flex flex-col items-center py-8 border-b border-border transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-6')}>
+            {/* Custom SVG Icon - new logo style */}
+            <span
+              className={cn(
+                "mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-2",
+                "bg-primary/10 dark:bg-gray-800"
+              )}
+            >
+              <img
+                src="/logo(1).png"
+                alt="App Icon"
+                className="w-14 h-14 object-contain rounded-full"
+                style={{
+                  backgroundColor: 'var(--color-navbar, #f0f4f8)',
+                  // fallback for dark mode
+                  filter: 'var(--logo-img-filter, none)'
+                }}
+              />
+              <style jsx>{`
+                @media (prefers-color-scheme: dark) {
+                  img[alt="App Icon"] {
+                    background-color: var(--color-navbar, #23272f);
+                  }
+                }
+              `}</style>
+            </span>
             {!sidebarCollapsed && (
-              <span className="font-extrabold text-xl tracking-tight text-primary dark:text-white">SafeApp</span>
+              <span className="font-extrabold text-2xl tracking-tight text-primary dark:text-white mb-3">SafeApp</span>
             )}
-          </div>
-          <div className={cn('flex flex-col items-center py-4 border-b border-border bg-white/80 dark:bg-gray-900/80 transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-4')}> 
-            <Avatar className="h-10 w-10 mb-2" src={user?.profile?.avatar} />
-            {!sidebarCollapsed && (
-              <>
-                <div className="font-bold text-lg text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</div>
-              </>
+            {/* User Info - horizontal layout, below SafeApp, above tabs */}
+            {!sidebarCollapsed && user && (
+              <div className="flex flex-row items-center gap-3 mb-6 w-full">
+                <Avatar className="h-14 w-14" src={user?.profile?.avatar} />
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-base text-gray-900 dark:text-white truncate">{user?.firstName} {user?.lastName}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{user?.email}</span>
+                </div>
+              </div>
             )}
+            <div className="w-full h-px bg-border mb-2" />
           </div>
           <div className="flex-1 flex flex-col justify-between">
             <nav className="px-1 py-4 space-y-2 overflow-y-auto">
@@ -234,10 +273,11 @@ const UnifiedLayout = ({ children }) => {
                     'flex items-center gap-3 py-2 rounded-full font-medium transition-colors duration-200',
                     sidebarCollapsed ? 'justify-center px-0 w-12 mx-auto' : 'px-4',
                     pathname.startsWith(item.path)
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 shadow-md'
-                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800',
-                    'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                      ? 'bg-[color:var(--color-primary)/.1] text-[color:var(--color-primary)]'
+                      : 'hover:bg-[color:var(--color-muted)] hover:text-[color:var(--color-primary)]',
+                    'focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)] focus:ring-offset-2'
                   )}
+                  style={{ color: 'var(--color-navbar-foreground)' }}
                   aria-current={pathname.startsWith(item.path) ? 'page' : undefined}
                 >
                   {item.icon}
@@ -278,26 +318,26 @@ const UnifiedLayout = ({ children }) => {
           {isMobile && (
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-xl mr-4">
+                <Button variant="ghost" size="icon" className="mr-4">
                   <MenuIcon className="h-7 w-7" />
                   <span className="sr-only">Toggle sidebar</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-[270px] bg-white/90 dark:bg-gray-900/90 shadow-2xl border-r border-border">
-                <button
+                <Button
                   onClick={() => setMobileOpen(false)}
                   className="absolute top-4 right-4 z-50 rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
                   aria-label="Close sidebar"
                 >
                   <X className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-                </button>
+                </Button>
                 <div className="flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-center justify-center py-6 border-b border-border">
                       <img src="/favicon.svg" alt="App Logo" className="h-8 w-8 mr-2" />
                       <span className="font-extrabold text-xl tracking-tight text-primary dark:text-white">SafeApp</span>
                     </div>
-                    <div className="flex flex-col items-center py-4 border-b border-border bg-white/80 dark:bg-gray-900/80">
+                    <div className="flex flex-col items-center py-4 border-b border-border">
                       <Avatar className="h-14 w-14 mb-2" src={user?.profile?.avatar} />
                       <div className="font-bold text-lg text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</div>
@@ -310,7 +350,7 @@ const UnifiedLayout = ({ children }) => {
                           className={cn(
                             'flex items-center gap-3 px-4 py-2 rounded-full font-medium transition-colors duration-200',
                             pathname.startsWith(item.path)
-                              ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 shadow-md'
+                              ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300'
                               : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800',
                             'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
                           )}
@@ -346,14 +386,14 @@ const UnifiedLayout = ({ children }) => {
           <div className="flex items-center gap-6">
             <ThemeButton />
             <div className="relative">
-              <Button variant="ghost" size="icon" title="Notifications" className="rounded-xl">
+              <Button variant="ghost" size="icon" title="Notifications">
                 <Bell className="h-6 w-6 text-primary-foreground" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold shadow-md">3</span>
               </Button>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-11 w-11 rounded-full border-2 border-primary shadow-md bg-primary">
+                <Button variant="ghost" className="relative h-11 w-11 border-2 border-primary shadow-md bg-primary">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary text-primary text-lg">
                       {user?.firstName?.[0] || 'U'}

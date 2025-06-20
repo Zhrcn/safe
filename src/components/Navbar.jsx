@@ -66,7 +66,7 @@ export default function Navbar() {
                   key={page.name}
                   variant="ghost"
                   onClick={() => scrollToSection(page.href)}
-                  className="rounded-md px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
+                  className="px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
                 >
                   {page.name}
                 </Button>
@@ -75,16 +75,16 @@ export default function Navbar() {
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
               <div className="hidden sm:flex sm:items-center sm:space-x-2">
-                <Button variant="outline" asChild className="rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                <Button variant="outline" asChild className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
                   <Link href="/login">Login</Link>
                 </Button>
-                <Button asChild className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
+                <Button asChild className="px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
                   <Link href="/register">Sign Up</Link>
                 </Button>
               </div>
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                  <Button variant="ghost" size="icon" className="md:hidden focus:outline-none focus:ring-2 focus:ring-primary">
                     <MenuIcon className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
@@ -98,16 +98,16 @@ export default function Navbar() {
                         key={page.name}
                         variant="ghost"
                         onClick={() => scrollToSection(page.href)}
-                        className="rounded-md justify-start px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        className="px-4 py-2 text-gray-700 hover:bg-primary/10 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition"
                       >
                         {page.name}
                       </Button>
                     ))}
                     <div className="flex flex-col space-y-2 pt-4 border-t">
-                      <Button variant="outline" asChild className="rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                      <Button variant="outline" asChild className="px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
                         <Link href="/login">Login</Link>
                       </Button>
-                      <Button asChild className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
+                      <Button asChild className="px-4 py-2 bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition">
                         <Link href="/register">Sign Up</Link>
                       </Button>
                     </div>

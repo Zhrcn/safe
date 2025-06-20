@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Separator } from '@/components/ui/Separator';
 import { medicalRecords } from '@/mockdata/medicalRecords';
 import Link from 'next/link';
@@ -154,29 +154,41 @@ const MedicalRecordsPage = () => {
                             className="pl-9 border-border focus:border-primary focus:ring-primary/20"
                         />
                     </div>
-                    <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="lab result">Lab Results</SelectItem>
-                            <SelectItem value="prescription">Prescriptions</SelectItem>
-                            <SelectItem value="imaging">Imaging</SelectItem>
-                            <SelectItem value="note">Notes</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select value={dateFilter} onValueChange={setDateFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by Date" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Time</SelectItem>
-                            <SelectItem value="2024">2024</SelectItem>
-                            <SelectItem value="2023">2023</SelectItem>
-                            <SelectItem value="2022">2022</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-[180px] justify-between">
+                                {(() => {
+                                    switch (typeFilter) {
+                                        case 'lab result': return 'Lab Results';
+                                        case 'prescription': return 'Prescriptions';
+                                        case 'imaging': return 'Imaging';
+                                        case 'note': return 'Notes';
+                                        default: return 'All Types';
+                                    }
+                                })()}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setTypeFilter('all')}>All Types</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('lab result')}>Lab Results</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('prescription')}>Prescriptions</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('imaging')}>Imaging</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('note')}>Notes</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-[180px] justify-between">
+                                {dateFilter === 'all' ? 'All Time' : dateFilter}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setDateFilter('all')}>All Time</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDateFilter('2024')}>2024</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDateFilter('2023')}>2023</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDateFilter('2022')}>2022</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                 <Button asChild className="w-full md:w-auto">
                     <Link href="/patient/medical-records/upload">

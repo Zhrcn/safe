@@ -16,7 +16,7 @@ import {
     QrCode,
     Eye,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -25,97 +25,133 @@ import { Separator } from '@/components/ui/Separator';
 import { Input } from '@/components/ui/Input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/DropdownMenu';
 import { ChevronDown, ListFilter, Search } from 'lucide-react';
+import StatusBadge from '@/components/common/StatusBadge';
+import { Tooltip } from '@/components/ui/Tooltip';
+const pillColors = [
+  'bg-blue-100 text-blue-800',
+  'bg-green-100 text-green-800',
+  'bg-purple-100 text-purple-800',
+  'bg-pink-100 text-pink-800',
+  'bg-yellow-100 text-yellow-800',
+  'bg-indigo-100 text-indigo-800',
+];
+
+const getPillColor = (idx) => pillColors[idx % pillColors.length];
+
+const AnimatedStatusBadge = ({ status }) => {
+  // Animate for active/pending
+  const animated = status === 'active' || status === 'pending';
+  return (
+    <span className={animated ? 'animate-pulse' : ''}>
+      <StatusBadge status={status} size="medium" className="shadow-sm" />
+    </span>
+  );
+};
+
 const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
-    const statusColors = {
-        active: 'bg-success/10 text-success',
-        completed: 'bg-info/10 text-info',
-        expired: 'bg-error/10 text-error',
-        pending: 'bg-warning/10 text-warning',
-    };
-    const statusIcons = {
-        active: <Check className="w-4 h-4" />,
-        completed: <Check className="w-4 h-4" />,
-        expired: <X className="w-4 h-4" />,
-        pending: <AlertCircle className="w-4 h-4" />,
-    };
+    const notesPreview = prescription.notes ? prescription.notes.slice(0, 60) + (prescription.notes.length > 60 ? '...' : '') : null;
     return (
-        <Card className="relative h-[280px] w-full border border-border transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg overflow-hidden group">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-lg" />
-            <CardContent className="pt-6 h-full flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 bg-primary border-2 border-primary/20">
-                            <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
-                            <AvatarFallback>
-                                <User className="h-6 w-6 text-primary" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h3 className="font-semibold text-lg text-foreground">{prescription.doctorName}</h3>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Calendar className="w-4 h-4" />
-                                <span>{new Date(prescription.date).toLocaleDateString()}</span>
-                            </div>
-                        </div>
+        <Card
+            bordered
+            hoverable
+            className="flex flex-col min-h-[370px] h-full transition-all duration-300 group shadow-md hover:shadow-2xl hover:scale-[1.03] border-border/80 hover:border-primary/60 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-background via-blue-50/60 to-background dark:via-blue-900/10 rounded-xl"
+        >
+            <CardHeader className="flex flex-row items-center gap-4 p-4 pb-2 border-b border-border bg-gradient-to-r from-primary/10 to-blue-100/30 dark:from-primary/20 dark:to-blue-900/10 rounded-t-xl">
+                <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm rounded-xl">
+                    <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
+                    <AvatarFallback>
+                        <User className="h-6 w-6 text-primary" />
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg truncate">{prescription.doctorName}</CardTitle>
+                    {prescription.doctorSpecialty && (
+                      <div className="text-xs text-blue-700/80 dark:text-blue-300/80 font-medium truncate">{prescription.doctorSpecialty}</div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(prescription.date).toLocaleDateString()}</span>
+                        <span className="mx-2 text-border">|</span>
+                        <span className="font-mono text-[11px] text-primary/80">#{prescription.id}</span>
                     </div>
-                    <Badge variant="outline" className={statusColors[prescription.status]}>
-                        {statusIcons[prescription.status]}
-                        <span className="ml-1">{prescription.status}</span>
-                    </Badge>
                 </div>
-                <div className="flex-1 overflow-hidden space-y-2">
-                    {prescription.medications.map((medication, index) => (
-                        <div
-                            key={index}
-                            className="p-3 rounded-lg bg-muted border border-border"
-                        >
-                            <div className="flex items-center gap-2 mb-1">
-                                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-                                    <Pill className="w-4 h-4" />
-                                </div>
-                                <h4 className="font-medium truncate text-foreground">{medication.name}</h4>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                                {medication.dosage} - {medication.frequency}
-                            </p>
-                        </div>
-                    ))}
+                <div className="flex flex-col items-end gap-1 min-w-fit">
+                    <AnimatedStatusBadge status={prescription.status} />
                 </div>
-                <div className="mt-4 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col gap-2 p-4">
+                <div className="mb-2 flex flex-col gap-1">
+                    <span className="font-semibold text-sm text-foreground">Medications:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                        {prescription.medications.map((medication, index) => (
+                            <span
+                                key={index}
+                                className={`inline-flex items-center gap-1 rounded-xl px-3 py-1 text-xs font-semibold border border-border shadow-sm ${getPillColor(index)}`}
+                                aria-label={`Medication: ${medication.name}`}
+                            >
+                                <Pill className="w-3.5 h-3.5" />
+                                {medication.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                {notesPreview && (
+                  <div className="mt-2 text-xs text-muted-foreground italic truncate" title={prescription.notes}>
+                    <span className="font-medium text-foreground">Doctor's Notes:</span> {notesPreview}
+                  </div>
+                )}
+            </CardContent>
+            <div className="border-t border-border w-full" />
+            <CardFooter className="flex gap-2 justify-end p-4 pt-2 bg-background/80 backdrop-blur-sm rounded-b-xl">
+                <Tooltip content="View Details">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onViewDetails(prescription)}
-                        className="bg-primary/10 hover:bg-primary/20 text-primary"
+                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label="View Details"
+                        tabIndex={0}
                     >
                         <Eye className="w-4 h-4" />
                     </Button>
-                    {(prescription.status === 'active' || prescription.status === 'pending') && (
+                </Tooltip>
+                {(prescription.status === 'active' || prescription.status === 'pending') && (
+                    <Tooltip content="Show QR Code">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onShowQR(prescription)}
-                            className="bg-primary/10 hover:bg-primary/20 text-primary"
+                            className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
+                            aria-label="Show QR Code"
+                            tabIndex={0}
                         >
                             <QrCode className="w-4 h-4" />
                         </Button>
-                    )}
+                    </Tooltip>
+                )}
+                <Tooltip content="Download">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="bg-primary/10 hover:bg-primary/20 text-primary"
+                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label="Download"
+                        tabIndex={0}
                     >
                         <Download className="w-4 h-4" />
                     </Button>
+                </Tooltip>
+                <Tooltip content="Print">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="bg-primary/10 hover:bg-primary/20 text-primary"
+                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label="Print"
+                        tabIndex={0}
                     >
                         <Printer className="w-4 h-4" />
                     </Button>
-                </div>
-            </CardContent>
+                </Tooltip>
+            </CardFooter>
         </Card>
     );
 };

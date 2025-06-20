@@ -8,6 +8,7 @@ import {
     Heart,
     AlertTriangle
 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 const InfoItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-center gap-3 mb-2">
         <Icon className="w-5 h-5 text-primary" />
@@ -16,7 +17,7 @@ const InfoItem = ({ icon: Icon, label, value }) => (
     </div>
 );
 const ContactCard = ({ title, contact }) => (
-    <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+    <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
         <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
             <User className="w-6 h-6" />
             {title}

@@ -31,10 +31,10 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) 
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
     whileHover={{ scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
-    className="focus-within:ring-2 focus-within:ring-primary outline-none"
+    className="focus-within:ring-2 focus-within:ring-primary outline-none h-full"
   >
-    <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none">
-      <CardContent className="p-6 rounded-2xl">
+    <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none min-h-[240px] h-full flex flex-col">
+      <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -44,47 +44,49 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) 
             <Icon className="h-6 w-6 text-primary-foreground" />
           </div>
         </div>
-        {progress !== undefined && (
-          <div className="mt-4">
-            <Progress value={progress} className="transition-all duration-700 rounded-full" />
-            <span className="block text-xs text-muted-foreground mt-1">Adherence</span>
-          </div>
-        )}
-        {trend !== undefined && (
-          <div className="flex items-center gap-1 mt-2">
-            {trend > 0 ? (
-              <TrendingUp className="h-4 w-4 text-success" />
-            ) : trend < 0 ? (
-              <TrendingDown className="h-4 w-4 text-error" />
-            ) : null}
-            <span className={`text-sm ${trend > 0 ? 'text-success' : trend < 0 ? 'text-error' : 'text-muted-foreground'}`}> 
-              {trend === 0 ? 'No change' : `${Math.abs(trend)}% from last month`}
-            </span>
-          </div>
-        )}
+        <div className="flex-1 flex flex-col justify-end">
+          {progress !== undefined && (
+            <div className="mt-4">
+              <Progress value={progress} className="transition-all duration-700 rounded-full" />
+              <span className="block text-xs text-muted-foreground mt-1">Adherence</span>
+            </div>
+          )}
+          {trend !== undefined && (
+            <div className="flex items-center gap-1 mt-2">
+              {trend > 0 ? (
+                <TrendingUp className="h-4 w-4 text-success" />
+              ) : trend < 0 ? (
+                <TrendingDown className="h-4 w-4 text-error" />
+              ) : null}
+              <span className={`text-sm ${trend > 0 ? 'text-success' : trend < 0 ? 'text-error' : 'text-muted-foreground'}`}> 
+                {trend === 0 ? 'No change' : `${Math.abs(trend)}% from last month`}
+              </span>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   </motion.div>
 );
 
-const QuickActionCard = ({ title, description, icon: Icon, href, color, tooltip }) => (
+const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, tooltip }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
-    whileHover={{ scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
-    className="focus-within:ring-2 focus-within:ring-primary outline-none"
+    whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
+    className="focus-within:ring-2 focus-within:ring-primary outline-none h-full"
   >
-    <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none">
-      <CardContent className="p-6 rounded-2xl">
+    <Card className="hover:shadow-2xl transition-all duration-300 rounded-2xl bg-card/95 border-none h-full flex flex-col">
+      <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
         <Tooltip text={tooltip}>
-          <Link href={href} className="flex items-start gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
-            <div className={`p-3 rounded-xl ${color} shadow-md group-hover:scale-105 transition-transform`} tabIndex={0} aria-label={title}>
+          <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1">
+            <div className={`p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform ${bgClass}`} tabIndex={0} aria-label={title}>
               <Icon className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">{title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{description}</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors truncate">{title}</h3>
+              <p className="text-sm text-muted-foreground mt-1 truncate">{description}</p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </Link>
@@ -175,7 +177,7 @@ const DashboardPage = () => {
             description: 'Book a new appointment with your healthcare provider',
             icon: Calendar,
             href: '/patient/appointments/new',
-            color: 'bg-info',
+            bgClass: 'bg-primary/90 dark:bg-primary/80',
             tooltip: 'Book a new appointment',
         },
         {
@@ -183,7 +185,7 @@ const DashboardPage = () => {
             description: 'Access your medical history and test results',
             icon: FileText,
             href: '/patient/medical-records',
-            color: 'bg-success',
+            bgClass: 'bg-success/90 dark:bg-success/80',
             tooltip: 'See your medical history',
         },
         {
@@ -191,7 +193,7 @@ const DashboardPage = () => {
             description: 'Chat with your healthcare team',
             icon: MessageSquare,
             href: '/patient/messaging',
-            color: 'bg-secondary',
+            bgClass: 'bg-secondary/90 dark:bg-secondary/80',
             tooltip: 'Send a message to your provider',
         }
     ];
@@ -231,7 +233,7 @@ const DashboardPage = () => {
                 ]}
             />
             {/* Health Metrics */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 z-10 rounded-2xl">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 z-10 rounded-2xl auto-rows-fr">
                 <AnimatePresence>
                     {healthMetrics.map((metric, index) => (
                         <HealthMetricCard key={index} {...metric} />

@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import { Button } from "@/components/ui/Button";
+
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import { APP_NAME } from '@/config/app-config';
 
@@ -45,7 +47,7 @@ const Footer = () => {
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="p-2 text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-full bg-muted shadow hover:bg-primary/10"
+                    className="p-2 text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg bg-muted shadow hover:bg-primary/10"
                   >
                     <social.icon className="w-5 h-5" />
                   </a>
@@ -57,7 +59,7 @@ const Footer = () => {
                 <Mail className="w-4 h-4 mr-2 text-muted-foreground" />
                 <a
                   href="mailto:contact@safemedical.com"
-                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
                 >
                   contact@safemedical.com
                 </a>
@@ -66,7 +68,7 @@ const Footer = () => {
                 <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
                 <a
                   href="tel:+1234567890"
-                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
                 >
                   (123) 456-7890
                 </a>
@@ -89,7 +91,7 @@ const Footer = () => {
                   <div key={link.name} className="mb-3">
                     <a
                       href={link.href}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 py-0.5"
+                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5"
                     >
                       {link.name}
                     </a>
@@ -101,7 +103,7 @@ const Footer = () => {
                   <div key={link.name} className="mb-3">
                     <a
                       href={link.href}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 py-0.5"
+                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5"
                     >
                       {link.name}
                     </a>
@@ -117,7 +119,7 @@ const Footer = () => {
               <div key={link.name} className="mb-3">
                 <a
                   href={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 py-0.5"
+                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5"
                 >
                   {link.name}
                 </a>
@@ -132,12 +134,12 @@ const Footer = () => {
                   className="flex-1 px-3 py-2.5 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
                   aria-label="Email address"
                 />
-                <button
+                <Button
                   type="submit"
                   className="px-5 py-2.5 bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   Subscribe
-                </button>
+                </Button>
               </form>
             </div>
           </div>

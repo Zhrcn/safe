@@ -10,7 +10,7 @@ const Card = React.forwardRef(({
     children,
     ...props
 }, ref) => {
-    const baseStyles = 'rounded-2xl border border-border bg-card text-card-foreground shadow-lg';
+    const baseStyles = 'rounded-lg border border-border bg-card text-card-foreground shadow-lg';
     const variantStyles = {
         default: 'bg-card text-card-foreground',
         primary: 'bg-primary text-primary-foreground',

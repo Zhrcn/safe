@@ -29,7 +29,7 @@
         padding: 1.5rem;
     }
 
-    .button-primary {
+    .Button-primary {
         background: var(--color-primary);
         color: #fff;
         border-radius: 8px;
@@ -37,7 +37,7 @@
         border: none;
         transition: background 0.2s;
     }
-    .button-primary:hover, .button-primary:focus {
+    .Button-primary:hover, .Button-primary:focus {
         background: var(--color-secondary);
     }
 

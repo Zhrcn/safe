@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 import { useState, useEffect } from 'react';
 import { Package, FileText, ShoppingCart, AlertCircle, Eye } from 'lucide-react';
 import { PharmacistPageContainer } from '@/components/pharmacist/PharmacistComponents';
@@ -6,7 +7,6 @@ import { DashboardCard } from '@/components/pharmacist/PharmacistComponents';
 import { getInventory, getPrescriptions, getPharmacistProfile } from '@/services/pharmacistService';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
-import { Button } from '@/components/ui/Button';
 export default function PharmacistDashboardPage() {
   const [pharmacist, setPharmacist] = useState(null);
   const [inventory, setInventory] = useState([]);

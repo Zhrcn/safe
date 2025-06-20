@@ -105,7 +105,7 @@ const RegisterForm = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Enter your password"
                         />
-                        <button
+                        <Button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -115,7 +115,7 @@ const RegisterForm = () => {
                             ) : (
                                 <Eye className="h-4 w-4" />
                             )}
-                        </button>
+                        </Button>
                     </div>
                     {errors.password && (
                         <p className="text-sm text-red-500">{errors.password.message}</p>
@@ -134,7 +134,7 @@ const RegisterForm = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Confirm your password"
                         />
-                        <button
+                        <Button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -144,14 +144,14 @@ const RegisterForm = () => {
                             ) : (
                                 <Eye className="h-4 w-4" />
                             )}
-                        </button>
+                        </Button>
                     </div>
                     {errors.confirmPassword && (
                         <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
                     )}
                 </div>
 
-                <button
+                <Button
                     type="submit"
                     disabled={isLoading}
                     className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -164,7 +164,7 @@ const RegisterForm = () => {
                     ) : (
                         'Register'
                     )}
-                </button>
+                </Button>
             </form>
         </motion.div>
     );

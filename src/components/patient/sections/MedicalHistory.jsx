@@ -96,7 +96,7 @@ const RecordCard = ({ record }) => {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
     return (
-        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-4 hover:shadow-lg transition-shadow duration-200">
+        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-4 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {getIcon(record.type)}
@@ -238,7 +238,7 @@ const MedicalHistory = ({ patient }) => {
     }
     if (error) {
         return (
-            <div className="bg-destructive/10 text-destructive border border-destructive rounded-md p-4 flex items-center gap-3">
+            <div className="bg-destructive/10 text-destructive border border-destructive rounded-lg p-4 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="text-sm">Error loading medical history: {error.message || 'An unknown error occurred.'}</p>
             </div>
@@ -259,6 +259,31 @@ const MedicalHistory = ({ patient }) => {
                 {medicalRecords.map((record) => (
                     <RecordCard key={record.id} record={record} />
                 ))}
+            </div>
+            <div className="flex justify-end gap-2">
+                <Button
+                    onClick={handleAdd}
+                    variant="default"
+                    size="sm"
+                    className="mr-2"
+                >
+                    Add
+                </Button>
+                <Button
+                    onClick={handleEdit}
+                    variant="outline"
+                    size="sm"
+                    className="mr-2"
+                >
+                    Edit
+                </Button>
+                <Button
+                    onClick={handleDelete}
+                    variant="destructive"
+                    size="sm"
+                >
+                    Delete
+                </Button>
             </div>
         </div>
     );

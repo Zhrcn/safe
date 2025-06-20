@@ -5,9 +5,17 @@ import {
     Clock,
     AlertTriangle
 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+
 const Medications = ({ patient }) => {
+    function handleRefill() {
+        alert('Refill requested!');
+    }
+    function handleRemove() {
+        alert('Remove requested!');
+    }
     return (
-        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
             <h2 className="text-xl font-extrabold mb-6 tracking-tight text-primary">Current Medications</h2>
             {patient.medications?.length > 0 ? (
                 <div className="divide-y divide-border">
@@ -22,7 +30,7 @@ const Medications = ({ patient }) => {
                                         <h3 className="text-lg font-bold text-foreground">
                                             {medication.name}
                                         </h3>
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                             {medication.dosage}
                                         </span>
                                     </div>
@@ -34,7 +42,7 @@ const Medications = ({ patient }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border shadow-sm ${
+                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold border shadow-sm ${
                                         medication.status === 'active'
                                             ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                             : 'bg-muted text-muted-foreground border-border'
@@ -55,6 +63,23 @@ const Medications = ({ patient }) => {
                     </p>
                 </div>
             )}
+            <div className="mt-4 flex items-center justify-end gap-2">
+                <Button
+                    onClick={handleRefill}
+                    variant="default"
+                    size="sm"
+                    className="mr-2"
+                >
+                    Refill
+                </Button>
+                <Button
+                    onClick={handleRemove}
+                    variant="destructive"
+                    size="sm"
+                >
+                    Remove
+                </Button>
+            </div>
         </div>
     );
 };

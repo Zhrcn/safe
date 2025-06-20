@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Stethoscope, Droplet, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {Button} from '@/components/ui/Button'
 import { ROLES } from '@/config/app-config';
 
 const roles = [
@@ -134,18 +135,18 @@ const RoleCard = ({ icon: Icon, title, description, features, role, color, bgGra
             ))}
           </div>
           <div className="mt-auto flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4 transition-transform duration-300">
-            <button
+            <Button
               className="w-full sm:w-auto px-6 py-3 font-semibold rounded-xl transition-all duration-300 group-hover:brightness-90 group-hover:shadow-lg bg-primary text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               onClick={handleLogin}
             >
               Login
-            </button>
-            <button
+            </Button>
+            <Button
               className="w-full sm:w-auto px-6 py-3 font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg border border-primary text-primary hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary"
               onClick={handleRegister}
             >
               Register
-            </button>
+            </Button>
           </div>
         </div>
       </div>

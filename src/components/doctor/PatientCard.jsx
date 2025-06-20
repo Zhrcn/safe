@@ -19,6 +19,8 @@ import AddPatientForm from './AddPatientForm';
 import PrescriptionForm from './PrescriptionForm';
 import PatientConditionForm from './PatientConditionForm';
 import ReferralForm from './ReferralForm';
+import { Button } from '@/components/ui/Button';
+
 export default function PatientCard({ patient }) {
     const router = useRouter();
     const [menuAnchor, setMenuAnchor] = useState(null);
@@ -104,58 +106,67 @@ export default function PatientCard({ patient }) {
                         </div>
                     </div>
                     <div className="flex justify-between items-center space-x-2">
-                        <button
+                        <Button
                             type="button"
-                            className="flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                            variant="default"
+                            size="sm"
+                            className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium"
                             onClick={handleViewPatient}
                         >
                             <Eye className="h-4 w-4 mr-1" /> View Patient
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
-                            className="flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 border border-blue-600 hover:bg-blue-50"
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium"
                             onClick={() => handleOpenDialog('condition')}
                         >
                             <Activity className="h-4 w-4 mr-1" /> Update
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
-                            className="flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 border border-blue-600 hover:bg-blue-50"
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium"
                             onClick={() => handleOpenDialog('prescription')}
                         >
                             <FileText className="h-4 w-4 mr-1" /> Prescribe
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label="Open menu"
                             onClick={handleMenuOpen}
                             className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100"
                         >
                             <MoreVertical className="h-5 w-5" />
-                        </button>
+                        </Button>
                         {Boolean(menuAnchor) && (
                             <div
-                                className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-10"
+                                className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-10"
                                 style={{ top: menuAnchor.offsetTop + menuAnchor.offsetHeight, left: menuAnchor.offsetLeft - 170 }}
                                 onBlur={handleMenuClose}
                             >
-                                <button
+                                <Button
                                     onClick={() => handleOpenDialog('edit')}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
                                     <Edit className="h-4 w-4 mr-2 text-gray-500" />Edit Patient
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     onClick={() => handleOpenDialog('referral')}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
                                     <Send className="h-4 w-4 mr-2 text-gray-500" />Create Referral
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     onClick={() => window.location.href = `/doctor/messaging`}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 >
                                     <MessageCircle className="h-4 w-4 mr-2 text-gray-500" />Send Message
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </div>

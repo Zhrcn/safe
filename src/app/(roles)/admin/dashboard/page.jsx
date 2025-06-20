@@ -64,7 +64,7 @@ export default function AdminDashboard() {
           <div className="mb-6 border-b border-muted">
             <div className="flex space-x-4">
               {['overview', 'users', 'activity', 'system'].map((tab) => (
-                <button
+                <Button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={`px-4 py-2 font-medium ${
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                   }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -166,12 +166,12 @@ export default function AdminDashboard() {
                 <AdminCard
                   title="Recent Activity"
                   actions={
-                    <button
+                    <Button
                       onClick={() => setActiveTab('activity')}
                       className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
                       View All
-                    </button>
+                    </Button>
                   }
                   className="bg-card border border-border rounded-xl"
                 >
@@ -192,11 +192,11 @@ export default function AdminDashboard() {
                 <AdminCard
                   title="Notifications"
                   actions={
-                    <button
+                    <Button
                       className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
                       Mark All Read
-                    </button>
+                    </Button>
                   }
                   className="bg-card border border-border rounded-xl"
                 >
@@ -220,12 +220,12 @@ export default function AdminDashboard() {
             <AdminCard
               title="User Management"
               actions={
-                <button
+                <Button
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md flex items-center gap-2"
                 >
                   <UserPlus size={20} />
                   Add User
-                </button>
+                </Button>
               }
             >
               <TableContainer component={Paper} elevation={0} className="bg-transparent">

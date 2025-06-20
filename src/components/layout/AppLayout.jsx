@@ -14,6 +14,8 @@ import ProtectedLayout from './ProtectedLayout';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { useLogoutMutation } from '@/store/services/user/userApi';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Button } from '@/components/ui/Button';
+import Image from 'next/image';
 
 const drawerWidth = 240;
 
@@ -155,22 +157,22 @@ export default function AppLayout({
 
     const SidebarContent = () => (
         <>
-            <div className={`h-16 ${logoBg} flex items-center justify-between px-4 transition-colors duration-300`}>
-                <div className="flex items-center">
-                    <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                        {APP_NAME}
-                    </h1>
-                    <span className="ml-2 opacity-75 text-sm">
-                        {title.replace('S.A.F.E', '').trim()}
-                    </span>
-                </div>
-                {!isDesktop && (
-                    <button 
-                        onClick={() => setMobileOpen(false)}
-                        className="text-foreground hover:text-foreground/80 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+            <div className={`h-20 flex flex-col items-center justify-center gap-2 ${logoBg} px-4 transition-colors duration-300 border-b border-border`}>
+                {/* Custom SVG Icon */}
+                <Image src="/avatars/icon.svg" alt="App Icon" width={48} height={48} className="mb-1" />
+                <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent mb-1">
+                    {APP_NAME}
+                </h1>
+                <span className="opacity-75 text-xs mb-2">{title.replace('S.A.F.E', '').trim()}</span>
+                {/* User Info */}
+                {user && (
+                  <div className="flex flex-col items-center gap-1 mt-2">
+                    <div className="rounded-full overflow-hidden border border-border mb-1">
+                      <img src={user?.profile?.avatar} alt="User Avatar" className="h-10 w-10 object-cover" />
+                    </div>
+                    <div className="font-bold text-base text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-400 text-center break-all">{user?.email}</div>
+                  </div>
                 )}
             </div>
             <div className="flex-1 overflow-y-auto py-4">
@@ -199,13 +201,10 @@ export default function AppLayout({
             </div>
             <div className="p-4 mt-auto">
                 <div className="h-px bg-border mb-4" />
-                <button 
-                    className="flex items-center w-full p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors duration-200"
-                    onClick={handleLogout}
-                >
+                <Button onClick={handleLogout} variant="ghost" className="flex items-center w-full p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors duration-200">
                     <LogOut className="mr-3 h-5 w-5 text-muted-foreground" />
                     <span className="font-medium text-muted-foreground">Logout</span>
-                </button>
+                </Button>
             </div>
         </>
     );
@@ -245,43 +244,34 @@ export default function AppLayout({
                         <div className="flex h-16 items-center justify-between px-4">
                             <div className="flex items-center gap-4">
                                 {!isDesktop && (
-                                    <button
-                                        onClick={() => setMobileOpen(true)}
-                                        className="text-foreground hover:text-foreground/80 transition-colors"
-                                    >
+                                    <Button onClick={() => setMobileOpen(true)} variant="ghost" size="icon" className="text-foreground hover:text-foreground/80 transition-colors">
                                         <MenuIcon className="w-6 h-6" />
-                                    </button>
+                                    </Button>
                                 )}
                                 {isDesktop && (
-                                    <button
-                                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                                        className="text-foreground hover:text-foreground/80 transition-colors"
-                                    >
+                                    <Button onClick={() => setSidebarOpen(!sidebarOpen)} variant="ghost" size="icon" className="text-foreground hover:text-foreground/80 transition-colors">
                                         <MenuIcon className="w-6 h-6" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                             <div className="flex items-center gap-4">
                                 <ThemeSwitcher />
                                 <div className="relative">
-                                    <button
-                                        onClick={() => setNotificationsMenuOpen(!notificationsMenuOpen)}
-                                        className="relative p-2 text-foreground hover:text-foreground/80 transition-colors"
-                                    >
+                                    <Button onClick={() => setNotificationsMenuOpen(!notificationsMenuOpen)} variant="ghost" size="icon" className="relative p-2 text-foreground hover:text-foreground/80 transition-colors">
                                         <Bell className="w-5 h-5" />
                                         {unreadNotificationsCount > 0 && (
                                             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
                                                 {unreadNotificationsCount}
                                             </span>
                                         )}
-                                    </button>
+                                    </Button>
                                     {notificationsMenuOpen && (
                                         <div className="absolute right-0 mt-2 w-80 rounded-lg border border-border bg-card shadow-lg">
                                             <div className="p-2">
                                                 <h3 className="px-2 py-1.5 text-sm font-semibold">Notifications</h3>
                                                 <div className="mt-1 max-h-96 overflow-y-auto">
                                                     {notifications.map((notification) => (
-                                                        <button
+                                                        <Button
                                                             key={notification.id}
                                                             className={`w-full px-2 py-1.5 text-left text-sm hover:bg-muted/40 transition-colors ${
                                                                 !notification.read ? 'font-medium' : ''
@@ -294,7 +284,7 @@ export default function AppLayout({
                                                         >
                                                             <div className="font-medium">{notification.title}</div>
                                                             <div className="text-muted-foreground">{notification.message}</div>
-                                                        </button>
+                                                        </Button>
                                                     ))}
                                                 </div>
                                             </div>
@@ -302,10 +292,7 @@ export default function AppLayout({
                                     )}
                                 </div>
                                 <div className="relative">
-                                    <button
-                                        onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                                        className="flex items-center gap-2 p-2 text-foreground hover:text-foreground/80 transition-colors"
-                                    >
+                                    <Button onClick={() => setProfileMenuOpen(!profileMenuOpen)} variant="ghost" className="flex items-center gap-2 p-2 text-foreground hover:text-foreground/80 transition-colors">
                                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                                             <span className="text-sm font-medium text-primary">
                                                 {user?.firstName?.[0] || 'U'}
@@ -317,11 +304,11 @@ export default function AppLayout({
                                         <ChevronRight className={`w-4 h-4 transition-transform ${
                                             profileMenuOpen ? 'rotate-90' : ''
                                         }`} />
-                                    </button>
+                                    </Button>
                                     {profileMenuOpen && (
                                         <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg">
                                             <div className="p-1">
-                                                <button
+                                                <Button
                                                     onClick={() => {
                                                         router.push('/profile');
                                                         setProfileMenuOpen(false);
@@ -330,8 +317,8 @@ export default function AppLayout({
                                                 >
                                                     <User className="mr-2 h-4 w-4" />
                                                     Profile
-                                                </button>
-                                                <button
+                                                </Button>
+                                                <Button
                                                     onClick={() => {
                                                         router.push('/settings');
                                                         setProfileMenuOpen(false);
@@ -340,15 +327,15 @@ export default function AppLayout({
                                                 >
                                                     <Settings className="mr-2 h-4 w-4" />
                                                     Settings
-                                                </button>
+                                                </Button>
                                                 <div className="h-px bg-border my-1" />
-                                                <button
+                                                <Button
                                                     onClick={handleLogout}
                                                     className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors text-destructive"
                                                 >
                                                     <LogOut className="mr-2 h-4 w-4" />
                                                     Logout
-                                                </button>
+                                                </Button>
                                             </div>
                                         </div>
                                     )}

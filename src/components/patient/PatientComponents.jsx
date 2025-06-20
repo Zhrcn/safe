@@ -97,7 +97,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
                         )}
                     </div>
                     {icon && (
-                        <div className="p-3 rounded-full bg-primary/10 text-primary">
+                        <div className="p-3 rounded-lg bg-primary/10 text-primary">
                             {icon}
                         </div>
                     )}
@@ -144,7 +144,7 @@ export function HealthIndicator({ value, type, className = '' }) {
     const info = getIndicatorInfo();
     return (
         <div className={`flex items-center ${className}`}>
-            <div className={`w-3 h-3 rounded-full ${info.color} mr-2`}></div>
+            <div className={`w-3 h-3 rounded-lg ${info.color} mr-2`}></div>
             <p className="text-sm text-muted-foreground">
                 {info.label}
             </p>
@@ -153,7 +153,7 @@ export function HealthIndicator({ value, type, className = '' }) {
 }
 export function MedicationStatusBadge({ status }) {
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground`}>
             {status}
         </span>
     );
@@ -188,7 +188,7 @@ export function AppointmentStatusBadge({ status }) {
         }
     };
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium ${getStatusColor(status)}`}>
             {getStatusLabel(status)}
         </span>
     );

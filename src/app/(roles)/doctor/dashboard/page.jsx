@@ -93,7 +93,7 @@ export default function DoctorDashboard() {
     console.log('Warning Color Components:', warningColorComponents);
     console.log('Error Color Components:', errorColorComponents);
 
-    // Colors for quick action buttons (using hsl() directly)
+    // Colors for quick action Buttons (using hsl() directly)
     const primaryColor = `hsl(${primaryColorComponents})`;
     const successColor = `hsl(${successColorComponents})`;
     const warningColor = `hsl(${warningColorComponents})`;

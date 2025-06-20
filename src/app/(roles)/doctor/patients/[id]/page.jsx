@@ -39,6 +39,8 @@ import Medications from '@/components/patient/sections/Medications';
 import Appointments from '@/components/patient/sections/Appointments';
 import Insurance from '@/components/patient/sections/Insurance';
 import EmergencyContact from '@/components/patient/sections/EmergencyContact';
+import { Button } from '@/components/ui/Button';
+import { consultations as mockConsultations } from '@/mockdata/consultations';
 function PrescriptionForm({ open, onClose, onSubmit, patient }) {
     const [formData, setFormData] = useState({
         medication: '',
@@ -89,12 +91,12 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                 <div className="p-6 border-b border-border">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">New Prescription</h2>
-                        <button 
+                        <Button 
                             onClick={onClose} 
                             className="text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <X className="w-5 h-5" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -234,18 +236,18 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                     </div>
                 </form>
                 <div className="p-6 border-t border-border flex justify-end gap-3">
-                    <button
+                    <Button
                         onClick={onClose}
                         className="px-4 py-2 text-foreground hover:bg-muted rounded-md transition-colors"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={handleSubmit}
                         className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-colors"
                     >
                         Create Prescription
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -261,6 +263,7 @@ const PatientPageContent = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+    const [answerInputs, setAnswerInputs] = useState({});
     useEffect(() => {
         const loadPatient = async () => {
             try {
@@ -354,6 +357,20 @@ const PatientPageContent = () => {
     const handleSendMessage = () => {
         router.push(`/chat/${patient.id}`);
     };
+    // Filter consultations for this patient
+    const patientConsultations = mockConsultations.filter(c => c.patientId === params.id);
+    const handleAnswerChange = (consultationId, value) => {
+        setAnswerInputs(prev => ({ ...prev, [consultationId]: value }));
+    };
+    const handleAnswerSubmit = (consultationId) => {
+        // Here you would call the mutation to answer the consultation
+        // For now, just show a notification
+        showNotification('Answer submitted!', 'success');
+        setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
+    };
+    const handleChat = (consultation) => {
+        router.push(`/chat/${consultation.patientId}`);
+    };
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -395,28 +412,28 @@ const PatientPageContent = () => {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <button
+                            <Button
                                 onClick={handleFavoriteToggle}
                                 className={`p-2 rounded-full transition-colors ${
                                     isFavorite ? 'text-yellow-500' : 'text-muted-foreground'
                                 } hover:bg-muted`}
                             >
                                 <Star className="w-5 h-5" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={() => setIsPrescriptionModalOpen(true)}
                                 className="flex items-center px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-colors"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 New Prescription
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
                 <div className="border-b border-border">
                     <div className="flex space-x-8 px-6">
-                        {['Personal Info', 'Medical History', 'Medications', 'Appointments', 'Insurance', 'Emergency Contact'].map((tab, index) => (
-                            <button
+                        {['Personal Info', 'Medical History', 'Medications', 'Appointments', 'Insurance', 'Emergency Contact', 'Consultations'].map((tab, index) => (
+                            <Button
                                 key={tab}
                                 onClick={() => setActiveTab(index)}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
@@ -426,7 +443,7 @@ const PatientPageContent = () => {
                                 }`}
                             >
                                 {tab}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>
@@ -439,14 +456,67 @@ const PatientPageContent = () => {
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.2 }}
                         >
-                    {activeTab === 0 && <PersonalInfo patient={patient} />}
-                            {activeTab === 1 && (
-                                <MedicalHistory patient={patient} />
-                            )}
-                    {activeTab === 2 && <Medications patient={patient} />}
+                            {activeTab === 0 && <PersonalInfo patient={patient} />}
+                            {activeTab === 1 && <MedicalHistory patient={patient} />}
+                            {activeTab === 2 && <Medications patient={patient} />}
                             {activeTab === 3 && <Appointments patient={patient} />}
                             {activeTab === 4 && <Insurance patient={patient} />}
                             {activeTab === 5 && <EmergencyContact patient={patient} />}
+                            {activeTab === 6 && (
+                                <div>
+                                    <h2 className="text-xl font-bold mb-4">Consultations</h2>
+                                    {patientConsultations.length === 0 ? (
+                                        <div className="text-muted-foreground">No consultations for this patient.</div>
+                                    ) : (
+                                        <div className="space-y-6">
+                                            {patientConsultations.map((consultation) => (
+                                                <div key={consultation.id} className="bg-muted rounded-lg p-4 border border-border flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="w-5 h-5 text-primary" />
+                                                        <span className="font-semibold">Question:</span>
+                                                        <span>{consultation.question}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                                                        <span className="font-semibold">Answer:</span>
+                                                        {consultation.answer ? (
+                                                            <span>{consultation.answer}</span>
+                                                        ) : (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    value={answerInputs[consultation.id] || ''}
+                                                                    onChange={e => handleAnswerChange(consultation.id, e.target.value)}
+                                                                    placeholder="Type your answer..."
+                                                                    className="border rounded px-2 py-1 text-sm w-64"
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="ml-2"
+                                                                    onClick={() => handleAnswerSubmit(consultation.id)}
+                                                                >
+                                                                    Submit
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleChat(consultation)}
+                                                        >
+                                                            <MessageCircle className="w-4 h-4 mr-1" />
+                                                            Chat
+                                                        </Button>
+                                                        <span className="ml-4 text-xs text-muted-foreground">Status: {consultation.answer ? 'Answered' : 'Pending'}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </motion.div>
                     </AnimatePresence>
                 </div>

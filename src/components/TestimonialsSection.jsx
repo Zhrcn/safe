@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { Button } from "@/components/ui/Button";
 const testimonials = [
   {
     id: 1,
@@ -110,17 +111,17 @@ export default function TestimonialsSection() {
                     transition={{ duration: 0.5 }}
                     className="absolute w-full h-full flex items-center justify-center"
                   >
-                    <div className="relative bg-card border-2 border-primary/70 shadow-xl rounded-3xl p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
+                    <div className="relative bg-card border-2 border-primary/70 shadow-xl rounded-lg p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
                       <Quote className="w-10 h-10 opacity-10 absolute top-6 left-6 text-primary" />
                       <p className="mb-6 text-lg md:text-xl italic relative z-10 text-card-foreground font-medium">
                         "{testimonial.text}"
                       </p>
                       <div className="mt-auto flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background">
+                        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background">
                           <img
                             src={testimonial.avatar}
                             alt={testimonial.name}
-                            className="w-full h-full rounded-full object-cover border-2 border-primary/30"
+                            className="w-full h-full rounded-lg object-cover border-2 border-primary/30"
                           />
                         </div>
                         <div>
@@ -152,32 +153,32 @@ export default function TestimonialsSection() {
             </AnimatePresence>
           </div>
           <div className="flex justify-center items-center mt-8 gap-3">
-            <button
+            <Button
               onClick={handlePrev}
               aria-label="Previous testimonial"
-              className="p-2 rounded-full bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="p-2 rounded-lg bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
+            </Button>
             <div className="flex items-center gap-2">
               {testimonials.map((_, index) => (
-                <button
+                <Button
                   key={index}
                   onClick={() => handleDotClick(index)}
                   aria-label={`Go to testimonial ${index + 1}`}
-                  className={`w-3 h-3 rounded-full border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-3 h-3 rounded-lg border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
                     activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/20'
                   }`}
                 />
               ))}
             </div>
-            <button
+            <Button
               onClick={handleNext}
               aria-label="Next testimonial"
-              className="p-2 rounded-full bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="p-2 rounded-lg bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronRight className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

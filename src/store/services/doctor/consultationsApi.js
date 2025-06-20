@@ -14,71 +14,31 @@ export const consultationsApi = createApi({
     tagTypes: ['Consultations', 'ConsultationDetails'],
     endpoints: (builder) => ({
         getConsultations: builder.query({
-            query: () => '/',
+            query: () => '/consultations',
             providesTags: ['Consultations'],
         }),
         getConsultationDetails: builder.query({
-            query: (consultationId) => `/${consultationId}`,
+            query: (consultationId) => `/consultations/${consultationId}`,
             providesTags: (result, error, consultationId) => [{ type: 'ConsultationDetails', id: consultationId }],
         }),
         createConsultation: builder.mutation({
-            query: (consultationData) => ({
-                url: '/',
+            query: ({ doctorId, question }) => ({
+                url: '/consultations',
                 method: 'POST',
-                body: consultationData,
+                body: { doctorId, question },
             }),
             invalidatesTags: ['Consultations'],
         }),
-        updateConsultation: builder.mutation({
-            query: ({ consultationId, consultationData }) => ({
-                url: `/${consultationId}`,
+        answerConsultation: builder.mutation({
+            query: ({ consultationId, answer }) => ({
+                url: `/consultations/${consultationId}`,
                 method: 'PUT',
-                body: consultationData,
+                body: { answer },
             }),
             invalidatesTags: (result, error, { consultationId }) => [
                 { type: 'ConsultationDetails', id: consultationId },
                 'Consultations'
             ],
-        }),
-        addNote: builder.mutation({
-            query: ({ consultationId, note }) => ({
-                url: `/${consultationId}/notes`,
-                method: 'POST',
-                body: { note },
-            }),
-            invalidatesTags: (result, error, { consultationId }) => [
-                { type: 'ConsultationDetails', id: consultationId }
-            ],
-        }),
-        addAttachment: builder.mutation({
-            query: ({ consultationId, attachment }) => {
-                const formData = new FormData();
-                formData.append('attachment', attachment);
-                return {
-                    url: `/${consultationId}/attachments`,
-                    method: 'POST',
-                    body: formData,
-                };
-            },
-            invalidatesTags: (result, error, { consultationId }) => [
-                { type: 'ConsultationDetails', id: consultationId }
-            ],
-        }),
-        getConsultationsByPatient: builder.query({
-            query: (patientId) => `/patient/${patientId}`,
-            providesTags: ['Consultations'],
-        }),
-        getConsultationsByDate: builder.query({
-            query: (date) => `/date/${date}`,
-            providesTags: ['Consultations'],
-        }),
-        getConsultationNotes: builder.query({
-            query: (consultationId) => `/${consultationId}/notes`,
-            providesTags: (result, error, consultationId) => [{ type: 'ConsultationDetails', id: consultationId }],
-        }),
-        getConsultationAttachments: builder.query({
-            query: (consultationId) => `/${consultationId}/attachments`,
-            providesTags: (result, error, consultationId) => [{ type: 'ConsultationDetails', id: consultationId }],
         }),
     }),
 });
@@ -86,11 +46,5 @@ export const {
     useGetConsultationsQuery,
     useGetConsultationDetailsQuery,
     useCreateConsultationMutation,
-    useUpdateConsultationMutation,
-    useAddNoteMutation,
-    useAddAttachmentMutation,
-    useGetConsultationsByPatientQuery,
-    useGetConsultationsByDateQuery,
-    useGetConsultationNotesQuery,
-    useGetConsultationAttachmentsQuery,
+    useAnswerConsultationMutation,
 } = consultationsApi; 

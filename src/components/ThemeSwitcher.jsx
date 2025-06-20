@@ -36,13 +36,13 @@ const ThemeSwitcher = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="relative focus:outline-none focus:ring-2 focus:ring-primary rounded-full shadow hover:bg-primary/10 transition-colors"
+          className="relative focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow hover:bg-primary/10 transition-colors"
         >
           <Palette className="h-5 w-5" />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-xl border border-border bg-card">
+      <DropdownMenuContent align="end" className="w-44 rounded-lg shadow-xl border border-border bg-card">
         {themes.map((theme) => (
           <DropdownMenuItem
             key={theme.name}
@@ -56,7 +56,7 @@ const ThemeSwitcher = () => {
           >
             <span>{theme.label}</span>
             {currentTheme === theme.name && (
-              <span className="h-2.5 w-2.5 rounded-full bg-primary border-2 border-primary" />
+              <span className="h-2.5 w-2.5 rounded-lg bg-primary border-2 border-primary" />
             )}
           </DropdownMenuItem>
         ))}

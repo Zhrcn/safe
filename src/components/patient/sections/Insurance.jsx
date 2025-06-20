@@ -10,6 +10,7 @@ import {
     Calendar,
     CheckCircle2
 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 const InfoItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-center gap-3 mb-2">
         <Icon className="w-5 h-5 text-primary" />
@@ -27,7 +28,7 @@ const Insurance = ({ patient }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Insurance Information */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <Building2 className="w-6 h-6" />
                     Insurance Information
@@ -64,7 +65,7 @@ const Insurance = ({ patient }) => {
                     <div>
                         <span className="text-sm text-muted-foreground font-semibold">Status</span>
                         <div className="mt-1">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold border shadow-sm ${
                                 patient.insurance?.status === 'active'
                                     ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                     : 'bg-destructive/10 text-destructive border-destructive/20'
@@ -77,7 +78,7 @@ const Insurance = ({ patient }) => {
                 </div>
             </div>
             {/* Coverage Details */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <FileText className="w-6 h-6" />
                     Coverage Details
@@ -111,7 +112,7 @@ const Insurance = ({ patient }) => {
                 </div>
             </div>
             {/* Contact Information */}
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
+            <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <Phone className="w-6 h-6" />
                     Contact Information

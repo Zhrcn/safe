@@ -21,9 +21,14 @@ function OrderDetailDialog({ open, onClose, order, onMarkAsProcessed }) {
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-bold">Order Details</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
-            <X size={20} />
-          </button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onClose}
+            startIcon={<X size={20} />}
+          >
+            Close
+          </Button>
         </div>
         <div className="p-4 space-y-4">
           <div>
@@ -44,23 +49,25 @@ function OrderDetailDialog({ open, onClose, order, onMarkAsProcessed }) {
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t">
-          <button
+          <Button
+            variant="outlined"
+            size="small"
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
           >
             Close
-          </button>
+          </Button>
           {order.status !== 'Completed' && (
-            <button
+            <Button
+              variant="contained"
+              size="small"
               onClick={() => {
                 onMarkAsProcessed(order.id);
                 onClose();
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              startIcon={<CheckCircle size={16} />}
             >
-              <CheckCircle size={16} />
               {order.status === 'Pending' ? 'Start Processing' : 'Mark as Completed'}
-            </button>
+            </Button>
           )}
         </div>
       </div>

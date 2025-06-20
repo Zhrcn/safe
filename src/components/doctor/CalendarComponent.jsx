@@ -14,6 +14,7 @@ import {
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProviderWrapper';
+import Button from '@/components/ui/Button'
 
 const getComputedCssVariable = (variableName) => {
   if (typeof window !== 'undefined') {
@@ -68,26 +69,26 @@ const CalendarComponent = ({ appointments }) => {
     isSameDay(new Date(appointment.date), selectedDate)
   );
   return (
-    <div className="bg-card rounded-xl shadow-lg border border-border flex flex-col h-full">
+    <div className="bg-card rounded-lg shadow-lg border border-border flex flex-col h-full">
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-card-foreground">Calendar</h2>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={handlePrevMonth}
               className="p-2 rounded-full hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors duration-200"
             >
               <ChevronLeft size={20} />
-            </button>
+            </Button>
             <h3 className="text-lg font-medium text-card-foreground">
               {format(currentMonth, 'MMMM yyyy')}
             </h3>
-            <button
+            <Button
               onClick={handleNextMonth}
               className="p-2 rounded-full hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors duration-200"
             >
               <ChevronRight size={20} />
-            </button>
+            </Button>
           </div>
         </div>
         <div className="border-b border-border mb-4" />
@@ -101,7 +102,7 @@ const CalendarComponent = ({ appointments }) => {
             <div key={`pad-${index}`} className="p-2"></div>
           ))}
           {daysInMonth.map((day) => (
-            <button
+            <Button
               key={day.toISOString()}
               onClick={() => setSelectedDate(day)}
               className={`p-2 rounded-lg transition-colors duration-200
@@ -116,7 +117,7 @@ const CalendarComponent = ({ appointments }) => {
               disabled={!isSameMonth(day, currentMonth)}
             >
               {format(day, 'd')}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

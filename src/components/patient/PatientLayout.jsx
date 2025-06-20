@@ -162,7 +162,7 @@ export default function PatientLayout({ children }) {
                     <div className="p-4 space-y-6">
                         {sidebarItems.map((group) => (
                             <div key={group.title} className="space-y-2">
-                                <button
+                                <Button
                                     onClick={() => toggleGroup(group.title)}
                                     className="flex items-center justify-between w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                                 >
@@ -173,7 +173,7 @@ export default function PatientLayout({ children }) {
                                             expandedGroups.includes(group.title) && "rotate-90"
                                         )} 
                                     />
-                                </button>
+                                </Button>
                                 {expandedGroups.includes(group.title) && (
                                     <div className="space-y-1 pl-2">
                                         {group.items.map((item) => {

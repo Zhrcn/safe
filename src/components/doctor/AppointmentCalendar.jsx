@@ -1,1 +1,85 @@
-import React from 'react';import { useSelector } from 'react-redux';import { useNavigate } from 'react-router-dom';import { Clock, User } from 'lucide-react';const AppointmentCalendar = () => {    const { appointments } = useSelector((state) => state.doctorSchedule);    const { patients } = useSelector((state) => state.doctorPatients);    const navigate = useNavigate();    const today = new Date();    const todayAppointments = appointments        .filter(appointment => {            const appointmentDate = new Date(appointment.date);            return appointmentDate.toDateString() === today.toDateString();        })        .sort((a, b) => new Date(a.date) - new Date(b.date));    const formatTime = (dateString) => {        const options = { hour: '2-digit', minute: '2-digit' };        return new Date(dateString).toLocaleTimeString(undefined, options);    };    const getStatusColor = (status) => {        switch (status) {            case 'scheduled':                return 'bg-blue-100 text-blue-800';            case 'in-progress':                return 'bg-yellow-100 text-yellow-800';            case 'completed':                return 'bg-green-100 text-green-800';            case 'cancelled':                return 'bg-red-100 text-red-800';            default:                return 'bg-gray-100 text-gray-800';        }    };    const handleAppointmentClick = (appointmentId) => {        navigate(`/doctor/appointments/${appointmentId}`);    };    if (todayAppointments.length === 0) {        return (            <div className="flex justify-center items-center min-h-[200px]">                <p className="text-gray-500">                    No appointments scheduled for today                </p>            </div>        );    }    return (        <ul className="divide-y divide-gray-200">            {todayAppointments.map((appointment, index) => {                const patient = patients.find(p => p.id === appointment.patientId);                return (                    <li                         key={appointment.id}                        onClick={() => handleAppointmentClick(appointment.id)}                        className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"                    >                        <div className="flex items-center justify-between">                            <div className="flex items-center space-x-3">                                <User className="h-5 w-5 text-gray-400" />                                <div>                                    <h3 className="text-sm font-medium text-gray-900">                                        {patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient'}                                    </h3>                                    <div className="flex items-center mt-1 space-x-2">                                        <div className="flex items-center text-sm text-gray-500">                                            <Clock className="h-4 w-4 mr-1" />                                            {formatTime(appointment.date)}                                        </div>                                        <span className="text-sm text-gray-500">                                            {appointment.type}                                        </span>                                    </div>                                </div>                            </div>                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>                                {appointment.status}                            </span>                        </div>                    </li>                );            })}        </ul>    );};export default AppointmentCalendar;
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+
+const AppointmentCalendar = () => {
+    const { appointments } = useSelector((state) => state.doctorSchedule);
+    const { patients } = useSelector((state) => state.doctorPatients);
+    const navigate = useNavigate();
+    const today = new Date();
+    const todayAppointments = appointments
+        .filter(appointment => {
+            const appointmentDate = new Date(appointment.date);
+            return appointmentDate.toDateString() === today.toDateString();
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const formatTime = (dateString) => {
+        const options = { hour: '2-digit', minute: '2-digit' };
+        return new Date(dateString).toLocaleTimeString(undefined, options);
+    };
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'scheduled':
+                return 'bg-blue-100 text-blue-800';
+            case 'in-progress':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'completed':
+                return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+    const handleAppointmentClick = (appointmentId) => {
+        navigate(`/doctor/appointments/${appointmentId}`);
+    };
+    if (todayAppointments.length === 0) {
+        return (
+            <div className="flex justify-center items-center min-h-[200px]">
+                <p className="text-gray-500">
+                    No appointments scheduled for today
+                </p>
+            </div>
+        );
+    }
+    return (
+        <div className="flex items-center justify-between mb-4">
+            <Button
+                onClick={() => {
+                    // Implement the logic to go to today
+                }}
+                variant="outline"
+                size="sm"
+                className="mr-2"
+            >
+                Today
+            </Button>
+            <Button
+                onClick={() => {
+                    // Implement the logic to go to previous day
+                }}
+                variant="ghost"
+                size="icon"
+                aria-label="Previous"
+                className="mr-2"
+            >
+                <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+                onClick={() => {
+                    // Implement the logic to go to next day
+                }}
+                variant="ghost"
+                size="icon"
+                aria-label="Next"
+            >
+                <ChevronRight className="h-4 w-4" />
+            </Button>
+        </div>
+    );
+};
+
+export default AppointmentCalendar;

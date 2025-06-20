@@ -654,17 +654,26 @@ const MedicationsPage = () => {
                             className="pl-9 border-border focus:border-primary focus:ring-primary/20"
                         />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="expired">Expired</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-[180px] justify-between">
+                                {(() => {
+                                    switch (statusFilter) {
+                                        case 'active': return 'Active';
+                                        case 'completed': return 'Completed';
+                                        case 'expired': return 'Expired';
+                                        default: return 'All Status';
+                                    }
+                                })()}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Status</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusFilter('active')}>Active</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusFilter('completed')}>Completed</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusFilter('expired')}>Expired</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <Button variant="outline" onClick={handleViewPrescriptions} className="w-full md:w-auto">

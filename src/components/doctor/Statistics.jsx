@@ -1,1 +1,69 @@
-import React from 'react';import { useSelector } from 'react-redux';import {    Users as PeopleIcon,    Calendar as CalendarIcon,    Hospital as HospitalIcon,    Clipboard as AssignmentIcon} from 'lucide-react';import { Card, CardContent } from '@/components/ui/Card';const Statistics = () => {    const { patients } = useSelector((state) => state.doctorPatients);    const { appointments } = useSelector((state) => state.doctorSchedule);    const { consultations } = useSelector((state) => state.doctorConsultations);    const { prescriptions } = useSelector((state) => state.doctorPrescriptions);    const today = new Date();    const todayAppointments = appointments.filter(appointment => {        const appointmentDate = new Date(appointment.date);        return appointmentDate.toDateString() === today.toDateString();    });    const stats = [        {            title: 'Total Patients',            value: patients.length,            icon: <PeopleIcon className="h-6 w-6" />,            color: 'bg-blue-500 text-white'        },        {            title: "Today's Appointments",            value: todayAppointments.length,            icon: <CalendarIcon className="h-6 w-6" />,            color: 'bg-green-500 text-white'        },        {            title: 'Active Consultations',            value: consultations.filter(cons => cons.status === 'active').length,            icon: <HospitalIcon className="h-6 w-6" />,            color: 'bg-orange-500 text-white'        },        {            title: 'Active Prescriptions',            value: prescriptions.filter(pres => pres.status === 'active').length,            icon: <AssignmentIcon className="h-6 w-6" />,            color: 'bg-purple-500 text-white'        }    ];    return (        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">            {stats.map((stat, index) => (                <Card key={index} className="p-4 flex items-center gap-4 h-full">                    <div className={stat.color + " rounded-full p-2 flex items-center justify-center"}>                        {stat.icon}                    </div>                    <div>                        <h3 className="text-2xl font-bold text-foreground">                            {stat.value}                        </h3>                        <p className="text-sm text-muted-foreground">                            {stat.title}                        </p>                    </div>                </Card>            ))}        </div>    );};export default Statistics; 
+import React from 'react';
+import { useSelector } from 'react-redux';
+import {
+    Users as PeopleIcon,
+    Calendar as CalendarIcon,
+    Hospital as HospitalIcon,
+    Clipboard as AssignmentIcon
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+
+const Statistics = () => {
+    const { patients } = useSelector((state) => state.doctorPatients);
+    const { appointments } = useSelector((state) => state.doctorSchedule);
+    const { consultations } = useSelector((state) => state.doctorConsultations);
+    const { prescriptions } = useSelector((state) => state.doctorPrescriptions);
+    const today = new Date();
+    const todayAppointments = appointments.filter(appointment => {
+        const appointmentDate = new Date(appointment.date);
+        return appointmentDate.toDateString() === today.toDateString();
+    });
+    const stats = [
+        {
+            title: 'Total Patients',
+            value: patients.length,
+            icon: <PeopleIcon className="h-6 w-6" />,
+            color: 'bg-blue-500 text-white'
+        },
+        {
+            title: "Today's Appointments",
+            value: todayAppointments.length,
+            icon: <CalendarIcon className="h-6 w-6" />,
+            color: 'bg-green-500 text-white'
+        },
+        {
+            title: 'Active Consultations',
+            value: consultations.filter(cons => cons.status === 'active').length,
+            icon: <HospitalIcon className="h-6 w-6" />,
+            color: 'bg-orange-500 text-white'
+        },
+        {
+            title: 'Active Prescriptions',
+            value: prescriptions.filter(pres => pres.status === 'active').length,
+            icon: <AssignmentIcon className="h-6 w-6" />,
+            color: 'bg-purple-500 text-white'
+        }
+    ];
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((stat, index) => (
+                <Card key={index} className="p-4 flex items-center gap-4 h-full">
+                    <div className={stat.color + " rounded-full p-2 flex items-center justify-center"}>
+                        {stat.icon}
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-bold text-foreground">
+                            {stat.value}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                            {stat.title}
+                        </p>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+};
+
+export default Statistics; 

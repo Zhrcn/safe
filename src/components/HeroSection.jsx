@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { APP_NAME, APP_DESCRIPTION } from '@/config/app-config';
+import { Button } from '@/components/ui/Button';
 
 export default function HeroSection() {
   const scrollToSection = (sectionId) => {
@@ -43,18 +44,18 @@ export default function HeroSection() {
                 {APP_DESCRIPTION}
               </p>
               <div className="flex flex-wrap sm:flex-nowrap gap-4">
-                <button
+                <Button
                   onClick={() => scrollToSection('roles')}
                   className="px-7 py-3 text-base font-semibold rounded-full bg-secondary text-secondary-foreground shadow-lg hover:bg-secondary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   Get Started
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => scrollToSection('features')}
                   className="px-7 py-3 text-base font-semibold rounded-full border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary shadow"
                 >
                   Learn More
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

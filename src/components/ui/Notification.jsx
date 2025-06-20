@@ -8,6 +8,7 @@ import {
     Search,
     X
 } from 'lucide-react';
+import{ Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 const NotificationContext = createContext({
     showNotification: () => {},
@@ -70,12 +71,12 @@ export function NotificationProvider({ children }) {
                 >
                     {getIcon(notification.severity)}
                     <p className="flex-1">{notification.message}</p>
-                    <button
+                    <Button
                         onClick={hideNotification}
                         className="p-1 hover:bg-black/10 rounded-full transition-colors"
                     >
                         <X size={18} />
-                    </button>
+                    </Button>
                 </div>
             </div>
         </NotificationContext.Provider>
@@ -107,12 +108,12 @@ export function SearchField({ value, onChange, placeholder = 'Search...', classN
                 placeholder={placeholder}
                 className="ml-1 flex-1 bg-transparent text-foreground outline-none"
             />
-            <button
+            <Button
                 type="button"
                 className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             >
                 <Search size={18} />
-            </button>
+            </Button>
         </div>
     );
 } 

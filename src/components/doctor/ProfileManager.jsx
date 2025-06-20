@@ -16,6 +16,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { doctors as mockDoctors } from '@/mockdata/doctors';
+import { Button } from '@/components/ui/Button';
 const personalInfoSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     specialty: z.string().min(2, 'Specialty is required'),
@@ -170,13 +171,12 @@ function PersonalInfoForm({ profile, onSave }) {
                         </div>
                     </div>
                     <div className="mt-6">
-                        <button 
+                        <Button 
                             type="button"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                             onClick={() => setIsEditing(true)}
                         >
                             Edit
-                        </button>
+                        </Button>
                     </div>
                 </div>
             ) : (

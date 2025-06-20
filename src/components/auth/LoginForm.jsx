@@ -127,13 +127,13 @@ export default function LoginForm({ role, redirectUrl }) {
                                     {...register('password')}
                                     className={errors.password ? 'border-red-500' : ''}
                                 />
-                                <button
+                                <Button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                                 >
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
+                                </Button>
                             </div>
                             {errors.password && (
                                 <p className="text-sm text-red-500">{errors.password.message}</p>

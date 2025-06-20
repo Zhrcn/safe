@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/Select';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 
 const ProviderCard = ({ provider, type, onOpenDialog }) => {
     const isDoctor = type === 'doctor';
@@ -439,41 +440,54 @@ const ProvidersPageContent = () => {
                         />
                     </div>
                     {activeTab === 'doctors' && (
-                        <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by Specialty" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Specialties</SelectItem>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-[180px] justify-between">
+                                    {specialtyFilter === 'all' ? 'All Specialties' : specialtyFilter}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>All Specialties</DropdownMenuItem>
                                 {uniqueSpecialties.map(specialty => (
-                                    <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                                    <DropdownMenuItem key={specialty} onClick={() => setSpecialtyFilter(specialty)}>{specialty}</DropdownMenuItem>
                                 ))}
-                            </SelectContent>
-                        </Select>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
                     {activeTab === 'doctors' && (
-                        <Select value={locationFilter} onValueChange={setLocationFilter}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by Location" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Locations</SelectItem>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-[180px] justify-between">
+                                    {locationFilter === 'all' ? 'All Locations' : locationFilter}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => setLocationFilter('all')}>All Locations</DropdownMenuItem>
                                 {uniqueLocations.map(location => (
-                                    <SelectItem key={location} value={location}>{location}</SelectItem>
+                                    <DropdownMenuItem key={location} onClick={() => setLocationFilter(location)}>{location}</DropdownMenuItem>
                                 ))}
-                            </SelectContent>
-                        </Select>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Sort by" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="rating">Rating</SelectItem>
-                            <SelectItem value="name">Name</SelectItem>
-                            {activeTab === 'doctors' && <SelectItem value="experience">Experience</SelectItem>}
-                        </SelectContent>
-                    </Select>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-[180px] justify-between">
+                                {(() => {
+                                    switch (sortBy) {
+                                        case 'rating': return 'Rating';
+                                        case 'name': return 'Name';
+                                        case 'experience': return 'Experience';
+                                        default: return 'Sort by';
+                                    }
+                                })()}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setSortBy('rating')}>Rating</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
+                            {activeTab === 'doctors' && <DropdownMenuItem onClick={() => setSortBy('experience')}>Experience</DropdownMenuItem>}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
                         <ArrowUpDown className={cn("h-4 w-4", sortOrder === 'desc' ? 'rotate-180' : '')} />
                     </Button>

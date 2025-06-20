@@ -189,13 +189,13 @@ export function NotificationItem({ title, message, timestamp, severity, isRead, 
       </div>
       <p className="mb-2 text-foreground">{message}</p>
       {!isRead && onMarkAsRead && (
-        <button
+        <Button
           onClick={onMarkAsRead}
           className="text-primary text-sm flex items-center hover:underline"
         >
           Mark as read
           <ArrowRight size={16} className="ml-1" />
-        </button>
+        </Button>
       )}
     </div>
   );
