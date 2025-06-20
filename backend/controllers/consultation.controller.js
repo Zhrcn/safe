@@ -58,8 +58,28 @@ const answerConsultation = asyncHandler(async (req, res) => {
   });
 });
 
+// Update a consultation (e.g., question or status)
+const updateConsultation = asyncHandler(async (req, res) => {
+  const consultation = await Consultation.findById(req.params.id);
+  if (!consultation) {
+    res.status(404);
+    throw new Error('Consultation not found');
+  }
+  // Allow updating question or status (expand as needed)
+  if (req.body.question !== undefined) consultation.question = req.body.question;
+  if (req.body.status !== undefined) consultation.status = req.body.status;
+  await consultation.save();
+  await consultation.populate('doctor', 'firstName lastName specialization');
+  await consultation.populate('patient', 'firstName lastName');
+  res.json({
+    success: true,
+    data: consultation
+  });
+});
+
 module.exports = {
   getConsultations,
   requestConsultation,
-  answerConsultation
+  answerConsultation,
+  updateConsultation
 };

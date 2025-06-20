@@ -215,7 +215,6 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
         const newTimes = [];
         const [hours, minutes] = initialTime.split(':').map(Number);
         let intervalHours = 0;
-
         switch (frequency) {
             case 'once_daily': intervalHours = 24; break;
             case 'twice_daily': intervalHours = 12; break;
@@ -227,7 +226,6 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
             case 'as_needed': return []; // No scheduled times for as needed
             default: return [];
         }
-
         if (intervalHours === 24) {
             newTimes.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
         } else {
@@ -258,31 +256,31 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (times.length === 0 || selectedDays.length === 0) {
-            showNotification('Please select reminder times and days.', 'error');
+        if (selectedFrequency !== 'as_needed' && (times.length === 0 || selectedDays.length === 0)) {
+            showNotification({ message: 'Please select reminder times and days.', severity: 'error' });
             return;
         }
         onSubmit({
             reminderTimes: times,
             reminderDays: selectedDays,
-            remindersEnabled: true,
+            remindersEnabled: selectedFrequency !== 'as_needed',
         });
-        showNotification('Reminder settings updated successfully!', 'success');
+        showNotification({ message: 'Reminder settings updated successfully!', severity: 'success' });
         onClose();
     };
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[480px]">
+            <DialogContent className="sm:max-w-[480px] rounded-xl bg-background">
                 <DialogHeader>
-                    <DialogTitle>Set Reminders for {medication?.name}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold">Set Reminders for {medication?.name}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="frequency">Frequency</Label>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between">
+                                <Button variant="outline" className="w-full justify-between rounded-lg">
                                     {FREQUENCY_OPTIONS.find(option => option.value === selectedFrequency)?.label || 'Select frequency'}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -303,7 +301,7 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
                                 type="time"
                                 value={firstTime}
                                 onChange={handleFirstTimeChange}
-                                className="border-border focus:border-primary focus:ring-primary/20"
+                                className="border-border focus:border-primary focus:ring-primary/20 rounded-lg"
                             />
                         </div>
                     )}
@@ -315,23 +313,23 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
                                     key={day.value}
                                     value={day.value}
                                     aria-label={`Toggle ${day.label}`}
-                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-lg px-4 py-2"
                                 >
                                     {day.label}
                                 </ToggleGroupItem>
                             ))}
                         </ToggleGroup>
                     </div>
-                    {times.length > 0 && selectedDays.length > 0 && selectedFrequency !== 'as_needed' && (
-                        <Alert className="bg-primary/10 text-primary border-primary">
+                    {selectedFrequency !== 'as_needed' && times.length > 0 && selectedDays.length > 0 && (
+                        <Alert className="bg-primary/10 text-primary border-primary rounded-lg">
                             <AlertTitle>Scheduled Times:</AlertTitle>
-                            <AlertDescription>{times.join(', ')}</AlertDescription>
+                            <AlertDescription>{times.join(', ')} on {selectedDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}</AlertDescription>
                         </Alert>
                     )}
                 </form>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="submit" form="reminder-form" onClick={handleSubmit}>Save Reminders</Button>
+                    <Button variant="outline" onClick={onClose} className="rounded-lg">Cancel</Button>
+                    <Button type="submit" form="reminder-form" onClick={handleSubmit} className="rounded-lg">Save Reminders</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

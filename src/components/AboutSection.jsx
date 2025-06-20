@@ -7,25 +7,25 @@ const stats = [
     icon: Users,
     value: '10K+',
     label: 'Active Users',
-    color: 'hsl(var(--primary))',
+    color: 'var(--color-primary)',
   },
   {
     icon: Clock,
     value: '24/7',
     label: 'Support',
-    color: 'hsl(var(--secondary))',
+    color: 'var(--color-secondary)',
   },
   {
     icon: Award,
     value: '99.9%',
     label: 'Uptime',
-    color: 'hsl(var(--success))',
+    color: 'var(--color-success)',
   },
   {
     icon: Heart,
     value: '95%',
     label: 'Satisfaction',
-    color: 'hsl(var(--destructive))',
+    color: 'var(--color-destructive)',
   },
 ];
 
@@ -33,14 +33,7 @@ export default function AboutSection() {
   return (
     <section 
       id="about" 
-      className="relative overflow-hidden py-20 sm:py-28 bg-background">
-      {/* Background accent for depth */}
-      <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
-        style={{
-          background:
-            'radial-gradient(circle at 80% 60%, var(--color-secondary) 0%, transparent 70%)',
-        }}
-      />
+      className="relative overflow-hidden py-20 sm:py-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
         <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20">
           <div className="w-full md:w-1/2">
@@ -69,14 +62,14 @@ export default function AboutSection() {
           </div>
           <div className="w-full md:w-1/2 flex flex-wrap justify-center gap-6">
             {stats.map((stat, index) => (
-                <motion.div
+                <div
                 key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 whileHover={{ y: -4, scale: 1.06, boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.13)' }}
-                className="w-full sm:w-1/2 md:w-1/3 px-2 flex"
+                className="w-full sm:w-1/2 md:w-1/3 px-2 flex bg-transparent"
               >
                 <div
                   className="h-full w-full p-8 text-center rounded-3xl transition-all duration-300 ease-in-out shadow-lg hover:shadow-2xl border bg-card hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary outline-none flex flex-col items-center justify-center gap-2"
@@ -102,7 +95,7 @@ export default function AboutSection() {
                       {stat.label}
                     </p>
                   </div>
-                </motion.div>
+                </div>
             ))}
           </div>
         </div>

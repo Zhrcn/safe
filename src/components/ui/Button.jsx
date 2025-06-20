@@ -3,6 +3,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background shadow-sm",
@@ -31,14 +32,29 @@ const buttonVariants = cva(
 );
 
 const Button = React.forwardRef(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, logo = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          "!text-white" // Force white text for all buttons for high contrast
+        )}
         ref={ref}
         {...props}
-      />
+      >
+        {logo && (
+          <Image
+            src="/logo(1).png"
+            alt="Logo"
+            width={22}
+            height={22}
+            className="mr-2 grayscale contrast-200 brightness-0"
+            style={{ filter: 'grayscale(1) brightness(0) invert(0)' }}
+          />
+        )}
+        {props.children}
+      </Comp>
     );
   }
 );

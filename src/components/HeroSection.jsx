@@ -1,6 +1,6 @@
 'use client';
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useAnimation } from 'framer-motion';
 import { APP_NAME, APP_DESCRIPTION } from '@/config/app-config';
 import { Button } from '@/components/ui/Button';
 
@@ -11,23 +11,38 @@ export default function HeroSection() {
       section.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Parallax effect
+  const containerRef = useRef(null);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e) => {
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    setParallax({ x, y });
+  };
+  const handleMouseLeave = () => setParallax({ x: 0, y: 0 });
+
+  // Color cycling for SVG background
+  const [colorIndex, setColorIndex] = useState(0);
+  const colorCycle = [
+    'var(--color-primary)',
+    'var(--color-secondary)',
+    'var(--color-success)',
+    'var(--color-warning)',
+    'var(--color-accent)',
+    'var(--color-muted)',
+    'var(--color-background)'
+  ];
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIndex((i) => (i + 1) % colorCycle.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-16 md:py-24">
-      <div className="absolute bottom-0 left-0 w-full h-[70px] sm:h-[100px] md:h-[120px] z-10 pointer-events-none select-none">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 1440 320"
-          className="absolute bottom-0 w-full h-full"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path
-            fill="white"
-            fillOpacity="1"
-            d="M0,224L48,197.3C96,171,192,117,288,122.7C384,128,480,192,576,197.3C672,203,768,149,864,133.3C960,117,1056,139,1152,154.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
-      </div>
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-16 md:py-24 mt-[116px]">
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-6 flex flex-col items-start justify-center">
@@ -53,6 +68,7 @@ export default function HeroSection() {
                   <Button
                     onClick={() => scrollToSection('roles')}
                     className="px-7 py-3 text-base font-semibold rounded-full bg-secondary text-secondary-foreground shadow-lg hover:bg-secondary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary relative"
+                    logo
                   >
                     Get Started
                   </Button>
@@ -73,38 +89,67 @@ export default function HeroSection() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative w-full h-[400px] flex justify-center items-center">
-                {/* Dashboard SVG Illustration */}
-                <svg
+              <motion.div
+                ref={containerRef}
+                className="relative w-full h-[400px] flex justify-center items-center"
+                animate={{
+                  y: [0, -18, 0, 18, 0],
+                  scale: [1, 1.04, 1, 0.98, 1],
+                  filter: [
+                    'brightness(1)',
+                    'brightness(1.08)',
+                    'brightness(1)',
+                    'brightness(0.96)',
+                    'brightness(1)'
+                  ],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+              >
+                {/* Dashboard SVG Illustration with parallax and color cycling */}
+                <motion.svg
                   width="380"
                   height="340"
                   viewBox="0 0 380 340"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-full h-full max-w-[380px] max-h-[340px] drop-shadow-2xl"
+                  style={{
+                    x: parallax.x * 18,
+                    y: parallax.y * 18,
+                  }}
                 >
                   <rect x="20" y="40" width="340" height="220" rx="32" fill="#fff" fillOpacity="0.9" />
-                  <rect x="40" y="60" width="120" height="40" rx="12" fill="#E0F2FE" />
-                  <rect x="180" y="60" width="140" height="40" rx="12" fill="#F1F5F9" />
-                  <rect x="40" y="120" width="280" height="24" rx="8" fill="#F1F5F9" />
-                  <rect x="40" y="160" width="80" height="40" rx="12" fill="#E0F2FE" />
-                  <rect x="140" y="160" width="180" height="40" rx="12" fill="#F1F5F9" />
-                  <circle cx="320" cy="220" r="24" fill="#E0F2FE" />
-                  <rect x="60" y="220" width="60" height="20" rx="8" fill="#F1F5F9" />
-                  <rect x="140" y="220" width="120" height="20" rx="8" fill="#F1F5F9" />
-                  <rect x="280" y="220" width="20" height="20" rx="8" fill="#F1F5F9" />
+                  <rect x="40" y="60" width="120" height="40" rx="12" fill={colorCycle[(colorIndex+0)%colorCycle.length]} />
+                  <rect x="180" y="60" width="140" height="40" rx="12" fill={colorCycle[(colorIndex+1)%colorCycle.length]} />
+                  <rect x="40" y="120" width="280" height="24" rx="8" fill={colorCycle[(colorIndex+2)%colorCycle.length]} />
+                  <rect x="40" y="160" width="80" height="40" rx="12" fill={colorCycle[(colorIndex+3)%colorCycle.length]} />
+                  <rect x="140" y="160" width="180" height="40" rx="12" fill={colorCycle[(colorIndex+4)%colorCycle.length]} />
+                  <circle cx="320" cy="220" r="24" fill={colorCycle[(colorIndex+5)%colorCycle.length]} />
+                  <rect x="60" y="220" width="60" height="20" rx="8" fill={colorCycle[(colorIndex+6)%colorCycle.length]} />
+                  <rect x="140" y="220" width="120" height="20" rx="8" fill={colorCycle[(colorIndex+1)%colorCycle.length]} />
+                  <rect x="280" y="220" width="20" height="20" rx="8" fill={colorCycle[(colorIndex+2)%colorCycle.length]} />
                   {/* Chart lines */}
                   <polyline points="60,200 100,180 140,210 180,170 220,200 260,160 300,210" stroke="#38BDF8" strokeWidth="3" fill="none" />
                   {/* Avatars */}
                   <circle cx="60" cy="90" r="12" fill="#38BDF8" />
                   <circle cx="90" cy="90" r="12" fill="#FBBF24" />
                   <circle cx="120" cy="90" r="12" fill="#F87171" />
-                </svg>
-                {/* Animated floating widgets */}
+                </motion.svg>
+                {/* Animated floating widgets with parallax */}
                 <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.6 }}
+                  animate={{
+                    y: [0, -10, 0, 10, 0],
+                    scale: [1, 1.08, 1, 0.96, 1],
+                    x: parallax.x * 10,
+                    y: parallax.y * 10 - 40,
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   className="absolute left-4 top-4 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
                   style={{ minWidth: 90 }}
                 >
@@ -112,9 +157,13 @@ export default function HeroSection() {
                   <span className="text-lg font-bold text-foreground">3 Appts</span>
                 </motion.div>
                 <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.8 }}
+                  animate={{
+                    y: [0, 10, 0, -10, 0],
+                    scale: [1, 1.08, 1, 0.96, 1],
+                    x: parallax.x * 10 + 40,
+                    y: parallax.y * 10 + 40,
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
                   className="absolute right-8 bottom-8 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
                   style={{ minWidth: 90 }}
                 >
@@ -122,16 +171,20 @@ export default function HeroSection() {
                   <span className="text-lg font-bold text-foreground">5 Active</span>
                 </motion.div>
                 <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 1, delay: 1 }}
+                  animate={{
+                    y: [0, -8, 0, 8, 0],
+                    scale: [1, 1.08, 1, 0.96, 1],
+                    x: parallax.x * 10,
+                    y: parallax.y * 10 + 60,
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
                   className="absolute left-1/2 -translate-x-1/2 bottom-2 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
                   style={{ minWidth: 90 }}
                 >
                   <span className="text-xs font-semibold text-primary mb-1">Patients</span>
                   <span className="text-lg font-bold text-foreground">12</span>
                 </motion.div>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>

@@ -158,7 +158,7 @@ export default function RolesSection() {
   return (
     <section
       id="roles"
-      className="relative overflow-hidden py-20 sm:py-28 w-full bg-muted">
+      className="relative overflow-hidden py-20 sm:py-28 w-full">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
         style={{
