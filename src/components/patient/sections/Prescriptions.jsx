@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/Button';
 
-// For action buttons (e.g., Download, Request Refill):
 <div className="flex gap-2 mt-4">
   <Button
     onClick={handleDownload}

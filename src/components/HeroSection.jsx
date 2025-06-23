@@ -12,18 +12,16 @@ export default function HeroSection() {
     }
   };
 
-  // Parallax effect
   const containerRef = useRef(null);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const handleMouseMove = (e) => {
     const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
     setParallax({ x, y });
   };
   const handleMouseLeave = () => setParallax({ x: 0, y: 0 });
 
-  // Color cycling for SVG background
   const [colorIndex, setColorIndex] = useState(0);
   const colorCycle = [
     'var(--color-primary)',
@@ -42,9 +40,12 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-16 md:py-24 mt-[116px]">
+    <section className="relative overflow-hidden text-primary-foreground py-16 md:py-20 bg-transparent mt-0">
+      <div className="absolute inset-0 z-0 pointer-events-none select-none">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] rounded-full bg-gradient-radial from-primary/20 via-secondary/10 to-background opacity-50 dark:opacity-30 animate-pulse-slow blur-2xl" />
+      </div>
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-14 items-center">
           <div className="md:col-span-6 flex flex-col items-start justify-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -52,30 +53,29 @@ export default function HeroSection() {
               transition={{ duration: 0.8 }}
               className="w-full"
             >
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight tracking-tight drop-shadow-xl">
+              <h1 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight tracking-tight drop-shadow-xl text-shadow-lg text-primary dark:text-white dark:drop-shadow-[0_4px_32px_rgba(0,180,255,0.25)]">
                 {APP_NAME} Medical Platform
               </h1>
-              <p className="text-lg md:text-2xl mb-10 opacity-90 max-w-2xl font-normal">
+              <p className="text-xl md:text-2xl mb-12 opacity-90 max-w-2xl font-normal text-muted-foreground dark:text-muted">
                 {APP_DESCRIPTION}
               </p>
-              <div className="flex flex-wrap sm:flex-nowrap gap-4">
+              <div className="flex flex-wrap sm:flex-nowrap gap-8 mt-4">
                 <motion.div
                   initial={{ boxShadow: '0 0 0 0 rgba(0,0,0,0)' }}
                   animate={{ boxShadow: '0 0 32px 0 var(--color-secondary, #00A3E0)' }}
                   transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
-                  className="rounded-full"
+                  className="rounded-full animate-pulse-fast"
                 >
                   <Button
                     onClick={() => scrollToSection('roles')}
-                    className="px-7 py-3 text-base font-semibold rounded-full bg-secondary text-secondary-foreground shadow-lg hover:bg-secondary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary relative"
-                    logo
+                    className="px-10 py-5 text-xl font-extrabold rounded-full bg-gradient-to-tr from-primary to-blue-500 text-primary dark:text-white shadow-2xl hover:from-blue-600 hover:to-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 border-none drop-shadow-xl"
                   >
                     Get Started
                   </Button>
                 </motion.div>
                 <Button
                   onClick={() => scrollToSection('features')}
-                  className="px-7 py-3 text-base font-semibold rounded-full border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary shadow"
+                  className="px-10 py-5 text-xl font-bold rounded-full border-4 border-primary text-primary bg-white hover:bg-primary/10 hover:text-primary-foreground transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 shadow-lg dark:border-white dark:text-white dark:bg-transparent"
                 >
                   Learn More
                 </Button>
@@ -91,7 +91,7 @@ export default function HeroSection() {
             >
               <motion.div
                 ref={containerRef}
-                className="relative w-full h-[400px] flex justify-center items-center"
+                className="relative w-full h-[420px] flex justify-center items-center bg-white/40 dark:bg-[#232a36]/60 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-3xl shadow-xl"
                 animate={{
                   y: [0, -18, 0, 18, 0],
                   scale: [1, 1.04, 1, 0.98, 1],
@@ -111,7 +111,6 @@ export default function HeroSection() {
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
-                {/* Dashboard SVG Illustration with parallax and color cycling */}
                 <motion.svg
                   width="380"
                   height="340"
@@ -134,14 +133,11 @@ export default function HeroSection() {
                   <rect x="60" y="220" width="60" height="20" rx="8" fill={colorCycle[(colorIndex+6)%colorCycle.length]} />
                   <rect x="140" y="220" width="120" height="20" rx="8" fill={colorCycle[(colorIndex+1)%colorCycle.length]} />
                   <rect x="280" y="220" width="20" height="20" rx="8" fill={colorCycle[(colorIndex+2)%colorCycle.length]} />
-                  {/* Chart lines */}
                   <polyline points="60,200 100,180 140,210 180,170 220,200 260,160 300,210" stroke="#38BDF8" strokeWidth="3" fill="none" />
-                  {/* Avatars */}
                   <circle cx="60" cy="90" r="12" fill="#38BDF8" />
                   <circle cx="90" cy="90" r="12" fill="#FBBF24" />
                   <circle cx="120" cy="90" r="12" fill="#F87171" />
                 </motion.svg>
-                {/* Animated floating widgets with parallax */}
                 <motion.div
                   animate={{
                     y: [0, -10, 0, 10, 0],
@@ -150,7 +146,7 @@ export default function HeroSection() {
                     y: parallax.y * 10 - 40,
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute left-4 top-4 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
+                  className="absolute left-4 top-4 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
                   <span className="text-xs font-semibold text-primary mb-1">Today</span>
@@ -164,7 +160,7 @@ export default function HeroSection() {
                     y: parallax.y * 10 + 40,
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                  className="absolute right-8 bottom-8 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
+                  className="absolute right-8 bottom-8 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
                   <span className="text-xs font-semibold text-primary mb-1">Prescriptions</span>
@@ -178,7 +174,7 @@ export default function HeroSection() {
                     y: parallax.y * 10 + 60,
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-                  className="absolute left-1/2 -translate-x-1/2 bottom-2 bg-white/90 rounded-xl shadow-lg px-4 py-2 flex flex-col items-center"
+                  className="absolute left-1/2 -translate-x-1/2 bottom-2 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
                   <span className="text-xs font-semibold text-primary mb-1">Patients</span>

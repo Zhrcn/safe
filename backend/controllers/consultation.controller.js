@@ -1,7 +1,6 @@
 const Consultation = require('../models/Consultation');
 const asyncHandler = require('express-async-handler');
 
-// Get all consultations for the logged-in user (patient or doctor)
 const getConsultations = asyncHandler(async (req, res) => {
   const filter = {
     $or: [
@@ -19,7 +18,6 @@ const getConsultations = asyncHandler(async (req, res) => {
   });
 });
 
-// Patient asks a question
 const requestConsultation = asyncHandler(async (req, res) => {
   const { doctorId, question } = req.body;
   const consultation = await Consultation.create({
@@ -36,7 +34,6 @@ const requestConsultation = asyncHandler(async (req, res) => {
   });
 });
 
-// Doctor answers the question
 const answerConsultation = asyncHandler(async (req, res) => {
   const consultation = await Consultation.findById(req.params.id);
   if (!consultation) {
@@ -58,14 +55,12 @@ const answerConsultation = asyncHandler(async (req, res) => {
   });
 });
 
-// Update a consultation (e.g., question or status)
 const updateConsultation = asyncHandler(async (req, res) => {
   const consultation = await Consultation.findById(req.params.id);
   if (!consultation) {
     res.status(404);
     throw new Error('Consultation not found');
   }
-  // Allow updating question or status (expand as needed)
   if (req.body.question !== undefined) consultation.question = req.body.question;
   if (req.body.status !== undefined) consultation.status = req.body.status;
   await consultation.save();

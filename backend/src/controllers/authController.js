@@ -2,12 +2,10 @@ const User = require('../../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// Register controller
 exports.register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName } = req.body;
 
-        // Validate input
         if (!email || !password || !role || !firstName || !lastName) {
             return res.status(400).json({
                 success: false,
@@ -15,7 +13,6 @@ exports.register = async (req, res) => {
             });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
@@ -24,7 +21,6 @@ exports.register = async (req, res) => {
             });
         }
 
-        // Create user
         const user = await User.create({
             email,
             password,
@@ -33,14 +29,12 @@ exports.register = async (req, res) => {
             lastName
         });
 
-        // Generate token
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '30d' }
         );
 
-        // Send response
         res.status(201).json({
             success: true,
             message: 'Registration successful',
@@ -63,12 +57,10 @@ exports.register = async (req, res) => {
     }
 };
 
-// Login controller
 exports.login = async (req, res) => {
     try {
         const { email, password, role } = req.body;
 
-        // Validate input
         if (!email || !password || !role) {
             return res.status(400).json({
                 success: false,
@@ -76,7 +68,6 @@ exports.login = async (req, res) => {
             });
         }
 
-        // Find user
         const user = await User.findOne({ email, role });
         if (!user) {
             return res.status(401).json({
@@ -85,7 +76,6 @@ exports.login = async (req, res) => {
             });
         }
 
-        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
@@ -94,14 +84,12 @@ exports.login = async (req, res) => {
             });
         }
 
-        // Generate token
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '30d' }
         );
 
-        // Send response
         res.status(200).json({
             success: true,
             message: 'Login successful',
@@ -124,7 +112,6 @@ exports.login = async (req, res) => {
     }
 };
 
-// Get current user
 exports.getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
@@ -155,7 +142,6 @@ exports.getCurrentUser = async (req, res) => {
     }
 };
 
-// Verify token
 exports.verifyToken = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
@@ -186,11 +172,8 @@ exports.verifyToken = async (req, res) => {
     }
 };
 
-// Logout controller
 exports.logout = async (req, res) => {
     try {
-        // Since we're using JWT, we don't need to do anything on the server side
-        // The client should remove the token from local storage
         res.status(200).json({
             success: true,
             message: 'Logout successful'

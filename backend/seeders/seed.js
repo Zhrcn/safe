@@ -13,7 +13,6 @@ const Conversation = require('../models/Conversation');
 const Notification = require('../models/Notification');
 const Pharmacist = require('../models/Pharmacist');
 
-// Debug environment variables
 console.log('Environment variables:', {
     NODE_ENV: process.env.NODE_ENV,
     MONGO_URI: process.env.MONGO_URI,
@@ -22,13 +21,11 @@ console.log('Environment variables:', {
 
 console.log('Loaded MONGO_URI:', process.env.MONGO_URI);
 
-// Ensure MONGO_URI is defined
 if (!process.env.MONGO_URI) {
     console.error('MONGO_URI is not defined in environment variables');
     process.exit(1);
 }
 
-// Connect to MongoDB with options
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -113,7 +110,6 @@ const seedDatabase = async () => {
       gender: 'male'
     });
 
-    // Create pharmacist user and profile
     const pharmacistUser = await User.create({
       firstName: 'Pharmacist',
       lastName: 'User',

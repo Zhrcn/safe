@@ -6,7 +6,6 @@ import {
     mockSystemLogs 
 } from '@/data/mock/adminData';
 
-// Get admin profile
 export const getAdminProfile = async () => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -17,7 +16,6 @@ export const getAdminProfile = async () => {
     }
 };
 
-// Get all users
 export const getUsers = async () => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -28,7 +26,6 @@ export const getUsers = async () => {
     }
 };
 
-// Get user by ID
 export const getUserById = async (userId) => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -43,7 +40,6 @@ export const getUserById = async (userId) => {
     }
 };
 
-// Update user
 export const updateUser = async (userId, data) => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -59,7 +55,6 @@ export const updateUser = async (userId, data) => {
     }
 };
 
-// Delete user
 export const deleteUser = async (userId) => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -75,7 +70,6 @@ export const deleteUser = async (userId) => {
     }
 };
 
-// Get system stats
 export const getStats = async () => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -86,7 +80,6 @@ export const getStats = async () => {
     }
 };
 
-// Get notifications
 export const getNotifications = async () => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -97,7 +90,6 @@ export const getNotifications = async () => {
     }
 };
 
-// Get system logs
 export const getSystemLogs = async () => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -108,7 +100,6 @@ export const getSystemLogs = async () => {
     }
 };
 
-// Mark notification as read
 export const markNotificationAsRead = async (notificationId) => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));

@@ -15,16 +15,13 @@ export const useSession = () => {
             dispatch(checkSessionTimeout());
         };
 
-        // Add event listeners for user activity
         const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
         events.forEach(event => {
             window.addEventListener(event, handleUserActivity);
         });
 
-        // Check session timeout periodically
-        const intervalId = setInterval(checkSession, 60000); // Check every minute
+        const intervalId = setInterval(checkSession, 60000);
 
-        // Cleanup
         return () => {
             events.forEach(event => {
                 window.removeEventListener(event, handleUserActivity);

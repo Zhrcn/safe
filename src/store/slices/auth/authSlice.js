@@ -3,7 +3,6 @@ import { userApi } from '@/store/services/user/userApi';
 import { users } from '@/mockdata/users';
 import { AUTH_CONSTANTS, ROLES } from '@/config/constants';
 
-// Helper functions for localStorage
 const getStoredToken = () => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY);
@@ -21,7 +20,7 @@ const getStoredUser = () => {
 
 const getStoredSessionTimeout = () => {
     if (typeof window !== 'undefined') {
-        return parseInt(localStorage.getItem('sessionTimeout')) || 30 * 60 * 1000; // 30 minutes default
+        return parseInt(localStorage.getItem('sessionTimeout')) || 30 * 60 * 1000;
     }
     return 30 * 60 * 1000;
 };
@@ -131,7 +130,6 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Login success
             .addMatcher(
                 userApi.endpoints.login.matchFulfilled,
                 (state, { payload }) => {
@@ -158,7 +156,6 @@ const authSlice = createSlice({
                     }
                 }
             )
-            // Login failure
             .addMatcher(
                 userApi.endpoints.login.matchRejected,
                 (state, { payload }) => {
@@ -166,7 +163,6 @@ const authSlice = createSlice({
                     state.error = payload?.data?.message || 'Login failed';
                 }
             )
-            // Get current user success
             .addMatcher(
                 userApi.endpoints.getCurrentUser.matchFulfilled,
                 (state, { payload }) => {
@@ -204,7 +200,6 @@ const authSlice = createSlice({
                     }
                 }
             )
-            // Get current user failure
             .addMatcher(
                 userApi.endpoints.getCurrentUser.matchRejected,
                 (state, { payload }) => {
@@ -218,7 +213,6 @@ const authSlice = createSlice({
                     state.authChecked = true;
                 }
             )
-            // Token verification success
             .addMatcher(
                 (action) => action.type.endsWith('/fulfilled') && action.type.includes('verifyToken'),
                 (state, { payload }) => {
@@ -240,7 +234,6 @@ const authSlice = createSlice({
                     }
                 }
             )
-            // Token verification failure
             .addMatcher(
                 (action) => action.type.endsWith('/rejected') && action.type.includes('verifyToken'),
                 (state, { payload }) => {
@@ -268,7 +261,6 @@ export const {
     checkSessionTimeout
 } = authSlice.actions;
 
-// Selectors
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectAuthToken = (state) => state.auth.token;

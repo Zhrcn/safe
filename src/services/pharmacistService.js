@@ -6,10 +6,8 @@ import {
     mockStats 
 } from '@/data/mock/pharmacistData';
 
-// Get pharmacist's inventory
 export const getInventory = async () => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         return mockInventory;
     } catch (error) {
@@ -18,10 +16,8 @@ export const getInventory = async () => {
     }
 };
 
-// Get prescriptions assigned to pharmacist
 export const getPrescriptions = async () => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         return mockPrescriptions;
     } catch (error) {
@@ -30,10 +26,8 @@ export const getPrescriptions = async () => {
     }
 };
 
-// Get pharmacist's profile
 export const getPharmacistProfile = async () => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         return mockPharmacistProfile;
     } catch (error) {
@@ -42,10 +36,8 @@ export const getPharmacistProfile = async () => {
     }
 };
 
-// Get pharmacist's notifications
 export const getNotifications = async () => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         return mockNotifications;
     } catch (error) {
@@ -54,10 +46,8 @@ export const getNotifications = async () => {
     }
 };
 
-// Get pharmacist's stats
 export const getStats = async () => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         return mockStats;
     } catch (error) {
@@ -66,10 +56,8 @@ export const getStats = async () => {
     }
 };
 
-// Update prescription status
 export const updatePrescriptionStatus = async (prescriptionId, status) => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         const prescription = mockPrescriptions.find(p => p.id === prescriptionId);
         if (prescription) {
@@ -83,10 +71,8 @@ export const updatePrescriptionStatus = async (prescriptionId, status) => {
     }
 };
 
-// Update inventory item
 export const updateInventoryItem = async (itemId, data) => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         const item = mockInventory.find(i => i.id === itemId);
         if (item) {
@@ -100,10 +86,8 @@ export const updateInventoryItem = async (itemId, data) => {
     }
 };
 
-// Add new inventory item
 export const addInventoryItem = async (data) => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         const newItem = {
             id: `inv_${String(mockInventory.length + 1).padStart(3, '0')}`,
@@ -117,10 +101,8 @@ export const addInventoryItem = async (data) => {
     }
 };
 
-// Delete inventory item
 export const deleteInventoryItem = async (itemId) => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         const index = mockInventory.findIndex(i => i.id === itemId);
         if (index !== -1) {

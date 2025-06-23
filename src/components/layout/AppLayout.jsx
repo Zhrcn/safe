@@ -107,7 +107,6 @@ const getSidebarItems = (role) => {
     return roleItems[roleLower] || roleItems.patient;
 };
 
-// Fallback mock user for demo if user is missing or incomplete
 const fallbackUser = {
   firstName: "John",
   lastName: "Doe",
@@ -159,7 +158,6 @@ export default function AppLayout({
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);
-            // Even if the API call fails, redirect to login
             router.push('/login');
         }
     };

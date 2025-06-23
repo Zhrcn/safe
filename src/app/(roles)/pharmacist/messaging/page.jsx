@@ -24,7 +24,6 @@ export default function PharmacistMessagingPage() {
   const typingTimeout = useRef(null);
 
   useEffect(() => {
-    // Add unreadCount to each conversation
     const withUnread = mockConversations.map(conv => ({
       ...conv,
       unreadCount: getUnreadCount(conv.messages || []),
@@ -41,7 +40,6 @@ export default function PharmacistMessagingPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Mark messages as read when opening a chat
   useEffect(() => {
     if (!selected) return;
     const updated = conversations.map(conv => {
@@ -60,7 +58,6 @@ export default function PharmacistMessagingPage() {
     setConversations(sortConversations(updated));
   }, [selected?.id]);
 
-  // Mock: show typing indicator after 2s of opening a chat, hide after 3s
   useEffect(() => {
     if (!selected) return;
     setTyping(false);
@@ -82,7 +79,6 @@ export default function PharmacistMessagingPage() {
 
   const handleSend = () => {
     if (!newMessage.trim() || !selected) return;
-    // Add new message to selected conversation
     const updatedConv = {
       ...selected,
       messages: [
@@ -99,7 +95,6 @@ export default function PharmacistMessagingPage() {
       lastMessageTime: new Date(),
       unreadCount: 0,
     };
-    // Simulate a reply after 1.5s
     setTimeout(() => {
       const reply = {
         id: Date.now() + 1,
@@ -127,7 +122,6 @@ export default function PharmacistMessagingPage() {
   };
 
   const handleNewChat = () => {
-    // Mock: add a new conversation
     const newId = Date.now();
     const newConv = {
       id: newId,

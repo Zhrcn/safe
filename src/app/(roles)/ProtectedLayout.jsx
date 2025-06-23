@@ -27,7 +27,6 @@ export default function ProtectedLayout({ children }) {
                     throw new Error('No authentication token found');
                 }
 
-                // Verify token with backend
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
                 const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
                     method: 'GET',
@@ -46,8 +45,7 @@ export default function ProtectedLayout({ children }) {
                     throw new Error('Token verification failed');
                 }
 
-                // Check role-based access
-                const currentRole = pathname.split('/')[1]; // Get role from URL
+                const currentRole = pathname.split('/')[1];
                 if (currentRole && currentRole !== userRole) {
                     throw new Error('Unauthorized access');
                 }

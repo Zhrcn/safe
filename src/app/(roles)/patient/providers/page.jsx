@@ -209,15 +209,14 @@ const ProvidersPageContent = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [specialtyFilter, setSpecialtyFilter] = useState('all');
     const [locationFilter, setLocationFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('rating'); // New state for sorting
-    const [sortOrder, setSortOrder] = useState('desc'); // New state for sort order (asc/desc)
+    const [sortBy, setSortBy] = useState('rating');
+    const [sortOrder, setSortOrder] = useState('desc'); 
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogProvider, setDialogProvider] = useState(null);
     const [dialogType, setDialogType] = useState('');
     const [messageContent, setMessageContent] = useState('');
 
-    // Mock Data - Replace with actual API data
     const allDoctors = [
         {
             id: 'doc1',
@@ -343,8 +342,10 @@ const ProvidersPageContent = () => {
             {type === 'doctors' && (
                 <Button asChild>
                     <Link href="/patient/appointments/new">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Book New Appointment
+                        <span className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            <span>Book New Appointment</span>
+                        </span>
                     </Link>
                 </Button>
             )}
@@ -356,7 +357,6 @@ const ProvidersPageContent = () => {
     const renderContent = () => {
         let filteredProviders = activeTab === 'doctors' ? allDoctors : allPharmacies;
 
-        // Apply search query
         if (searchQuery) {
             filteredProviders = filteredProviders.filter(provider => 
                 provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -366,21 +366,18 @@ const ProvidersPageContent = () => {
             );
         }
 
-        // Apply specialty filter (for doctors)
         if (activeTab === 'doctors' && specialtyFilter !== 'all') {
             filteredProviders = filteredProviders.filter(provider => 
                 provider.specialization === specialtyFilter
             );
         }
 
-        // Apply location filter (for doctors)
         if (activeTab === 'doctors' && locationFilter !== 'all') {
             filteredProviders = filteredProviders.filter(provider => 
                 provider.hospital === locationFilter
             );
         }
 
-        // Apply sorting
         filteredProviders.sort((a, b) => {
             let compareA, compareB;
             if (sortBy === 'name') {
@@ -393,7 +390,7 @@ const ProvidersPageContent = () => {
                 compareA = a.yearsExperience || 0;
                 compareB = b.yearsExperience || 0;
             } else {
-                return 0; // No valid sorting key
+                return 0; 
             }
 
             if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1;
@@ -549,8 +546,7 @@ const ProvidersPageContent = () => {
                         ) : (
                             <Button onClick={() => {
                                 handleCloseDialog();
-                                // Assuming a medicine check page exists
-                                // router.push('/patient/medications/check'); 
+                                
                             }}>Proceed</Button>
                         )}
                     </DialogFooter>

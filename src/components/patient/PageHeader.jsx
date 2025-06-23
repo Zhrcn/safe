@@ -22,7 +22,6 @@ export default function PageHeader({
   const pathname = usePathname();
   const user = useAppSelector(selectCurrentUser);
 
-  // Generate breadcrumbs based on the current path
   const pathSegments = pathname.split('/').filter(Boolean);
   const generatedBreadcrumbs = pathSegments.map((segment, index) => {
     const href = '/' + pathSegments.slice(0, index + 1).join('/');
@@ -30,7 +29,6 @@ export default function PageHeader({
     return { href, label };
   });
 
-  // Use provided breadcrumbs or generated ones
   const finalBreadcrumbs = breadcrumbs.length > 0 ? breadcrumbs : generatedBreadcrumbs;
 
   return (

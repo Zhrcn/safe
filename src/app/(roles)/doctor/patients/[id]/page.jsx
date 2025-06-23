@@ -357,14 +357,11 @@ const PatientPageContent = () => {
     const handleSendMessage = () => {
         router.push(`/chat/${patient.id}`);
     };
-    // Filter consultations for this patient
     const patientConsultations = mockConsultations.filter(c => c.patientId === params.id);
     const handleAnswerChange = (consultationId, value) => {
         setAnswerInputs(prev => ({ ...prev, [consultationId]: value }));
     };
     const handleAnswerSubmit = (consultationId) => {
-        // Here you would call the mutation to answer the consultation
-        // For now, just show a notification
         showNotification('Answer submitted!', 'success');
         setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
     };

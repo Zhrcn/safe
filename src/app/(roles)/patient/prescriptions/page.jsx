@@ -39,7 +39,6 @@ const pillColors = [
 const getPillColor = (idx) => pillColors[idx % pillColors.length];
 
 const AnimatedStatusBadge = ({ status }) => {
-  // Animate for active/pending
   const animated = status === 'active' || status === 'pending';
   return (
     <span className={animated ? 'animate-pulse' : ''}>
@@ -309,7 +308,6 @@ const PrescriptionsPage = () => {
             setLoading(true);
             setError(null);
             let filtered = mockPatientData.prescriptions || [];
-            // Apply search term filter
             if (searchTerm) {
                 filtered = filtered.filter(
                     (p) =>
@@ -319,11 +317,9 @@ const PrescriptionsPage = () => {
                         )
                 );
             }
-            // Apply status filter
             if (filterStatus !== 'all') {
                 filtered = filtered.filter((p) => p.status === filterStatus);
             }
-            // Apply sorting
             filtered.sort((a, b) => {
                 let comparison = 0;
                 if (sortBy === 'date') {

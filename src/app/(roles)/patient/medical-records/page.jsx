@@ -82,11 +82,12 @@ const RecordCard = ({ record, onView, onDownload }) => {
                                 size="sm"
                                 onClick={() => onView(record)}
                                 className="flex items-center gap-2"
-                                asChild
                             >
                                 <Link href={`/patient/medical-records/${record.id}`}>
-                                    <Eye className="h-4 w-4" />
-                                    View
+                                    <span className="flex items-center gap-2">
+                                        <Eye className="h-4 w-4" />
+                                        View
+                                    </span>
                                 </Link>
                             </Button>
                             <Button
@@ -118,7 +119,6 @@ const MedicalRecordsPage = () => {
     };
 
     const handleDownloadRecord = (record) => {
-        // Implement download functionality
         console.log('Downloading record:', record);
     };
 
@@ -155,17 +155,19 @@ const MedicalRecordsPage = () => {
                         />
                     </div>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger >
                             <Button variant="outline" className="w-[180px] justify-between">
-                                {(() => {
-                                    switch (typeFilter) {
-                                        case 'lab result': return 'Lab Results';
-                                        case 'prescription': return 'Prescriptions';
-                                        case 'imaging': return 'Imaging';
-                                        case 'note': return 'Notes';
-                                        default: return 'All Types';
-                                    }
-                                })()}
+                                <span>
+                                    {(() => {
+                                        switch (typeFilter) {
+                                            case 'lab result': return 'Lab Results';
+                                            case 'prescription': return 'Prescriptions';
+                                            case 'imaging': return 'Imaging';
+                                            case 'note': return 'Notes';
+                                            default: return 'All Types';
+                                        }
+                                    })()}
+                                </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -177,9 +179,11 @@ const MedicalRecordsPage = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger >
                             <Button variant="outline" className="w-[180px] justify-between">
-                                {dateFilter === 'all' ? 'All Time' : dateFilter}
+                                <span>
+                                    {dateFilter === 'all' ? 'All Time' : dateFilter}
+                                </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -190,10 +194,12 @@ const MedicalRecordsPage = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <Button asChild className="w-full md:w-auto">
+                <Button  className="w-full md:w-auto">
                     <Link href="/patient/medical-records/upload">
-                        <FileUp className="h-4 w-4 mr-2" />
-                        Upload Record
+                        <span className="flex items-center gap-2">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Upload New Record
+                        </span>
                     </Link>
                 </Button>
             </div>
@@ -210,34 +216,37 @@ const MedicalRecordsPage = () => {
                     <TabsTrigger value="note">Notes</TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
-                    {/* Records List */}
-                    <div className="grid gap-4">
-                        {filteredRecords.length > 0 ? (
-                            filteredRecords.map((record) => (
-                                <RecordCard
-                                    key={record.id}
-                                    record={record}
-                                    onView={handleViewRecord}
-                                    onDownload={handleDownloadRecord}
-                                />
-                            ))
-                        ) : (
-                            <div className="text-center py-12 bg-card rounded-lg shadow-sm">
-                                <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
-                                <h3 className="text-xl font-semibold mb-3 text-foreground">No Medical Records Found</h3>
-                                <p className="text-muted-foreground mb-6">
-                                    {searchQuery || typeFilter !== 'all' || dateFilter !== 'all'
-                                        ? 'Try adjusting your search or filters to find records.'
-                                        : 'You don\'t have any medical records here yet. Upload your first document!'}
-                                </p>
-                                <Button asChild>
-                                    <Link href="/patient/medical-records/upload">
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Upload New Record
-                                    </Link>
-                                </Button>
-                            </div>
-                        )}
+                    <div>
+                        <div className="grid gap-4">
+                            {filteredRecords.length > 0 ? (
+                                filteredRecords.map((record) => (
+                                    <RecordCard
+                                        key={record.id}
+                                        record={record}
+                                        onView={handleViewRecord}
+                                        onDownload={handleDownloadRecord}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                                    <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
+                                    <h3 className="text-xl font-semibold mb-3 text-foreground">No Medical Records Found</h3>
+                                    <p className="text-muted-foreground mb-6">
+                                        {searchQuery || typeFilter !== 'all' || dateFilter !== 'all'
+                                            ? 'Try adjusting your search or filters to find records.'
+                                            : 'You don\'t have any medical records here yet. Upload your first document!'}
+                                    </p>
+                                    <Button >
+                                        <Link href="/patient/medical-records/upload">
+                                            <span className="flex items-center gap-2">
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Upload New Record
+                                            </span>
+                                        </Link>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </TabsContent>
             </Tabs>

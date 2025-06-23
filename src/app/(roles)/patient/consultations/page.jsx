@@ -198,7 +198,6 @@ const ConsultationsPageContent = () => {
         showNotification({ message: 'Question submitted!', severity: 'success' });
         setNewConsultationDialogOpen(false);
         setQuestion('');
-        // Add to mock data for demo
         mockConsultations.unshift({
             id: `con_${mockConsultations.length + 1}`,
             doctorName: 'Dr. Alice Wonderland',

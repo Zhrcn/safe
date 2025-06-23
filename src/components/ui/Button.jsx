@@ -38,12 +38,12 @@ const Button = React.forwardRef(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          "!text-white" // Force white text for all buttons for high contrast
+          "!text-white" 
         )}
         ref={ref}
         {...props}
       >
-        {logo && (
+        {!asChild && logo && (
           <Image
             src="/logo(1).png"
             alt="Logo"
@@ -53,7 +53,7 @@ const Button = React.forwardRef(
             style={{ filter: 'grayscale(1) brightness(0) invert(0)' }}
           />
         )}
-        {props.children}
+        {!asChild && props.children}
       </Comp>
     );
   }

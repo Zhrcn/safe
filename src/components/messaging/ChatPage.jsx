@@ -33,7 +33,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
-  // Group messages and add date separators
   const grouped = [];
   let lastSender = null;
   let lastDate = null;

@@ -223,7 +223,7 @@ const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
             case 'every_6_hours': intervalHours = 6; break;
             case 'every_8_hours': intervalHours = 8; break;
             case 'every_12_hours': intervalHours = 12; break;
-            case 'as_needed': return []; // No scheduled times for as needed
+            case 'as_needed': return []; 
             default: return [];
         }
         if (intervalHours === 24) {
@@ -509,13 +509,11 @@ const MedicationsPage = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        // Simulate API call
         const fetchMedications = async () => {
             setIsLoading(true);
             setApiError(null);
             try {
-                // In a real app, you'd fetch from your backend
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 dispatch(setActiveMedications(medications));
             } catch (err) {
                 setApiError('Failed to load medications.');
@@ -539,21 +537,17 @@ const MedicationsPage = () => {
     };
 
     const handleDeleteMedication = (id) => {
-        // In a real app, this would be an API call to delete
         console.log('Deleting medication with ID:', id);
         showNotification('Medication deleted successfully!', 'success');
-        // Optimistically update UI or re-fetch data
     };
 
     const handleSaveMedication = (formData) => {
         console.log('Saving medication:', formData);
-        // In a real app, this would be an API call to save
         setMedicationDialogOpen(false);
     };
 
     const handleRefill = (medication) => {
         showNotification(`Requesting refill for ${medication.name}...`, 'info');
-        // Implement refill logic, likely API call
     };
 
     const handleViewDetails = (medication) => {
@@ -567,7 +561,6 @@ const MedicationsPage = () => {
     };
 
     const handleReminderUpdate = (formData) => {
-        // This would typically involve an API call to update reminder settings
         console.log('Updating reminder for:', selectedMedication.name, formData);
         setReminderDialogOpen(false);
     };
@@ -575,7 +568,6 @@ const MedicationsPage = () => {
     const handleToggleReminder = (medication) => {
         const newReminderStatus = !medication.remindersEnabled;
         showNotification(`${newReminderStatus ? 'Enabled' : 'Disabled'} reminders for ${medication.name}`, 'info');
-        // In a real app, update this via API
     };
 
     const handleViewPrescriptions = () => {
@@ -640,7 +632,6 @@ const MedicationsPage = () => {
                 ]}
             />
 
-            {/* Actions Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -687,7 +678,6 @@ const MedicationsPage = () => {
 
             <Separator />
 
-            {/* Medication List */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="active">Active</TabsTrigger>

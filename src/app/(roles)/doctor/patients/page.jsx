@@ -84,22 +84,22 @@ export default function PatientsPage() {
     setPatients(prevPatients => [...prevPatients, newPatient]);
   };
   return (
-    <div className="p-6">
-      <Card className="mb-6 rounded-xl shadow-lg">
+    <div className="p-6 bg-background min-h-screen text-foreground">
+      <Card className="mb-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
-          <h1 className="text-2xl font-bold text-foreground">Patient Management</h1>
-          <Button onClick={handleOpenAddDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
+          <h1 className="text-2xl font-bold text-card-foreground">Patient Management</h1>
+          <Button onClick={handleOpenAddDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-md">
             <UserPlus className="mr-2 h-4 w-4" />
             Add New Patient
           </Button>
         </CardContent>
       </Card>
       {error && (
-        <Alert variant="destructive" className="mb-6 rounded-lg">
+        <Alert variant="destructive" className="mb-6 rounded-lg bg-destructive/10 border border-destructive text-destructive-foreground">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Card className="p-6 rounded-xl shadow-lg">
+      <Card className="p-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
@@ -108,23 +108,23 @@ export default function PatientsPage() {
                 placeholder="Search patients by name, condition, or ID..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="pl-10 bg-background rounded-lg"
+                className="pl-10 bg-background border border-border text-foreground rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
               />
             </div>
             <Button
               variant="outline"
-              className="whitespace-nowrap text-muted-foreground border-muted-foreground hover:bg-muted/50 rounded-lg"
+              className="whitespace-nowrap text-muted-foreground border border-border hover:bg-muted/50 rounded-lg shadow-sm"
             >
               <Filter className="mr-2 h-4 w-4" />
               Advanced Filters
             </Button>
           </div>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
-            <TabsList>
-              <TabsTrigger value="all">{tabLabels.all}</TabsTrigger>
-              <TabsTrigger value="active">{tabLabels.active}</TabsTrigger>
-              <TabsTrigger value="urgent">{tabLabels.urgent}</TabsTrigger>
-              <TabsTrigger value="inactive">{tabLabels.inactive}</TabsTrigger>
+            <TabsList className="bg-muted rounded-lg p-1">
+              <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.all}</TabsTrigger>
+              <TabsTrigger value="active" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.active}</TabsTrigger>
+              <TabsTrigger value="urgent" className="rounded-lg data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">{tabLabels.urgent}</TabsTrigger>
+              <TabsTrigger value="inactive" className="rounded-lg data-[state=active]:bg-muted-foreground/10 data-[state=active]:text-foreground">{tabLabels.inactive}</TabsTrigger>
             </TabsList>
           </Tabs>
           {loading ? (
@@ -134,7 +134,7 @@ export default function PatientsPage() {
           ) : filteredPatients.length === 0 ? (
             <div className="py-12 text-center">
               <UserRound className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
-              <h2 className="text-lg font-semibold text-foreground mb-2">
+              <h2 className="text-lg font-semibold text-card-foreground mb-2">
                 No patients found
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
@@ -152,20 +152,16 @@ export default function PatientsPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
               {filteredPatients.map((patient) => (
-                <Card key={patient.id} className="rounded-xl shadow-md">
-                  <CardContent className="p-4">
-                    <PatientCard patient={patient} />
-                  </CardContent>
-                </Card>
+                <PatientCard key={patient.id} patient={patient} />
               ))}
             </div>
           )}
         </CardContent>
       </Card>
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-md rounded-xl">
+        <DialogContent className="sm:max-w-md rounded-xl bg-card border border-border">
           <AddPatientForm 
             onClose={handleCloseAddDialog} 
             onSuccess={handlePatientAdded} 

@@ -19,32 +19,6 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Medical Platform Theme Colors
-        // The following 'medical' object is commented out or removed if no longer used for dynamic themeing.
-        // medical: {
-        //   primary: '#0077B6',
-        //   secondary: '#00B4D8',
-        //   success: '#2ECC71',
-        //   warning: '#F39C12',
-        //   processing: '#00B4D8',
-        //   error: '#E74C3C',
-        //   background: {
-        //     light: '#F4F9FB',
-        //     dark: '#121C24',
-        //   },
-        //   text: {
-        //     light: '#212529',
-        //     dark: '#F8F9FA',
-        //   },
-        //   card: {
-        //     light: '#FFFFFF',
-        //     dark: '#1C2A36',
-        //   },
-        //   muted: {
-        //     light: '#6C757D',
-        //     dark: '#ADB5BD',
-        //   },
-        // },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

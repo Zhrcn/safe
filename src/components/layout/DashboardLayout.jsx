@@ -57,7 +57,6 @@ const DashboardLayout = ({ children }) => {
       return;
     }
 
-    // Verify token on mount and every 5 minutes
     verifyToken();
     const interval = setInterval(verifyToken, 5 * 60 * 1000);
 
@@ -68,7 +67,6 @@ const DashboardLayout = ({ children }) => {
     return null;
   }
 
-  // Check if user has access to the current route
   const currentPath = window.location.pathname;
   const roleRoute = ROLE_ROUTES[user.role];
   
@@ -82,7 +80,6 @@ const DashboardLayout = ({ children }) => {
     setMobileOpen(!mobileOpen);
   };
   const handleLogout = async () => {
-    // Implement logout logic
   };
   const activePath = router.pathname; 
   const sidebarContent = (
@@ -129,8 +126,10 @@ const DashboardLayout = ({ children }) => {
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild className="md:hidden mr-4">
               <Button variant="ghost" size="icon">
-                <MenuIcon className="h-6 w-6" />
-                <span className="sr-only">Toggle sidebar</span>
+                <span>
+                  <MenuIcon className="h-6 w-6" />
+                  <span className="sr-only">Toggle sidebar</span>
+                </span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-[240px]">

@@ -1,10 +1,9 @@
-
-
-
 import { Separator } from '@/components/ui/Separator';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Menu as MenuIcon,
+  X as CloseIcon,
+  ArrowLeft as CollapseSidebarIcon,
   Home,
   Users,
   Calendar,
@@ -37,7 +36,6 @@ import {
   Building2,
   X,
   ArrowLeft,
-  ArrowRight,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -60,7 +58,6 @@ import { ThemeButton } from '@/components/ThemeButton';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// Import user from userSlice.js
 import { useSelector as useUserSelector } from 'react-redux';
 
 const drawerWidth = 240;
@@ -137,9 +134,7 @@ const UnifiedLayout = ({ children }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Fetch user from userSlice.js (assuming it's at state.user)
   const userFromUserSlice = useUserSelector((state) => state.user?.user);
-  // Fallback to auth.user if userSlice is not available
   const user = useSelector((state) => state.auth.user) || userFromUserSlice;
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
@@ -220,7 +215,7 @@ const UnifiedLayout = ({ children }) => {
             className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {sidebarCollapsed ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
+            {/* No icon */}
           </Button>
           <div className={cn('flex flex-col items-center py-8 border-b border-border transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-6')}>
             {/* Custom SVG Icon - new logo style */}
@@ -236,7 +231,6 @@ const UnifiedLayout = ({ children }) => {
                 className="w-14 h-14 object-contain rounded-full"
                 style={{
                   backgroundColor: 'var(--color-navbar, #f0f4f8)',
-                  // fallback for dark mode
                   filter: 'var(--logo-img-filter, none)'
                 }}
               />
@@ -314,80 +308,22 @@ const UnifiedLayout = ({ children }) => {
         'flex-1 flex flex-col min-h-screen transition-all duration-300',
         !isMobile && sidebarCollapsed ? 'md:ml-16' : !isMobile ? 'md:ml-[270px]' : 'md:ml-0'
       )}>
-        <header className="sticky top-0 z-40 w-full h-20 flex items-center px-4 md:px-8 bg-primary shadow-xl border-b border-border backdrop-blur-lg">
-          {isMobile && (
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-4">
-                  <MenuIcon className="h-7 w-7" />
-                  <span className="sr-only">Toggle sidebar</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[270px] bg-white/90 dark:bg-gray-900/90 shadow-2xl border-r border-border">
-                <Button
-                  onClick={() => setMobileOpen(false)}
-                  className="absolute top-4 right-4 z-50 rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-                  aria-label="Close sidebar"
-                >
-                  <X className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-                </Button>
-                <div className="flex flex-col h-full justify-between">
-                  <div>
-                    <div className="flex items-center justify-center py-6 border-b border-border">
-                      <img src="/favicon.svg" alt="App Logo" className="h-8 w-8 mr-2" />
-                      <span className="font-extrabold text-xl tracking-tight text-primary dark:text-white">SafeApp</span>
-                    </div>
-                    <div className="flex flex-col items-center py-4 border-b border-border">
-                      <Avatar className="h-14 w-14 mb-2" src={user?.profile?.avatar} />
-                      <div className="font-bold text-lg text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</div>
-                    </div>
-                    <nav className="px-2 py-4 space-y-2 overflow-y-auto">
-                      {menuItems.map((item, idx) => (
-                        <Link
-                          key={item.path}
-                          href={item.path}
-                          className={cn(
-                            'flex items-center gap-3 px-4 py-2 rounded-full font-medium transition-colors duration-200',
-                            pathname.startsWith(item.path)
-                              ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800',
-                            'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
-                          )}
-                          aria-current={pathname.startsWith(item.path) ? 'page' : undefined}
-                        >
-                          {item.icon}
-                          <span className="truncate">{prettify(item.name)}</span>
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-                  <div className="flex flex-col gap-2 pb-6">
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-3 px-4 py-2 rounded-full font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-                    >
-                      <SettingsIcon className="h-5 w-5" />
-                      <span>Settings</span>
-                    </Link>
-                    <Link
-                      href="/logout"
-                      className="flex items-center gap-3 px-4 py-2 rounded-full font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200 w-full"
-                    >
-                      <LogoutIcon className="h-5 w-5" />
-                      <span>Logout</span>
-                    </Link>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+        <header
+          className="sticky top-0 z-40 w-full h-20 flex items-center px-4 md:px-8 backdrop-blur-xl shadow-xl border-b border-border transition-colors"
+          style={{ background: 'var(--color-primary)', color: '#fff' }}
+        >
+          {/* Logo or App Name */}
+          <div className="flex items-center gap-3">
+            <img src="/logo(1).png" alt="Logo" className="h-10 w-10 rounded-full" />
+            <span className="font-extrabold text-2xl tracking-tight">SafeApp</span>
+          </div>
           <div className="flex-1" />
+          {/* Right-side icons and user menu */}
           <div className="flex items-center gap-6">
             <ThemeButton />
             <div className="relative">
               <Button variant="ghost" size="icon" title="Notifications">
-                <Bell className="h-6 w-6 text-primary-foreground" />
+                <Bell className="h-6 w-6 text-white" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold shadow-md">3</span>
               </Button>
             </div>
@@ -395,7 +331,7 @@ const UnifiedLayout = ({ children }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-11 w-11 border-2 border-primary shadow-md bg-primary">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary text-primary text-lg">
+                    <AvatarFallback className="bg-primary text-white text-lg">
                       {user?.firstName?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>

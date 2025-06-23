@@ -44,7 +44,6 @@ const RecentActivities = () => {
     ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
     const handleViewAll = () => {
-        // Implement the logic to handle "View All" button
     };
 
     return (

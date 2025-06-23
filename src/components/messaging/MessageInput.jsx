@@ -5,14 +5,12 @@ import { Paperclip, Smile, Send } from "lucide-react";
 export default function MessageInput({ value, onChange, onSend, disabled }) {
   const textareaRef = useRef(null);
 
-  // Auto-grow textarea
   const handleInput = e => {
     onChange(e.target.value);
     textareaRef.current.style.height = "auto";
     textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
   };
 
-  // Send on Enter, new line on Shift+Enter
   const handleKeyDown = e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

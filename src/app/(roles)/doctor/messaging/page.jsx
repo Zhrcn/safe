@@ -58,7 +58,6 @@ export default function DoctorMessagingPage() {
   };
 
   const handleNewChat = () => {
-    // Placeholder for new chat logic
     alert("Start a new chat (not implemented)");
   };
 

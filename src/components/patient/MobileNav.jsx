@@ -1,1 +1,0 @@
-// Remove all code in this file to delete the MobileNav component, as it is responsible for the duplicate drawer/sidebar on small screens. 

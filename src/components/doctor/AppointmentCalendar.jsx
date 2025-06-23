@@ -49,7 +49,6 @@ const AppointmentCalendar = () => {
         <div className="flex items-center justify-between mb-4">
             <Button
                 onClick={() => {
-                    // Implement the logic to go to today
                 }}
                 variant="outline"
                 size="sm"
@@ -59,7 +58,6 @@ const AppointmentCalendar = () => {
             </Button>
             <Button
                 onClick={() => {
-                    // Implement the logic to go to previous day
                 }}
                 variant="ghost"
                 size="icon"
@@ -70,7 +68,6 @@ const AppointmentCalendar = () => {
             </Button>
             <Button
                 onClick={() => {
-                    // Implement the logic to go to next day
                 }}
                 variant="ghost"
                 size="icon"

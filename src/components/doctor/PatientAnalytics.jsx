@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { Tooltip } from '@/components/ui/Tooltip';
 const PatientAnalytics = () => {
   const [analytics, setAnalytics] = useState({
     totalPatients: 0,
@@ -74,7 +75,7 @@ const PatientAnalytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="gender" />
                 <YAxis />
-                <Tooltip />
+                <RechartsTooltip />
                 <Bar dataKey="count" fill="#3B82F6" />
               </BarChart>
             </ResponsiveContainer>
@@ -89,7 +90,7 @@ const PatientAnalytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="condition" />
                 <YAxis />
-                <Tooltip />
+                <RechartsTooltip />
                 <Bar dataKey="count" fill="#10B981" />
               </BarChart>
             </ResponsiveContainer>
@@ -105,7 +106,7 @@ const PatientAnalytics = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip />
+              <RechartsTooltip />
               <Bar dataKey="newPatients" name="New Patients" fill="#3B82F6" />
               <Bar dataKey="activePatients" name="Active Patients" fill="#10B981" />
             </BarChart>

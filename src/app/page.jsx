@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState, forwardRef } from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import FeaturesSection from '@/components/FeaturesSection';
@@ -8,8 +8,8 @@ import RolesSection from '@/components/RolesSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import Footer from '@/components/Footer';
 import anime from 'animejs';
+import Section from '@/components/common/Section';
 
-// Custom hook for scroll-triggered animation
 function useSectionInView(ref, animateFn) {
   useEffect(() => {
     if (!ref.current) return;
@@ -26,7 +26,6 @@ function useSectionInView(ref, animateFn) {
       { threshold: 0.2 }
     );
     observer.observe(node);
-    // Fallback: if animation doesn't run, set opacity to 1 after 2s
     const fallback = setTimeout(() => {
       if (!hasAnimated && node) {
         node.style.opacity = 1;
@@ -39,18 +38,17 @@ function useSectionInView(ref, animateFn) {
   }, [ref, animateFn]);
 }
 
-// SVGs for heart and plus icons
-const HeartSVG = ({ style, className }) => (
-  <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-    <path d="M30 44c-6-5-14-9-14-16a8 8 0 0 1 16 0 8 8 0 0 1 16 0c0 7-8 11-14 16z" fill="#F87171" fillOpacity="0.18" />
+const HeartSVG = forwardRef(({ style, className }, ref) => (
+  <svg ref={ref} width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 44c-6-5-14-9-14-16a8 8 0 0 1 16 0 8 8 0 0 1 16 0c0 7-8 11-14 16z" fill="var(--color-destructive)" fillOpacity="0.18" />
   </svg>
-);
-const PlusSVG = ({ style, className }) => (
-  <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-    <rect x="22" y="22" width="16" height="16" rx="4" fill="#38BDF8" fillOpacity="0.13" />
-    <path d="M38 30h-4v-4a2 2 0 1 0-4 0v4h-4a2 2 0 1 0 0 4h4v4a2 2 0 1 0 4 0v-4h4a2 2 0 1 0 0-4z" fill="#FBBF24" fillOpacity="0.13" />
+));
+const PlusSVG = forwardRef(({ style, className }, ref) => (
+  <svg ref={ref} width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
+    <rect x="22" y="22" width="16" height="16" rx="4" fill="var(--color-primary)" fillOpacity="0.13" />
+    <path d="M38 30h-4v-4a2 2 0 1 0-4 0v4h-4a2 2 0 1 0 0 4h4v4a2 2 0 1 0 4 0v-4h4a2 2 0 1 0 0-4z" fill="var(--color-warning)" fillOpacity="0.13" />
   </svg>
-);
+));
 
 export default function Home() {
   const bgRef = useRef(null);
@@ -60,28 +58,25 @@ export default function Home() {
   const rolesRef = useRef(null);
   const testimonialsRef = useRef(null);
 
-  // Refs for each icon
   const heart1Ref = useRef(null);
   const plus1Ref = useRef(null);
   const heart2Ref = useRef(null);
   const plus2Ref = useRef(null);
 
-  // Animation state (not React state)
-  const mouseTarget = useRef({ x: 0, y: 0 }); // -1 to 1
+  const mouseTarget = useRef({ x: 0, y: 0 }); 
   const iconStates = useRef([
-    { x: 0, y: 0 }, // heart1
-    { x: 0, y: 0 }, // plus1
-    { x: 0, y: 0 }, // heart2
-    { x: 0, y: 0 }, // plus2
+    { x: 0, y: 0 }, 
+    { x: 0, y: 0 }, 
+    { x: 0, y: 0 },
+    { x: 0, y: 0 }, 
   ]);
   const floatPhases = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
-  const lags = [0.08, 0.12, 0.10, 0.14]; // unique lag for each icon
+  const lags = [0.08, 0.12, 0.10, 0.14]; 
   const animFrame = useRef();
 
-  // Mouse parallax handler (no React state)
   const handleMouseMove = (e) => {
     const rect = bgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; 
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
     mouseTarget.current = { x, y };
   };
@@ -89,28 +84,22 @@ export default function Home() {
     mouseTarget.current = { x: 0, y: 0 };
   };
 
-  // Animation loop
   useEffect(() => {
     let running = true;
     function animate() {
-      const now = performance.now() / 1000; // seconds
-      // Target positions
+      const now = performance.now() / 1000; 
       const targets = [
         { x: mouseTarget.current.x * 18, y: mouseTarget.current.y * 12 },
         { x: mouseTarget.current.x * -12, y: mouseTarget.current.y * 18 },
         { x: mouseTarget.current.x * 10, y: mouseTarget.current.y * -10 },
         { x: mouseTarget.current.x * -16, y: mouseTarget.current.y * -8 },
       ];
-      // Float amplitudes
       const floats = [8, 10, 7, 9];
-      // For each icon, lerp toward target and add float
       [heart1Ref, plus1Ref, heart2Ref, plus2Ref].forEach((ref, i) => {
-        // Lerp
         iconStates.current[i].x += (targets[i].x - iconStates.current[i].x) * lags[i];
         iconStates.current[i].y += (targets[i].y - iconStates.current[i].y) * lags[i];
-        // Idle float
         const floatY = Math.sin(now * 1.1 + floatPhases[i]) * floats[i];
-        const floatR = Math.sin(now * 0.7 + floatPhases[i]) * 2; // subtle rotation
+        const floatR = Math.sin(now * 0.7 + floatPhases[i]) * 2; 
         if (ref.current) {
           ref.current.style.transform = `translate(${iconStates.current[i].x}px, ${iconStates.current[i].y + floatY}px) scale(${[1.2,1.1,1.3,1.05][i]}) rotate(${floatR}deg)`;
         }
@@ -124,7 +113,6 @@ export default function Home() {
     };
   }, []);
 
-  // Section scroll-triggered animations
   useSectionInView(heroRef, node => {
     anime({
       targets: node,
@@ -174,12 +162,12 @@ export default function Home() {
   return (
     <div
       ref={bgRef}
-      className="min-h-screen w-full bg-gradient-to-br from-background via-muted/60 to-background text-foreground relative overflow-x-hidden"
+      className="min-h-screen w-full bg-background text-foreground relative overflow-x-hidden transition-colors duration-700"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {/* Animated medical icons background */}
-      <div className="pointer-events-none select-none fixed inset-0 z-0 opacity-40 contrast-125" aria-hidden="true">
+      <div className="pointer-events-none select-none fixed inset-0 z-0 opacity-30 contrast-125 dark:opacity-40" aria-hidden="true">
         {/* Heart */}
         <span style={{ position: 'absolute', left: `10%`, top: `18%` }}>
           <HeartSVG ref={heart1Ref} />
@@ -199,31 +187,21 @@ export default function Home() {
       </div>
       <main className="relative z-10 w-full flex flex-col gap-0">
         <Navbar />
-        <section
-          className="mb-0" ref={heroRef} style={{ opacity: 0 }}>
+        <Section as="section" className="mt-20 !py-0 !px-0 !max-w-none bg-transparent shadow-none border-none">
           <HeroSection />
-        </section>
-        {/* Section divider */}
-        <div className="w-full h-8 bg-gradient-to-b from-transparent to-muted/30" />
-        <section
-          className="py-0" ref={featuresRef} style={{ opacity: 0 }}>
+        </Section>
+        <Section as="section" id="features" className="bg-transparent shadow-none border-none !py-12">
           <FeaturesSection />
-        </section>
-        <div className="w-full h-8 bg-gradient-to-b from-transparent to-muted/40" />
-        <section
-          className="py-0" ref={aboutRef} style={{ opacity: 0 }}>
+        </Section>
+        <Section as="section" id="about" className="bg-transparent shadow-none border-none !py-12">
           <AboutSection />
-        </section>
-        <div className="w-full h-8 bg-gradient-to-b from-transparent to-muted/30" />
-        <section
-          className="py-0" ref={rolesRef} style={{ opacity: 0 }}>
+        </Section>
+        <Section as="section" id="roles" className="bg-transparent shadow-none border-none !py-12">
           <RolesSection />
-        </section>
-        <div className="w-full h-8 bg-gradient-to-b from-transparent to-muted/40" />
-        <section
-          className="py-0" ref={testimonialsRef} style={{ opacity: 0 }}>
+        </Section>
+        <Section as="section" id="testimonials" className="bg-transparent shadow-none border-none !py-12">
           <TestimonialsSection />
-        </section>
+        </Section>
         <Footer />
       </main>
     </div>

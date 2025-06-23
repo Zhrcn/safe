@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { Users, Activity, Bell, Server, UserPlus, Settings } from 'lucide-react';
 import { AdminPageContainer, AdminCard, StatCard, ChartContainer, UserRoleBadge, UserStatusBadge, ActivityLogItem, NotificationItem } from '@/components/admin/AdminComponents';
 import { getUsers, getSystemStats, getActivityLogs, getNotifications } from '@/services/adminService';
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Grid, Box, Typography } from '@mui/material';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip
+                      <RechartsTooltip
                         contentStyle={{
                           backgroundColor: 'var(--card)',
                           borderColor: 'var(--border)',
@@ -149,7 +150,7 @@ export default function AdminDashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="name" stroke="var(--muted-foreground)" />
                       <YAxis stroke="var(--muted-foreground)" />
-                      <Tooltip
+                      <RechartsTooltip
                         contentStyle={{
                           backgroundColor: 'var(--card)',
                           borderColor: 'var(--border)',
@@ -348,7 +349,7 @@ export default function AdminDashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="name" stroke="var(--muted-foreground)" />
                       <YAxis stroke="var(--muted-foreground)" />
-                      <Tooltip
+                      <RechartsTooltip
                         contentStyle={{
                           backgroundColor: 'var(--card)',
                           borderColor: 'var(--border)',

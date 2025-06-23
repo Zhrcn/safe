@@ -35,6 +35,20 @@ export function ThemeProvider({ children }) {
       root.style.setProperty(key, value);
     });
     root.setAttribute('data-theme', currentTheme);
+    root.classList.remove('theme-hopeCare', 'theme-pureCare', 'theme-syriaWarm', 'theme-safeNight', 'dark');
+    root.classList.add(`theme-${currentTheme}`);
+    if (currentTheme === 'safeNight') {
+      root.classList.add('dark');
+    }
+    const bg = themeVars['--color-background'] || '#fff';
+    root.style.backgroundColor = bg;
+    if (document.body) document.body.style.backgroundColor = bg;
+    const requiredVars = ['--color-background', '--color-foreground', '--color-primary'];
+    requiredVars.forEach(key => {
+      if (!themeVars[key]) {
+        console.warn(`Theme '${currentTheme}' is missing variable: ${key}`);
+      }
+    });
     localStorage.setItem('theme', currentTheme);
   }, [currentTheme]);
 

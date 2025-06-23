@@ -28,7 +28,6 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
         )}
         {conversations.map(conv => {
           const lastTime = conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
-          // Sender prefix
           let lastMsgPrefix = "";
           if (conv.lastMessage) {
             if (conv.messages && conv.messages.length > 0) {

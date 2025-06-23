@@ -89,7 +89,7 @@ const sidebarItems = [
                 icon: MessageCircle,
                 link: '/patient/messaging',
                 description: 'Chat with your healthcare providers',
-                badge: '3' // Example notification count
+                badge: '3'
             }
         ]
     }
@@ -119,7 +119,6 @@ export default function PatientLayout({ children }) {
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);
-            // Even if the API call fails, redirect to login
             router.push('/login');
         }
     };
@@ -191,16 +190,18 @@ export default function PatientLayout({ children }) {
                                                     asChild
                                                 >
                                                     <a href={item.link}>
-                                                        <Icon className="h-4 w-4" />
-                                                        <span>{item.name}</span>
-                                                        {item.badge && (
-                                                            <Badge className="ml-auto bg-primary/20 text-primary">
-                                                                {item.badge}
-                                                            </Badge>
-                                                        )}
-                                                        {item.subItems && (
-                                                            <ChevronRight className="ml-auto h-4 w-4" />
-                                                        )}
+                                                        <span className="flex items-center gap-2 w-full">
+                                                            <Icon className="h-4 w-4" />
+                                                            <span>{item.name}</span>
+                                                            {item.badge && (
+                                                                <Badge className="ml-auto bg-primary/20 text-primary">
+                                                                    {item.badge}
+                                                                </Badge>
+                                                            )}
+                                                            {item.subItems && (
+                                                                <ChevronRight className="ml-auto h-4 w-4" />
+                                                            )}
+                                                        </span>
                                                     </a>
                                                 </Button>
                                             );
@@ -216,8 +217,10 @@ export default function PatientLayout({ children }) {
                 <div className="p-4 border-t space-y-2">
                     <Button variant="ghost" className="w-full justify-start gap-2" asChild>
                         <a href="/patient/settings">
-                            <Settings className="h-4 w-4" />
-                            Settings
+                            <span className="flex items-center gap-2">
+                                <Settings className="h-4 w-4" />
+                                Settings
+                            </span>
                         </a>
                     </Button>
                     <Button 

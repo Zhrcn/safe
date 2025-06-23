@@ -1,7 +1,6 @@
 import { mockAdminProfile } from '@/data/mock/adminData';
 import { mockPharmacistProfile } from '@/data/mock/pharmacistData';
 
-// Mock user credentials
 const MOCK_USERS = {
     'admin@safemedical.com': {
         password: 'admin123',
@@ -17,7 +16,6 @@ const MOCK_USERS = {
 
 export const login = async (email, password) => {
     try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         const user = MOCK_USERS[email];
@@ -25,10 +23,8 @@ export const login = async (email, password) => {
             throw new Error('Invalid credentials');
         }
 
-        // Generate a mock token
         const token = btoa(`${email}:${Date.now()}`);
         
-        // Store token in localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user.profile));
         localStorage.setItem('role', user.role);

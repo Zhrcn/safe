@@ -74,7 +74,7 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
                 </div>
                 <div className="flex flex-col items-end gap-3">
                     {canReschedule && (
-                        <DialogTrigger asChild>
+                        <DialogTrigger >
                             <Button variant="outline" size="sm" onClick={() => onReschedule(appointment)}>
                                 Reschedule
                             </Button>
@@ -90,10 +90,9 @@ const AppointmentsPage = () => {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState('new'); // 'new' or 'reschedule'
+    const [modalType, setModalType] = useState('new');
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-    // Mock data - replace with actual data from your API
     const appointments = [
         {
             id: 1,
@@ -151,7 +150,6 @@ const AppointmentsPage = () => {
     };
 
     const handleSubmitAppointment = (data) => {
-        // TODO: handle create or reschedule logic
         handleCloseModal();
     };
 
@@ -166,7 +164,7 @@ const AppointmentsPage = () => {
                 ]}
                 actions={
                     <Dialog open={showModal} onOpenChange={setShowModal}>
-                        <DialogTrigger asChild>
+                        <DialogTrigger >
                             <Button onClick={handleNewAppointment}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Appointment

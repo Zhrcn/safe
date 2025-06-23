@@ -5,7 +5,7 @@ import {
     DropletIcon, Edit, Save, X, AlertCircle, Check, MapPin,
     Shield, Stethoscope, Pill, Clock, BarChart3, ChevronRight,
     History, FileImage, Download, FilePlus2, RefreshCcw,
-    Camera, Bell, Lock, CreditCard,
+    Camera, Bell, Lock, CreditCard, CalendarIcon, Info, Plus,
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
-import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import PageHeader from '@/components/patient/PageHeader';
 import FormLayout from '@/components/patient/FormLayout';
 import LoadingState from '@/components/patient/LoadingState';
@@ -966,7 +966,9 @@ const ProfilePage = () => {
                         {selectedPdf?.url && (
                             <Button asChild>
                                 <a href={selectedPdf.url} download={selectedPdf.title || 'document.pdf'}>
-                                    <Download className="h-4 w-4 mr-2" /> Download
+                                    <span className="flex items-center gap-2">
+                                        <Download className="h-4 w-4" /> Download
+                                    </span>
                                 </a>
                             </Button>
                         )}

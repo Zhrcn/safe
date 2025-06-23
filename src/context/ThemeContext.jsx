@@ -8,7 +8,6 @@ export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('hopeCare');
 
   useEffect(() => {
-    // Load saved theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme && themes[savedTheme]) {
       setCurrentTheme(savedTheme);
@@ -16,12 +15,8 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Update HTML class and toggle 'dark' class based on theme
     document.documentElement.className = `theme-${currentTheme}`;
-
-    // Determine if the current theme is a 'dark' theme
-    const isDarkTheme = currentTheme === 'safeNight'; // Assuming 'safeNight' is the only dark theme
-
+    const isDarkTheme = currentTheme === 'safeNight';
     if (isDarkTheme) {
       document.documentElement.classList.add('dark');
     } else {

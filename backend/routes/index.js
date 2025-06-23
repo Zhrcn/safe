@@ -9,7 +9,6 @@ const notificationRoutes = require('../routes/notification.routes');
 const medicalFileRoutes = require('../routes/medicalFile.routes');
 const consultationRoutes = require('../routes/consultation.routes');
 
-// Mount routes
 router.use('/auth', authRoutes);
 router.use('/patients', patientRoutes);
 router.use('/doctors', doctorRoutes);

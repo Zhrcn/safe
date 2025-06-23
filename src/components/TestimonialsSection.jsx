@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
+import Section from './common/Section';
+import GlassCard from './common/GlassCard';
 const testimonials = [
   {
     id: 1,
@@ -70,9 +72,9 @@ export default function TestimonialsSection() {
     setActiveIndex(index);
   };
   return (
-    <section
+    <Section
       id="testimonials"
-      className="relative overflow-hidden py-12 md:py-20 bg-gradient-to-br from-background to-muted/60"
+      className="relative overflow-hidden bg-transparent py-12"
     >
       {/* Soft background pattern/gradient */}
       <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
@@ -82,7 +84,7 @@ export default function TestimonialsSection() {
         }}
       />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-10">
+        <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -92,16 +94,16 @@ export default function TestimonialsSection() {
             <p className="text-primary font-semibold tracking-widest mb-2 text-xs md:text-sm uppercase">
               Testimonials
             </p>
-            <h2 className="font-extrabold mb-2 text-3xl md:text-4xl text-foreground tracking-tight">
+            <h2 className="font-extrabold mb-2 text-4xl md:text-5xl text-foreground tracking-tight">
               What Our Users Say
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-base md:text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-lg md:text-xl">
               Discover how our platform is making a difference in healthcare management
             </p>
           </motion.div>
         </div>
         <div className="relative max-w-2xl mx-auto">
-          <div className="relative h-[420px] md:h-[320px] flex items-center justify-center">
+          <div className="relative h-[420px] md:h-[340px] flex items-center justify-center">
             <AnimatePresence initial={false} mode="wait">
               {testimonials.map((testimonial, index) => (
                 activeIndex === index && (
@@ -113,16 +115,16 @@ export default function TestimonialsSection() {
                     transition={{ duration: 0.5 }}
                     className="absolute w-full h-full flex items-center justify-center"
                   >
-                    <div className="relative bg-card border-2 border-primary/70 shadow-2xl rounded-3xl p-8 md:p-10 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300">
+                    <GlassCard className="relative p-10 md:p-12 flex flex-col h-full w-full max-w-xl mx-auto focus-within:ring-2 focus-within:ring-primary outline-none transition-all duration-300 shadow-xl rounded-3xl border-none bg-white/40 dark:bg-[#232a36]/60 backdrop-blur-xl border border-white/20 dark:border-white/10">
                       <Quote className="w-10 h-10 opacity-10 absolute top-6 left-6 text-primary" />
-                      <p className="mb-6 text-lg md:text-xl italic relative z-10 text-card-foreground font-medium">
+                      <p className="mb-8 text-xl md:text-2xl italic relative z-10 text-card-foreground font-medium dark:text-white">
                         "{testimonial.text}"
                       </p>
-                      <div className="mt-auto flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-4 border-background relative">
+                      <div className="mt-auto flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-xl border-4 border-background dark:border-primary/40 relative animate-glow">
                           <motion.div
                             initial={{ boxShadow: '0 0 0 0 rgba(56,189,248,0.7)' }}
-                            animate={{ boxShadow: '0 0 24px 4px rgba(56,189,248,0.25)' }}
+                            animate={{ boxShadow: '0 0 32px 8px rgba(56,189,248,0.25)' }}
                             transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
                             className="absolute inset-0 rounded-full z-0"
                           />
@@ -133,17 +135,17 @@ export default function TestimonialsSection() {
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-lg text-card-foreground">
+                          <p className="font-bold text-xl text-card-foreground dark:text-white">
                             {testimonial.name}
                           </p>
-                          <p className="text-muted-foreground text-sm font-medium">
+                          <p className="text-muted-foreground text-base font-medium dark:text-muted">
                             {testimonial.role}
                           </p>
                           <div className="flex mt-1" aria-label={`Rating: ${testimonial.rating} out of 5`}>
                             {[...Array(5)].map((_, i) => (
                               <svg
                                 key={i}
-                                className={`w-4 h-4 ${i < testimonial.rating ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
+                                className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                                 aria-hidden="true"
@@ -154,27 +156,27 @@ export default function TestimonialsSection() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </GlassCard>
                   </motion.div>
                 )
               ))}
             </AnimatePresence>
           </div>
-          <div className="flex justify-center items-center mt-8 gap-3">
+          <div className="flex justify-center items-center mt-10 gap-4">
             <Button
               onClick={handlePrev}
               aria-label="Previous testimonial"
-              className="p-2 rounded-lg bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="p-3 rounded-xl bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-6 h-6" />
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {testimonials.map((_, index) => (
                 <Button
                   key={index}
                   onClick={() => handleDotClick(index)}
                   aria-label={`Go to testimonial ${index + 1}`}
-                  className={`w-3 h-3 rounded-lg border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-4 h-4 rounded-xl border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
                     activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/20'
                   }`}
                 />
@@ -183,13 +185,13 @@ export default function TestimonialsSection() {
             <Button
               onClick={handleNext}
               aria-label="Next testimonial"
-              className="p-2 rounded-lg bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              className="p-3 rounded-xl bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-6 h-6" />
             </Button>
           </div>
         </div>
       </div>
-    </section>
+    </Section>
   );
 } 

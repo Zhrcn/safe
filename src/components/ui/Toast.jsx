@@ -112,7 +112,6 @@ const ToastDescription = React.forwardRef(function ToastDescription({ className,
 })
 ToastDescription.displayName = ToastPrimitives.Description.displayName
 
-// Remove TypeScript-only type exports and declarations
 
 export {
   ToastProvider,

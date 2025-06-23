@@ -14,16 +14,7 @@ import { Progress } from '@/components/ui/Progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Simple Tooltip implementation for this page
-const Tooltip = ({ children, text }) => (
-  <span className="relative group">
-    {children}
-    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-xs px-2 py-1 rounded bg-foreground text-background text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50 shadow-lg">
-      {text}
-    </span>
-  </span>
-);
+import { Tooltip } from '@/components/ui/Tooltip';
 
 const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) => (
   <motion.div
@@ -79,7 +70,7 @@ const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, toolti
   >
     <Card className="hover:shadow-2xl transition-all duration-300 rounded-2xl bg-card/95 border-none h-full flex flex-col">
       <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
-        <Tooltip text={tooltip}>
+        <Tooltip content={tooltip}>
           <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1">
             <div className={`p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform ${bgClass}`} tabIndex={0} aria-label={title}>
               <Icon className="h-6 w-6 text-primary-foreground" />
@@ -135,10 +126,8 @@ const AppointmentCard = ({ appointment }) => (
 
 const DashboardPage = () => {
     const router = useRouter();
-    // Mock user for greeting
     const user = { firstName: 'John' };
 
-    // Mock data - replace with actual data from your API
     const healthMetrics = [
         {
             title: 'Heart Rate',

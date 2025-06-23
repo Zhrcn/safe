@@ -19,7 +19,6 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Medical Platform Theme Colors
         medical: {
           primary: '#0077B6',
           secondary: '#00B4D8',

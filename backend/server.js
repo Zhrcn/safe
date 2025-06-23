@@ -8,7 +8,6 @@ const mainRouter = require('./routes/index');
 const errorHandler = require('./middleware/error.middleware'); 
 const morgan = require('morgan');
 
-// Load models
 require('./models/User');
 require('./models/Medicine');
 require('./models/Doctor');
@@ -27,7 +26,6 @@ connectDB();
 
 const app = express();
 
-// CORS configuration
 app.use(cors({
   origin: ['http://localhost:3000', 'http://192.168.1.100:3000'],
   credentials: true,
@@ -35,7 +33,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
 
-// Middleware
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
@@ -43,7 +40,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Mount routes
 app.use('/api/v1', mainRouter);
 
 app.get('/', (req, res) => {

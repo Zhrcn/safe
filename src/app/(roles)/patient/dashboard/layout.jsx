@@ -19,7 +19,6 @@ export default function PatientDashboardLayout({ children }) {
                 return;
             }
 
-            // Verify token with backend
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
             fetch(`${apiUrl}/api/v1/auth/me`, {
                 method: 'GET',

@@ -7,7 +7,6 @@ const processFile = (filePath) => {
     const stats = fs.statSync(filePath);
     if (!stats.isFile()) return;
 
-    // Skip node_modules and any other sensitive directories
     if (filePath.includes('node_modules') || 
         filePath.includes('.git') || 
         filePath.includes('package-lock.json')) {
@@ -16,8 +15,8 @@ const processFile = (filePath) => {
 
     const content = fs.readFileSync(filePath, 'utf8');
     const withoutComments = content
-      .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove both multi-line and single-line comments
-      .replace(/^\s*[\r\n]/gm, ''); // Remove empty lines
+      .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') 
+      .replace(/^\s*[\r\n]/gm, '');
     fs.writeFileSync(filePath, withoutComments);
     console.log(`Processed ${filePath}`);
   } catch (error) {

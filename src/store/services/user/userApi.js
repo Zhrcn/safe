@@ -110,18 +110,15 @@ export const userApi = createApi({
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     await queryFulfilled;
-                    // Clear all auth-related data
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('safe_auth_token');
                         localStorage.removeItem('user');
                         localStorage.removeItem('role');
                         localStorage.removeItem('sessionTimeout');
                     }
-                    // Dispatch logout action to clear Redux state
                     dispatch(logout());
                 } catch (error) {
                     console.error('Logout error:', error);
-                    // Even if the API call fails, we should still clear local data
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('safe_auth_token');
                         localStorage.removeItem('user');

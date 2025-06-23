@@ -8,6 +8,7 @@ import { appointments as mockAppointments } from '@/mockdata/appointments';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/Select';
 
 const AppointmentCard = ({ appointment }) => {
     const getStatusColor = (status) => {
@@ -98,7 +99,6 @@ const AppointmentsPage = () => {
     const [typeFilter, setTypeFilter] = useState('all');
     const [viewMode, setViewMode] = useState('list');
 
-    // Mock data - replace with actual data from your API
     const appointments = [
         {
             id: 1,
@@ -179,26 +179,34 @@ const AppointmentsPage = () => {
                                 className="pl-10 pr-4 py-2 rounded-lg"
                             />
                         </div>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                            <option value="all">All Status</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        <select
-                            value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                            <option value="all">All Types</option>
-                            <option value="in-person">In Person</option>
-                            <option value="video">Video</option>
-                            <option value="phone">Phone</option>
-                        </select>
+                        {/* Status Filter */}
+                        <div className="w-36">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {/* Type Filter */}
+                        <div className="w-36">
+                            <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Types" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Types</SelectItem>
+                                    <SelectItem value="in-person">In Person</SelectItem>
+                                    <SelectItem value="video">Video</SelectItem>
+                                    <SelectItem value="phone">Phone</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

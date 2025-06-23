@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
-import { ButtonVariants } from "@/components/ui/Button"
+import { buttonVariants } from "@/components/ui/Button"
 
 function Calendar({
   className,
@@ -27,7 +27,7 @@ function Calendar({
         caption_label: "text-sm font-medium",
         nav: "space-x-1 flex items-center",
         nav_Button: cn(
-          ButtonVariants({ variant: "outline" }),
+          buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         nav_Button_previous: "absolute left-1",
