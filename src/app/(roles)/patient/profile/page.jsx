@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover
 import { Calendar } from '@/components/ui/Calendar';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from '@/components/ui/ScrollArea';
+import { useTranslation } from 'react-i18next';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -71,21 +72,22 @@ const ProfilePage = () => {
     const [medicalRecordsData, setMedicalRecordsData] = useState(mockPatientData.medicalRecords || {});
     const initializedProfileData = useRef(false);
     const [medicalTabValue, setMedicalTabValue] = useState('vitalSigns');
+    const { t } = useTranslation('common');
 
     const medicalRecordCategories = [
-        { id: 'vitalSigns', label: 'Vital Signs', icon: HeartPulse },
-        { id: 'allergies', label: 'Allergies', icon: DropletIcon },
-        { id: 'chronicConditions', label: 'Chronic Conditions', icon: Stethoscope },
-        { id: 'diagnoses', label: 'Diagnoses', icon: HeartPulse },
-        { id: 'labResults', label: 'Lab Results', icon: BarChart3 },
-        { id: 'imagingReports', label: 'Imaging Reports', icon: FileImage },
-        { id: 'medications', label: 'Medications', icon: Pill },
-        { id: 'immunizations', label: 'Immunizations', icon: Shield },
-        { id: 'surgicalHistory', label: 'Surgical History', icon: History },
-        { id: 'documents', label: 'Documents', icon: FileText },
-        { id: 'familyHistory', label: 'Family History', icon: User },
-        { id: 'socialHistory', label: 'Social History', icon: Home },
-        { id: 'generalHistory', label: 'General History', icon: CalendarDays },
+        { id: 'vitalSigns', label: t('patient.profile.vitalSigns', 'Vital Signs'), icon: HeartPulse },
+        { id: 'allergies', label: t('patient.profile.allergies', 'Allergies'), icon: DropletIcon },
+        { id: 'chronicConditions', label: t('patient.profile.chronicConditions', 'Chronic Conditions'), icon: Stethoscope },
+        { id: 'diagnoses', label: t('patient.profile.diagnoses', 'Diagnoses'), icon: HeartPulse },
+        { id: 'labResults', label: t('patient.profile.labResults', 'Lab Results'), icon: BarChart3 },
+        { id: 'imagingReports', label: t('patient.profile.imagingReports', 'Imaging Reports'), icon: FileImage },
+        { id: 'medications', label: t('patient.profile.medications', 'Medications'), icon: Pill },
+        { id: 'immunizations', label: t('patient.profile.immunizations', 'Immunizations'), icon: Shield },
+        { id: 'surgicalHistory', label: t('patient.profile.surgicalHistory', 'Surgical History'), icon: History },
+        { id: 'documents', label: t('patient.profile.documents', 'Documents'), icon: FileText },
+        { id: 'familyHistory', label: t('patient.profile.familyHistory', 'Family History'), icon: User },
+        { id: 'socialHistory', label: t('patient.profile.socialHistory', 'Social History'), icon: Home },
+        { id: 'generalHistory', label: t('patient.profile.generalHistory', 'General History'), icon: CalendarDays },
     ];
 
     const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
@@ -94,10 +96,9 @@ const ProfilePage = () => {
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.2);
     
-    const isLoading = false; // Replace with actual loading state from API
-    const apiError = null;   // Replace with actual error state from API
-
-    useEffect(() => {
+    const isLoading = false; 
+    const apiError = null;   
+        useEffect(() => {
         if (!initializedProfileData.current) {
             if (!isLoading && !apiError && mockPatientData.profile) {
                 setFormData({
@@ -155,16 +156,16 @@ const ProfilePage = () => {
 
     const handleSave = async () => {
         if (!isFormValid()) {
-            showNotification('Please fill in all required fields', 'error');
+            showNotification(t('patient.profile.saveRequired', 'Please fill in all required fields'), 'error');
             return;
         }
         setSaving(true);
         try {
             await new Promise(resolve => setTimeout(resolve, 1000));
-            showNotification('Profile updated successfully', 'success');
+            showNotification(t('patient.profile.saveSuccess', 'Profile updated successfully'), 'success');
             setIsEditing(false);
         } catch (error) {
-            showNotification(error.message || 'Failed to update profile', 'error');
+            showNotification(error.message || t('patient.profile.saveFailed', 'Failed to update profile'), 'error');
         } finally {
             setSaving(false);
         }
@@ -175,8 +176,8 @@ const ProfilePage = () => {
     };
 
     const getStatusText = (loadingState, errorState) => {
-        if (loadingState) return 'Loading...';
-        if (errorState) return 'Error loading data';
+        if (loadingState) return t('patient.profile.loading', 'Loading...');
+        if (errorState) return t('patient.profile.errorLoading', 'Error loading data');
         return '';
     };
 
@@ -519,7 +520,6 @@ const ProfilePage = () => {
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
 
-                    {/* Vital Signs */}
                     <TabsContent value="vitalSigns" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Recent Vital Signs</h3>
                         {medicalRecordsData.vitalSigns && medicalRecordsData.vitalSigns.length > 0 ? (
@@ -545,7 +545,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Allergies */}
                     <TabsContent value="allergies" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold">My Allergies</h3>
@@ -578,7 +577,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Chronic Conditions */}
                     <TabsContent value="chronicConditions" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold">Chronic Conditions</h3>
@@ -611,7 +609,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Diagnoses */}
                     <TabsContent value="diagnoses" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">My Diagnoses</h3>
                         {medicalRecordsData.diagnoses && medicalRecordsData.diagnoses.length > 0 ? (
@@ -632,7 +629,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Lab Results */}
                     <TabsContent value="labResults" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Lab Results</h3>
                         {medicalRecordsData.labResults && medicalRecordsData.labResults.length > 0 ? (
@@ -660,7 +656,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Imaging Reports */}
                     <TabsContent value="imagingReports" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Imaging Reports</h3>
                         {medicalRecordsData.imagingReports && medicalRecordsData.imagingReports.length > 0 ? (
@@ -688,7 +683,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Medications */}
                     <TabsContent value="medications" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold">Current Medications</h3>
@@ -721,7 +715,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Immunizations */}
                     <TabsContent value="immunizations" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Immunizations History</h3>
                         {medicalRecordsData.immunizations && medicalRecordsData.immunizations.length > 0 ? (
@@ -741,7 +734,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Surgical History */}
                     <TabsContent value="surgicalHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Surgical History</h3>
                         {medicalRecordsData.surgicalHistory && medicalRecordsData.surgicalHistory.length > 0 ? (
@@ -762,7 +754,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Documents */}
                     <TabsContent value="documents" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">My Documents</h3>
                         <div className="flex justify-between items-center mb-3">
@@ -796,7 +787,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Family History */}
                     <TabsContent value="familyHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Family Medical History</h3>
                         {medicalRecordsData.familyHistory && medicalRecordsData.familyHistory.length > 0 ? (
@@ -816,7 +806,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* Social History */}
                     <TabsContent value="socialHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">Social History</h3>
                         {medicalRecordsData.socialHistory && medicalRecordsData.socialHistory.length > 0 ? (
@@ -836,7 +825,6 @@ const ProfilePage = () => {
                         )}
                     </TabsContent>
 
-                    {/* General History */}
                     <TabsContent value="generalHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">General Medical History</h3>
                         {medicalRecordsData.generalHistory && medicalRecordsData.generalHistory.length > 0 ? (
@@ -864,7 +852,7 @@ const ProfilePage = () => {
         if (isLoading) {
             return (
                 <div className="min-h-[400px] flex items-center justify-center">
-                    <LoadingSpinner /> {/* Assuming a LoadingSpinner component exists */}
+                    <LoadingSpinner />
                 </div>
             );
         }
@@ -872,7 +860,7 @@ const ProfilePage = () => {
         if (apiError) {
             return (
                 <div className="min-h-[400px] flex items-center justify-center">
-                    <ErrorState message={apiError} onRetry={handleRefresh} /> {/* Assuming an ErrorState component exists */}
+                    <ErrorState message={apiError} onRetry={handleRefresh} />
                 </div>
             );
         }
@@ -890,11 +878,11 @@ const ProfilePage = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title="My Profile"
-                description="Manage your personal information, emergency contacts, insurance, and medical records."
+                title={t('patient.profile.myProfile')}
+                description={t('patient.profile.description')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Profile', href: '/patient/profile' }
+                    { label: t('patient.profile.breadcrumb'), href: '/patient/dashboard' },
+                    { label: t('patient.profile.profile'), href: '/patient/profile' }
                 ]}
             />
 
@@ -902,10 +890,10 @@ const ProfilePage = () => {
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                    <TabsTrigger value="emergency">Emergency Contact</TabsTrigger>
-                    <TabsTrigger value="insurance">Insurance</TabsTrigger>
-                    <TabsTrigger value="medical">Medical File</TabsTrigger>
+                    <TabsTrigger value="personal">{t('patient.profile.tabs.personal', 'Personal Info')}</TabsTrigger>
+                    <TabsTrigger value="emergency">{t('patient.profile.tabs.emergency', 'Emergency Contact')}</TabsTrigger>
+                    <TabsTrigger value="insurance">{t('patient.profile.tabs.insurance', 'Insurance')}</TabsTrigger>
+                    <TabsTrigger value="medical">{t('patient.profile.tabs.medical', 'Medical File')}</TabsTrigger>
                 </TabsList>
             </Tabs>
 
@@ -913,7 +901,6 @@ const ProfilePage = () => {
 
             {renderContent()}
 
-            {/* PDF Viewer Dialog */}
             <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
                 <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col p-4">
                     <DialogHeader className="pb-2">
@@ -976,21 +963,18 @@ const ProfilePage = () => {
                 </DialogContent>
             </Dialog>
 
-            {/* Add Allergy Dialog */}
             <AddAllergyDialog
                 open={allergyDialogOpen}
                 onClose={() => setAllergyDialogOpen(false)}
                 onAdd={(newAllergy) => handleMedicalRecordAdd('allergies', newAllergy)}
             />
 
-            {/* Add Chronic Condition Dialog */}
             <AddChronicConditionDialog
                 open={chronicConditionDialogOpen}
                 onClose={() => setChronicConditionDialogOpen(false)}
                 onAdd={(newCondition) => handleMedicalRecordAdd('chronicConditions', newCondition)}
             />
 
-            {/* Add Medication Dialog (for medical records tab) */}
             <AddMedicationDialog
                 open={medicationDialogOpen}
                 onClose={() => setMedicationDialogOpen(false)}

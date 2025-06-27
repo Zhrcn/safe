@@ -76,7 +76,6 @@ const RegisterForm = () => {
           </div>
         )}
 
-        {/* Email Field */}
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-foreground">
             Email
@@ -97,7 +96,6 @@ const RegisterForm = () => {
           )}
         </div>
 
-        {/* Password Field */}
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-medium text-foreground">
             Password
@@ -130,7 +128,6 @@ const RegisterForm = () => {
           )}
         </div>
 
-        {/* Confirm Password Field */}
         <div className="space-y-2">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
             Confirm Password
@@ -163,7 +160,6 @@ const RegisterForm = () => {
           )}
         </div>
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isLoading}

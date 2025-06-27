@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import Link from 'next/link';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/Dialog';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
+import { useTranslation } from 'react-i18next';
 
 const AppointmentCard = ({ appointment, onReschedule }) => {
     const getStatusProps = (status) => {
@@ -42,7 +43,6 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
     const statusProps = getStatusProps(appointment.status);
     return (
         <Card className="hover:shadow-lg transition-shadow border border-border bg-card flex flex-col h-full relative">
-            {/* Status badge at top right */}
             <div className="absolute top-4 right-4">
                 <Button variant={statusProps.variant} size="sm" className="rounded-full px-4 py-1 cursor-default" disabled>{statusProps.label}</Button>
             </div>
@@ -87,6 +87,7 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
 };
 
 const AppointmentsPage = () => {
+    const { t } = useTranslation('common');
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -96,32 +97,32 @@ const AppointmentsPage = () => {
     const appointments = [
         {
             id: 1,
-            title: 'Annual Check-up',
-            doctor: 'Sarah Johnson',
+            title: t('patient.appointments.annualCheckup', 'Annual Checkup'),
+            doctor: t('patient.appointments.doctorSarahJohnson', 'Sarah Johnson'),
             date: '2024-03-20',
             time: '10:00 AM',
-            type: 'in-person',
-            location: 'Main Clinic, Room 101',
+            type: t('patient.appointments.inPerson', 'In Person'),
+            location: t('patient.appointments.mainClinicRoom101', 'Main Clinic, Room 101'),
             status: 'upcoming'
         },
         {
             id: 2,
-            title: 'Follow-up Consultation',
-            doctor: 'Michael Chen',
+            title: t('patient.appointments.followUpConsultation', 'Follow-up Consultation'),
+            doctor: t('patient.appointments.doctorMichaelChen', 'Michael Chen'),
             date: '2024-03-22',
             time: '2:30 PM',
-            type: 'video',
-            location: 'Virtual Meeting',
+            type: t('patient.appointments.video', 'Video'),
+            location: t('patient.appointments.virtualMeeting', 'Virtual Meeting'),
             status: 'upcoming'
         },
         {
             id: 3,
-            title: 'Lab Results Review',
-            doctor: 'Emily Rodriguez',
+            title: t('patient.appointments.labResultsReview', 'Lab Results Review'),
+            doctor: t('patient.appointments.doctorEmilyRodriguez', 'Emily Rodriguez'),
             date: '2024-03-15',
             time: '11:00 AM',
-            type: 'phone',
-            location: 'Phone Consultation',
+            type: t('patient.appointments.phone', 'Phone'),
+            location: t('patient.appointments.phoneConsultation', 'Phone Consultation'),
             status: 'completed'
         }
     ];
@@ -156,18 +157,18 @@ const AppointmentsPage = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title="Appointments"
-                description="Schedule and manage your healthcare appointments."
+                title={t('patient.appointments.title')}
+                description={t('patient.appointments.description')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Appointments', href: '/patient/appointments' }
+                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
+                    { label: t('patient.appointments.title'), href: '/patient/appointments' }
                 ]}
                 actions={
                     <Dialog open={showModal} onOpenChange={setShowModal}>
                         <DialogTrigger >
                             <Button onClick={handleNewAppointment}>
                                 <Plus className="h-4 w-4 mr-2" />
-                                New Appointment
+                                {t('patient.appointments.new')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-xl w-full">
@@ -185,12 +186,11 @@ const AppointmentsPage = () => {
                 }
             />
 
-            {/* Actions Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="relative flex-1 min-w-[200px] max-w-sm">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Search appointments..."
+                        placeholder={t('patient.appointments.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -198,27 +198,25 @@ const AppointmentsPage = () => {
                 </div>
             </div>
 
-            {/* Appointments List */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredAppointments.length > 0 ? (
                     filteredAppointments.map((appointment) => (
                         <Dialog key={appointment.id} open={showModal && selectedAppointment?.id === appointment.id && modalType === 'reschedule'} onOpenChange={setShowModal}>
                             <AppointmentCard appointment={appointment} onReschedule={handleReschedule} />
-                            {/* The reschedule modal is handled globally above, so this Dialog is just for accessibility */}
                         </Dialog>
                     ))
                 ) : (
                     <div className="text-center py-12 bg-card rounded-lg shadow-sm col-span-full">
                         <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
-                        <h3 className="text-xl font-semibold mb-3">No Appointments Found</h3>
+                        <h3 className="text-xl font-semibold mb-3">{t('patient.appointments.noAppointments')}</h3>
                         <p className="text-muted-foreground mb-6">
                             {searchQuery
-                                ? 'Try adjusting your search to find appointments.'
-                                : 'You don\'t have any appointments. Schedule your first appointment!'}
+                                ? t('patient.appointments.noAppointmentsSearch')
+                                : t('patient.appointments.noAppointmentsDefault')}
                         </p>
                         <Button onClick={handleNewAppointment}>
                             <Plus className="h-4 w-4 mr-2" />
-                            Schedule New Appointment
+                            {t('patient.appointments.scheduleNew')}
                         </Button>
                     </div>
                 )}

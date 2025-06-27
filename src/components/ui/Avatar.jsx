@@ -1,6 +1,8 @@
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 import { cn } from "@/lib/utils"
+import { useTranslation } from 'react-i18next';
+
 const Avatar = React.forwardRef(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
@@ -20,15 +22,20 @@ const AvatarImage = React.forwardRef(({ className, ...props }, ref) => (
   />
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
-const AvatarFallback = React.forwardRef(({ className, ...props }, ref) => (
-  <span
-    ref={ref}
-    className={cn(
-      "flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-))
+const AvatarFallback = React.forwardRef(({ className, ...props }, ref) => {
+  const { t } = useTranslation();
+  return (
+    <span
+      ref={ref}
+      className={cn(
+        "flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
+        className
+      )}
+      {...props}
+    >
+      {t('avatar.fallback', 'User')}
+    </span>
+  );
+})
 AvatarFallback.displayName = "AvatarFallback"
 export { Avatar, AvatarImage, AvatarFallback } 

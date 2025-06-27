@@ -2,11 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base Theme Configuration */
 @layer base {
     :root {
         --color-radius: 0.5rem;
-        /* All color variables are set by JS ThemeProvider */
+        --color-primary: #f87171;
     }
 
     html, body {
@@ -19,6 +18,10 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         transition: background-color 0.3s;
+    }
+
+    html.dark {
+        --color-primary: #f87171;
     }
 
     .card {
@@ -60,7 +63,6 @@
     }
 }
 
-/* Custom Utilities */
 @layer utilities {
     ::-webkit-scrollbar {
         width: 8px;
@@ -77,10 +79,6 @@
     }
 }
 
-/* Remove old theme-* classes and HSL-based variables */
-/* .theme-hopeCare, .theme-pureCare, .theme-syriaWarm, .theme-safeNight { ... } */
-
-/* Semantic color utility classes for theme variables */
 .bg-primary { background-color: var(--color-primary) !important; }
 .bg-secondary { background-color: var(--color-secondary) !important; }
 .bg-accent { background-color: var(--color-accent) !important; }
@@ -137,7 +135,6 @@
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
 }
 
-/* Theme-adaptive SAFE logo SVG */
 .safe-logo-svg {
   width: 36px;
   height: 36px;

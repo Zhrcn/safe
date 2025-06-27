@@ -11,7 +11,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 export default function PatientsPage() {
+  const { t } = useTranslation();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -46,12 +48,12 @@ export default function PatientsPage() {
   }, [patients]);
   const tabLabels = useMemo(() => {
     return {
-      all: `All Patients (${statusCounts.all})`,
-      active: `Active (${statusCounts.active})`,
-      urgent: `Urgent (${statusCounts.urgent})`,
-      inactive: `Inactive (${statusCounts.inactive})`
+      all: t('doctor.patients.all', { count: statusCounts.all }, `All Patients (${statusCounts.all})`),
+      active: t('doctor.patients.active', { count: statusCounts.active }, `Active (${statusCounts.active})`),
+      urgent: t('doctor.patients.urgent', { count: statusCounts.urgent }, `Urgent (${statusCounts.urgent})`),
+      inactive: t('doctor.patients.inactive', { count: statusCounts.inactive }, `Inactive (${statusCounts.inactive})`)
     };
-  }, [statusCounts]);
+  }, [statusCounts, t]);
   useEffect(() => {
     const loadPatients = async () => {
       try {
@@ -60,14 +62,14 @@ export default function PatientsPage() {
         const data = mockPatients;
         setPatients(data);
       } catch (err) {
-        setError('Failed to load patients');
+        setError(t('doctor.patients.loadError', 'Failed to load patients'));
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     loadPatients();
-  }, []);
+  }, [t]);
   const handleTabChange = (value) => {
     setActiveTab(value);
   };
@@ -87,10 +89,10 @@ export default function PatientsPage() {
     <div className="p-6 bg-background min-h-screen text-foreground">
       <Card className="mb-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
-          <h1 className="text-2xl font-bold text-card-foreground">Patient Management</h1>
+          <h1 className="text-2xl font-bold text-card-foreground">{t('doctor.patients.title', 'Patient Management')}</h1>
           <Button onClick={handleOpenAddDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-md">
             <UserPlus className="mr-2 h-4 w-4" />
-            Add New Patient
+            {t('doctor.patients.addNew', 'Add New Patient')}
           </Button>
         </CardContent>
       </Card>
@@ -105,7 +107,7 @@ export default function PatientsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search patients by name, condition, or ID..."
+                placeholder={t('doctor.patients.searchPlaceholder', 'Search patients by name, condition, or ID...')}
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="pl-10 bg-background border border-border text-foreground rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
@@ -116,7 +118,7 @@ export default function PatientsPage() {
               className="whitespace-nowrap text-muted-foreground border border-border hover:bg-muted/50 rounded-lg shadow-sm"
             >
               <Filter className="mr-2 h-4 w-4" />
-              Advanced Filters
+              {t('doctor.patients.advancedFilters', 'Advanced Filters')}
             </Button>
           </div>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
@@ -135,12 +137,12 @@ export default function PatientsPage() {
             <div className="py-12 text-center">
               <UserRound className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
               <h2 className="text-lg font-semibold text-card-foreground mb-2">
-                No patients found
+                {t('doctor.patients.noPatients', 'No patients found')}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
                 {searchTerm 
-                  ? 'Try a different search term or clear the filters'
-                  : 'Add a new patient to get started'
+                  ? t('doctor.patients.noSearchResults', 'Try a different search term or clear the filters')
+                  : t('doctor.patients.addPrompt', 'Add a new patient to get started')
                 }
               </p>
               <Button
@@ -148,7 +150,7 @@ export default function PatientsPage() {
                 onClick={handleOpenAddDialog}
                 className="text-primary border-primary hover:bg-primary/10 rounded-lg"
               >
-                Add New Patient
+                {t('doctor.patients.addNew', 'Add New Patient')}
               </Button>
             </div>
           ) : (

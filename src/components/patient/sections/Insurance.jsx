@@ -27,7 +27,6 @@ const Insurance = ({ patient }) => {
     };
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Insurance Information */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <Building2 className="w-6 h-6" />
@@ -77,7 +76,6 @@ const Insurance = ({ patient }) => {
                     </div>
                 </div>
             </div>
-            {/* Coverage Details */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <FileText className="w-6 h-6" />
@@ -111,7 +109,6 @@ const Insurance = ({ patient }) => {
                     />
                 </div>
             </div>
-            {/* Contact Information */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <Phone className="w-6 h-6" />

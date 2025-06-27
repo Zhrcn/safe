@@ -10,10 +10,12 @@ import {
 } from '@/components/ui/DropdownMenu';
 import { Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false);
   const { currentTheme, setTheme } = useTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
@@ -24,10 +26,10 @@ const ThemeSwitcher = () => {
   }
 
   const themes = [
-    { name: 'hopeCare', label: 'HopeCare' },
-    { name: 'pureCare', label: 'PureCare' },
-    { name: 'syriaWarm', label: 'SyriaWarm' },
-    { name: 'safeNight', label: 'SafeNight' },
+    { name: 'hopeCare', label: t('themeSwitcher.hopeCare', 'HopeCare') },
+    { name: 'pureCare', label: t('themeSwitcher.pureCare', 'PureCare') },
+    { name: 'syriaWarm', label: t('themeSwitcher.syriaWarm', 'SyriaWarm') },
+    { name: 'safeNight', label: t('themeSwitcher.safeNight', 'SafeNight') },
   ];
 
   return (
@@ -37,9 +39,10 @@ const ThemeSwitcher = () => {
           variant="ghost"
           size="icon"
           className="relative focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow hover:bg-primary/10 transition-colors"
+          aria-label={t('themeSwitcher.toggleTheme', 'Toggle theme')}
         >
           <Palette className="h-5 w-5" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t('themeSwitcher.toggleTheme', 'Toggle theme')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44 rounded-lg shadow-xl border border-border bg-card">

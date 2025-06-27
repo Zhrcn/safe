@@ -9,8 +9,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/Select';
+import { useTranslation } from 'react-i18next';
 
 const AppointmentCard = ({ appointment }) => {
+    const { t } = useTranslation();
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
             case 'upcoming':
@@ -55,17 +57,17 @@ const AppointmentCard = ({ appointment }) => {
     const { date, time } = formatDateTime(appointment.appointmentDate, appointment.appointmentTime);
     const patientName = appointment.patient ? 
         `${appointment.patient.firstName || ''} ${appointment.patient.lastName || ''}`.trim() : 
-        'Unknown Patient';
+        t('doctor.appointments.unknownPatient', 'Unknown Patient');
     const doctorName = appointment.doctor ? 
         `${appointment.doctor.firstName || ''} ${appointment.doctor.lastName || ''}`.trim() : 
-        'Unknown Doctor';
+        t('doctor.appointments.unknownDoctor', 'Unknown Doctor');
 
     return (
         <Card className="rounded-xl shadow-md border border-border mb-4">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">{appointment.consultationType || 'Consultation'}</h3>
+                        <h3 className="text-lg font-semibold mb-2">{appointment.consultationType || t('doctor.appointments.consultation', 'Consultation')}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="w-4 h-4" />
                             <span>{date}</span>
@@ -74,7 +76,7 @@ const AppointmentCard = ({ appointment }) => {
                         </div>
                     </div>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                        {appointment.status || 'Unknown'}
+                        {appointment.status || t('doctor.appointments.unknown', 'Unknown')}
                     </span>
                 </div>
                 <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
@@ -83,7 +85,7 @@ const AppointmentCard = ({ appointment }) => {
                 </div>
                 {appointment.reason && (
                     <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
+                        <MapPin className="h-4 w-4" />
                         <span>{appointment.reason}</span>
                     </div>
                 )}
@@ -93,6 +95,7 @@ const AppointmentCard = ({ appointment }) => {
 };
 
 const AppointmentsPage = () => {
+    const { t } = useTranslation();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -167,43 +170,41 @@ const AppointmentsPage = () => {
         <div className="container mx-auto px-4 py-8">
             <Card className="mb-8 rounded-xl shadow-lg">
                 <CardContent className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h1 className="text-2xl font-bold">Appointments</h1>
+                    <h1 className="text-2xl font-bold">{t('doctor.appointments.title', 'Appointments')}</h1>
                     <div className="flex gap-4 w-full md:w-auto">
                         <div className="relative w-full md:w-auto">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
                                 type="text"
-                                placeholder="Search appointments..."
+                                placeholder={t('doctor.appointments.searchPlaceholder', 'Search appointments...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 pr-4 py-2 rounded-lg"
                             />
                         </div>
-                        {/* Status Filter */}
                         <div className="w-36">
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="All Status" />
+                                    <SelectValue placeholder={t('doctor.appointments.allStatus', 'All Status')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="scheduled">Scheduled</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    <SelectItem value="all">{t('doctor.appointments.allStatus', 'All Status')}</SelectItem>
+                                    <SelectItem value="scheduled">{t('doctor.appointments.scheduled', 'Scheduled')}</SelectItem>
+                                    <SelectItem value="completed">{t('doctor.appointments.completed', 'Completed')}</SelectItem>
+                                    <SelectItem value="cancelled">{t('doctor.appointments.cancelled', 'Cancelled')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-                        {/* Type Filter */}
                         <div className="w-36">
                             <Select value={typeFilter} onValueChange={setTypeFilter}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="All Types" />
+                                    <SelectValue placeholder={t('doctor.appointments.allTypes', 'All Types')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Types</SelectItem>
-                                    <SelectItem value="in-person">In Person</SelectItem>
-                                    <SelectItem value="video">Video</SelectItem>
-                                    <SelectItem value="phone">Phone</SelectItem>
+                                    <SelectItem value="all">{t('doctor.appointments.allTypes', 'All Types')}</SelectItem>
+                                    <SelectItem value="in-person">{t('doctor.appointments.inPerson', 'In Person')}</SelectItem>
+                                    <SelectItem value="video">{t('doctor.appointments.video', 'Video')}</SelectItem>
+                                    <SelectItem value="phone">{t('doctor.appointments.phone', 'Phone')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

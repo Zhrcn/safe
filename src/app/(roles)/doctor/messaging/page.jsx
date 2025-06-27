@@ -5,8 +5,10 @@ import { conversations as mockConversations } from "@/mockdata/conversations";
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
 import { Card, CardContent } from '@/components/ui/Card';
+import { useTranslation } from 'react-i18next';
 
 export default function DoctorMessagingPage() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [selected, setSelected] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,7 +60,7 @@ export default function DoctorMessagingPage() {
   };
 
   const handleNewChat = () => {
-    alert("Start a new chat (not implemented)");
+    alert(t('doctor.messaging.startNewChat', 'Start a new chat (not implemented)'));
   };
 
   if (mobileView) {
@@ -130,7 +132,7 @@ export default function DoctorMessagingPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
-                  Select a conversation to start chatting.
+                  {t('doctor.messaging.selectConversation', 'Select a conversation to start chatting.')}
                 </div>
               )}
             </CardContent>

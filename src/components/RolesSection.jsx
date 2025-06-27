@@ -7,56 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { ROLES } from '@/config/app-config';
 import Section from './common/Section';
 import clsx from 'clsx';
-
-const roles = [
-  {
-    icon: User,
-    title: 'Patient',
-    description: 'Access your medical records, schedule appointments, and manage prescriptions.',
-    features: [
-      'View medical history',
-      'Book appointments',
-      'Manage prescriptions',
-      'Secure messaging',
-      'Access test results'
-    ],
-    role: ROLES.PATIENT,
-    color: 'var(--color-primary)',
-    gradient: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-  },
-  {
-    icon: Stethoscope,
-    title: 'Doctor',
-    description: 'Manage patient records, appointments, and issue digital prescriptions.',
-    features: [
-      'Patient management',
-      'Schedule appointments',
-      'Issue prescriptions',
-      'Medical records access',
-      'Virtual consultations',
-      'Treatment planning'
-    ],
-    role: ROLES.DOCTOR,
-    color: 'var(--color-secondary)',
-    gradient: 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%)',
-  },
-  {
-    icon: Droplet,
-    title: 'Pharmacist',
-    description: 'Process digital prescriptions and manage medication dispensing.',
-    features: [
-      'Process prescriptions',
-      'Inventory management',
-      'Patient consultation',
-      'Medication tracking',
-      'Drug interactions check',
-      'Prescription verification'
-    ],
-    role: ROLES.PHARMACIST,
-    color: 'var(--color-accent)',
-    gradient: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%)',
-  },
-];
+import { Badge } from '@/components/ui/Badge';
+import GlassCard from './common/GlassCard';
+import { useTranslation } from 'react-i18next';
 
 const cardVariants = {
   initial: { opacity: 0, y: 40, scale: 0.96 },
@@ -107,9 +60,11 @@ const RoleCard = ({
   role,
   color,
   gradient,
+  badge,
   index,
 }) => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = React.useState(false);
   const [hoveredFeature, setHoveredFeature] = React.useState(null);
 
@@ -117,39 +72,27 @@ const RoleCard = ({
   const handleRegister = () => router.push(`/register?role=${role}`);
 
   return (
-    <motion.div
-      custom={index}
-      variants={cardVariants}
-      initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, margin: '-50px' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setHoveredFeature(null); }}
+    <GlassCard
       tabIndex={0}
       aria-label={title}
       className={clsx(
-        'group relative flex flex-col items-center justify-between rounded-2xl shadow-xl transition-all duration-200',
-        'bg-white/90 dark:bg-[#1a2230]/90 backdrop-blur-lg border border-transparent',
+        'group relative flex flex-col items-center justify-between shadow-xl transition-all duration-200',
+        'backdrop-blur-xl border border-border',
         'hover:shadow-2xl focus-within:ring-2 focus-within:ring-primary outline-none',
-        'p-7 sm:p-9 min-h-[480px] w-full max-w-md mx-auto'
+        'p-8 sm:p-10 min-h-[520px] w-full max-w-md mx-auto',
+        isHovered ? 'scale-[1.04] -translate-y-1.5' : ''
       )}
       style={{
-        borderImage: isHovered
-          ? `${gradient} 1`
-          : undefined,
+        borderImage: isHovered ? `${gradient} 1` : undefined,
         borderWidth: isHovered ? 2 : 1,
         boxShadow: isHovered
           ? `0 12px 40px 0 ${color}33, 0 2px 8px 0 ${color}11`
           : `0 2px 8px 0 ${color}11`,
         transition: 'box-shadow 0.2s, border-image 0.2s',
       }}
-      whileHover={{
-        scale: 1.04,
-        y: -8,
-        transition: { type: 'spring', stiffness: 180, damping: 18 },
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setHoveredFeature(null); }}
     >
-      {/* Animated gradient border overlay */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -157,7 +100,7 @@ const RoleCard = ({
             animate={{ opacity: 0.7 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="pointer-events-none absolute inset-0 rounded-2xl z-10"
+            className="pointer-events-none absolute inset-0 rounded-3xl z-10"
             style={{
               border: '2.5px solid transparent',
               borderImage: gradient + ' 1',
@@ -166,22 +109,20 @@ const RoleCard = ({
           />
         )}
       </AnimatePresence>
-      {/* Icon */}
       <motion.div
         animate={isHovered ? { scale: 1.18, rotate: 8 } : { scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-        className="relative flex items-center justify-center rounded-full"
+        className="relative flex items-center justify-center rounded-full shadow-lg mb-2"
         style={{
-          width: 64,
-          height: 64,
+          width: 80,
+          height: 80,
           background: gradient,
           boxShadow: isHovered
             ? `0 4px 24px 0 ${color}33`
             : `0 2px 8px 0 ${color}11`,
         }}
       >
-        <Icon className="w-10 h-10 text-white drop-shadow" />
-        {/* Animated ring */}
+        <Icon className="w-14 h-14 text-white drop-shadow" />
         <AnimatePresence>
           {isHovered && (
             <motion.span
@@ -199,12 +140,13 @@ const RoleCard = ({
           )}
         </AnimatePresence>
       </motion.div>
-      <h3 className="mt-4 font-bold text-2xl text-foreground text-center">{title}</h3>
-      {/* Description */}
+      <Badge variant={badge} className="absolute top-6 right-6 px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-md">
+        {title}
+      </Badge>
+      <h3 className="mt-4 font-extrabold text-2xl text-foreground text-center tracking-tight drop-shadow-sm">{title}</h3>
       <p className="mb-4 text-muted-foreground text-base sm:text-lg leading-normal font-normal text-center z-20">
         {description}
       </p>
-      {/* Features - always visible, with motion and bold on hover */}
       <motion.div
         className="mb-6 w-full flex flex-col gap-2 z-20"
         variants={featureListVariants}
@@ -244,39 +186,91 @@ const RoleCard = ({
           </motion.div>
         ))}
       </motion.div>
-      {/* Actions */}
       <div className="mt-auto flex w-full gap-3 z-20">
         <Button
           className={clsx(
-            "flex-1 px-0 py-2.5 text-base font-bold rounded-full shadow-md focus:outline-none focus:ring-2 border-none transition-all duration-200 select-none active:scale-95",
-            "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white",
-            "hover:from-[var(--color-primary-dark,theme(colors.primary.700))]",
-            "hover:to-[var(--color-secondary-dark,theme(colors.secondary.700))]",
-            "hover:text-white"
+            'flex-1 px-0 py-2.5 text-base font-bold rounded-full shadow-md focus:outline-none focus:ring-2 border-none transition-all duration-200 select-none active:scale-95',
+            'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white',
+            'hover:from-[var(--color-primary-dark,theme(colors.primary.700))]',
+            'hover:to-[var(--color-secondary-dark,theme(colors.secondary.700))]',
+            'hover:text-white'
           )}
-          style={{ color: "#fff" }}
+          style={{ color: '#fff' }}
           onClick={handleLogin}
         >
-          Login
+          {t('roles.login', 'Login')}
         </Button>
         <Button
           className="flex-1 px-0 py-2.5 text-base font-semibold rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary shadow-md hover:shadow-lg"
           onClick={handleRegister}
         >
-          Register
+          {t('roles.register', 'Register')}
         </Button>
       </div>
-    </motion.div>
+    </GlassCard>
   );
 };
 
 export default function RolesSection() {
+  const { t } = useTranslation('common');
+  const roles = [
+    {
+      icon: User,
+      title: t('roles.patient.title', 'Patient'),
+      description: t('roles.patient.description', 'Access your medical records, schedule appointments, and manage prescriptions.'),
+      features: [
+        t('roles.patient.features.0', 'View medical history'),
+        t('roles.patient.features.1', 'Book appointments'),
+        t('roles.patient.features.2', 'Manage prescriptions'),
+        t('roles.patient.features.3', 'Secure messaging'),
+        t('roles.patient.features.4', 'Access test results'),
+      ],
+      role: ROLES.PATIENT,
+      color: 'var(--color-primary)',
+      badge: 'primary',
+      gradient: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+    },
+    {
+      icon: Stethoscope,
+      title: t('roles.doctor.title', 'Doctor'),
+      description: t('roles.doctor.description', 'Manage patient records, appointments, and issue digital prescriptions.'),
+      features: [
+        t('roles.doctor.features.0', 'Patient management'),
+        t('roles.doctor.features.1', 'Schedule appointments'),
+        t('roles.doctor.features.2', 'Issue prescriptions'),
+        t('roles.doctor.features.3', 'Medical records access'),
+        t('roles.doctor.features.4', 'Virtual consultations'),
+        t('roles.doctor.features.5', 'Treatment planning'),
+      ],
+      role: ROLES.DOCTOR,
+      color: 'var(--color-accent)',
+      badge: 'accent',
+      gradient: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-success) 100%)',
+    },
+    {
+      icon: Droplet,
+      title: t('roles.pharmacist.title', 'Pharmacist'),
+      description: t('roles.pharmacist.description', 'Process digital prescriptions and manage medication dispensing.'),
+      features: [
+        t('roles.pharmacist.features.0', 'Process prescriptions'),
+        t('roles.pharmacist.features.1', 'Inventory management'),
+        t('roles.pharmacist.features.2', 'Patient consultation'),
+        t('roles.pharmacist.features.3', 'Medication tracking'),
+        t('roles.pharmacist.features.4', 'Drug interactions check'),
+        t('roles.pharmacist.features.5', 'Prescription verification'),
+      ],
+      role: ROLES.PHARMACIST,
+      color: 'var(--color-warning)',
+      badge: 'warning',
+      gradient: 'linear-gradient(135deg, var(--color-warning) 0%, var(--color-error) 100%)',
+    },
+  ];
   return (
     <Section
       id="roles"
       className="relative overflow-hidden bg-transparent py-16"
     >
-      {/* Modern background pattern */}
+      <p>{t('testKey')}</p>
       <div
         className="absolute inset-0 pointer-events-none select-none z-0"
         aria-hidden="true"
@@ -296,13 +290,13 @@ export default function RolesSection() {
           className="mb-16 text-center"
         >
           <p className="mb-2 font-semibold tracking-wider text-primary text-xs sm:text-sm uppercase">
-            User Access
+            {t('roles.sectionLabel', 'Roles')}
           </p>
           <h2 className="mb-4 font-extrabold text-4xl sm:text-5xl md:text-6xl leading-tight text-foreground">
-            Choose Your Role
+            {t('roles.sectionTitle', 'Choose Your Role')}
           </h2>
           <p className="text-muted-foreground text-lg text-center max-w-2xl mx-auto">
-            Select your role to access features tailored for your specific healthcare needs.
+            {t('roles.sectionDescription', 'Select your role to get started with SAFE.')}
           </p>
         </motion.div>
         <div className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto px-2 sm:px-6">

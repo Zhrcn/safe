@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   UserPlus,
@@ -35,6 +35,7 @@ import {
   CardTitle,
   CardContent,
 } from '@/components/ui/Card';
+import { useTranslation } from 'react-i18next';
 
 ChartJS.register(
   CategoryScale,
@@ -46,10 +47,98 @@ ChartJS.register(
   ArcElement
 );
 
+function getCssVar(name, fallback) {
+  if (typeof window !== 'undefined') {
+    const style = getComputedStyle(document.documentElement);
+    const value = style.getPropertyValue(name);
+    return value ? value.trim() : fallback;
+  }
+  return fallback;
+}
+
+function getChartColors(mode) {
+  if (typeof window !== 'undefined') {
+    return {
+      bar: getCssVar('--primary-bg-chart', getCssVar('--primary', '#2563eb')),
+      barHover: getCssVar('--primary-bg-chart-hover', getCssVar('--primary', '#2563eb')),
+      barBorder: getCssVar('--primary', '#2563eb'),
+      doughnut: [
+        getCssVar('--primary-bg-chart', getCssVar('--primary', '#2563eb')),
+        getCssVar('--success-bg-chart', getCssVar('--success', '#22c55e')),
+        getCssVar('--warning-bg-chart', getCssVar('--warning', '#f59e42')),
+        getCssVar('--destructive-bg-chart', getCssVar('--destructive', '#ef4444')),
+      ],
+      doughnutBorder: [
+        getCssVar('--primary', '#2563eb'),
+        getCssVar('--success', '#22c55e'),
+        getCssVar('--warning', '#f59e42'),
+        getCssVar('--destructive', '#ef4444'),
+      ],
+      card: getCssVar('--card', mode === 'dark' ? '#18181b' : '#fff'),
+      cardForeground: getCssVar('--card-foreground', mode === 'dark' ? '#fff' : '#18181b'),
+      mutedForeground: getCssVar('--muted-foreground', mode === 'dark' ? '#a1a1aa' : '#6b7280'),
+      border: getCssVar('--border', mode === 'dark' ? '#27272a' : '#e5e7eb'),
+      muted: getCssVar('--muted', mode === 'dark' ? '#27272a' : '#f3f4f6'),
+      primary: getCssVar('--primary', '#2563eb'),
+      primaryBgVerylight: getCssVar('--primary-bg-verylight', 'hsla(222, 47%, 11%, 0.05)'),
+      primaryBgLight: getCssVar('--primary-bg-light', 'hsla(222, 47%, 11%, 0.10)'),
+    };
+  }
+  if (mode === 'dark') {
+    return {
+      bar: '#2563eb',
+      barHover: '#2563eb',
+      barBorder: '#2563eb',
+      doughnut: [
+        '#2563eb',
+        '#22c55e',
+        '#f59e42',
+        '#ef4444',
+      ],
+      doughnutBorder: [
+        '#2563eb',
+        '#22c55e',
+        '#f59e42',
+        '#ef4444',
+      ],
+      card: '#18181b',
+      cardForeground: '#fff',
+      mutedForeground: '#a1a1aa',
+      border: '#27272a',
+    };
+  } else {
+    return {
+      bar: 'hsla(222, 47%, 11%, 0.7)',
+      barHover: 'hsla(222, 47%, 11%, 0.9)',
+      barBorder: '#2563eb',
+      doughnut: [
+        'hsla(222, 47%, 11%, 0.7)',
+        'hsla(142, 71%, 45%, 0.7)',
+        'hsla(36, 100%, 50%, 0.7)',
+        'hsla(0, 84%, 60%, 0.7)',
+      ],
+      doughnutBorder: [
+        '#2563eb',
+        '#22c55e',
+        '#f59e42',
+        '#ef4444',
+      ],
+      card: '#fff',
+      cardForeground: '#18181b',
+    };
+  }
+}
+
 export default function DoctorDashboard() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
 
-  // Chart data and options
+  const [chartColors, setChartColors] = useState(getChartColors(mode));
+
+  useEffect(() => {
+    setChartColors(getChartColors(mode));
+  }, [mode]);
+
   const [chartData, setChartData] = useState({
     appointments: { labels: [], datasets: [] },
     patientDistribution: { labels: [], datasets: [] },
@@ -59,43 +148,45 @@ export default function DoctorDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [chartKey, setChartKey] = useState(0);
 
-  // Set up chart data and options using CSS vars for colors
   useEffect(() => {
     setChartData({
       appointments: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        labels: [
+          t('doctor.dashboard.mon', 'Mon'),
+          t('doctor.dashboard.tue', 'Tue'),
+          t('doctor.dashboard.wed', 'Wed'),
+          t('doctor.dashboard.thu', 'Thu'),
+          t('doctor.dashboard.fri', 'Fri'),
+          t('doctor.dashboard.sat', 'Sat'),
+          t('doctor.dashboard.sun', 'Sun')
+        ],
         datasets: [
           {
-            label: 'Appointments',
+            label: t('doctor.dashboard.appointments', 'Appointments'),
             data: [12, 19, 15, 17, 14, 8, 5],
-            backgroundColor: 'var(--primary-bg-chart)',
+            backgroundColor: chartColors.bar,
             borderRadius: 10,
             borderSkipped: false,
-            borderColor: 'var(--primary)',
+            borderColor: chartColors.barBorder,
             borderWidth: 2,
             barPercentage: 0.6,
             categoryPercentage: 0.7,
-            hoverBackgroundColor: 'var(--primary-bg-chart-hover)',
+            hoverBackgroundColor: chartColors.barHover,
           },
         ],
       },
       patientDistribution: {
-        labels: ['New', 'Follow-up', 'Emergency', 'Regular'],
+        labels: [
+          t('doctor.dashboard.new', 'New'),
+          t('doctor.dashboard.followUp', 'Follow-up'),
+          t('doctor.dashboard.emergency', 'Emergency'),
+          t('doctor.dashboard.regular', 'Regular')
+        ],
         datasets: [
           {
             data: [30, 25, 15, 30],
-            backgroundColor: [
-              'var(--primary-bg-chart)',
-              'var(--success-bg-chart)',
-              'var(--warning-bg-chart)',
-              'var(--destructive-bg-chart)',
-            ],
-            borderColor: [
-              'var(--primary)',
-              'var(--success)',
-              'var(--warning)',
-              'var(--destructive)',
-            ],
+            backgroundColor: chartColors.doughnut,
+            borderColor: chartColors.doughnutBorder,
             borderWidth: 2,
             hoverOffset: 8,
           },
@@ -109,9 +200,9 @@ export default function DoctorDashboard() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'var(--card)',
-          titleColor: 'var(--card-foreground)',
-          bodyColor: 'var(--card-foreground)',
+          backgroundColor: chartColors.card,
+          titleColor: chartColors.cardForeground,
+          bodyColor: chartColors.cardForeground,
           borderColor: 'var(--border)',
           borderWidth: 1,
           padding: 12,
@@ -158,9 +249,9 @@ export default function DoctorDashboard() {
           },
         },
         tooltip: {
-          backgroundColor: 'var(--card)',
-          titleColor: 'var(--card-foreground)',
-          bodyColor: 'var(--card-foreground)',
+          backgroundColor: chartColors.card,
+          titleColor: chartColors.cardForeground,
+          bodyColor: chartColors.cardForeground,
           borderColor: 'var(--border)',
           borderWidth: 1,
           padding: 12,
@@ -170,9 +261,8 @@ export default function DoctorDashboard() {
     });
 
     setChartKey(Date.now());
-  }, [mode]);
+  }, [mode, t, chartColors]);
 
-  // Data
   const recentPatients = patients.slice(0, 3).map((patient) => ({
     _id: patient.id,
     firstName: patient.user.firstName,
@@ -195,15 +285,14 @@ export default function DoctorDashboard() {
   }
 
   if (overallError) {
-    return <ErrorMessage message="Failed to load dashboard data." />;
+    return <ErrorMessage message={t('doctor.dashboard.loadError', 'Failed to load dashboard data.')} />;
   }
 
-  // Quick Actions
   const quickActions = [
     {
       href: '/doctor/patients/new',
       icon: <UserPlus size={28} strokeWidth={2.2} />,
-      label: 'New Patient',
+      label: t('doctor.dashboard.newPatient', 'New Patient'),
       colorVar: 'var(--primary)',
       bgVar: 'var(--primary-bg)',
       iconBgVar: 'var(--primary-bg-hover, var(--primary-bg))',
@@ -211,7 +300,7 @@ export default function DoctorDashboard() {
     {
       href: '/doctor/appointments/new',
       icon: <CalendarClock size={28} strokeWidth={2.2} />,
-      label: 'Schedule',
+      label: t('doctor.dashboard.schedule', 'Schedule'),
       colorVar: 'var(--success)',
       bgVar: 'var(--success-bg)',
       iconBgVar: 'var(--success-bg-hover, var(--success-bg))',
@@ -219,7 +308,7 @@ export default function DoctorDashboard() {
     {
       href: '/doctor/prescriptions/new',
       icon: <FileText size={28} strokeWidth={2.2} />,
-      label: 'Prescription',
+      label: t('doctor.dashboard.prescription', 'Prescription'),
       colorVar: 'var(--warning)',
       bgVar: 'var(--warning-bg)',
       iconBgVar: 'var(--warning-bg-hover, var(--warning-bg))',
@@ -227,7 +316,7 @@ export default function DoctorDashboard() {
     {
       href: '/doctor/messages',
       icon: <MessageSquare size={28} strokeWidth={2.2} />,
-      label: 'Messages',
+      label: t('doctor.dashboard.messages', 'Messages'),
       colorVar: 'var(--destructive)',
       bgVar: 'var(--destructive-bg)',
       iconBgVar: 'var(--destructive-bg-hover, var(--destructive-bg))',
@@ -237,80 +326,68 @@ export default function DoctorDashboard() {
   return (
     <div className="p-6 sm:p-8 bg-background min-h-screen text-foreground flex justify-center">
       <div className="w-full max-w-screen-xl">
-        {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: 'var(--card-foreground)' }}>
-              Dashboard
+            <h1 className="text-4xl font-extrabold tracking-tight text-card-foreground drop-shadow-sm">
+              {t('doctor.dashboard.title', 'Dashboard')}
             </h1>
-            <p className="text-lg mt-1" style={{ color: 'var(--muted-foreground)' }}>
-              Welcome back, <span className="font-semibold" style={{ color: 'var(--primary)' }}>{doctorName}</span>
+            <p className="text-lg mt-1 text-muted-foreground">
+              {t('doctor.dashboard.welcome', 'Welcome back')}, <span className="font-semibold text-primary">{doctorName}</span>
             </p>
           </div>
         </div>
 
-        {/* Main Grid */}
         <div className="grid grid-cols-12 gap-6 md:gap-8 mb-10">
-          {/* Recent Patients */}
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <Card className="flex-grow rounded-2xl shadow-lg border-0 bg-card transition-all">
+            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-card transition-all hover:shadow-2xl focus-within:shadow-2xl">
               <CardHeader className="flex flex-row items-center justify-between mb-2 p-6 pb-2">
-                <CardTitle className="text-2xl font-bold" style={{ color: 'var(--card-foreground)' }}>
-                  Recent Patients
+                <CardTitle className="text-2xl font-bold text-card-foreground">
+                  {t('doctor.dashboard.recentPatients', 'Recent Patients')}
                 </CardTitle>
                 <Link
                   href="/doctor/patients"
-                  className="inline-flex items-center gap-1 text-primary hover:underline text-base font-semibold"
-                  style={{ color: 'var(--primary)' }}
+                  className="inline-flex items-center gap-1 text-primary hover:underline text-base font-semibold transition-colors hover:text-accent"
                 >
-                  <span>View All</span>
+                  <span>{t('doctor.dashboard.viewAll', 'View All')}</span>
                   <ChevronRight size={20} />
                 </Link>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="border-b mb-4" style={{ borderColor: 'var(--muted)' }} />
+                <div className="border-b mb-4 border-muted" />
                 {recentPatients.length === 0 ? (
-                  <div className="py-10 text-center" style={{ color: 'var(--muted-foreground)' }}>
+                  <div className="py-10 text-center text-muted-foreground">
                     <Users size={72} className="mx-auto mb-4 opacity-40" />
-                    <p className="text-lg">No recent patients found</p>
+                    <p className="text-lg">{t('doctor.dashboard.noRecentPatients', 'No recent patients found')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-6 flex-grow">
                     {recentPatients.map((patient) => (
                       <div
                         key={patient._id}
-                        className="flex items-center gap-5 group transition"
+                        className="flex items-center gap-5 group transition hover:bg-primary/5 rounded-xl px-2 py-2"
                       >
                         <div
-                          className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg group-hover:scale-105 transition-transform"
-                          style={{
-                            background: 'var(--primary)',
-                            color: 'var(--card)',
-                          }}
+                          className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg group-hover:scale-105 transition-transform bg-primary text-card border-4 border-card"
                         >
                           {patient.firstName?.[0]}
                           {patient.lastName?.[0]}
                         </div>
                         <div className="flex-grow">
-                          <p className="text-lg font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                          <p className="text-lg font-semibold text-card-foreground">
                             {patient.firstName} {patient.lastName}
                           </p>
-                          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-                            Last visit:{' '}
+                          <p className="text-sm mt-1 text-muted-foreground">
+                            {t('doctor.dashboard.lastVisit', 'Last visit')}: {' '}
                             {patient.lastVisit
                               ? new Date(patient.lastVisit).toLocaleDateString()
-                              : 'N/A'}
+                              : t('doctor.dashboard.notAvailable', 'N/A')}
                           </p>
                         </div>
                         <Link
                           href={`/doctor/patients/${patient._id}`}
-                          className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-semibold border-0 transition-colors shadow-md"
-                          style={{
-                            background: 'var(--primary)',
-                            color: 'var(--card)',
-                          }}
+                          className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-semibold border-0 transition-colors shadow-md bg-primary text-card hover:bg-accent focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
                         >
-                          View
+                          {t('doctor.dashboard.view', 'View')}
                         </Link>
                       </div>
                     ))}
@@ -320,12 +397,11 @@ export default function DoctorDashboard() {
             </Card>
           </div>
 
-          {/* Quick Actions */}
           <div className="col-span-12 md:col-span-4 flex flex-col">
-            <Card className="flex-grow rounded-2xl shadow-lg border-0 bg-card transition-all">
+            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
               <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2" style={{ color: 'var(--card-foreground)' }}>
-                  Quick Actions
+                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
+                  {t('doctor.dashboard.quickActions', 'Quick Actions')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -334,46 +410,15 @@ export default function DoctorDashboard() {
                     <Link
                       key={action.href}
                       href={action.href}
-                      className="group flex flex-col items-center justify-center gap-3 rounded-2xl h-32 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all"
-                      style={{
-                        color: action.colorVar,
-                        background: action.bgVar,
-                        boxShadow: 'var(--shadow-lg)',
-                        cursor: 'pointer',
-                        transition: 'box-shadow 0.18s, background 0.18s, transform 0.18s',
-                      }}
+                      className="group flex flex-col items-center justify-center gap-3 rounded-2xl h-32 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl"
                       tabIndex={0}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = `var(--${action.label.toLowerCase().replace(/\s/g, '-')}-bg-hover, ${action.bgVar})`;
-                        e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = action.bgVar;
-                        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                        e.currentTarget.style.transform = 'none';
-                      }}
-                      onFocus={e => {
-                        e.currentTarget.style.background = `var(--${action.label.toLowerCase().replace(/\s/g, '-')}-bg-hover, ${action.bgVar})`;
-                        e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
-                      }}
-                      onBlur={e => {
-                        e.currentTarget.style.background = action.bgVar;
-                        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                        e.currentTarget.style.transform = 'none';
-                      }}
                     >
                       <div
-                        className="flex items-center justify-center w-14 h-14 rounded-xl mb-1 transition-all shadow"
-                        style={{
-                          background: action.iconBgVar,
-                          color: action.colorVar,
-                        }}
+                        className="flex items-center justify-center w-14 h-14 rounded-xl mb-1 transition-all shadow bg-primary/10 group-hover:bg-primary/20 group-focus:bg-primary/20 text-primary"
                       >
                         {action.icon}
                       </div>
-                      <span className="text-lg font-bold" style={{ color: 'var(--card-foreground)' }}>{action.label}</span>
+                      <span className="text-lg font-bold text-card-foreground group-hover:text-primary group-focus:text-primary transition-colors">{action.label}</span>
                     </Link>
                   ))}
                 </div>
@@ -381,17 +426,15 @@ export default function DoctorDashboard() {
             </Card>
           </div>
 
-          {/* Calendar & Appointments */}
           <div className="col-span-12 md:col-span-3 flex flex-col">
-            <Card className="flex-grow rounded-2xl shadow-lg border-0 bg-card p-0 transition-all">
+            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-card p-0 transition-all hover:shadow-2xl focus-within:shadow-2xl">
               <CardContent className="p-0">
                 <div className="p-6">
                   <label
-                    className="block mb-3 font-semibold text-lg"
+                    className="block mb-3 font-semibold text-lg text-card-foreground"
                     htmlFor="dashboard-calendar"
-                    style={{ color: 'var(--card-foreground)' }}
                   >
-                    Calendar
+                    {t('doctor.dashboard.calendar', 'Calendar')}
                   </label>
                   <Calendar
                     value={selectedDate}
@@ -409,36 +452,29 @@ export default function DoctorDashboard() {
                     }}
                   />
                   <div className="mt-6">
-                    <div className="font-semibold mb-2 text-base" style={{ color: 'var(--card-foreground)' }}>
-                      Appointments on {selectedDate.toLocaleDateString()}:
+                    <div className="font-semibold mb-2 text-base text-card-foreground">
+                      {t('doctor.dashboard.appointmentsOn', 'Appointments on')} {selectedDate.toLocaleDateString()}:
                     </div>
                     {appointmentsForSelectedDate.length === 0 ? (
-                      <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        No appointments
+                      <div className="text-sm text-muted-foreground">
+                        {t('doctor.dashboard.noAppointments', 'No appointments')}
                       </div>
                     ) : (
                       <ul className="space-y-3">
                         {appointmentsForSelectedDate.map((app) => (
                           <li
                             key={app.id}
-                            className="flex items-center gap-3 text-base rounded-lg px-3 py-2"
-                            style={{
-                              background: 'var(--primary-bg-verylight, var(--primary-bg))',
-                            }}
+                            className="flex items-center gap-3 text-base rounded-lg px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors"
                           >
-                            <span className="font-semibold" style={{ color: 'var(--primary)' }}>{app.time}</span>
-                            <span style={{ color: 'var(--muted-foreground)' }}>-</span>
-                            <span style={{ color: 'var(--card-foreground)' }}>
+                            <span className="font-semibold text-primary">{app.time}</span>
+                            <span className="text-muted-foreground">-</span>
+                            <span className="text-card-foreground">
                               {app.patient.firstName} {app.patient.lastName}
                             </span>
                             <span
-                              className="ml-auto px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
-                              style={{
-                                background: 'var(--primary-bg-light, var(--primary-bg))',
-                                color: 'var(--primary)',
-                              }}
+                              className="ml-auto px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20"
                             >
-                              {app.status}
+                              {t('doctor.dashboard.status.' + app.status, app.status)}
                             </span>
                           </li>
                         ))}
@@ -451,14 +487,12 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-12 gap-6 md:gap-8">
-          {/* Appointments Overview */}
           <div className="col-span-12 md:col-span-7 flex flex-col">
-            <Card className="flex-grow rounded-2xl shadow-lg border-0 bg-card transition-all">
+            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
               <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2" style={{ color: 'var(--card-foreground)' }}>
-                  Appointments Overview
+                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
+                  {t('doctor.dashboard.appointmentsOverview', 'Appointments Overview')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -473,12 +507,11 @@ export default function DoctorDashboard() {
             </Card>
           </div>
 
-          {/* Patient Distribution */}
           <div className="col-span-12 md:col-span-5 flex flex-col">
-            <Card className="flex-grow rounded-2xl shadow-lg border-0 bg-card transition-all">
+            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
               <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2" style={{ color: 'var(--card-foreground)' }}>
-                  Patient Distribution
+                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
+                  {t('doctor.dashboard.patientDistribution', 'Patient Distribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -531,65 +564,6 @@ export default function DoctorDashboard() {
         }
         .react-calendar__month-view__weekdays {
           color: var(--muted-foreground) !important;
-        }
-      `}</style>
-      {/* CSS vars for theme colors */}
-      <style jsx global>{`
-        :root {
-          --primary: #2563eb;
-          --card: #fff;
-          --card-foreground: #18181b;
-          --muted-foreground: #6b7280;
-          --border: #e5e7eb;
-          --muted: #f3f4f6;
-          --success: #22c55e;
-          --warning: #f59e42;
-          --destructive: #ef4444;
-          --primary-bg: hsla(222, 47%, 11%, 0.08);
-          --primary-bg-chart: hsla(222, 47%, 11%, 0.7);
-          --primary-bg-chart-hover: hsla(222, 47%, 11%, 0.9);
-          --success-bg: hsla(142, 71%, 45%, 0.08);
-          --success-bg-chart: hsla(142, 71%, 45%, 0.7);
-          --warning-bg: hsla(36, 100%, 50%, 0.08);
-          --warning-bg-chart: hsla(36, 100%, 50%, 0.7);
-          --destructive-bg: hsla(0, 84%, 60%, 0.08);
-          --destructive-bg-chart: hsla(0, 84%, 60%, 0.7);
-          --shadow-lg: 0 4px 24px 0 rgba(0,0,0,0.10);
-          --shadow-xl: 0 8px 32px 0 rgba(0,0,0,0.16);
-          --primary-bg-hover: hsla(222, 47%, 11%, 0.15);
-          --success-bg-hover: hsla(142, 71%, 45%, 0.15);
-          --warning-bg-hover: hsla(36, 100%, 50%, 0.15);
-          --destructive-bg-hover: hsla(0, 84%, 60%, 0.15);
-          --primary-bg-verylight: hsla(222, 47%, 11%, 0.05);
-          --primary-bg-light: hsla(222, 47%, 11%, 0.10);
-        }
-        html.dark {
-          --primary: #2563eb;
-          --card: #18181b;
-          --card-foreground: #fff;
-          --muted-foreground: #a1a1aa;
-          --border: #27272a;
-          --muted: #27272a;
-          --success: #22c55e;
-          --warning: #f59e42;
-          --destructive: #ef4444;
-          --primary-bg: hsla(222, 47%, 11%, 0.12);
-          --primary-bg-chart: hsla(222, 47%, 11%, 0.7);
-          --primary-bg-chart-hover: hsla(222, 47%, 11%, 0.9);
-          --success-bg: hsla(142, 71%, 45%, 0.12);
-          --success-bg-chart: hsla(142, 71%, 45%, 0.7);
-          --warning-bg: hsla(36, 100%, 50%, 0.12);
-          --warning-bg-chart: hsla(36, 100%, 50%, 0.7);
-          --destructive-bg: hsla(0, 84%, 60%, 0.12);
-          --destructive-bg-chart: hsla(0, 84%, 60%, 0.7);
-          --shadow-lg: 0 4px 24px 0 rgba(0,0,0,0.30);
-          --shadow-xl: 0 8px 32px 0 rgba(0,0,0,0.40);
-          --primary-bg-hover: hsla(222, 47%, 11%, 0.15);
-          --success-bg-hover: hsla(142, 71%, 45%, 0.15);
-          --warning-bg-hover: hsla(36, 100%, 50%, 0.15);
-          --destructive-bg-hover: hsla(0, 84%, 60%, 0.15);
-          --primary-bg-verylight: hsla(222, 47%, 11%, 0.05);
-          --primary-bg-light: hsla(222, 47%, 11%, 0.10);
         }
       `}</style>
     </div>

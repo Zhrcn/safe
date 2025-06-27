@@ -17,93 +17,93 @@ import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import { useLogoutMutation } from '@/store/services/user/userApi';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
 import { Badge } from '@/components/ui/Badge';
-
-const sidebarItems = [
-    {
-        title: 'Main',
-        items: [
-            {
-                name: 'Dashboard',
-                icon: Home,
-                link: '/patient/dashboard',
-                description: 'Overview of your health status'
-            },
-            {
-                name: 'Appointments',
-                icon: Calendar,
-                link: '/patient/appointments',
-                description: 'Schedule and manage appointments'
-            },
-            {
-                name: 'Consultations',
-                icon: Stethoscope,
-                link: '/patient/consultations',
-                description: 'Virtual consultations with providers'
-            }
-        ]
-    },
-    {
-        title: 'Healthcare',
-        items: [
-            {
-                name: 'Providers',
-                icon: Users,
-                link: '/patient/providers',
-                description: 'Find and connect with healthcare providers',
-                subItems: [
-                    {
-                        name: 'Doctors',
-                        link: '/patient/providers/doctors'
-                    },
-                    {
-                        name: 'Pharmacists',
-                        link: '/patient/providers/pharmacists'
-                    }
-                ]
-            },
-            {
-                name: 'Medications',
-                icon: Pill,
-                link: '/patient/medications',
-                description: 'Track and manage your medications'
-            },
-            {
-                name: 'Medical Records',
-                icon: FileText,
-                link: '/patient/medical-records',
-                description: 'Access your medical history and documents'
-            },
-            {
-                name: 'Prescriptions',
-                icon: FileText,
-                link: '/patient/prescriptions',
-                description: 'View and manage your prescriptions'
-            }
-        ]
-    },
-    {
-        title: 'Communication',
-        items: [
-            {
-                name: 'Messages',
-                icon: MessageCircle,
-                link: '/patient/messaging',
-                description: 'Chat with your healthcare providers',
-                badge: '3'
-            }
-        ]
-    }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function PatientLayout({ children }) {
     const pathname = usePathname();
     const user = useSelector(selectCurrentUser);
     const [logout] = useLogoutMutation();
     const router = useRouter();
-    const [expandedGroups, setExpandedGroups] = useState(
-        sidebarItems.map(group => group.title)
-    );
+    const [expandedGroups, setExpandedGroups] = useState([]);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { t } = useTranslation('common');
+
+    const sidebarItems = [
+        {
+            title: t('mainSection', 'Main'),
+            items: [
+                {
+                    name: t('dashboard'),
+                    icon: Home,
+                    link: '/patient/dashboard',
+                    description: t('overviewOfYourHealthStatus', 'Overview of your health status')
+                },
+                {
+                    name: t('appointments', 'Appointments'),
+                    icon: Calendar,
+                    link: '/patient/appointments',
+                    description: t('scheduleAndManageAppointments', 'Schedule and manage appointments')
+                },
+                {
+                    name: t('consultations', 'Consultations'),
+                    icon: Stethoscope,
+                    link: '/patient/consultations',
+                    description: t('virtualConsultationsWithProviders', 'Virtual consultations with providers')
+                }
+            ]
+        },
+        {
+            title: t('healthcareSection', 'Healthcare'),
+            items: [
+                {
+                    name: t('providers'),
+                    icon: Users,
+                    link: '/patient/providers',
+                    description: t('findAndConnectWithHealthcareProviders', 'Find and connect with healthcare providers'),
+                    subItems: [
+                        {
+                            name: t('doctors', 'Doctors'),
+                            link: '/patient/providers/doctors'
+                        },
+                        {
+                            name: t('pharmacists', 'Pharmacists'),
+                            link: '/patient/providers/pharmacists'
+                        }
+                    ]
+                },
+                {
+                    name: t('medications', 'Medications'),
+                    icon: Pill,
+                    link: '/patient/medications',
+                    description: t('trackAndManageYourMedications', 'Track and manage your medications')
+                },
+                {
+                    name: t('medicalRecords', 'Medical Records'),
+                    icon: FileText,
+                    link: '/patient/medical-records',
+                    description: t('accessYourMedicalHistoryAndDocuments', 'Access your medical history and documents')
+                },
+                {
+                    name: t('prescriptions', 'Prescriptions'),
+                    icon: FileText,
+                    link: '/patient/prescriptions',
+                    description: t('viewAndManageYourPrescriptions', 'View and manage your prescriptions')
+                }
+            ]
+        },
+        {
+            title: t('communicationSection', 'Communication'),
+            items: [
+                {
+                    name: t('messages', 'Messages'),
+                    icon: MessageCircle,
+                    link: '/patient/messaging',
+                    description: t('chatWithYourHealthcareProviders', 'Chat with your healthcare providers'),
+                    badge: '3'
+                }
+            ]
+        }
+    ];
 
     const toggleGroup = (title) => {
         setExpandedGroups(prev => 
@@ -125,16 +125,13 @@ export default function PatientLayout({ children }) {
 
     return (
         <div className="flex h-screen bg-background">
-            {/* Desktop Sidebar */}
             <aside className="hidden lg:flex flex-col w-72 border-r bg-card shadow-lg">
-                {/* Logo and Title */}
                 <div className="p-6 border-b">
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                         Patient Portal
                     </h2>
                 </div>
 
-                {/* User Profile Section */}
                 <div className="p-4 border-b">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
@@ -156,7 +153,6 @@ export default function PatientLayout({ children }) {
                     </div>
                 </div>
 
-                {/* Navigation */}
                 <ScrollArea className="flex-1">
                     <div className="p-4 space-y-6">
                         {sidebarItems.map((group) => (
@@ -213,7 +209,6 @@ export default function PatientLayout({ children }) {
                     </div>
                 </ScrollArea>
 
-                {/* Bottom Actions */}
                 <div className="p-4 border-t space-y-2">
                     <Button variant="ghost" className="w-full justify-start gap-2" asChild>
                         <a href="/patient/settings">
@@ -234,7 +229,6 @@ export default function PatientLayout({ children }) {
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
                 <div className="container mx-auto p-6">
                     {children}

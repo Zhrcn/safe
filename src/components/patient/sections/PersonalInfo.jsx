@@ -29,7 +29,6 @@ const PersonalInfo = ({ patient }) => {
     };
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Basic Information */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
@@ -69,7 +68,6 @@ const PersonalInfo = ({ patient }) => {
                     </div>
                 </div>
             </div>
-            {/* Contact Information */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
@@ -110,7 +108,6 @@ const PersonalInfo = ({ patient }) => {
                     </div>
                 </div>
             </div>
-            {/* Additional Information */}
             <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg md:col-span-2">
                 <div className="p-8">
                     <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">

@@ -53,7 +53,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
 
   return (
     <div className="flex flex-col h-full bg-background rounded-2xl shadow-md overflow-hidden">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border sticky top-0 z-10 bg-gradient-to-r from-primary/10 to-secondary/10">
         {isMobile && (
           <Button size="icon" variant="ghost" onClick={onBack} className="mr-2">
@@ -65,7 +64,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
           <AvatarFallback className="bg-primary text-primary">
             {conversation.title[0]}
           </AvatarFallback>
-          {/* Online status dot (mocked as online) */}
           <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
         </Avatar>
         <div className="flex-1 min-w-0">
@@ -78,7 +76,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
           <MoreVertical className="w-5 h-5" />
         </Button>
       </div>
-      {/* Messages */}
       <ScrollArea className="flex-1 px-2 py-4 bg-background">
         <div className="flex flex-col gap-1">
           {grouped.map((item, idx) => {
@@ -99,7 +96,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
           })}
           <div ref={messagesEndRef} />
         </div>
-        {/* Typing indicator (mocked) */}
         {typing && (
           <div className="flex items-center gap-2 mt-2 px-4">
             <span className="w-2 h-2 rounded-full bg-muted animate-bounce" />
@@ -109,7 +105,6 @@ export default function ChatPage({ conversation, onSend, newMessage, setNewMessa
           </div>
         )}
       </ScrollArea>
-      {/* Input */}
       <MessageInput
         value={newMessage}
         onChange={setNewMessage}

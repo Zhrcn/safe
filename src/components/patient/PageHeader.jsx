@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Separator } from '@/components/ui/Separator';
 import { useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
+import { useTranslation } from 'react-i18next';
 
 export default function PageHeader({
   title,
@@ -21,6 +22,7 @@ export default function PageHeader({
 }) {
   const pathname = usePathname();
   const user = useAppSelector(selectCurrentUser);
+  const { t } = useTranslation('common');
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const generatedBreadcrumbs = pathSegments.map((segment, index) => {
@@ -33,14 +35,12 @@ export default function PageHeader({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Breadcrumbs */}
       <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
         <Link
           href={`/${user?.role?.toLowerCase() || 'patient'}/dashboard`}
           className="flex items-center hover:text-foreground transition-colors"
         >
           <HomeIcon className="h-4 w-4 mr-1" />
-          Dashboard
         </Link>
         {finalBreadcrumbs.map((crumb, index) => (
           <React.Fragment key={crumb.href}>
@@ -60,7 +60,6 @@ export default function PageHeader({
 
       <Separator />
 
-      {/* Header Content */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">

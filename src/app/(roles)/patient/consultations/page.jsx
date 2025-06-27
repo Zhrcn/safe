@@ -37,6 +37,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { consultations as mockConsultations } from '@/mockdata/consultations';
+import { useTranslation } from 'react-i18next';
 
 const ConsultationCard = ({ consultation, onOpenDialog }) => {
   const statusColors = {
@@ -182,11 +183,13 @@ const ConsultationCard = ({ consultation, onOpenDialog }) => {
 };
 
 const ConsultationsPageContent = () => {
+    const { t, i18n } = useTranslation('common');
     const router = useRouter();
     const { showNotification } = useNotification();
     const [newConsultationDialogOpen, setNewConsultationDialogOpen] = useState(false);
     const [question, setQuestion] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const isRtl = i18n.language === 'ar';
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsLoading(false);
@@ -213,25 +216,25 @@ const ConsultationsPageContent = () => {
     };
     const patientConsultations = mockConsultations.filter(c => c.patientId === mockPatientData.id);
     return (
-        <div className="flex flex-col space-y-6">
+        <div className="flex flex-col space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
             <PageHeader
-                title="Consultations"
-                description="Ask your doctor a question and view your Q&A history."
+                title={t('patient.consultations.title')}
+                description={t('patient.consultations.description')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Consultations', href: '/patient/consultations' }
+                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
+                    { label: t('patient.consultations.title'), href: '/patient/consultations' }
                 ]}
             />
             <div className="flex justify-end">
                 <Button onClick={() => setNewConsultationDialogOpen(true)}>
-                    Ask a Question
+                    {t('patient.consultations.askQuestion')}
                 </Button>
             </div>
             <div className="mt-4">
                 {isLoading ? (
-                    <div className="text-center py-10 text-muted-foreground">Loading...</div>
+                    <div className="text-center py-10 text-muted-foreground">{t('patient.consultations.loading')}</div>
                 ) : patientConsultations.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">No consultations yet.</div>
+                    <div className="text-center py-10 text-muted-foreground">{t('patient.consultations.noConsultations')}</div>
                 ) : (
                     <div className="space-y-4">
                         {patientConsultations.map((consultation) => (
@@ -247,7 +250,7 @@ const ConsultationsPageContent = () => {
                                     {consultation.answer ? (
                                         <span>{consultation.answer}</span>
                                     ) : (
-                                        <span className="italic text-muted-foreground">Not answered yet</span>
+                                        <span className="italic text-muted-foreground">{t('patient.consultations.notAnsweredYet')}</span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-2">
@@ -293,9 +296,13 @@ const ConsultationsPageContent = () => {
 };
 
 export default function ConsultationsPage() {
+    const { i18n } = useTranslation('common');
+    const isRtl = i18n.language === 'ar';
     return (
         <NotificationProvider>
-            <ConsultationsPageContent />
+            <main className={isRtl ? 'rtl' : 'ltr'}>
+                <ConsultationsPageContent />
+            </main>
         </NotificationProvider>
     );
 }

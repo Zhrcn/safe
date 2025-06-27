@@ -5,6 +5,7 @@ import { conversations as mockConversations } from "@/mockdata/conversations";
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
 import { MessageCircle } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export default function PatientMessagingPage() {
   const [conversations, setConversations] = useState([]);
@@ -13,6 +14,8 @@ export default function PatientMessagingPage() {
   const [newMessage, setNewMessage] = useState("");
   const [mobileView, setMobileView] = useState(false);
   const router = useRouter();
+  const { t, i18n } = useTranslation('common');
+  const isRtl = i18n.language === 'ar';
 
   useEffect(() => {
     setConversations(mockConversations);
@@ -66,8 +69,8 @@ export default function PatientMessagingPage() {
       return (
         <div className="min-h-screen bg-background p-2">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-            <p className="text-muted-foreground text-sm">Select a conversation to start chatting.</p>
+            <h1 className="text-2xl font-bold text-foreground">{t('messages.title')}</h1>
+            <p className="text-muted-foreground text-sm">{t('messages.select_conversation')}</p>
           </div>
           <ChatList
             conversations={filtered}
@@ -99,8 +102,8 @@ export default function PatientMessagingPage() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Messages</h1>
-          <p className="text-muted-foreground text-base">Chat securely with your healthcare providers.</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('messages.title')}</h1>
+          <p className="text-muted-foreground text-base">{t('messages.chat_securely')}</p>
         </div>
         <div className="container mx-auto grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
           <div className="col-span-12 md:col-span-4 lg:col-span-3 h-full">
@@ -127,8 +130,8 @@ export default function PatientMessagingPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-lg">
                   <MessageCircle className="w-12 h-12 mb-4 text-primary/60" />
-                  <div className="font-semibold mb-1">No conversation selected</div>
-                  <div className="text-sm text-muted-foreground">Select a conversation from the list to start chatting.</div>
+                  <div className="font-semibold mb-1">{t('messages.no_conversation_selected')}</div>
+                  <div className="text-sm text-muted-foreground">{t('messages.select_conversation')}</div>
                 </div>
               )}
             </div>

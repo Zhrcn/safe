@@ -16,6 +16,7 @@ import { useLogoutMutation } from '@/store/services/user/userApi';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 const drawerWidth = 240;
 
@@ -165,13 +166,11 @@ export default function AppLayout({
     const SidebarContent = () => (
         <>
             <div className={`h-20 flex flex-col items-center justify-center gap-2 ${logoBg} px-4 transition-colors duration-300 border-b border-border`}>
-                {/* Custom SVG Icon */}
                 <Image src="/avatars/icon.svg" alt="App Icon" width={48} height={48} className="mb-1" />
                 <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent mb-1">
                     {APP_NAME}
                 </h1>
                 <span className="opacity-75 text-xs mb-2">{title.replace('S.A.F.E', '').trim()}</span>
-                {/* User Info */}
                 {user && (
                   <div className="flex flex-col items-center gap-1 mt-2">
                     <div className="rounded-full overflow-hidden border border-border mb-1">
@@ -219,7 +218,6 @@ export default function AppLayout({
     return (
         <ProtectedLayout allowedRoles={allowedRoles}>
             <div className="flex h-screen overflow-hidden">
-                {/* Desktop Sidebar */}
                 <aside 
                     className={`fixed top-0 left-0 z-40 h-full w-60 transition-all duration-300 ease-in-out ${
                         isDesktop 
@@ -230,7 +228,6 @@ export default function AppLayout({
                     <SidebarContent />
                 </aside>
 
-                {/* Mobile Menu Overlay */}
                 {mobileOpen && (
                     <div className="fixed inset-0 z-50 lg:hidden">
                         <div 
@@ -243,7 +240,6 @@ export default function AppLayout({
                     </div>
                 )}
 
-                {/* Main Content */}
                 <main className={`flex-1 w-full h-full overflow-auto transition-all duration-300 ${
                     isDesktop && sidebarOpen ? 'ml-60' : 'ml-0'
                 }`}>
@@ -263,6 +259,7 @@ export default function AppLayout({
                             </div>
                             <div className="flex items-center gap-4">
                                 <ThemeSwitcher />
+                                <LanguageSwitcher />
                                 <div className="relative">
                                     <Button onClick={() => setNotificationsMenuOpen(!notificationsMenuOpen)} variant="ghost" size="icon" className="relative p-2 text-foreground hover:text-foreground/80 transition-colors">
                                         <Bell className="w-5 h-5" />

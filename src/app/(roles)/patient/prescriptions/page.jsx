@@ -27,6 +27,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { ChevronDown, ListFilter, Search } from 'lucide-react';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useTranslation } from 'react-i18next';
 const pillColors = [
   'bg-blue-100 text-blue-800',
   'bg-green-100 text-green-800',
@@ -300,6 +301,8 @@ const PrescriptionsPage = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [sortBy, setSortBy] = useState('date');
     const [sortOrder, setSortOrder] = useState('desc');
+    const { t, i18n } = useTranslation('common');
+    const isRtl = i18n.language === 'ar';
     useEffect(() => {
         loadPrescriptions();
     }, [filterStatus, searchTerm, sortBy, sortOrder]);
@@ -359,15 +362,15 @@ const PrescriptionsPage = () => {
     return (
         <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
             <PageHeader
-                title="My Prescriptions"
-                description="View and manage all your active, past, and pending prescriptions."
+                title={t('myPrescriptions')}
+                description={t('viewAndManageAllYourActivePastAndPendingPrescriptions')}
             />
             <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <div className="relative w-full sm:w-auto flex-grow">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         type="text"
-                        placeholder="Search prescriptions by doctor or medication..."
+                        placeholder={t('searchPrescriptionsByDoctorOrMedication')}
                         className="w-full pl-9 pr-3 py-2 border border-border rounded-md focus:ring-primary focus:border-primary"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -378,7 +381,9 @@ const PrescriptionsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
                                 <ListFilter className="w-4 h-4" />
-                                Status: {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+                                {t('status')}
+                                {': '}
+                                {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
                                 <ChevronDown className="w-4 h-4 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -387,19 +392,19 @@ const PrescriptionsPage = () => {
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={filterStatus} onValueChange={setFilterStatus}>
                                 <DropdownMenuRadioItem value="all" className="text-foreground hover:bg-accent">
-                                    All
+                                    {t('all')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="active" className="text-foreground hover:bg-accent">
-                                    Active
+                                    {t('active')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="completed" className="text-foreground hover:bg-accent">
-                                    Completed
+                                    {t('completed')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="pending" className="text-foreground hover:bg-accent">
-                                    Pending
+                                    {t('pending')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="expired" className="text-foreground hover:bg-accent">
-                                    Expired
+                                    {t('expired')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
@@ -408,7 +413,10 @@ const PrescriptionsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
                                 <ListFilter className="w-4 h-4" />
-                                Sort: {sortBy === 'date' ? 'Date' : 'Doctor'} ({sortOrder === 'asc' ? 'Asc' : 'Desc'})
+                                {t('sort')}
+                                {': '}
+                                {sortBy === 'date' ? t('date') : t('doctor')}
+                                {` (${sortOrder === 'asc' ? t('ascending') : t('descending')})`}
                                 <ChevronDown className="w-4 h-4 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -417,19 +425,19 @@ const PrescriptionsPage = () => {
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
                                 <DropdownMenuRadioItem value="date" className="text-foreground hover:bg-accent">
-                                    Date
+                                    {t('date')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="doctorName" className="text-foreground hover:bg-accent">
-                                    Doctor Name
+                                    {t('doctorName')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={sortOrder} onValueChange={setSortOrder}>
                                 <DropdownMenuRadioItem value="asc" className="text-foreground hover:bg-accent">
-                                    Ascending
+                                    {t('ascending')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="desc" className="text-foreground hover:bg-accent">
-                                    Descending
+                                    {t('descending')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
@@ -438,7 +446,7 @@ const PrescriptionsPage = () => {
             </div>
             {loading && (
                 <div className="text-center py-10">
-                    <p className="text-lg text-muted-foreground">Loading prescriptions...</p>
+                    <p className="text-lg text-muted-foreground">{t('loadingPrescriptions')}</p>
                 </div>
             )}
             {error && (
@@ -449,14 +457,14 @@ const PrescriptionsPage = () => {
             )}
             {!loading && !error && ( (prescriptions.length === 0 && searchTerm === '') ? (
                 <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
-                    <h3 className="text-xl font-semibold text-foreground mb-3">No Prescriptions Found</h3>
-                    <p className="text-muted-foreground mb-4">It looks like you don't have any prescriptions recorded yet.</p>
-                    <p className="text-sm text-muted-foreground">Prescriptions will appear here once issued by your doctor.</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('noPrescriptionsFound')}</h3>
+                    <p className="text-muted-foreground mb-4">{t('itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
+                    <p className="text-sm text-muted-foreground">{t('prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
                 </div>
             ) : (prescriptions.length === 0 && searchTerm !== '') ? (
                 <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
-                    <h3 className="text-xl font-semibold text-foreground mb-3">No Matching Prescriptions</h3>
-                    <p className="text-muted-foreground mb-4">Your search for "{searchTerm}" did not yield any results.</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('noMatchingPrescriptions')}</h3>
+                    <p className="text-muted-foreground mb-4">{t('yourSearchFor', { searchTerm })}</p>
                     <Button onClick={() => setSearchTerm('')} className="mt-4">Clear Search</Button>
                 </div>
             ) : (

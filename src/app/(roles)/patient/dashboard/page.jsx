@@ -14,9 +14,11 @@ import { Progress } from '@/components/ui/Progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip } from '@/components/ui/Tooltip';
 
-const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) => (
+import { Tooltip } from '@/components/ui/Tooltip';
+import { useTranslation } from 'react-i18next';
+
+const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
@@ -39,7 +41,7 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) 
           {progress !== undefined && (
             <div className="mt-4">
               <Progress value={progress} className="transition-all duration-700 rounded-full" />
-              <span className="block text-xs text-muted-foreground mt-1">Adherence</span>
+              <span className="block text-xs text-muted-foreground mt-1">{t('patient.dashboard.adherence')}</span>
             </div>
           )}
           {trend !== undefined && (
@@ -50,7 +52,7 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress }) 
                 <TrendingDown className="h-4 w-4 text-error" />
               ) : null}
               <span className={`text-sm ${trend > 0 ? 'text-success' : trend < 0 ? 'text-error' : 'text-muted-foreground'}`}> 
-                {trend === 0 ? 'No change' : `${Math.abs(trend)}% from last month`}
+                {trend === 0 ? t('patient.dashboard.noChange') : t('patient.dashboard.trend', { value: Math.abs(trend) }, '{{value}}% from last month')}
               </span>
             </div>
           )}
@@ -87,7 +89,7 @@ const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, toolti
   </motion.div>
 );
 
-const AppointmentCard = ({ appointment }) => (
+const AppointmentCard = ({ appointment, t }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
@@ -105,7 +107,7 @@ const AppointmentCard = ({ appointment }) => (
             <div>
               <h3 className="font-semibold text-card-foreground">{appointment.title}</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                with Dr. {appointment.doctor}
+                {t('patient.dashboard.withDoctor', { doctor: appointment.doctor }, 'with Dr. {{doctor}}')}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
@@ -116,7 +118,7 @@ const AppointmentCard = ({ appointment }) => (
             </div>
           </div>
           <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'} className="capitalize rounded-lg px-3 py-1 text-sm">
-            {appointment.status}
+            {t(`patient.appointments.${appointment.status}`)}
           </Badge>
         </div>
       </CardContent>
@@ -125,26 +127,28 @@ const AppointmentCard = ({ appointment }) => (
 );
 
 const DashboardPage = () => {
+    const { t, i18n } = useTranslation('common');
     const router = useRouter();
     const user = { firstName: 'John' };
+    const isRtl = i18n.language === 'ar';
 
     const healthMetrics = [
         {
-            title: 'Heart Rate',
+            title: t('patient.dashboard.heartRate'),
             value: '72 BPM',
             icon: Heart,
             trend: -2,
             color: 'bg-error',
         },
         {
-            title: 'Blood Pressure',
+            title: t('patient.dashboard.bloodPressure'),
             value: '120/80',
             icon: Activity,
             trend: 0,
             color: 'bg-info',
         },
         {
-            title: 'Medication Adherence',
+            title: t('patient.dashboard.medicationAdherence'),
             value: '95%',
             icon: Pill,
             trend: 5,
@@ -152,7 +156,7 @@ const DashboardPage = () => {
             progress: 95,
         },
         {
-            title: 'Steps Today',
+            title: t('patient.dashboard.stepsToday'),
             value: '6,543',
             icon: Activity,
             trend: 12,
@@ -162,51 +166,50 @@ const DashboardPage = () => {
 
     const quickActions = [
         {
-            title: 'Schedule Appointment',
-            description: 'Book a new appointment with your healthcare provider',
+            title: t('patient.dashboard.scheduleAppointment'),
+            description: t('patient.dashboard.scheduleAppointmentDesc'),
             icon: Calendar,
             href: '/patient/appointments/new',
             bgClass: 'bg-primary/90 dark:bg-primary/80',
-            tooltip: 'Book a new appointment',
+            tooltip: t('patient.dashboard.scheduleAppointmentTooltip'),
         },
         {
-            title: 'View Medical Records',
-            description: 'Access your medical history and test results',
+            title: t('patient.dashboard.viewMedicalRecords'),
+            description: t('patient.dashboard.viewMedicalRecordsDesc'),
             icon: FileText,
             href: '/patient/medical-records',
             bgClass: 'bg-success/90 dark:bg-success/80',
-            tooltip: 'See your medical history',
+            tooltip: t('patient.dashboard.viewMedicalRecordsTooltip'),
         },
         {
-            title: 'Message Provider',
-            description: 'Chat with your healthcare team',
+            title: t('patient.dashboard.messageProvider'),
+            description: t('patient.dashboard.messageProviderDesc'),
             icon: MessageSquare,
             href: '/patient/messaging',
             bgClass: 'bg-secondary/90 dark:bg-secondary/80',
-            tooltip: 'Send a message to your provider',
+            tooltip: t('patient.dashboard.messageProviderTooltip'),
         }
     ];
 
     const upcomingAppointments = [
         {
             id: 1,
-            title: 'Annual Check-up',
+            title: t('patient.dashboard.annualCheckup'),
             doctor: 'Sarah Johnson',
-            time: 'Tomorrow, 10:00 AM',
+            time: t('patient.dashboard.tomorrowAt', { time: '10:00 AM' }),
             status: 'upcoming'
         },
         {
             id: 2,
-            title: 'Follow-up Consultation',
+            title: t('patient.dashboard.followUpConsultation'),
             doctor: 'Michael Chen',
-            time: 'Next Monday, 2:30 PM',
+            time: t('patient.dashboard.nextMondayAt', { time: '2:30 PM' }),
             status: 'upcoming'
         }
     ];
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">
-            {/* Animated background shape */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 0.08, scale: 1 }}
@@ -215,26 +218,23 @@ const DashboardPage = () => {
                 aria-hidden="true"
             />
             <PageHeader
-                title={`Welcome back${user?.firstName ? ', ' + user.firstName : ''}!`}
-                description={"Here's an overview of your health status. Tip: Stay hydrated today!"}
+                title={t('patient.dashboard.welcome', { name: user?.firstName ? ', ' + user.firstName : '' })}
+                description={t('patient.dashboard.overview')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' }
+                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' }
                 ]}
             />
-            {/* Health Metrics */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 z-10 rounded-2xl auto-rows-fr">
                 <AnimatePresence>
                     {healthMetrics.map((metric, index) => (
-                        <HealthMetricCard key={index} {...metric} />
+                        <HealthMetricCard key={index} {...metric} t={t} />
                     ))}
                 </AnimatePresence>
             </section>
-            {/* Main Content */}
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 z-10 rounded-2xl">
-                {/* Left Column - Quick Actions */}
                 <div className="lg:col-span-1 space-y-6">
                     <h2 className="text-lg font-semibold text-card-foreground mb-2 flex items-center gap-2">
-                        <Plus className="h-5 w-5 text-primary" /> Quick Actions
+                        <Plus className="h-5 w-5 text-primary" /> {t('patient.dashboard.quickActions')}
                     </h2>
                     <div className="space-y-4">
                         <AnimatePresence>
@@ -244,25 +244,24 @@ const DashboardPage = () => {
                         </AnimatePresence>
                     </div>
                 </div>
-                {/* Right Column - Appointments and Activity */}
                 <div className="lg:col-span-2 space-y-8">
                     <Tabs defaultValue="appointments" className="w-full rounded-2xl">
                         <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted">
-                            <TabsTrigger value="appointments" className="rounded-xl">Upcoming Appointments</TabsTrigger>
-                            <TabsTrigger value="activity" className="rounded-xl">Recent Activity</TabsTrigger>
+                            <TabsTrigger value="appointments" className="rounded-xl">{t('patient.dashboard.upcomingAppointments')}</TabsTrigger>
+                            <TabsTrigger value="activity" className="rounded-xl">{t('patient.dashboard.recentActivity')}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="appointments">
                             <div className="space-y-4">
                                 <AnimatePresence>
                                     {upcomingAppointments.map((appointment) => (
-                                        <AppointmentCard key={appointment.id} appointment={appointment} />
+                                        <AppointmentCard key={appointment.id} appointment={appointment} t={t} />
                                     ))}
                                 </AnimatePresence>
                             </div>
                         </TabsContent>
                         <TabsContent value="activity">
                             <div className="space-y-4 text-muted-foreground text-center py-8 rounded-xl bg-card/60">
-                                <span>No recent activity yet.</span>
+                                <span>{t('patient.dashboard.noRecentActivity')}</span>
                             </div>
                         </TabsContent>
                     </Tabs>

@@ -1,11 +1,13 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { themes } from '@/styles/themes';
+import { useTranslation } from 'react-i18next';
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('hopeCare');
+  const { t } = useTranslation();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -40,10 +42,11 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => {
+export function useTheme() {
+  const { t } = useTranslation();
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error(t('themeContext.useThemeError', 'useTheme must be used within a ThemeProvider'));
   }
   return context;
-};
+}

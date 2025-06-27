@@ -17,8 +17,10 @@ import { Separator } from '@/components/ui/Separator';
 import { medicalRecords } from '@/mockdata/medicalRecords';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useTranslation } from 'react-i18next';
 
 const RecordCard = ({ record, onView, onDownload }) => {
+    const { t } = useTranslation('common');
     const getTypeIcon = (type) => {
         switch (type.toLowerCase()) {
             case 'lab result':
@@ -57,7 +59,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                             <h3 className="text-lg font-bold text-foreground">{record.title}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Added by <span className="font-semibold">Dr. {record.provider}</span>
+                            {t('addedBy')} <span className="font-semibold">{t('doctorWithName', { name: record.provider })}</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
                             <div className="flex items-center gap-1">
@@ -67,14 +69,14 @@ const RecordCard = ({ record, onView, onDownload }) => {
                             {record.attachments?.length > 0 && (
                                 <div className="flex items-center gap-1">
                                     <FileText className="h-4 w-4 text-primary" />
-                                    <span>{record.attachments.length} attachment(s)</span>
+                                    <span>{record.attachments.length} {t('attachments')}</span>
                                 </div>
                             )}
                         </div>
                     </div>
                     <div className="flex flex-col md:items-end gap-3">
                         <Badge className={getTypeColor(record.type)}>
-                            {record.type}
+                            {t(record.type.replace(/ /g, ''))}
                         </Badge>
                         <div className="flex gap-2">
                             <Button
@@ -86,7 +88,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                                 <Link href={`/patient/medical-records/${record.id}`}>
                                     <span className="flex items-center gap-2">
                                         <Eye className="h-4 w-4" />
-                                        View
+                                        {t('view')}
                                     </span>
                                 </Link>
                             </Button>
@@ -97,7 +99,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                                 className="flex items-center gap-2"
                             >
                                 <Download className="h-4 w-4" />
-                                Download
+                                {t('download')}
                             </Button>
                         </div>
                     </div>
@@ -113,6 +115,8 @@ const MedicalRecordsPage = () => {
     const [typeFilter, setTypeFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('all');
+    const { t, i18n } = useTranslation('common');
+    const isRtl = i18n.language === 'ar';
 
     const handleViewRecord = (record) => {
         router.push(`/patient/medical-records/${record.id}`);
@@ -134,21 +138,20 @@ const MedicalRecordsPage = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title="Medical Records"
-                description="Access and manage your medical history and documents."
+                title={t('medicalRecords')}
+                description={t('accessAndManageYourMedicalHistoryAndDocuments')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Medical Records', href: '/patient/medical-records' }
+                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
+                    { label: t('medicalRecords'), href: '/patient/medical-records' }
                 ]}
             />
 
-            {/* Actions Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder="Search records by title or provider..."
+                            placeholder={t('searchRecordsByTitleOrProvider')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9 border-border focus:border-primary focus:ring-primary/20"
@@ -160,34 +163,34 @@ const MedicalRecordsPage = () => {
                                 <span>
                                     {(() => {
                                         switch (typeFilter) {
-                                            case 'lab result': return 'Lab Results';
-                                            case 'prescription': return 'Prescriptions';
-                                            case 'imaging': return 'Imaging';
-                                            case 'note': return 'Notes';
-                                            default: return 'All Types';
+                                            case 'lab result': return t('labResults');
+                                            case 'prescription': return t('prescriptions');
+                                            case 'imaging': return t('imaging');
+                                            case 'note': return t('notes');
+                                            default: return t('allTypes');
                                         }
                                     })()}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setTypeFilter('all')}>All Types</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('lab result')}>Lab Results</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('prescription')}>Prescriptions</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('imaging')}>Imaging</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('note')}>Notes</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('all')}>{t('allTypes')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('lab result')}>{t('labResults')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('prescription')}>{t('prescriptions')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('imaging')}>{t('imaging')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('note')}>{t('notes')}</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
                             <Button variant="outline" className="w-[180px] justify-between">
                                 <span>
-                                    {dateFilter === 'all' ? 'All Time' : dateFilter}
+                                    {dateFilter === 'all' ? t('allTime') : dateFilter}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setDateFilter('all')}>All Time</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDateFilter('all')}>{t('allTime')}</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2024')}>2024</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2023')}>2023</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2022')}>2022</DropdownMenuItem>
@@ -206,7 +209,6 @@ const MedicalRecordsPage = () => {
 
             <Separator />
 
-            {/* Records Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="all">All Records</TabsTrigger>

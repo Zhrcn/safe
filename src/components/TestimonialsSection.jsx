@@ -5,49 +5,52 @@ import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import Section from './common/Section';
 import GlassCard from './common/GlassCard';
-const testimonials = [
-  {
-    id: 1,
-    name: 'Sarah Johnson',
-    role: 'Patient',
-    avatar: '/avatars/avatar-1.jpg',
-    rating: 5,
-    text: 'The SAFE platform has completely transformed how I manage my healthcare. Scheduling appointments is so easy, and I love having all my medical records in one secure place. The digital prescriptions feature is a game-changer!'
-  },
-  {
-    id: 2,
-    name: 'Dr. Michael Chen',
-    role: 'Cardiologist',
-    avatar: '/avatars/avatar-2.jpg',
-    rating: 5,
-    text: 'As a doctor, this platform has streamlined my workflow significantly. Patient management is intuitive, and the secure communication channel ensures I can provide timely care. The integration with other healthcare systems is seamless.'
-  },
-  {
-    id: 3,
-    name: 'Lisa Rodriguez',
-    role: 'Pharmacist',
-    avatar: '/avatars/avatar-3.jpg',
-    rating: 4,
-    text: 'Processing prescriptions has never been easier. The system helps prevent medication errors and allows me to communicate directly with doctors when needed. The inventory management tools are also incredibly helpful.'
-  },
-  {
-    id: 4,
-    name: 'Robert Williams',
-    role: 'Patient',
-    avatar: '/avatars/avatar-4.jpg',
-    rating: 5,
-    text: 'I manage healthcare for my elderly parents, and this platform makes it so much easier. The family account feature lets me coordinate appointments and medications efficiently. The reminders have been invaluable.'
-  },
-  {
-    id: 5,
-    name: 'Dr. Emily Taylor',
-    role: 'Pediatrician',
-    avatar: '/avatars/avatar-5.jpg',
-    rating: 5,
-    text: 'The platform is intuitive and helps me provide better care for my young patients. The medical history access and secure messaging with parents have improved communication tremendously. Highly recommended for all healthcare providers!'
-  }
-];
+import { useTranslation } from 'react-i18next';
+
 export default function TestimonialsSection() {
+  const { t } = useTranslation();
+  const testimonials = [
+    {
+      id: 1,
+      name: t('testimonials.1.name', 'Sarah Johnson'),
+      role: t('testimonials.1.role', 'Patient'),
+      avatar: '/avatars/avatar-1.jpg',
+      rating: 5,
+      text: t('testimonials.1.text', 'This platform made it so easy to book appointments and manage my health records!')
+    },
+    {
+      id: 2,
+      name: t('testimonials.2.name', 'Dr. Ahmed Al-Farsi'),
+      role: t('testimonials.2.role', 'Doctor'),
+      avatar: '/avatars/avatar-2.jpg',
+      rating: 5,
+      text: t('testimonials.2.text', 'A seamless experience for both doctors and patients. Highly recommended!')
+    },
+    {
+      id: 3,
+      name: t('testimonials.3.name', 'Fatima Al-Abbas'),
+      role: t('testimonials.3.role', 'Pharmacist'),
+      avatar: '/avatars/avatar-3.jpg',
+      rating: 4,
+      text: t('testimonials.3.text', 'Managing prescriptions has never been easier. Great support team!')
+    },
+    {
+      id: 4,
+      name: t('testimonials.4.name', 'Mohammed Al-Sayed'),
+      role: t('testimonials.4.role', 'Patient'),
+      avatar: '/avatars/avatar-4.jpg',
+      rating: 5,
+      text: t('testimonials.4.text', 'I love the secure messaging feature and the quick response from doctors.')
+    },
+    {
+      id: 5,
+      name: t('testimonials.5.name', 'Dr. Lina Khaled'),
+      role: t('testimonials.5.role', 'Doctor'),
+      avatar: '/avatars/avatar-5.jpg',
+      rating: 5,
+      text: t('testimonials.5.text', 'A must-have for every healthcare provider!')
+    }
+  ];
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   useEffect(() => {
@@ -76,7 +79,6 @@ export default function TestimonialsSection() {
       id="testimonials"
       className="relative overflow-hidden bg-transparent py-12"
     >
-      {/* Soft background pattern/gradient */}
       <div className="absolute inset-0 pointer-events-none select-none opacity-10 z-0" aria-hidden="true"
         style={{
           background:
@@ -92,13 +94,13 @@ export default function TestimonialsSection() {
             viewport={{ once: true }}
           >
             <p className="text-primary font-semibold tracking-widest mb-2 text-xs md:text-sm uppercase">
-              Testimonials
+              {t('testimonials.title', 'Testimonials')}
             </p>
             <h2 className="font-extrabold mb-2 text-4xl md:text-5xl text-foreground tracking-tight">
-              What Our Users Say
+              {t('testimonials.heading', 'What Our Users Say')}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-lg md:text-xl">
-              Discover how our platform is making a difference in healthcare management
+              {t('testimonials.intro', 'Real feedback from patients, doctors, and pharmacists using SAFE.')}
             </p>
           </motion.div>
         </div>
@@ -141,7 +143,7 @@ export default function TestimonialsSection() {
                           <p className="text-muted-foreground text-base font-medium dark:text-muted">
                             {testimonial.role}
                           </p>
-                          <div className="flex mt-1" aria-label={`Rating: ${testimonial.rating} out of 5`}>
+                          <div className="flex mt-1" aria-label={`${t('testimonials.rating')}: ${testimonial.rating} ${t('testimonials.outOf5')}` }>
                             {[...Array(5)].map((_, i) => (
                               <svg
                                 key={i}
@@ -165,7 +167,7 @@ export default function TestimonialsSection() {
           <div className="flex justify-center items-center mt-10 gap-4">
             <Button
               onClick={handlePrev}
-              aria-label="Previous testimonial"
+              aria-label={t('testimonials.prev', 'Previous')}
               className="p-3 rounded-xl bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronLeft className="w-6 h-6" />
@@ -175,7 +177,7 @@ export default function TestimonialsSection() {
                 <Button
                   key={index}
                   onClick={() => handleDotClick(index)}
-                  aria-label={`Go to testimonial ${index + 1}`}
+                  aria-label={t('testimonials.goto', { index: index + 1, defaultValue: 'Go to testimonial {{index}}' })}
                   className={`w-4 h-4 rounded-xl border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
                     activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/20'
                   }`}
@@ -184,7 +186,7 @@ export default function TestimonialsSection() {
             </div>
             <Button
               onClick={handleNext}
-              aria-label="Next testimonial"
+              aria-label={t('testimonials.next', 'Next')}
               className="p-3 rounded-xl bg-card border border-border shadow hover:shadow-lg hover:bg-primary/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <ChevronRight className="w-6 h-6" />

@@ -59,6 +59,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { useSelector as useUserSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const drawerWidth = 240;
 
@@ -128,6 +130,7 @@ const UnifiedLayout = ({ children }) => {
   const { theme } = useTheme();
   const { showNotification } = useNotification();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { t, i18n } = useTranslation();
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -165,12 +168,12 @@ const UnifiedLayout = ({ children }) => {
   const handleLogout = useCallback(async () => {
     try {
       await dispatch(logout()).unwrap();
-      showNotification('Logged out successfully', 'success');
+      showNotification(t('notification.logoutSuccess', 'Logged out successfully'), 'success');
       router.push('/auth/login');
     } catch (error) {
-      showNotification(error.message || 'Failed to logout', 'error');
+      showNotification(error.message || t('notification.logoutFail', 'Failed to logout'), 'error');
     }
-  }, [dispatch, router, showNotification]);
+  }, [dispatch, router, showNotification, t]);
 
   useEffect(() => {
     setMounted(true);
@@ -191,34 +194,38 @@ const UnifiedLayout = ({ children }) => {
     }
   }, [isMobile]);
 
+  const isRtl = i18n.language === 'ar';
+
   if (!mounted) {
     return null;
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar for desktop */}
+    <div className={cn("flex min-h-screen bg-background", isRtl ? 'flex-row-reverse' : 'flex-row')}>
       {!isMobile && (
         <aside
           className={cn(
-            'relative fixed z-40 top-0 left-0 h-screen border-r border-border flex flex-col transition-all duration-300',
+            'relative fixed z-40 top-0',
+            isRtl ? 'right-0' : 'left-0',
+            'h-screen border-r border-border flex flex-col transition-all duration-300',
             sidebarCollapsed ? 'w-16' : 'w-[270px]'
           )}
           style={{
             background: 'var(--color-navbar)',
-            color: 'var(--color-navbar-foreground)'
+            color: 'var(--color-navbar-foreground)',
+            [isRtl ? 'right' : 'left']: 0
           }}
         >
-          {/* Collapse/expand arrow Button at right edge, vertically centered */}
           <Button
             onClick={() => setSidebarCollapsed((c) => !c)}
-            className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn(
+              'absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+              isRtl ? 'left-[-20px]' : 'right-[-20px]'
+            )}
+            aria-label={sidebarCollapsed ? t('aria.expandSidebar', 'Expand sidebar') : t('aria.collapseSidebar', 'Collapse sidebar')}
           >
-            {/* No icon */}
           </Button>
           <div className={cn('flex flex-col items-center py-8 border-b border-border transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-6')}>
-            {/* Custom SVG Icon - new logo style */}
             <span
               className={cn(
                 "mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-2",
@@ -243,9 +250,8 @@ const UnifiedLayout = ({ children }) => {
               `}</style>
             </span>
             {!sidebarCollapsed && (
-              <span className="font-extrabold text-2xl tracking-tight text-primary dark:text-white mb-3">SafeApp</span>
+              <span className="font-extrabold text-2xl tracking-tight text-primary dark:text-white mb-3">{t('appName', 'SafeApp')}</span>
             )}
-            {/* User Info - horizontal layout, below SafeApp, above tabs */}
             {!sidebarCollapsed && user && (
               <div className="flex flex-row items-center gap-3 mb-6 w-full">
                 <Avatar className="h-14 w-14" src={user?.profile?.avatar} />
@@ -275,7 +281,7 @@ const UnifiedLayout = ({ children }) => {
                   aria-current={pathname.startsWith(item.path) ? 'page' : undefined}
                 >
                   {item.icon}
-                  {!sidebarCollapsed && <span className="truncate">{prettify(item.name)}</span>}
+                  {!sidebarCollapsed && <span className="truncate">{t(`sidebar.${item.name}`, prettify(item.name))}</span>}
                 </Link>
               ))}
             </nav>
@@ -288,7 +294,7 @@ const UnifiedLayout = ({ children }) => {
                 )}
               >
                 <SettingsIcon className="h-5 w-5" />
-                {!sidebarCollapsed && <span>Settings</span>}
+                {!sidebarCollapsed && <span>{t('settings', 'Settings')}</span>}
               </Link>
               <Link
                 href="/logout"
@@ -298,7 +304,7 @@ const UnifiedLayout = ({ children }) => {
                 )}
               >
                 <LogoutIcon className="h-5 w-5" />
-                {!sidebarCollapsed && <span>Logout</span>}
+                {!sidebarCollapsed && <span>{t('logout', 'Logout')}</span>}
               </Link>
             </div>
           </div>
@@ -306,23 +312,22 @@ const UnifiedLayout = ({ children }) => {
       )}
       <div className={cn(
         'flex-1 flex flex-col min-h-screen transition-all duration-300',
-        !isMobile && sidebarCollapsed ? 'md:ml-16' : !isMobile ? 'md:ml-[270px]' : 'md:ml-0'
+        !isMobile && sidebarCollapsed ? (isRtl ? 'md:mr-16' : 'md:ml-16') : !isMobile ? (isRtl ? 'md:mr-[270px]' : 'md:ml-[270px]') : 'md:ml-0'
       )}>
         <header
           className="sticky top-0 z-40 w-full h-20 flex items-center px-4 md:px-8 backdrop-blur-xl shadow-xl border-b border-border transition-colors"
           style={{ background: 'var(--color-primary)', color: '#fff' }}
         >
-          {/* Logo or App Name */}
           <div className="flex items-center gap-3">
             <img src="/logo(1).png" alt="Logo" className="h-10 w-10 rounded-full" />
-            <span className="font-extrabold text-2xl tracking-tight">SafeApp</span>
+            <span className="font-extrabold text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
           </div>
           <div className="flex-1" />
-          {/* Right-side icons and user menu */}
-          <div className="flex items-center gap-6">
+          <div className={cn('flex items-center gap-6', isRtl && 'flex-row-reverse')}>
             <ThemeButton />
+            <LanguageSwitcher />
             <div className="relative">
-              <Button variant="ghost" size="icon" title="Notifications">
+              <Button variant="ghost" size="icon" title={t('notifications', 'Notifications')}>
                 <Bell className="h-6 w-6 text-white" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold shadow-md">3</span>
               </Button>
@@ -337,7 +342,7 @@ const UnifiedLayout = ({ children }) => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 rounded-xl shadow-lg" align="end" forceMount>
+              <DropdownMenuContent className="w-56 rounded-xl shadow-lg" align={isRtl ? 'start' : 'end'} forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{user?.firstName} {user?.lastName}</p>
@@ -349,16 +354,16 @@ const UnifiedLayout = ({ children }) => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} disabled={isNavigating} className="rounded-lg">
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t('profile', 'Profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleNavigation('/settings')} disabled={isNavigating} className="rounded-lg">
                   <SettingsIcon className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>{t('settings', 'Settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} disabled={isNavigating} className="rounded-lg text-destructive">
                   <LogoutIcon className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('logout', 'Logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -366,7 +371,6 @@ const UnifiedLayout = ({ children }) => {
         </header>
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {children}
-          
         </main>
       </div>
     </div>

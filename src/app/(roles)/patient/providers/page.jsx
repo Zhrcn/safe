@@ -45,8 +45,11 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
+import { useTranslation } from 'react-i18next';
 
-const ProviderCard = ({ provider, type, onOpenDialog }) => {
+
+
+const ProviderCard = ({ provider, type, onOpenDialog, t }) => {
     const isDoctor = type === 'doctor';
     const avatarBg = isDoctor ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600';
 
@@ -106,14 +109,14 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                         {provider.yearsExperience && (
                             <div className="flex items-center gap-2">
                                 <Briefcase className="h-4 w-4 text-primary" />
-                                <span>{provider.yearsExperience} years experience</span>
+                                <span>{provider.yearsExperience} {t('yearsExperience')}</span>
                             </div>
                         )}
                         {provider.education && provider.education.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <GraduationCap className="h-4 w-4 text-primary" />
                                 <span>
-                                    {provider.education[provider.education.length - 1].degree} from {
+                                    {provider.education[provider.education.length - 1].degree} {t('from')} {
                                         provider.education[provider.education.length - 1].institution
                                     }
                                 </span>
@@ -128,14 +131,14 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                         {isDoctor && (
                              <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-primary" />
-                                <span className="font-medium text-sm text-foreground">Available for consultations</span>
+                                <span className="font-medium text-sm text-foreground">{t('availableForConsultations')}</span>
                             </div>
                         )}
                         {!isDoctor && provider.availability && (
                             <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-primary" />
                                 <span className="font-medium text-sm text-foreground">
-                                    Working hours: {Object.entries(provider.availability)
+                                    {t('workingHours')}: {Object.entries(provider.availability)
                                         .map(([day, hours]) => `${day}: ${hours.join('-')}`)
                                         .join(', ')}
                                 </span>
@@ -145,7 +148,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
 
                     {!isDoctor && provider.specialties && provider.specialties.length > 0 && (
                         <div className="mt-4">
-                            <h4 className="text-sm font-semibold text-foreground mb-2">Specialties:</h4>
+                            <h4 className="text-sm font-semibold text-foreground mb-2">{t('specialties')}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {provider.specialties.map((specialty, index) => (
                                     <Badge key={index} variant="secondary" className="bg-primary text-primary hover:bg-primary/20">
@@ -165,7 +168,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                                 onClick={() => onOpenDialog(provider, 'appointment')}
                             >
                                 <Calendar className="h-4 w-4 mr-2" />
-                                Book Appointment
+                                {t ? t('bookAppointment') : 'Book Appointment'}
                             </Button>
                             <Button
                                 variant="outline"
@@ -173,7 +176,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                                 onClick={() => onOpenDialog(provider, 'message')}
                             >
                                 <MessageSquare className="h-4 w-4 mr-2" />
-                                Message
+                                {t ? t('message') : 'Message'}
                             </Button>
                         </>
                     ) : (
@@ -183,7 +186,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                                 onClick={() => onOpenDialog(provider, 'medicine')}
                             >
                                 <Pill className="h-4 w-4 mr-2" />
-                                Check Medicine
+                                {t ? t('checkMedicine') : 'Check Medicine'}
                             </Button>
                             <Button
                                 variant="outline"
@@ -191,7 +194,7 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
                                 onClick={() => onOpenDialog(provider, 'message')}
                             >
                                 <MessageSquare className="h-4 w-4 mr-2" />
-                                Message
+                                {t ? t('message') : 'Message'}
                             </Button>
                         </>
                     )}
@@ -204,6 +207,8 @@ const ProviderCard = ({ provider, type, onOpenDialog }) => {
 const ProvidersPageContent = () => {
     const router = useRouter();
     const { addNotification } = useNotification();
+    const { t, i18n } = useTranslation('common');
+    const isRtl = i18n.language === 'ar';
 
     const [activeTab, setActiveTab] = useState('doctors');
     const [searchQuery, setSearchQuery] = useState('');
@@ -325,8 +330,8 @@ const ProvidersPageContent = () => {
 
     const handleSendMessage = () => {
         addNotification({
-            title: 'Message Sent!',
-            description: `Your message to ${dialogProvider.name} has been sent.`, 
+            title: t('messageSent') || 'Message Sent!',
+            description: t('yourMessageTo', { name: dialogProvider.name }) || `Your message to ${dialogProvider.name} has been sent.`, 
             type: 'success'
         });
         handleCloseDialog();
@@ -335,16 +340,16 @@ const ProvidersPageContent = () => {
     const renderEmptyState = (type) => (
         <div className="text-center py-12 bg-card rounded-lg shadow-sm col-span-full">
             <AlertCircle className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
-            <h3 className="text-xl font-semibold mb-3">No {type} Found</h3>
+            <h3 className="text-xl font-semibold mb-3">{t('noProvidersFound')}</h3>
             <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filters to find a {type === 'doctors' ? 'doctor' : 'pharmacy'}.
+                {t('tryAdjustingSearchOrFilters')}
             </p>
             {type === 'doctors' && (
                 <Button asChild>
                     <Link href="/patient/appointments/new">
                         <span className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
-                            <span>Book New Appointment</span>
+                            <span>{t('bookNewAppointment')}</span>
                         </span>
                     </Link>
                 </Button>
@@ -406,6 +411,7 @@ const ProvidersPageContent = () => {
                         provider={provider} 
                         type={activeTab === 'doctors' ? 'doctor' : 'pharmacy'} 
                         onOpenDialog={handleOpenDialog}
+                        t={t}
                     />
                 ))}
             </div>
@@ -417,11 +423,11 @@ const ProvidersPageContent = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title="Providers"
-                description="Find and connect with healthcare professionals and pharmacies."
+                title={t('providers')}
+                description={t('findAndConnectWithHealthcareProfessionalsAndPharmacies')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Providers', href: '/patient/providers' }
+                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
+                    { label: t('sidebar.providers'), href: '/patient/providers' }
                 ]}
             />
 
@@ -430,7 +436,7 @@ const ProvidersPageContent = () => {
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder={`Search ${activeTab}...`}
+                            placeholder={`${t('search')} ${activeTab}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9"
@@ -440,11 +446,11 @@ const ProvidersPageContent = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="w-[180px] justify-between">
-                                    {specialtyFilter === 'all' ? 'All Specialties' : specialtyFilter}
+                                    {specialtyFilter === 'all' ? t('allSpecialties') : specialtyFilter}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>All Specialties</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>{t('allSpecialties')}</DropdownMenuItem>
                                 {uniqueSpecialties.map(specialty => (
                                     <DropdownMenuItem key={specialty} onClick={() => setSpecialtyFilter(specialty)}>{specialty}</DropdownMenuItem>
                                 ))}
@@ -455,11 +461,11 @@ const ProvidersPageContent = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="w-[180px] justify-between">
-                                    {locationFilter === 'all' ? 'All Locations' : locationFilter}
+                                    {locationFilter === 'all' ? t('allLocations') : locationFilter}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => setLocationFilter('all')}>All Locations</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setLocationFilter('all')}>{t('allLocations')}</DropdownMenuItem>
                                 {uniqueLocations.map(location => (
                                     <DropdownMenuItem key={location} onClick={() => setLocationFilter(location)}>{location}</DropdownMenuItem>
                                 ))}
@@ -471,18 +477,18 @@ const ProvidersPageContent = () => {
                             <Button variant="outline" className="w-[180px] justify-between">
                                 {(() => {
                                     switch (sortBy) {
-                                        case 'rating': return 'Rating';
-                                        case 'name': return 'Name';
-                                        case 'experience': return 'Experience';
-                                        default: return 'Sort by';
+                                        case 'rating': return t('rating');
+                                        case 'name': return t('name');
+                                        case 'experience': return t('experience');
+                                        default: return t('sortBy');
                                     }
                                 })()}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setSortBy('rating')}>Rating</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
-                            {activeTab === 'doctors' && <DropdownMenuItem onClick={() => setSortBy('experience')}>Experience</DropdownMenuItem>}
+                            <DropdownMenuItem onClick={() => setSortBy('rating')}>{t('rating')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSortBy('name')}>{t('name')}</DropdownMenuItem>
+                            {activeTab === 'doctors' && <DropdownMenuItem onClick={() => setSortBy('experience')}>{t('experience')}</DropdownMenuItem>}
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
@@ -495,59 +501,62 @@ const ProvidersPageContent = () => {
 
             <Tabs defaultValue="doctors" className="w-full" onValueChange={handleTabChange}>
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
-                    <TabsTrigger value="pharmacies">Pharmacies</TabsTrigger>
+                    <TabsTrigger value="doctors">{t('doctors')}</TabsTrigger>
+                    <TabsTrigger value="pharmacies">{t('pharmacies')}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="doctors" className="mt-6">
-                    {renderContent()}
+                    <main className={isRtl ? 'rtl' : 'ltr'}>
+                        {renderContent()}
+                    </main>
                 </TabsContent>
                 <TabsContent value="pharmacies" className="mt-6">
-                    {renderContent()}
+                    <main className={isRtl ? 'rtl' : 'ltr'}>
+                        {renderContent()}
+                    </main>
                 </TabsContent>
             </Tabs>
 
-            {/* Dialog for Message/Appointment/Medicine Check */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>
-                            {dialogType === 'message' ? `Message ${dialogProvider?.name}` : 
-                             dialogType === 'appointment' ? `Book Appointment with ${dialogProvider?.name}` : 
-                             `Check Medicine with ${dialogProvider?.name}`}
+                            {dialogType === 'message' ? `${t('message')} ${dialogProvider?.name}` : 
+                             dialogType === 'appointment' ? `${t('bookAppointmentWith')} ${dialogProvider?.name}` : 
+                             `${t('checkMedicineWith')} ${dialogProvider?.name}`}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         {dialogType === 'message' ? (
                             <div className="grid gap-2">
-                                <Label htmlFor="message">Your Message</Label>
+                                <Label htmlFor="message">{t('yourMessage')}</Label>
                                 <Input
                                     id="message"
-                                    placeholder="Type your message here."
+                                    placeholder={t('typeYourMessageHere')}
                                     value={messageContent}
                                     onChange={(e) => setMessageContent(e.target.value)}
                                     className="min-h-[80px]"
                                 />
                             </div>
                         ) : dialogType === 'appointment' ? (
-                            <p className="text-muted-foreground">You will be redirected to the appointment scheduling page.</p>
+                            <p className="text-muted-foreground">{t('youWillBeRedirectedToAppointmentSchedulingPage')}</p>
                         ) : (
-                            <p className="text-muted-foreground">You will be redirected to the medicine check page.</p>
+                            <p className="text-muted-foreground">{t('youWillBeRedirectedToMedicineCheckPage')}</p>
                         )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={handleCloseDialog}>Cancel</Button>
+                        <Button variant="outline" onClick={handleCloseDialog}>{t('cancel')}</Button>
                         {dialogType === 'message' ? (
-                            <Button onClick={handleSendMessage}>Send Message</Button>
+                            <Button onClick={handleSendMessage}>{t('sendMessage')}</Button>
                         ) : dialogType === 'appointment' ? (
                             <Button onClick={() => {
                                 handleCloseDialog();
                                 router.push('/patient/appointments/new');
-                            }}>Proceed to Book</Button>
+                            }}>{t('proceedToBook')}</Button>
                         ) : (
                             <Button onClick={() => {
                                 handleCloseDialog();
                                 
-                            }}>Proceed</Button>
+                            }}>{t('proceed')}</Button>
                         )}
                     </DialogFooter>
                 </DialogContent>

@@ -41,7 +41,9 @@ import Insurance from '@/components/patient/sections/Insurance';
 import EmergencyContact from '@/components/patient/sections/EmergencyContact';
 import { Button } from '@/components/ui/Button';
 import { consultations as mockConsultations } from '@/mockdata/consultations';
+import { useTranslation } from 'react-i18next';
 function PrescriptionForm({ open, onClose, onSubmit, patient }) {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         medication: '',
         dosage: '',
@@ -68,12 +70,12 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
     };
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.medication) newErrors.medication = 'Medication is required';
-        if (!formData.dosage) newErrors.dosage = 'Dosage is required';
-        if (!formData.frequency) newErrors.frequency = 'Frequency is required';
-        if (!formData.duration) newErrors.duration = 'Duration is required';
-        if (!formData.startDate) newErrors.startDate = 'Start date is required';
-        if (!formData.endDate) newErrors.endDate = 'End date is required';
+        if (!formData.medication) newErrors.medication = t('doctor.patientDetail.medicationRequired', 'Medication is required');
+        if (!formData.dosage) newErrors.dosage = t('doctor.patientDetail.dosageRequired', 'Dosage is required');
+        if (!formData.frequency) newErrors.frequency = t('doctor.patientDetail.frequencyRequired', 'Frequency is required');
+        if (!formData.duration) newErrors.duration = t('doctor.patientDetail.durationRequired', 'Duration is required');
+        if (!formData.startDate) newErrors.startDate = t('doctor.patientDetail.startDateRequired', 'Start date is required');
+        if (!formData.endDate) newErrors.endDate = t('doctor.patientDetail.endDateRequired', 'End date is required');
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -90,7 +92,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
             <div className="bg-card text-card-foreground rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg border border-border">
                 <div className="p-6 border-b border-border">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold">New Prescription</h2>
+                        <h2 className="text-xl font-semibold">{t('doctor.patientDetail.newPrescription', 'New Prescription')}</h2>
                         <Button 
                             onClick={onClose} 
                             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -103,7 +105,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                Medication
+                                {t('doctor.patientDetail.medication', 'Medication')}
                             </label>
                             <input
                                 type="text"
@@ -120,7 +122,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                Dosage
+                                {t('doctor.patientDetail.dosage', 'Dosage')}
                             </label>
                             <input
                                 type="text"
@@ -137,7 +139,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                Frequency
+                                {t('doctor.patientDetail.frequency', 'Frequency')}
                             </label>
                             <select
                                 name="frequency"
@@ -147,12 +149,12 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                     errors.frequency ? 'border-destructive' : 'border-input'
                                 }`}
                             >
-                                <option value="">Select frequency</option>
-                                <option value="once">Once daily</option>
-                                <option value="twice">Twice daily</option>
-                                <option value="thrice">Three times daily</option>
-                                <option value="four">Four times daily</option>
-                                <option value="as_needed">As needed</option>
+                                <option value="">{t('doctor.patientDetail.selectFrequency', 'Select frequency')}</option>
+                                <option value="once">{t('doctor.patientDetail.onceDaily', 'Once daily')}</option>
+                                <option value="twice">{t('doctor.patientDetail.twiceDaily', 'Twice daily')}</option>
+                                <option value="thrice">{t('doctor.patientDetail.thriceDaily', 'Three times daily')}</option>
+                                <option value="four">{t('doctor.patientDetail.fourTimesDaily', 'Four times daily')}</option>
+                                <option value="as_needed">{t('doctor.patientDetail.asNeeded', 'As needed')}</option>
                             </select>
                             {errors.frequency && (
                                 <p className="mt-1 text-sm text-destructive">{errors.frequency}</p>
@@ -160,7 +162,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                Duration
+                                {t('doctor.patientDetail.duration', 'Duration')}
                             </label>
                             <input
                                 type="text"
@@ -177,7 +179,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                Start Date
+                                {t('doctor.patientDetail.startDate', 'Start Date')}
                             </label>
                             <input
                                 type="date"
@@ -194,7 +196,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
-                                End Date
+                                {t('doctor.patientDetail.endDate', 'End Date')}
                             </label>
                             <input
                                 type="date"
@@ -212,7 +214,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-1">
-                            Instructions
+                            {t('doctor.patientDetail.instructions', 'Instructions')}
                         </label>
                         <textarea
                             name="instructions"
@@ -224,7 +226,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-1">
-                            Additional Notes
+                            {t('doctor.patientDetail.notes', 'Additional Notes')}
                         </label>
                         <textarea
                             name="notes"
@@ -240,13 +242,13 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                         onClick={onClose}
                         className="px-4 py-2 text-foreground hover:bg-muted rounded-md transition-colors"
                     >
-                        Cancel
+                        {t('doctor.patientDetail.cancel', 'Cancel')}
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-colors"
                     >
-                        Create Prescription
+                        {t('doctor.patientDetail.createPrescription', 'Create Prescription')}
                     </Button>
                 </div>
             </div>

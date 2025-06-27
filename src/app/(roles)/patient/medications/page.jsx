@@ -49,87 +49,462 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
+import { useTranslation } from 'react-i18next';
 
-const FREQUENCY_OPTIONS = [
-    { value: 'once_daily', label: 'Once a day' },
-    { value: 'twice_daily', label: 'Twice a day' },
-    { value: 'three_times_daily', label: 'Three times a day' },
-    { value: 'four_times_daily', label: 'Four times a day' },
-    { value: 'every_6_hours', label: 'Every 6 hours' },
-    { value: 'every_8_hours', label: 'Every 8 hours' },
-    { value: 'every_12_hours', label: 'Every 12 hours' },
-    { value: 'as_needed', label: 'As Needed' },
-];
-const DAYS_OF_WEEK = [
-    { value: 'monday', label: 'Mon' },
-    { value: 'tuesday', label: 'Tue' },
-    { value: 'wednesday', label: 'Wed' },
-    { value: 'thursday', label: 'Thu' },
-    { value: 'friday', label: 'Fri' },
-    { value: 'saturday', label: 'Sat' },
-    { value: 'sunday', label: 'Sun' },
-];
-const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, onToggleReminder, onEdit, onDelete }) => {
-    const getStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'active':
-                return 'bg-success/10 text-success border-success';
-            case 'completed':
-                return 'bg-secondary/10 text-secondary border-secondary';
-            case 'expired':
-                return 'bg-error/10 text-error border-error';
-            default:
-                return 'bg-secondary/10 text-secondary border-secondary';
+function getCssVar(varName, fallback) {
+    if (typeof window === 'undefined') return fallback;
+    const value = getComputedStyle(document.documentElement).getPropertyValue(varName);
+    return value ? value.trim() : fallback;
+}
+
+const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
+    const { t } = useTranslation();
+    const [reminderTimes, setReminderTimes] = useState(medication?.reminderTimes || []);
+    const [reminderDays, setReminderDays] = useState(medication?.reminderDays || []);
+    const [remindersEnabled, setRemindersEnabled] = useState(medication?.remindersEnabled ?? true);
+
+    useEffect(() => {
+        if (medication) {
+            setReminderTimes(medication.reminderTimes || []);
+            setReminderDays(medication.reminderDays || []);
+            setRemindersEnabled(medication.remindersEnabled ?? true);
+        }
+    }, [medication]);
+
+    const DAYS_OF_WEEK = [
+        { value: 'monday', label: t('patient.medications.days.mon', 'Mon') },
+        { value: 'tuesday', label: t('patient.medications.days.tue', 'Tue') },
+        { value: 'wednesday', label: t('patient.medications.days.wed', 'Wed') },
+        { value: 'thursday', label: t('patient.medications.days.thu', 'Thu') },
+        { value: 'friday', label: t('patient.medications.days.fri', 'Fri') },
+        { value: 'saturday', label: t('patient.medications.days.sat', 'Sat') },
+        { value: 'sunday', label: t('patient.medications.days.sun', 'Sun') },
+    ];
+
+    const handleTimeChange = (e, idx) => {
+        const newTimes = [...reminderTimes];
+        newTimes[idx] = e.target.value;
+        setReminderTimes(newTimes);
+    };
+
+    const handleAddTime = () => {
+        setReminderTimes([...reminderTimes, '08:00']);
+    };
+
+    const handleRemoveTime = (idx) => {
+        setReminderTimes(reminderTimes.filter((_, i) => i !== idx));
+    };
+
+    const handleDayToggle = (day) => {
+        if (reminderDays.includes(day)) {
+            setReminderDays(reminderDays.filter(d => d !== day));
+        } else {
+            setReminderDays([...reminderDays, day]);
         }
     };
 
-    const isRefillable = medication.status.toLowerCase() === 'active' && 
-        (medication.refillDate && new Date(medication.refillDate) <= new Date());
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit({
+            reminderTimes,
+            reminderDays,
+            remindersEnabled,
+        });
+    };
+
+    if (!open) return null;
+
+    const primary = 'var(--color-primary)';
+    const warning = 'var(--color-warning)';
+    const info = 'var(--color-info)';
+    const border = 'var(--color-border)';
+    const cardBg = 'var(--color-card)';
+    const text = 'var(--color-foreground)';
+    const muted = 'var(--color-muted-foreground)';
 
     return (
-        <Card className="transition-all duration-300 hover:shadow-lg">
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent style={{ background: cardBg, color: text, borderColor: border }}>
+                <DialogHeader>
+                    <DialogTitle>
+                        {t('patient.medications.reminderDialogTitle', 'Set Reminders')}
+                    </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <Label>{t('patient.medications.enableReminders', 'Enable Reminders')}</Label>
+                        <div className="mt-2">
+                            <Button
+                                type="button"
+                                variant={remindersEnabled ? "default" : "outline"}
+                                onClick={() => setRemindersEnabled(!remindersEnabled)}
+                                className="flex items-center gap-2"
+                                style={{
+                                    background: remindersEnabled ? primary : 'transparent',
+                                    color: remindersEnabled ? 'var(--color-primary-foreground)' : text,
+                                    borderColor: border,
+                                    transition: 'background 0.2s, color 0.2s'
+                                }}
+                            >
+                                {remindersEnabled ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                                {remindersEnabled ? t('patient.medications.enabled', 'Enabled') : t('patient.medications.disabled', 'Disabled')}
+                            </Button>
+                        </div>
+                    </div>
+                    {remindersEnabled && (
+                        <>
+                            <div>
+                                <Label>{t('patient.medications.reminderTimes', 'Reminder Times')}</Label>
+                                <div className="flex flex-col gap-2 mt-2">
+                                    {reminderTimes.map((time, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <Input
+                                                type="time"
+                                                value={time}
+                                                onChange={e => handleTimeChange(e, idx)}
+                                                className="w-32"
+                                                style={{ borderColor: border, color: text, background: cardBg }}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleRemoveTime(idx)}
+                                                style={{
+                                                    color: warning,
+                                                    background: 'transparent',
+                                                    borderColor: 'transparent'
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleAddTime}
+                                        style={{
+                                            borderColor: border,
+                                            color: primary,
+                                            background: 'var(--color-secondary-bg, #f0f4fa)',
+                                            fontWeight: 500,
+                                            transition: 'background 0.2s, color 0.2s'
+                                        }}>
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        {t('patient.medications.addTime', 'Add Time')}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div>
+                                <Label>{t('patient.medications.reminderDays', 'Reminder Days')}</Label>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {DAYS_OF_WEEK.map(day => (
+                                        <Button
+                                            key={day.value}
+                                            type="button"
+                                            variant={reminderDays.includes(day.value) ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => handleDayToggle(day.value)}
+                                            style={{
+                                                background: reminderDays.includes(day.value) ? primary : 'var(--color-secondary-bg, #f0f4fa)',
+                                                color: reminderDays.includes(day.value) ? 'var(--color-primary-foreground)' : text,
+                                                borderColor: border,
+                                                fontWeight: 500,
+                                                transition: 'background 0.2s, color 0.2s'
+                                            }}
+                                        >
+                                            {day.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            style={{
+                                borderColor: border,
+                                color: primary,
+                                background: 'var(--color-secondary-bg, #f0f4fa)',
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}>
+                            {t('common.cancel', 'Cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            style={{
+                                background: primary,
+                                color: 'var(--color-primary-foreground)',
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}>
+                            {t('common.save', 'Save')}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const MedicationFormDialog = ({ open, onClose, onSubmit, medication }) => {
+    const { t } = useTranslation();
+    const [name, setName] = useState(medication?.name || '');
+    const [dosage, setDosage] = useState(medication?.dosage || '');
+    const [frequency, setFrequency] = useState(medication?.frequency || '');
+    const [refillDate, setRefillDate] = useState(medication?.refillDate ? format(new Date(medication.refillDate), 'yyyy-MM-dd') : '');
+    const [prescribedBy, setPrescribedBy] = useState(medication?.prescribedBy || '');
+    const [notes, setNotes] = useState(medication?.notes || '');
+
+    useEffect(() => {
+        if (medication) {
+            setName(medication.name || '');
+            setDosage(medication.dosage || '');
+            setFrequency(medication.frequency || '');
+            setRefillDate(medication.refillDate ? format(new Date(medication.refillDate), 'yyyy-MM-dd') : '');
+            setPrescribedBy(medication.prescribedBy || '');
+            setNotes(medication.notes || '');
+        } else {
+            setName('');
+            setDosage('');
+            setFrequency('');
+            setRefillDate('');
+            setPrescribedBy('');
+            setNotes('');
+        }
+    }, [medication]);
+
+    const FREQUENCY_OPTIONS = [
+        { value: 'once_daily', label: t('patient.medications.frequency.onceDaily', 'Once a day') },
+        { value: 'twice_daily', label: t('patient.medications.frequency.twiceDaily', 'Twice a day') },
+        { value: 'three_times_daily', label: t('patient.medications.frequency.threeTimesDaily', 'Three times a day') },
+        { value: 'four_times_daily', label: t('patient.medications.frequency.fourTimesDaily', 'Four times a day') },
+        { value: 'every_6_hours', label: t('patient.medications.frequency.every6Hours', 'Every 6 hours') },
+        { value: 'every_8_hours', label: t('patient.medications.frequency.every8Hours', 'Every 8 hours') },
+        { value: 'every_12_hours', label: t('patient.medications.frequency.every12Hours', 'Every 12 hours') },
+        { value: 'as_needed', label: t('patient.medications.frequency.asNeeded', 'As Needed') },
+    ];
+
+    if (!open) return null;
+
+    const primary = 'var(--color-primary)';
+    const border = 'var(--color-border)';
+    const cardBg = 'var(--color-card)';
+    const text = 'var(--color-foreground)';
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit({
+            name,
+            dosage,
+            frequency,
+            refillDate,
+            prescribedBy,
+            notes,
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent style={{ background: cardBg, color: text, borderColor: border }}>
+                <DialogHeader>
+                    <DialogTitle>
+                        {medication ? t('patient.medications.editMedication', 'Edit Medication') : t('patient.medications.addMedication', 'Add Medication')}
+                    </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <Label>{t('patient.medications.name', 'Medication Name')}</Label>
+                        <Input value={name} onChange={e => setName(e.target.value)} required style={{ borderColor: border, color: text, background: cardBg }} />
+                    </div>
+                    <div>
+                        <Label>{t('patient.medications.dosage', 'Dosage')}</Label>
+                        <Input value={dosage} onChange={e => setDosage(e.target.value)} required style={{ borderColor: border, color: text, background: cardBg }} />
+                    </div>
+                    <div>
+                        <Label>{t('patient.medications.frequency', 'Frequency')}</Label>
+                        <Select value={frequency} onValueChange={setFrequency} required>
+                            <SelectTrigger style={{ borderColor: border, color: text, background: cardBg }}>
+                                <SelectValue placeholder={t('patient.medications.selectFrequency', 'Select frequency')} />
+                            </SelectTrigger>
+                            <SelectContent style={{ background: cardBg, color: text, borderColor: border }}>
+                                {FREQUENCY_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label>{t('patient.medications.refillDate', 'Refill Date')}</Label>
+                        <Input type="date" value={refillDate} onChange={e => setRefillDate(e.target.value)} style={{ borderColor: border, color: text, background: cardBg }} />
+                    </div>
+                    <div>
+                        <Label>{t('patient.medications.prescribedBy', 'Prescribed By')}</Label>
+                        <Input value={prescribedBy} onChange={e => setPrescribedBy(e.target.value)} style={{ borderColor: border, color: text, background: cardBg }} />
+                    </div>
+                    <div>
+                        <Label>{t('patient.medications.notes', 'Notes')}</Label>
+                        <Textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ borderColor: border, color: text, background: cardBg }} />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            style={{
+                                borderColor: border,
+                                color: primary,
+                                background: 'var(--color-secondary-bg, #f0f4fa)',
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}>
+                            {t('common.cancel', 'Cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            style={{
+                                background: primary,
+                                color: 'var(--color-primary-foreground)',
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}>
+                            {t('common.save', 'Save')}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, onToggleReminder, onEdit, onDelete }) => {
+    const { t } = useTranslation();
+
+    const primary = 'var(--color-primary)';
+    const success = 'var(--color-success)';
+    const secondary = 'var(--color-secondary)';
+    const error = 'var(--color-error)';
+    const warning = 'var(--color-warning)';
+    const info = 'var(--color-info)';
+    const border = 'var(--color-border)';
+    const cardBg = 'var(--color-card)';
+    const text = 'var(--color-foreground)';
+    const muted = 'var(--color-muted-foreground)';
+
+    const getStatusColor = (status) => {
+        switch (status.toLowerCase()) {
+            case 'active':
+                return {
+                    background: 'var(--color-success-bg, #e6f9f0)',
+                    color: success,
+                    borderColor: success
+                };
+            case 'completed':
+                return {
+                    background: 'var(--color-secondary-bg, #f0f4fa)',
+                    color: secondary,
+                    borderColor: secondary
+                };
+            case 'expired':
+                return {
+                    background: 'var(--color-error-bg, #fbeaea)',
+                    color: error,
+                    borderColor: error
+                };
+            default:
+                return {
+                    background: 'var(--color-secondary-bg, #f0f4fa)',
+                    color: secondary,
+                    borderColor: secondary
+                };
+        }
+    };
+    const DAYS_OF_WEEK = [
+        { value: 'monday', label: t('patient.medications.days.mon', 'Mon') },
+        { value: 'tuesday', label: t('patient.medications.days.tue', 'Tue') },
+        { value: 'wednesday', label: t('patient.medications.days.wed', 'Wed') },
+        { value: 'thursday', label: t('patient.medications.days.thu', 'Thu') },
+        { value: 'friday', label: t('patient.medications.days.fri', 'Fri') },
+        { value: 'saturday', label: t('patient.medications.days.sat', 'Sat') },
+        { value: 'sunday', label: t('patient.medications.days.sun', 'Sun') },
+    ];
+    const isRefillable = medication.status.toLowerCase() === 'active' &&
+        (medication.refillDate && new Date(medication.refillDate) <= new Date());
+    const statusStyle = getStatusColor(medication.status);
+
+    return (
+        <Card
+            className="transition-all duration-300 hover:shadow-lg"
+            style={{ background: cardBg, color: text, borderColor: border }}
+        >
             <CardContent className="p-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3 mb-2">
-                        <Pill className="h-6 w-6 text-primary" />
-                        <h3 className="text-lg font-bold text-foreground">{medication.name}</h3>
+                        <Pill className="h-6 w-6" style={{ color: primary }} />
+                        <h3 className="text-lg font-bold" style={{ color: text }}>{medication.name}</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">{medication.dosage} - {medication.frequency}</p>
-                    
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
+                    <p className="text-sm" style={{ color: muted }}>{medication.dosage} - {medication.frequency}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mt-2" style={{ color: muted }}>
                         {medication.refillDate && (
                             <div className="flex items-center gap-1">
-                                <CalendarIcon className="h-4 w-4 text-primary" />
-                                <span>Next refill: {format(new Date(medication.refillDate), 'PPP')}</span>
+                                <CalendarIcon className="h-4 w-4" style={{ color: primary }} />
+                                <span>{t('patient.medications.nextRefill', 'Next refill:')} {format(new Date(medication.refillDate), 'PPP')}</span>
                             </div>
                         )}
                         {medication.prescribedBy && (
-                             <div className="flex items-center gap-1">
-                                <Hospital className="h-4 w-4 text-primary" />
-                                <span>Prescribed by {medication.prescribedBy}</span>
+                            <div className="flex items-center gap-1">
+                                <Hospital className="h-4 w-4" style={{ color: primary }} />
+                                <span>{t('patient.medications.prescribedBy', 'Prescribed by')} {medication.prescribedBy}</span>
                             </div>
                         )}
                     </div>
-
                     {medication.notes && (
-                        <Alert className="mt-3 bg-warning/10 text-warning border-warning" icon={<AlertCircle className="h-4 w-4" />}>
-                            <AlertTitle>Note</AlertTitle>
+                        <Alert
+                            className="mt-3"
+                            style={{
+                                background: 'var(--color-warning-bg, #fffbe6)',
+                                color: warning,
+                                borderColor: warning
+                            }}
+                            icon={<AlertCircle className="h-4 w-4" style={{ color: warning }} />}
+                        >
+                            <AlertTitle>{t('patient.medications.note', 'Note')}</AlertTitle>
                             <AlertDescription>{medication.notes}</AlertDescription>
                         </Alert>
                     )}
-
                     {medication.remindersEnabled && medication.reminderTimes && medication.reminderDays && (
-                        <Alert className="mt-3 bg-info/10 text-info border-info" icon={<BellRing className="h-4 w-4" />}>
-                            <AlertTitle>Reminders Active</AlertTitle>
+                        <Alert
+                            className="mt-3"
+                            style={{
+                                background: 'var(--color-info-bg, #e6f4fa)',
+                                color: info,
+                                borderColor: info
+                            }}
+                            icon={<BellRing className="h-4 w-4" style={{ color: info }} />}
+                        >
+                            <AlertTitle>{t('patient.medications.remindersActive', 'Reminders Active')}</AlertTitle>
                             <AlertDescription>
-                                Daily at: {medication.reminderTimes.join(', ')} on {medication.reminderDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}
+                                {t('patient.medications.dailyAt', 'Daily at:')} {medication.reminderTimes.join(', ')} {t('patient.medications.on', 'on')} {medication.reminderDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}
                             </AlertDescription>
                         </Alert>
                     )}
                 </div>
-                
                 <div className="flex flex-col items-end gap-2">
-                    <Badge className={getStatusColor(medication.status)}>
+                    <Badge
+                        style={{
+                            background: statusStyle.background,
+                            color: statusStyle.color,
+                            borderColor: statusStyle.borderColor,
+                            borderWidth: 1,
+                            borderStyle: 'solid'
+                        }}
+                    >
                         {medication.status}
                     </Badge>
                     <div className="flex flex-wrap gap-2 justify-end">
@@ -138,10 +513,17 @@ const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, on
                                 variant="default"
                                 size="sm"
                                 onClick={() => onRefill(medication)}
-                                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                                className="flex items-center gap-2"
+                                style={{
+                                    background: primary,
+                                    color: 'var(--color-primary-foreground)',
+                                    borderColor: border,
+                                    fontWeight: 500,
+                                    transition: 'background 0.2s, color 0.2s'
+                                }}
                             >
                                 <Pill className="h-4 w-4" />
-                                Refill Now
+                                {t('patient.medications.refillNow', 'Refill Now')}
                             </Button>
                         )}
                         <Button
@@ -149,35 +531,63 @@ const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, on
                             size="sm"
                             onClick={() => onSetReminder(medication)}
                             className="flex items-center gap-2"
+                            style={{
+                                background: 'var(--color-secondary-bg, #f0f4fa)',
+                                color: secondary,
+                                borderColor: border,
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}
                         >
                             {medication.remindersEnabled ? <BellOff className="h-4 w-4" /> : <BellRing className="h-4 w-4" />}
-                            {medication.remindersEnabled ? 'Manage Reminders' : 'Set Reminders'}
+                            {medication.remindersEnabled ? t('patient.medications.manageReminders', 'Manage Reminders') : t('patient.medications.setReminders', 'Set Reminders')}
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={() => onViewDetails(medication)}
                             className="flex items-center gap-2"
+                            style={{
+                                borderColor: border,
+                                color: primary,
+                                background: 'var(--color-secondary-bg, #f0f4fa)',
+                                fontWeight: 500,
+                                transition: 'background 0.2s, color 0.2s'
+                            }}
                         >
-                            View Details
+                            {t('patient.medications.viewDetails', 'View Details')}
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onEdit(medication)}
-                            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                            className="flex items-center gap-2"
+                            style={{
+                                color: muted,
+                                fontWeight: 500,
+                                background: 'transparent',
+                                borderColor: 'transparent',
+                                transition: 'color 0.2s'
+                            }}
                         >
                             <Edit className="h-4 w-4" />
-                            Edit
+                            {t('patient.medications.edit', 'Edit')}
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onDelete(medication.id)}
-                            className="flex items-center gap-2 text-destructive hover:text-destructive"
+                            className="flex items-center gap-2"
+                            style={{
+                                color: error,
+                                fontWeight: 500,
+                                background: 'transparent',
+                                borderColor: 'transparent',
+                                transition: 'color 0.2s'
+                            }}
                         >
                             <Trash2 className="h-4 w-4" />
-                            Delete
+                            {t('patient.medications.delete', 'Delete')}
                         </Button>
                     </div>
                 </div>
@@ -185,315 +595,7 @@ const MedicationCard = ({ medication, onRefill, onViewDetails, onSetReminder, on
         </Card>
     );
 };
-const ReminderDialog = ({ open, onClose, medication, onSubmit }) => {
-    const [times, setTimes] = useState([]);
-    const [selectedDays, setSelectedDays] = useState([]);
-    const [firstTime, setFirstTime] = useState('09:00'); 
-    const [selectedFrequency, setSelectedFrequency] = useState(medication?.frequency || '');
-    const { showNotification } = useNotification();
 
-    useEffect(() => {
-        if (medication) {
-            setTimes(medication.reminderTimes || []);
-            setSelectedDays(medication.reminderDays || []);
-            setSelectedFrequency(medication.frequency || '');
-            if (medication.reminderTimes && medication.reminderTimes.length > 0) {
-                setFirstTime(medication.reminderTimes[0]);
-            } else {
-                setFirstTime('09:00');
-            }
-        }
-    }, [medication]);
-
-    useEffect(() => {
-        if (selectedFrequency && firstTime) {
-            setTimes(calculateReminderTimes(selectedFrequency, firstTime));
-        }
-    }, [selectedFrequency, firstTime]);
-
-    const calculateReminderTimes = (frequency, initialTime) => {
-        const newTimes = [];
-        const [hours, minutes] = initialTime.split(':').map(Number);
-        let intervalHours = 0;
-        switch (frequency) {
-            case 'once_daily': intervalHours = 24; break;
-            case 'twice_daily': intervalHours = 12; break;
-            case 'three_times_daily': intervalHours = 8; break;
-            case 'four_times_daily': intervalHours = 6; break;
-            case 'every_6_hours': intervalHours = 6; break;
-            case 'every_8_hours': intervalHours = 8; break;
-            case 'every_12_hours': intervalHours = 12; break;
-            case 'as_needed': return []; 
-            default: return [];
-        }
-        if (intervalHours === 24) {
-            newTimes.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
-        } else {
-            let currentHour = hours;
-            for (let i = 0; i < 24 / intervalHours; i++) {
-                newTimes.push(`${String(currentHour % 24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
-                currentHour += intervalHours;
-            }
-        }
-        return newTimes.sort();
-    };
-
-    const handleFrequencyChange = (value) => {
-        setSelectedFrequency(value);
-    };
-
-    const handleFirstTimeChange = (e) => {
-        setFirstTime(e.target.value);
-    };
-
-    const handleDayToggle = (value) => {
-        setSelectedDays(prev => 
-            prev.includes(value)
-                ? prev.filter(day => day !== value)
-                : [...prev, value]
-        );
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (selectedFrequency !== 'as_needed' && (times.length === 0 || selectedDays.length === 0)) {
-            showNotification({ message: 'Please select reminder times and days.', severity: 'error' });
-            return;
-        }
-        onSubmit({
-            reminderTimes: times,
-            reminderDays: selectedDays,
-            remindersEnabled: selectedFrequency !== 'as_needed',
-        });
-        showNotification({ message: 'Reminder settings updated successfully!', severity: 'success' });
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[480px] rounded-xl bg-background">
-                <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">Set Reminders for {medication?.name}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="frequency">Frequency</Label>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between rounded-lg">
-                                    {FREQUENCY_OPTIONS.find(option => option.value === selectedFrequency)?.label || 'Select frequency'}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {FREQUENCY_OPTIONS.map(option => (
-                                    <DropdownMenuItem key={option.value} onClick={() => handleFrequencyChange(option.value)}>
-                                        {option.label}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    {selectedFrequency !== 'as_needed' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="firstTime">First Dose Time (24h format)</Label>
-                            <Input
-                                id="firstTime"
-                                type="time"
-                                value={firstTime}
-                                onChange={handleFirstTimeChange}
-                                className="border-border focus:border-primary focus:ring-primary/20 rounded-lg"
-                            />
-                        </div>
-                    )}
-                    <div className="space-y-2">
-                        <Label>Reminder Days</Label>
-                        <ToggleGroup type="multiple" value={selectedDays} onValueChange={setSelectedDays} className="flex flex-wrap gap-2">
-                            {DAYS_OF_WEEK.map(day => (
-                                <ToggleGroupItem
-                                    key={day.value}
-                                    value={day.value}
-                                    aria-label={`Toggle ${day.label}`}
-                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-lg px-4 py-2"
-                                >
-                                    {day.label}
-                                </ToggleGroupItem>
-                            ))}
-                        </ToggleGroup>
-                    </div>
-                    {selectedFrequency !== 'as_needed' && times.length > 0 && selectedDays.length > 0 && (
-                        <Alert className="bg-primary/10 text-primary border-primary rounded-lg">
-                            <AlertTitle>Scheduled Times:</AlertTitle>
-                            <AlertDescription>{times.join(', ')} on {selectedDays.map(day => DAYS_OF_WEEK.find(d => d.value === day)?.label).join(', ')}</AlertDescription>
-                        </Alert>
-                    )}
-                </form>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose} className="rounded-lg">Cancel</Button>
-                    <Button type="submit" form="reminder-form" onClick={handleSubmit} className="rounded-lg">Save Reminders</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
-const MedicationFormDialog = ({ open, onClose, onSubmit, medication }) => {
-    const [formData, setFormData] = useState({
-        id: '',
-        name: '',
-        dosage: '',
-        frequency: '',
-        notes: '',
-        refillDate: null,
-        prescribedBy: '',
-        status: 'active',
-        remindersEnabled: false,
-        reminderTimes: [],
-        reminderDays: [],
-    });
-    const { showNotification } = useNotification();
-
-    useEffect(() => {
-        if (medication) {
-            setFormData({
-                id: medication.id || '',
-                name: medication.name || '',
-                dosage: medication.dosage || '',
-                frequency: medication.frequency || '',
-                notes: medication.notes || '',
-                refillDate: medication.refillDate ? new Date(medication.refillDate) : null,
-                prescribedBy: medication.prescribedBy || '',
-                status: medication.status || 'active',
-                remindersEnabled: medication.remindersEnabled || false,
-                reminderTimes: medication.reminderTimes || [],
-                reminderDays: medication.reminderDays || [],
-            });
-        } else {
-            setFormData({
-                id: '',
-                name: '',
-                dosage: '',
-                frequency: '',
-                notes: '',
-                refillDate: null,
-                prescribedBy: '',
-                status: 'active',
-                remindersEnabled: false,
-                reminderTimes: [],
-                reminderDays: [],
-            });
-        }
-    }, [medication]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleDateChange = (date, field) => {
-        setFormData(prev => ({ ...prev, [field]: date }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.name || !formData.dosage || !formData.frequency) {
-            showNotification('Please fill in all required fields.', 'error');
-            return;
-        }
-        onSubmit(formData);
-        showNotification('Medication saved successfully!', 'success');
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                    <DialogTitle>{medication ? 'Edit Medication' : 'Add New Medication'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">Name</Label>
-                        <Input id="name" name="name" value={formData.name} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="dosage" className="text-right">Dosage</Label>
-                        <Input id="dosage" name="dosage" value={formData.dosage} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="frequency" className="text-right">Frequency</Label>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between">
-                                    {FREQUENCY_OPTIONS.find(option => option.value === formData.frequency)?.label || 'Select frequency'}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {FREQUENCY_OPTIONS.map(option => (
-                                    <DropdownMenuItem key={option.value} onClick={() => handleChange({ target: { name: 'frequency', value: option.value } })}>
-                                        {option.label}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="prescribedBy" className="text-right">Prescribed By</Label>
-                        <Input id="prescribedBy" name="prescribedBy" value={formData.prescribedBy} onChange={handleChange} className="col-span-3 border-border focus:border-primary focus:ring-primary/20" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="refillDate" className="text-right">Next Refill Date</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-full justify-start text-left font-normal col-span-3",
-                                        !formData.refillDate && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {formData.refillDate ? format(formData.refillDate, "PPP") : <span>Pick a date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={formData.refillDate}
-                                    onSelect={(date) => handleDateChange(date, 'refillDate')}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="status" className="text-right">Status</Label>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full justify-between">
-                                    {['Active', 'Completed', 'Expired'].find(label => label.toLowerCase() === formData.status) || 'Select status'}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {['active', 'completed', 'expired'].map(status => (
-                                    <DropdownMenuItem key={status} onClick={() => handleChange({ target: { name: 'status', value: status } })}>
-                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                        <Label htmlFor="notes" className="text-right">Notes</Label>
-                        <Textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} className="col-span-3 min-h-[80px] border-border focus:border-primary focus:ring-primary/20" />
-                    </div>
-                </form>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="submit" form="medication-form" onClick={handleSubmit}>Save Medication</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
 const MedicationsPage = () => {
     const router = useRouter();
     const { showNotification } = useNotification();
@@ -505,8 +607,45 @@ const MedicationsPage = () => {
     const [selectedMedication, setSelectedMedication] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [apiError, setApiError] = useState(null);
+    const { t, i18n } = useTranslation('common');
+    const [_, setRerender] = useState(0);
+    useEffect(() => {
+        const handleLangChange = () => setRerender(x => x + 1);
+        i18n.on('languageChanged', handleLangChange);
+        return () => i18n.off('languageChanged', handleLangChange);
+    }, [i18n]);
+    console.log('Current language:', i18n.language);
+    const isRtl = i18n.language === 'ar';
 
     const dispatch = useDispatch();
+
+    const FREQUENCY_OPTIONS = [
+        { value: 'once_daily', label: t('patient.medications.frequency.onceDaily', 'Once a day') },
+        { value: 'twice_daily', label: t('patient.medications.frequency.twiceDaily', 'Twice a day') },
+        { value: 'three_times_daily', label: t('patient.medications.frequency.threeTimesDaily', 'Three times a day') },
+        { value: 'four_times_daily', label: t('patient.medications.frequency.fourTimesDaily', 'Four times a day') },
+        { value: 'every_6_hours', label: t('patient.medications.frequency.every6Hours', 'Every 6 hours') },
+        { value: 'every_8_hours', label: t('patient.medications.frequency.every8Hours', 'Every 8 hours') },
+        { value: 'every_12_hours', label: t('patient.medications.frequency.every12Hours', 'Every 12 hours') },
+        { value: 'as_needed', label: t('patient.medications.frequency.asNeeded', 'As Needed') },
+    ];
+    const DAYS_OF_WEEK = [
+        { value: 'monday', label: t('patient.medications.days.mon', 'Mon') },
+        { value: 'tuesday', label: t('patient.medications.days.tue', 'Tue') },
+        { value: 'wednesday', label: t('patient.medications.days.wed', 'Wed') },
+        { value: 'thursday', label: t('patient.medications.days.thu', 'Thu') },
+        { value: 'friday', label: t('patient.medications.days.fri', 'Fri') },
+        { value: 'saturday', label: t('patient.medications.days.sat', 'Sat') },
+        { value: 'sunday', label: t('patient.medications.days.sun', 'Sun') },
+    ];
+
+    const primary = 'var(--color-primary)';
+    const border = 'var(--color-border)';
+    const cardBg = 'var(--color-card)';
+    const text = 'var(--color-foreground)';
+    const muted = 'var(--color-muted-foreground)';
+    const error = 'var(--color-error)';
+    const warning = 'var(--color-warning)';
 
     useEffect(() => {
         const fetchMedications = async () => {
@@ -516,15 +655,15 @@ const MedicationsPage = () => {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 dispatch(setActiveMedications(medications));
             } catch (err) {
-                setApiError('Failed to load medications.');
-                showNotification('Failed to load medications.', 'error');
+                setApiError(t('patient.medications.failedToLoad', 'Failed to load medications.'));
+                showNotification(t('patient.medications.failedToLoad', 'Failed to load medications.'), 'error');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchMedications();
-    }, [dispatch]);
+    }, [dispatch, t]);
 
     const handleAddMedication = () => {
         setSelectedMedication(null);
@@ -538,21 +677,21 @@ const MedicationsPage = () => {
 
     const handleDeleteMedication = (id) => {
         console.log('Deleting medication with ID:', id);
-        showNotification('Medication deleted successfully!', 'success');
+        showNotification(t('patient.medications.deleteSuccess', 'Medication deleted successfully!'), 'success');
     };
 
     const handleSaveMedication = (formData) => {
-        console.log('Saving medication:', formData);
+        console.log(t('patient.medications.savingMedication', 'Saving medication:'), formData);
         setMedicationDialogOpen(false);
     };
 
     const handleRefill = (medication) => {
-        showNotification(`Requesting refill for ${medication.name}...`, 'info');
+        showNotification(t('patient.medications.requestingRefill', { name: medication.name, defaultValue: 'Requesting refill for {{name}}...' }), 'info');
     };
 
     const handleViewDetails = (medication) => {
-        console.log('Viewing details for:', medication);
-        showNotification(`Viewing details for ${medication.name}`, 'info');
+        console.log(t('patient.medications.viewingDetails', 'Viewing details for:'), medication);
+        showNotification(t('patient.medications.viewingDetailsFor', { name: medication.name, defaultValue: 'Viewing details for {{name}}' }), 'info');
     };
 
     const handleSetReminder = (medication) => {
@@ -561,24 +700,39 @@ const MedicationsPage = () => {
     };
 
     const handleReminderUpdate = (formData) => {
-        console.log('Updating reminder for:', selectedMedication.name, formData);
+        console.log(t('patient.medications.updatingReminder', 'Updating reminder for:'), selectedMedication.name, formData);
         setReminderDialogOpen(false);
     };
 
     const handleToggleReminder = (medication) => {
         const newReminderStatus = !medication.remindersEnabled;
-        showNotification(`${newReminderStatus ? 'Enabled' : 'Disabled'} reminders for ${medication.name}`, 'info');
+        showNotification(
+            t(newReminderStatus ? 'patient.medications.enabledRemindersFor' : 'patient.medications.disabledRemindersFor', { name: medication.name, defaultValue: newReminderStatus ? 'Enabled reminders for {{name}}' : 'Disabled reminders for {{name}}' }),
+            'info'
+        );
     };
 
     const handleViewPrescriptions = () => {
         router.push('/patient/prescriptions');
     };
 
+    const safeToLower = (val) => (typeof val === 'string' ? val.toLowerCase() : '');
+
     const filteredMedications = medications.filter(med => {
-        const matchesSearch = med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            med.prescribedBy.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || med.status.toLowerCase() === statusFilter.toLowerCase();
-        const matchesTab = activeTab === 'all' || med.status.toLowerCase() === activeTab.toLowerCase();
+        const medName = safeToLower(med?.name);
+        const medPrescribedBy = safeToLower(med?.prescribedBy);
+        const medStatus = safeToLower(med?.status);
+
+        const matchesSearch =
+            medName.includes(searchQuery.toLowerCase()) ||
+            medPrescribedBy.includes(searchQuery.toLowerCase());
+
+        const matchesStatus =
+            statusFilter === 'all' || medStatus === safeToLower(statusFilter);
+
+        const matchesTab =
+            activeTab === 'all' || medStatus === safeToLower(activeTab);
+
         return matchesSearch && matchesStatus && matchesTab;
     });
 
@@ -586,15 +740,16 @@ const MedicationsPage = () => {
         return (
             <div className="flex flex-col space-y-6">
                 <PageHeader
-                    title="Medications"
-                    description="Manage your prescribed medications and set reminders."
+                    title={t('patient.medications.title', 'Medications')}
+                    description={t('patient.medications.description', 'Manage your prescribed medications and set reminders.')}
                     breadcrumbs={[
-                        { label: 'Patient', href: '/patient/dashboard' },
-                        { label: 'Medications', href: '/patient/medications' }
+                        { label: t('patient.breadcrumb', 'Patient'), href: '/patient/dashboard' },
+                        { label: t('patient.medications.title', 'Medications'), href: '/patient/medications' }
                     ]}
                 />
                 <div className="flex items-center justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2"
+                        style={{ borderColor: primary }}></div>
                 </div>
             </div>
         );
@@ -604,18 +759,28 @@ const MedicationsPage = () => {
         return (
             <div className="flex flex-col space-y-6">
                 <PageHeader
-                    title="Medications"
-                    description="Manage your prescribed medications and set reminders."
+                    title={t('patient.medications.title', 'Medications')}
+                    description={t('patient.medications.description', 'Manage your prescribed medications and set reminders.')}
                     breadcrumbs={[
-                        { label: 'Patient', href: '/patient/dashboard' },
-                        { label: 'Medications', href: '/patient/medications' }
+                        { label: t('patient.breadcrumb', 'Patient'), href: '/patient/dashboard' },
+                        { label: t('patient.medications.title', 'Medications'), href: '/patient/medications' }
                     ]}
                 />
-                <div className="text-center py-12 bg-card rounded-lg shadow-sm">
-                    <AlertCircle className="h-16 w-16 mx-auto mb-6 text-destructive" />
-                    <h3 className="text-xl font-semibold mb-3 text-foreground">Error Loading Medications</h3>
-                    <p className="text-muted-foreground mb-6">{apiError}</p>
-                    <Button onClick={() => window.location.reload()}>Retry</Button>
+                <div className="text-center py-12 rounded-lg shadow-sm"
+                    style={{ background: cardBg, color: text }}>
+                    <AlertCircle className="h-16 w-16 mx-auto mb-6" style={{ color: error }} />
+                    <h3 className="text-xl font-semibold mb-3" style={{ color: text }}>{t('patient.medications.errorLoading', 'Error Loading Medications')}</h3>
+                    <p className="mb-6" style={{ color: muted }}>{apiError}</p>
+                    <Button
+                        onClick={() => window.location.reload()}
+                        style={{
+                            background: primary,
+                            color: 'var(--color-primary-foreground)',
+                            fontWeight: 500,
+                            transition: 'background 0.2s, color 0.2s'
+                        }}>
+                        {t('common.retry', 'Retry')}
+                    </Button>
                 </div>
             </div>
         );
@@ -624,65 +789,111 @@ const MedicationsPage = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title="Medications"
-                description="Manage your prescribed medications and set reminders."
+                title={t('patient.medications.title', 'Medications')}
+                description={t('patient.medications.description', 'Manage your prescribed medications and set reminders.')}
                 breadcrumbs={[
-                    { label: 'Patient', href: '/patient/dashboard' },
-                    { label: 'Medications', href: '/patient/medications' }
+                    { label: t('patient.breadcrumb', 'Patient'), href: '/patient/dashboard' },
+                    { label: t('patient.medications.title', 'Medications'), href: '/patient/medications' }
                 ]}
             />
 
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                            style={{ color: muted }} />
                         <Input
-                            placeholder="Search medications..."
+                            placeholder={t('patient.medications.searchPlaceholder', 'Search medications...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 border-border focus:border-primary focus:ring-primary/20"
+                            className="pl-9"
+                            style={{
+                                borderColor: border,
+                                color: text,
+                                background: cardBg
+                            }}
                         />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="w-[180px] justify-between">
-                                {(() => {
-                                    switch (statusFilter) {
-                                        case 'active': return 'Active';
-                                        case 'completed': return 'Completed';
-                                        case 'expired': return 'Expired';
-                                        default: return 'All Status';
-                                    }
-                                })()}
+                            <Button
+                                variant="outline"
+                                className="w-[180px] justify-between"
+                                style={{
+                                    borderColor: border,
+                                    color: primary,
+                                    background: 'var(--color-secondary-bg, #f0f4fa)',
+                                    fontWeight: 500,
+                                    transition: 'background 0.2s, color 0.2s'
+                                }}>
+                                <span style={{ color: primary }}>
+                                    {(() => {
+                                        switch (statusFilter) {
+                                            case 'active': return t('patient.medications.status.active', 'Active');
+                                            case 'completed': return t('patient.medications.status.completed', 'Completed');
+                                            case 'expired': return t('patient.medications.status.expired', 'Expired');
+                                            default: return t('patient.medications.status.all', 'All Status');
+                                        }
+                                    })()}
+                                </span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Status</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter('active')}>Active</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter('completed')}>Completed</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter('expired')}>Expired</DropdownMenuItem>
+                        <DropdownMenuContent style={{ background: cardBg, color: text, borderColor: border }}>
+                            <DropdownMenuItem style={{ color: primary }} onClick={() => setStatusFilter('all')}>
+                                {t('patient.medications.status.all', 'All Status')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem style={{ color: primary }} onClick={() => setStatusFilter('active')}>
+                                {t('patient.medications.status.active', 'Active')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem style={{ color: primary }} onClick={() => setStatusFilter('completed')}>
+                                {t('patient.medications.status.completed', 'Completed')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem style={{ color: primary }} onClick={() => setStatusFilter('expired')}>
+                                {t('patient.medications.status.expired', 'Expired')}
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Button variant="outline" onClick={handleViewPrescriptions} className="w-full md:w-auto">
-                        <FileText className="h-4 w-4 mr-2" />
-                        View Prescriptions
+                    <Button
+                        variant="outline"
+                        onClick={handleViewPrescriptions}
+                        className="w-full md:w-auto"
+                        style={{
+                            borderColor: border,
+                            color: primary,
+                            background: 'var(--color-secondary-bg, #f0f4fa)',
+                            fontWeight: 500,
+                            transition: 'background 0.2s, color 0.2s'
+                        }}>
+                        <FileText className="h-4 w-4 mr-2" style={{ color: primary }} />
+                        <span style={{ color: primary }}>
+                            {t('patient.medications.viewPrescriptions', 'View Prescriptions')}
+                        </span>
                     </Button>
-                    <Button onClick={handleAddMedication} className="w-full md:w-auto">
+                    <Button
+                        onClick={handleAddMedication}
+                        className="w-full md:w-auto"
+                        style={{
+                            background: primary,
+                            color: 'var(--color-primary-foreground)',
+                            fontWeight: 500,
+                            transition: 'background 0.2s, color 0.2s'
+                        }}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Medication
+                        {t('patient.medications.addMedication', 'Add Medication')}
                     </Button>
                 </div>
             </div>
 
-            <Separator />
+            <Separator style={{ borderColor: border }} />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="expired">Expired</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3"
+                    style={{ background: cardBg, borderColor: border }}>
+                    <TabsTrigger value="active" style={{ color: text }}>{t('patient.medications.status.active', 'Active')}</TabsTrigger>
+                    <TabsTrigger value="completed" style={{ color: text }}>{t('patient.medications.status.completed', 'Completed')}</TabsTrigger>
+                    <TabsTrigger value="expired" style={{ color: text }}>{t('patient.medications.status.expired', 'Expired')}</TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
                     {filteredMedications.length > 0 ? (
@@ -701,17 +912,25 @@ const MedicationsPage = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12 bg-card rounded-lg shadow-sm">
-                            <Pill className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
-                            <h3 className="text-xl font-semibold mb-3 text-foreground">No Medications Found</h3>
-                            <p className="text-muted-foreground mb-6">
+                        <div className="text-center py-12 rounded-lg shadow-sm"
+                            style={{ background: cardBg, color: text }}>
+                            <Pill className="h-16 w-16 mx-auto mb-6" style={{ color: muted }} />
+                            <h3 className="text-xl font-semibold mb-3" style={{ color: text }}>{t('patient.medications.noMedicationsFound', 'No Medications Found')}</h3>
+                            <p className="mb-6" style={{ color: muted }}>
                                 {searchQuery || statusFilter !== 'all' || activeTab !== 'all'
-                                    ? 'Try adjusting your search or filters to find medications.'
-                                    : 'You don\'t have any medications here yet. Add your first medication!'}
+                                    ? t('patient.medications.tryAdjustingSearch', 'Try adjusting your search or filters to find medications.')
+                                    : t('patient.medications.noMedicationsDefault', "You don't have any medications here yet. Add your first medication!")}
                             </p>
-                            <Button onClick={handleAddMedication}>
+                            <Button
+                                onClick={handleAddMedication}
+                                style={{
+                                    background: primary,
+                                    color: 'var(--color-primary-foreground)',
+                                    fontWeight: 500,
+                                    transition: 'background 0.2s, color 0.2s'
+                                }}>
                                 <Plus className="h-4 w-4 mr-2" />
-                                Add New Medication
+                                {t('patient.medications.addNewMedication', 'Add New Medication')}
                             </Button>
                         </div>
                     )}
@@ -723,4 +942,4 @@ const MedicationsPage = () => {
     );
 };
 
-export default MedicationsPage; 
+export default MedicationsPage;

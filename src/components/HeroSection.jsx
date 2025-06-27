@@ -1,10 +1,11 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import { APP_NAME, APP_DESCRIPTION } from '@/config/app-config';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 
 export default function HeroSection() {
+  const { t } = useTranslation();
   const scrollToSection = (sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
@@ -32,7 +33,7 @@ export default function HeroSection() {
     'var(--color-muted)',
     'var(--color-background)'
   ];
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setColorIndex((i) => (i + 1) % colorCycle.length);
     }, 2200);
@@ -54,10 +55,10 @@ export default function HeroSection() {
               className="w-full"
             >
               <h1 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight tracking-tight drop-shadow-xl text-shadow-lg text-primary dark:text-white dark:drop-shadow-[0_4px_32px_rgba(0,180,255,0.25)]">
-                {APP_NAME} Medical Platform
+                {t('hero.title', 'Your Health, Our Priority')}
               </h1>
               <p className="text-xl md:text-2xl mb-12 opacity-90 max-w-2xl font-normal text-muted-foreground dark:text-muted">
-                {APP_DESCRIPTION}
+                {t('hero.description', 'A modern platform for patients, doctors, and pharmacists to connect, manage care, and improve health outcomes.')}
               </p>
               <div className="flex flex-wrap sm:flex-nowrap gap-8 mt-4">
                 <motion.div
@@ -70,14 +71,14 @@ export default function HeroSection() {
                     onClick={() => scrollToSection('roles')}
                     className="px-10 py-5 text-xl font-extrabold rounded-full bg-gradient-to-tr from-primary to-blue-500 text-primary dark:text-white shadow-2xl hover:from-blue-600 hover:to-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 border-none drop-shadow-xl"
                   >
-                    Get Started
+                    {t('hero.getStarted', 'Get Started')}
                   </Button>
                 </motion.div>
                 <Button
                   onClick={() => scrollToSection('features')}
                   className="px-10 py-5 text-xl font-bold rounded-full border-4 border-primary text-primary bg-white hover:bg-primary/10 hover:text-primary-foreground transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 shadow-lg dark:border-white dark:text-white dark:bg-transparent"
                 >
-                  Learn More
+                  {t('hero.learnMore', 'Learn More')}
                 </Button>
               </div>
             </motion.div>
@@ -149,8 +150,8 @@ export default function HeroSection() {
                   className="absolute left-4 top-4 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
-                  <span className="text-xs font-semibold text-primary mb-1">Today</span>
-                  <span className="text-lg font-bold text-foreground">3 Appts</span>
+                  <span className="text-xs font-semibold text-primary mb-1">{t('hero.today', 'Today')}</span>
+                  <span className="text-lg font-bold text-foreground">3 {t('hero.appointments', 'Appts')}</span>
                 </motion.div>
                 <motion.div
                   animate={{
@@ -163,8 +164,8 @@ export default function HeroSection() {
                   className="absolute right-8 bottom-8 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
-                  <span className="text-xs font-semibold text-primary mb-1">Prescriptions</span>
-                  <span className="text-lg font-bold text-foreground">5 Active</span>
+                  <span className="text-xs font-semibold text-primary mb-1">{t('hero.prescriptions', 'Prescriptions')}</span>
+                  <span className="text-lg font-bold text-foreground">5 {t('hero.active', 'Active')}</span>
                 </motion.div>
                 <motion.div
                   animate={{
@@ -177,7 +178,7 @@ export default function HeroSection() {
                   className="absolute left-1/2 -translate-x-1/2 bottom-2 bg-white/90 dark:bg-[#232a36]/90 rounded-xl shadow-2xl border-2 border-primary/30 px-4 py-2 flex flex-col items-center animate-glow"
                   style={{ minWidth: 90 }}
                 >
-                  <span className="text-xs font-semibold text-primary mb-1">Patients</span>
+                  <span className="text-xs font-semibold text-primary mb-1">{t('hero.patients', 'Patients')}</span>
                   <span className="text-lg font-bold text-foreground">12</span>
                 </motion.div>
               </motion.div>

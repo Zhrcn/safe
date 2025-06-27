@@ -67,7 +67,6 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
           );
         })}
       </div>
-      {/* Floating new chat button (desktop only) */}
       <button
         onClick={onNewChat}
         className="hidden md:flex items-center justify-center fixed bottom-8 right-8 z-20 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition"

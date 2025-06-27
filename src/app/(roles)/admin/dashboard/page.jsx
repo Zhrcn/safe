@@ -6,8 +6,10 @@ import { getUsers, getSystemStats, getActivityLogs, getNotifications } from '@/s
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Grid, Box, Typography } from '@mui/material';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [systemStats, setSystemStats] = useState(null);
   const [activityLogs, setActivityLogs] = useState([]);
@@ -52,13 +54,13 @@ export default function AdminDashboard() {
 
   return (
     <AdminPageContainer
-      title="Admin Dashboard"
-      description="Monitor system health, user activity, and manage platform settings."
+      title={t('admin.dashboard.title', 'Admin Dashboard')}
+      description={t('admin.dashboard.description', 'Monitor system health, user activity, and manage platform settings.')}
       className="bg-background min-h-screen text-foreground"
     >
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <p className="text-muted-foreground">Loading dashboard data...</p>
+          <p className="text-muted-foreground">{t('admin.dashboard.loading', 'Loading dashboard data...')}</p>
         </div>
       ) : (
         <>
@@ -74,7 +76,7 @@ export default function AdminDashboard() {
                       : 'text-muted-foreground hover:text-primary'
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {t(`admin.dashboard.tabs.${tab}`, tab.charAt(0).toUpperCase() + tab.slice(1))}
                 </Button>
               ))}
             </div>
@@ -83,34 +85,34 @@ export default function AdminDashboard() {
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard
-                title="Total Users"
+                title={t('admin.dashboard.stats.totalUsers', 'Total Users')}
                 value={systemStats.users.total}
                 icon={<Users />}
-                description={`${systemStats.users.active} active users`}
+                description={t('admin.dashboard.stats.activeUsers', { count: systemStats.users.active }, '{{count}} active users')}
                 onClick={() => setActiveTab('users')}
               />
               <StatCard
-                title="Appointments"
+                title={t('admin.dashboard.stats.appointments', 'Appointments')}
                 value={systemStats.appointments.total}
                 icon={<Activity />}
-                description={`${systemStats.appointments.scheduled} scheduled`}
+                description={t('admin.dashboard.stats.scheduled', { count: systemStats.appointments.scheduled }, '{{count}} scheduled')}
               />
               <StatCard
-                title="Prescriptions"
+                title={t('admin.dashboard.stats.prescriptions', 'Prescriptions')}
                 value={systemStats.prescriptions.total}
                 icon={<Bell />}
-                description={`${systemStats.prescriptions.active} active`}
+                description={t('admin.dashboard.stats.activePrescriptions', { count: systemStats.prescriptions.active }, '{{count}} active')}
               />
               <StatCard
-                title="System Health"
+                title={t('admin.dashboard.stats.systemHealth', 'System Health')}
                 value={systemStats.systemHealth.status}
                 icon={<Server />}
-                description={`${systemStats.systemHealth.uptime} uptime`}
+                description={t('admin.dashboard.stats.uptime', { uptime: systemStats.systemHealth.uptime }, '{{uptime}} uptime')}
                 onClick={() => setActiveTab('system')}
               />
 
               <div className="col-span-1 md:col-span-2">
-                <ChartContainer title="User Distribution by Role" className="bg-card border border-border rounded-xl">
+                <ChartContainer title={t('admin.dashboard.charts.userDistribution', 'User Distribution by Role')} className="bg-card border border-border rounded-xl">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -141,7 +143,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <ChartContainer title="Appointment Status" className="bg-card border border-border rounded-xl">
+                <ChartContainer title={t('admin.dashboard.charts.appointmentStatus', 'Appointment Status')} className="bg-card border border-border rounded-xl">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={Object.entries(systemStats.appointments).filter(([key]) => key !== 'total').map(([name, value]) => ({ name, value }))}
@@ -165,13 +167,13 @@ export default function AdminDashboard() {
 
               <div className="col-span-1 md:col-span-2">
                 <AdminCard
-                  title="Recent Activity"
+                  title={t('admin.dashboard.cards.recentActivity', 'Recent Activity')}
                   actions={
                     <Button
                       onClick={() => setActiveTab('activity')}
                       className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
-                      View All
+                      {t('admin.dashboard.cards.viewAll', 'View All')}
                     </Button>
                   }
                   className="bg-card border border-border rounded-xl"
@@ -191,12 +193,12 @@ export default function AdminDashboard() {
 
               <div className="col-span-1 md:col-span-2">
                 <AdminCard
-                  title="Notifications"
+                  title={t('admin.dashboard.cards.notifications', 'Notifications')}
                   actions={
                     <Button
                       className="text-primary hover:bg-primary/10 px-3 py-1 rounded-md text-sm"
                     >
-                      Mark All Read
+                      {t('admin.dashboard.cards.markAllRead', 'Mark All Read')}
                     </Button>
                   }
                   className="bg-card border border-border rounded-xl"

@@ -10,14 +10,16 @@ import {
 } from 'lucide-react';
 import{ Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 const NotificationContext = createContext({
     showNotification: () => {},
     hideNotification: () => {},
 });
 export const useNotification = () => {
+    const { t } = useTranslation();
     const context = useContext(NotificationContext);
     if (!context) {
-        throw new Error('useNotification must be used within a NotificationProvider');
+        throw new Error(t('notification.useNotificationError', 'useNotification must be used within a NotificationProvider'));
     }
     return context;
 };
@@ -96,6 +98,7 @@ const getIcon = (type) => {
     }
 };
 export function SearchField({ value, onChange, placeholder = 'Search...', className = '' }) {
+    const { t } = useTranslation();
     return (
         <div className={cn(
             'flex items-center px-3 py-1 border border-border bg-background rounded-md',
@@ -105,7 +108,7 @@ export function SearchField({ value, onChange, placeholder = 'Search...', classN
                 type="text"
                 value={value}
                 onChange={onChange}
-                placeholder={placeholder}
+                placeholder={t('notification.searchPlaceholder', 'Search...')}
                 className="ml-1 flex-1 bg-transparent text-foreground outline-none"
             />
             <Button
