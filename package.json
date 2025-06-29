@@ -75,7 +75,6 @@
     "zod": "^3.25.36"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^15.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
