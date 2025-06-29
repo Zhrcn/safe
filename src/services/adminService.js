@@ -113,4 +113,24 @@ export const markNotificationAsRead = async (notificationId) => {
         console.error('Error marking notification as read:', error);
         throw error;
     }
+};
+
+export const getSystemStats = async () => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return mockStats;
+    } catch (error) {
+        console.error('Error fetching system stats:', error);
+        throw error;
+    }
+};
+
+export const getActivityLogs = async () => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return mockSystemLogs;
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        throw error;
+    }
 }; 

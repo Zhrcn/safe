@@ -56,6 +56,31 @@ export const getStats = async () => {
     }
 };
 
+export const getOrders = async () => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return mockPrescriptions;
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+    }
+};
+
+export const updateOrderStatus = async (orderId, status) => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const order = mockPrescriptions.find(p => p.id === orderId);
+        if (order) {
+            order.status = status;
+            return order;
+        }
+        throw new Error('Order not found');
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        throw error;
+    }
+};
+
 export const updatePrescriptionStatus = async (prescriptionId, status) => {
     try {
         await new Promise(resolve => setTimeout(resolve, 500));

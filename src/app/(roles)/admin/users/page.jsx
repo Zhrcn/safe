@@ -1,4 +1,4 @@
-'use client';ButtonButtonButtonButton
+'use client';
 import { Users, Search, Edit, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { AdminPageContainer, AdminCard } from '@/components/admin/AdminComponents';

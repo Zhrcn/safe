@@ -4,7 +4,9 @@ import { Users, Activity, Bell, Server, UserPlus, Settings } from 'lucide-react'
 import { AdminPageContainer, AdminCard, StatCard, ChartContainer, UserRoleBadge, UserStatusBadge, ActivityLogItem, NotificationItem } from '@/components/admin/AdminComponents';
 import { getUsers, getSystemStats, getActivityLogs, getNotifications } from '@/services/adminService';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Grid, Box, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from '@/components/ui/Table';
+import Button from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 
@@ -220,59 +222,47 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'users' && (
-            <AdminCard
-              title="User Management"
-              actions={
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md flex items-center gap-2"
-                >
-                  <UserPlus size={20} />
-                  Add User
-                </Button>
-              }
-            >
-              <TableContainer component={Paper} elevation={0} className="bg-transparent">
-                <Table>
-                  <TableHead>
-                    <TableRow className="bg-muted/50">
-                      <TableCell className="text-foreground font-medium">Name</TableCell>
-                      <TableCell className="text-foreground font-medium">Email</TableCell>
-                      <TableCell className="text-foreground font-medium">Role</TableCell>
-                      <TableCell className="text-foreground font-medium">Status</TableCell>
-                      <TableCell className="text-foreground font-medium">Last Active</TableCell>
-                      <TableCell className="text-foreground font-medium" align="right">Actions</TableCell>
+            <Card className="bg-transparent p-0 shadow-none">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="text-foreground font-medium">Name</TableHead>
+                    <TableHead className="text-foreground font-medium">Email</TableHead>
+                    <TableHead className="text-foreground font-medium">Role</TableHead>
+                    <TableHead className="text-foreground font-medium">Status</TableHead>
+                    <TableHead className="text-foreground font-medium">Last Active</TableHead>
+                    <TableHead className="text-foreground font-medium" align="right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-muted/30">
+                      <TableCell className="text-foreground">{user.name}</TableCell>
+                      <TableCell className="text-foreground">{user.email}</TableCell>
+                      <TableCell>
+                        <UserRoleBadge role={user.role} />
+                      </TableCell>
+                      <TableCell>
+                        <UserStatusBadge status={user.status} />
+                      </TableCell>
+                      <TableCell className="text-foreground">
+                        {new Date(user.lastActive).toLocaleString()}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-primary border-primary hover:bg-primary/10"
+                        >
+                          <Settings size={16} className="mr-2" />
+                          Manage
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id} className="hover:bg-muted/30">
-                        <TableCell className="text-foreground">{user.name}</TableCell>
-                        <TableCell className="text-foreground">{user.email}</TableCell>
-                        <TableCell>
-                          <UserRoleBadge role={user.role} />
-                        </TableCell>
-                        <TableCell>
-                          <UserStatusBadge status={user.status} />
-                        </TableCell>
-                        <TableCell className="text-foreground">
-                          {new Date(user.lastActive).toLocaleString()}
-                        </TableCell>
-                        <TableCell align="right">
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<Settings size={16} />}
-                            className="text-primary border-primary hover:bg-primary/10"
-                          >
-                            Manage
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AdminCard>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           )}
           {activeTab === 'activity' && (
             <AdminCard title="Activity Logs">
@@ -289,50 +279,36 @@ export default function AdminDashboard() {
             </AdminCard>
           )}
           {activeTab === 'system' && (
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <AdminCard title="System Health">
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                      <Box className="p-4 border border-border rounded-md">
-                        <Typography variant="h6" className="text-foreground mb-2">Status</Typography>
-                        <Typography variant="body1" className="text-foreground">
-                          {systemStats.systemHealth.status === 'healthy' ? (
-                            <span className="text-success">● Healthy</span>
-                          ) : (
-                            <span className="text-error">● Issues Detected</span>
-                          )}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Box className="p-4 border border-border rounded-md">
-                        <Typography variant="h6" className="text-foreground mb-2">Uptime</Typography>
-                        <Typography variant="body1" className="text-foreground">
-                          {systemStats.systemHealth.uptime}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Box className="p-4 border border-border rounded-md">
-                        <Typography variant="h6" className="text-foreground mb-2">Response Time</Typography>
-                        <Typography variant="body1" className="text-foreground">
-                          {systemStats.systemHealth.responseTime}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Box className="p-4 border border-border rounded-md">
-                        <Typography variant="h6" className="text-foreground mb-2">Last Issue</Typography>
-                        <Typography variant="body1" className="text-foreground">
-                          {new Date(systemStats.systemHealth.lastIssue).toLocaleString()}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </AdminCard>
-              </Grid>
-              <Grid item xs={12}>
+            <div className="grid gap-6">
+              <div>
+                <Card>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="p-4 border border-border rounded-md">
+                      <h6 className="text-foreground mb-2 text-lg font-semibold">Status</h6>
+                      <p className="text-foreground">
+                        {systemStats.systemHealth.status === 'healthy' ? (
+                          <span className="text-success">● Healthy</span>
+                        ) : (
+                          <span className="text-error">● Issues Detected</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="p-4 border border-border rounded-md">
+                      <h6 className="text-foreground mb-2 text-lg font-semibold">Uptime</h6>
+                      <p className="text-foreground">{systemStats.systemHealth.uptime}</p>
+                    </div>
+                    <div className="p-4 border border-border rounded-md">
+                      <h6 className="text-foreground mb-2 text-lg font-semibold">Response Time</h6>
+                      <p className="text-foreground">{systemStats.systemHealth.responseTime}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 border border-border rounded-md mt-6">
+                    <h6 className="text-foreground mb-2 text-lg font-semibold">Last Issue</h6>
+                    <p className="text-foreground">{new Date(systemStats.systemHealth.lastIssue).toLocaleString()}</p>
+                  </div>
+                </Card>
+              </div>
+              <div>
                 <ChartContainer title="System Performance">
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart
@@ -363,8 +339,8 @@ export default function AdminDashboard() {
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-              </Grid>
-            </Grid>
+              </div>
+            </div>
           )}
         </>
       )}
