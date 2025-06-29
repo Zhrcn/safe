@@ -232,6 +232,9 @@ const UnifiedLayout = ({ children }) => {
             'h-screen border-r border-border flex flex-col transition-all duration-300',
             sidebarCollapsed ? 'w-16' : 'w-[270px]'
           )}
+
+
+          
           style={{
             background: 'var(--color-navbar)',
             color: 'var(--color-navbar-foreground)',
