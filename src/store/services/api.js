@@ -9,7 +9,7 @@ const logRequest = (request) => {
         headers: request.headers,
         body: request.body
     });
-};
+}; 
 
 export const api = createApi({
     reducerPath: 'api',
@@ -23,7 +23,9 @@ export const api = createApi({
             }
             headers.set('Content-Type', 'application/json');
             headers.set('Accept', 'application/json');
-            headers.set('Origin', 'http://localhost:3000');
+            // Set origin dynamically based on environment
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+            headers.set('Origin', origin);
             console.log('Final headers:', headers);
             return headers;
         },
