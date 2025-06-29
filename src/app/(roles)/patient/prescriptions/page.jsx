@@ -49,113 +49,198 @@ const AnimatedStatusBadge = ({ status }) => {
 };
 
 const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
+    const { t } = useTranslation('common');
     const notesPreview = prescription.notes ? prescription.notes.slice(0, 60) + (prescription.notes.length > 60 ? '...' : '') : null;
+    
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'active': return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800';
+            case 'completed': return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800';
+            case 'pending': return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800';
+            case 'expired': return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+            default: return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800';
+        }
+    };
+
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'active': return <Check className="w-3 h-3" />;
+            case 'completed': return <Check className="w-3 h-3" />;
+            case 'pending': return <Clock className="w-3 h-3" />;
+            case 'expired': return <X className="w-3 h-3" />;
+            default: return <AlertCircle className="w-3 h-3" />;
+        }
+    };
+
+    const getStatusGradient = (status) => {
+        switch (status) {
+            case 'active': return 'from-emerald-500/20 to-emerald-600/20';
+            case 'completed': return 'from-blue-500/20 to-blue-600/20';
+            case 'pending': return 'from-amber-500/20 to-amber-600/20';
+            case 'expired': return 'from-red-500/20 to-red-600/20';
+            default: return 'from-gray-500/20 to-gray-600/20';
+        }
+    };
+
     return (
-        <Card
-            bordered
-            hoverable
-            className="flex flex-col min-h-[370px] h-full transition-all duration-300 group shadow-md hover:shadow-2xl hover:scale-[1.03] border-border/80 hover:border-primary/60 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-background via-blue-50/60 to-background dark:via-blue-900/10 rounded-xl"
-        >
-            <CardHeader className="flex flex-row items-center gap-4 p-4 pb-2 border-b border-border bg-gradient-to-r from-primary/10 to-blue-100/30 dark:from-primary/20 dark:to-blue-900/10 rounded-t-xl">
-                <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm rounded-xl">
-                    <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
-                    <AvatarFallback>
-                        <User className="h-6 w-6 text-primary" />
-                    </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{prescription.doctorName}</CardTitle>
-                    {prescription.doctorSpecialty && (
-                      <div className="text-xs text-blue-700/80 dark:text-blue-300/80 font-medium truncate">{prescription.doctorSpecialty}</div>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(prescription.date).toLocaleDateString()}</span>
-                        <span className="mx-2 text-border">|</span>
-                        <span className="font-mono text-[11px] text-primary/80">#{prescription.id}</span>
+        <Card className="group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border-0 bg-gradient-to-br from-white via-blue-50/40 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900 rounded-3xl shadow-xl hover:shadow-3xl">
+            <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${getStatusGradient(prescription.status)} opacity-80 animate-pulse`} />
+            
+            <div className="absolute top-4 right-4 z-10">
+                <Badge 
+                    variant="outline" 
+                    className={`px-4 py-2 text-sm font-bold rounded-full border-2 shadow-lg backdrop-blur-sm ${getStatusColor(prescription.status)} transition-all duration-300 group-hover:scale-110`}
+                >
+                    {getStatusIcon(prescription.status)}
+                    <span className="ml-2">{t(`patient.prescriptions.${prescription.status}`)}</span>
+                </Badge>
+            </div>
+
+            <CardHeader className="pb-3 pt-6">
+                <div className="flex items-start gap-4">
+                    <div className="relative">
+                        <div className="relative">
+                            <Avatar className="h-14 w-14 ring-3 ring-primary/20 shadow-xl transition-all duration-300 group-hover:ring-primary/40 group-hover:scale-110">
+                                <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
+                                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary font-bold text-base">
+                                    <User className="h-7 w-7" />
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className={`absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-lg ${getStatusColor(prescription.status).split(' ')[0]}`}>
+                                {getStatusIcon(prescription.status)}
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 min-w-fit">
-                    <AnimatedStatusBadge status={prescription.status} />
+                    <div className="flex-1 min-w-0 pt-1">
+                        <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 truncate mb-1">
+                            Dr. {prescription.doctorName}
+                        </CardTitle>
+                        {prescription.doctorSpecialty && (
+                            <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold truncate mb-2">
+                                {prescription.doctorSpecialty}
+                            </p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                                <Calendar className="w-3 h-3 text-primary" />
+                                <span className="font-medium">{new Date(prescription.date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-1 rounded-full">
+                                <span className="font-mono text-primary font-bold text-xs">#{prescription.id}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-2 p-4">
-                <div className="mb-2 flex flex-col gap-1">
-                    <span className="font-semibold text-sm text-foreground">Medications:</span>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                        {prescription.medications.map((medication, index) => (
-                            <span
-                                key={index}
-                                className={`inline-flex items-center gap-1 rounded-xl px-3 py-1 text-xs font-semibold border border-border shadow-sm ${getPillColor(index)}`}
-                                aria-label={`Medication: ${medication.name}`}
-                            >
-                                <Pill className="w-3.5 h-3.5" />
-                                {medication.name}
+
+            <CardContent className="pt-0 pb-4">
+                <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-gray-50/80 to-blue-50/80 dark:from-gray-800/50 dark:to-blue-900/20 rounded-xl p-3 border border-gray-200/50 dark:border-gray-700/50">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-1.5 h-4 bg-gradient-to-b from-primary to-primary/60 rounded-full shadow-sm" />
+                            <h4 className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                                {t('patient.prescriptions.medications')}
+                            </h4>
+                            <span className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full font-semibold shadow-sm border border-gray-200 dark:border-gray-700">
+                                {prescription.medications.length}
                             </span>
-                        ))}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {prescription.medications.map((medication, index) => (
+                                <span
+                                    key={index}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border-2 shadow-sm transition-all duration-300 hover:shadow-md ${getPillColor(index)}`}
+                                    aria-label={`${t('patient.prescriptions.medications')}: ${medication.name}`}
+                                >
+                                    <Pill className="w-3 h-3" />
+                                    {medication.name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {notesPreview && (
+                        <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-3 border-2 border-blue-200/50 dark:border-blue-800/30 shadow-lg">
+                            <div className="flex items-start gap-2">
+                                <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-1.5 flex-shrink-0 shadow-sm" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">
+                                        {t('patient.prescriptions.doctorsNotes')}
+                                    </p>
+                                    <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed" title={prescription.notes}>
+                                        {notesPreview}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+
+            <div className="px-4 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <Tooltip content={t('patient.prescriptions.viewDetails')}>
+                            <Button
+                                onClick={() => onViewDetails(prescription)}
+                                className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 text-sm"
+                                aria-label={t('patient.prescriptions.viewDetails')}
+                            >
+                                <Eye className="w-4 h-4 mr-1.5" />
+                                {t('patient.prescriptions.viewDetails')}
+                            </Button>
+                        </Tooltip>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        {(prescription.status === 'active' || prescription.status === 'pending') && (
+                            <Tooltip content={t('patient.prescriptions.showQRCode')}>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => onShowQR(prescription)}
+                                    className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                    aria-label={t('patient.prescriptions.showQRCode')}
+                                >
+                                    <QrCode className="w-5 h-5" />
+                                </Button>
+                            </Tooltip>
+                        )}
+                        <Tooltip content={t('patient.prescriptions.download')}>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                aria-label={t('patient.prescriptions.download')}
+                            >
+                                <Download className="w-5 h-5" />
+                            </Button>
+                        </Tooltip>
+                        <Tooltip content={t('patient.prescriptions.print')}>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                aria-label={t('patient.prescriptions.print')}
+                            >
+                                <Printer className="w-5 h-5" />
+                            </Button>
+                        </Tooltip>
                     </div>
                 </div>
-                {notesPreview && (
-                  <div className="mt-2 text-xs text-muted-foreground italic truncate" title={prescription.notes}>
-                    <span className="font-medium text-foreground">Doctor's Notes:</span> {notesPreview}
-                  </div>
-                )}
-            </CardContent>
-            <div className="border-t border-border w-full" />
-            <CardFooter className="flex gap-2 justify-end p-4 pt-2 bg-background/80 backdrop-blur-sm rounded-b-xl">
-                <Tooltip content="View Details">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onViewDetails(prescription)}
-                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
-                        aria-label="View Details"
-                        tabIndex={0}
-                    >
-                        <Eye className="w-4 h-4" />
-                    </Button>
-                </Tooltip>
-                {(prescription.status === 'active' || prescription.status === 'pending') && (
-                    <Tooltip content="Show QR Code">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onShowQR(prescription)}
-                            className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
-                            aria-label="Show QR Code"
-                            tabIndex={0}
-                        >
-                            <QrCode className="w-4 h-4" />
-                        </Button>
-                    </Tooltip>
-                )}
-                <Tooltip content="Download">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
-                        aria-label="Download"
-                        tabIndex={0}
-                    >
-                        <Download className="w-4 h-4" />
-                    </Button>
-                </Tooltip>
-                <Tooltip content="Print">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-primary focus-visible:ring-2 focus-visible:ring-primary"
-                        aria-label="Print"
-                        tabIndex={0}
-                    >
-                        <Printer className="w-4 h-4" />
-                    </Button>
-                </Tooltip>
-            </CardFooter>
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl" />
+            
+            <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute top-10 right-10 w-20 h-20 bg-primary rounded-full blur-3xl" />
+                <div className="absolute bottom-10 left-10 w-16 h-16 bg-blue-500 rounded-full blur-2xl" />
+            </div>
         </Card>
     );
 };
 const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => {
+    const { t } = useTranslation('common');
     if (!prescription) return null;
     const statusColors = {
         active: 'bg-success/10 text-success',
@@ -173,7 +258,7 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[650px] p-6">
                 <DialogHeader className="pb-4 mb-4 border-b border-border">
-                    <DialogTitle className="text-2xl font-bold text-foreground">Prescription Details</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold text-foreground">{t('patient.prescriptions.prescriptionDetails')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2 -mr-2">
                     <div className="flex items-center gap-4 p-4 bg-info/10 rounded-lg">
@@ -187,21 +272,21 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                             <h3 className="text-2xl font-semibold text-foreground">Dr. {prescription.doctorName}</h3>
                             <div className="flex items-center gap-2 text-md text-muted-foreground mt-1">
                                 <Calendar className="w-5 h-5" />
-                                <span>Prescribed on: {new Date(prescription.date).toLocaleDateString()}</span>
+                                <span>{t('patient.prescriptions.prescribedOn')}: {new Date(prescription.date).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center gap-2 text-md text-muted-foreground mt-1">
                                 <Clock className="w-5 h-5" />
-                                <span>Valid until: {new Date(prescription.endDate).toLocaleDateString()}</span>
+                                <span>{t('patient.prescriptions.validUntil')}: {new Date(prescription.endDate).toLocaleDateString()}</span>
                             </div>
                         </div>
                         <Badge variant="outline" className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColors[prescription.status]}`}>
                             {statusIcons[prescription.status]}
-                            <span className="ml-2">{prescription.status}</span>
+                            <span className="ml-2">{t(`patient.prescriptions.${prescription.status}`)}</span>
                         </Badge>
                     </div>
                     <Separator />
                     <div className="space-y-4">
-                        <h4 className="text-xl font-semibold text-foreground">Medications ({prescription.medications.length})</h4>
+                        <h4 className="text-xl font-semibold text-foreground">{t('patient.prescriptions.medications')} ({prescription.medications.length})</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {prescription.medications.map((medication, index) => (
                                 <Card key={index} className="p-4 border border-border shadow-sm transition-shadow hover:shadow-md">
@@ -213,13 +298,13 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                                             <h5 className="font-bold text-lg text-foreground">{medication.name}</h5>
                                         </div>
                                         <div className="space-y-1 text-sm text-muted-foreground">
-                                            <p><span className="font-medium">Dosage:</span> {medication.dosage}</p>
-                                            <p><span className="font-medium">Frequency:</span> {medication.frequency}</p>
+                                            <p><span className="font-medium">{t('patient.prescriptions.dosage')}:</span> {medication.dosage}</p>
+                                            <p><span className="font-medium">{t('patient.prescriptions.frequency')}:</span> {medication.frequency}</p>
                                             {medication.instructions && (
-                                                <p><span className="font-medium">Instructions:</span> {medication.instructions}</p>
+                                                <p><span className="font-medium">{t('patient.prescriptions.instructions')}:</span> {medication.instructions}</p>
                                             )}
                                             {medication.notes && (
-                                                <p><span className="font-medium">Notes:</span> {medication.notes}</p>
+                                                <p><span className="font-medium">{t('patient.prescriptions.notes')}:</span> {medication.notes}</p>
                                             )}
                                         </div>
                                     </CardContent>
@@ -229,19 +314,19 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                     </div>
                     {prescription.notes && (
                         <div className="space-y-3 p-4 bg-muted rounded-lg border border-border">
-                            <h4 className="text-xl font-semibold text-foreground">Doctor's Notes</h4>
+                            <h4 className="text-xl font-semibold text-foreground">{t('patient.prescriptions.doctorsNotes')}</h4>
                             <p className="text-muted-foreground leading-relaxed">{prescription.notes}</p>
                         </div>
                     )}
                 </div>
                 <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end gap-3">
                     <Button variant="outline" onClick={onClose} className="px-6 py-2">
-                        Close
+                        {t('patient.prescriptions.close')}
                     </Button>
                     {(prescription.status === 'active' || prescription.status === 'pending') && (
                         <Button onClick={() => onShowQR(prescription)} className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground">
                             <QrCode className="w-5 h-5 mr-2" />
-                            Show QR Code
+                            {t('patient.prescriptions.showQRCode')}
                         </Button>
                     )}
                 </DialogFooter>
@@ -250,16 +335,17 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
     );
 };
 const QRCodeDialog = ({ open, onClose, prescription }) => {
+    const { t } = useTranslation('common');
     if (!prescription) return null;
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[450px] p-6 text-center">
                 <DialogHeader className="pb-4 mb-4 border-b border-border">
-                    <DialogTitle className="text-2xl font-bold text-foreground">Prescription QR Code</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold text-foreground">{t('patient.prescriptions.prescriptionQRCode')}</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col items-center space-y-6 py-4 bg-info/10 rounded-lg border border-info/20">
                     <p className="text-md text-info font-medium">
-                        Scan this code at the pharmacy to get your prescription
+                        {t('patient.prescriptions.scanThisCodeAtThePharmacyToGetYourPrescription')}
                     </p>
                     <div className="p-5 bg-card rounded-lg shadow-xl border-4 border-primary/30">
                         <QRCodeSVG
@@ -277,13 +363,13 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                         />
                     </div>
                     <div className="text-sm text-muted-foreground mt-2">
-                        <p><span className="font-semibold">Prescription ID:</span> {prescription.id}</p>
-                        <p><span className="font-semibold">Medications:</span> {prescription.medications.map(med => med.name).join(', ')}</p>
+                        <p><span className="font-semibold">{t('patient.prescriptions.prescriptionID')}:</span> {prescription.id}</p>
+                        <p><span className="font-semibold">{t('patient.prescriptions.medications')}:</span> {prescription.medications.map(med => med.name).join(', ')}</p>
                     </div>
                 </div>
                 <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end">
                     <Button variant="outline" onClick={onClose} className="px-6 py-2">
-                        Close
+                        {t('patient.prescriptions.close')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -362,16 +448,16 @@ const PrescriptionsPage = () => {
     return (
         <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
             <PageHeader
-                title={t('myPrescriptions')}
-                description={t('viewAndManageAllYourActivePastAndPendingPrescriptions')}
+                title={t('patient.prescriptions.title')}
+                description={t('patient.prescriptions.description')}
             />
             <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <div className="relative w-full sm:w-auto flex-grow">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         type="text"
-                        placeholder={t('searchPrescriptionsByDoctorOrMedication')}
-                        className="w-full pl-9 pr-3 py-2 border border-border rounded-md focus:ring-primary focus:border-primary"
+                        placeholder={t('patient.prescriptions.searchPlaceholder')}
+                        className="w-full pl-9 pr-3 py-2 border border-border rounded-2xl focus:ring-primary focus:border-primary"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -381,30 +467,30 @@ const PrescriptionsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
                                 <ListFilter className="w-4 h-4" />
-                                {t('status')}
+                                {t('patient.prescriptions.status')}
                                 {': '}
-                                {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+                                {t(`patient.prescriptions.${filterStatus}`)}
                                 <ChevronDown className="w-4 h-4 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56 bg-card border-border">
-                            <DropdownMenuLabel className="text-foreground">Filter by Status</DropdownMenuLabel>
+                            <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.status')}</DropdownMenuLabel>
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={filterStatus} onValueChange={setFilterStatus}>
                                 <DropdownMenuRadioItem value="all" className="text-foreground hover:bg-accent">
-                                    {t('all')}
+                                    {t('patient.prescriptions.all')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="active" className="text-foreground hover:bg-accent">
-                                    {t('active')}
+                                    {t('patient.prescriptions.active')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="completed" className="text-foreground hover:bg-accent">
-                                    {t('completed')}
+                                    {t('patient.prescriptions.completed')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="pending" className="text-foreground hover:bg-accent">
-                                    {t('pending')}
+                                    {t('patient.prescriptions.pending')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="expired" className="text-foreground hover:bg-accent">
-                                    {t('expired')}
+                                    {t('patient.prescriptions.expired')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
@@ -413,31 +499,31 @@ const PrescriptionsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="flex items-center gap-2 w-full justify-center sm:w-auto">
                                 <ListFilter className="w-4 h-4" />
-                                {t('sort')}
+                                {t('patient.prescriptions.sort')}
                                 {': '}
-                                {sortBy === 'date' ? t('date') : t('doctor')}
-                                {` (${sortOrder === 'asc' ? t('ascending') : t('descending')})`}
+                                {sortBy === 'date' ? t('patient.prescriptions.date') : t('patient.prescriptions.doctorName')}
+                                {` (${sortOrder === 'asc' ? t('patient.prescriptions.ascending') : t('patient.prescriptions.descending')})`}
                                 <ChevronDown className="w-4 h-4 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56 bg-card border-border">
-                            <DropdownMenuLabel className="text-foreground">Sort by</DropdownMenuLabel>
+                            <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.sort')}</DropdownMenuLabel>
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
                                 <DropdownMenuRadioItem value="date" className="text-foreground hover:bg-accent">
-                                    {t('date')}
+                                    {t('patient.prescriptions.date')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="doctorName" className="text-foreground hover:bg-accent">
-                                    {t('doctorName')}
+                                    {t('patient.prescriptions.doctorName')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                             <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuRadioGroup value={sortOrder} onValueChange={setSortOrder}>
                                 <DropdownMenuRadioItem value="asc" className="text-foreground hover:bg-accent">
-                                    {t('ascending')}
+                                    {t('patient.prescriptions.ascending')}
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="desc" className="text-foreground hover:bg-accent">
-                                    {t('descending')}
+                                    {t('patient.prescriptions.descending')}
                                 </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
@@ -446,29 +532,39 @@ const PrescriptionsPage = () => {
             </div>
             {loading && (
                 <div className="text-center py-10">
-                    <p className="text-lg text-muted-foreground">{t('loadingPrescriptions')}</p>
+                    <p className="text-lg text-muted-foreground">{t('patient.prescriptions.loadingPrescriptions')}</p>
                 </div>
             )}
             {error && (
                 <div className="text-center py-10">
                     <p className="text-lg text-destructive">{error}</p>
-                    <Button onClick={handleRetry} className="mt-4">Retry</Button>
+                    <Button 
+                        onClick={handleRetry} 
+                        className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                    >
+                        {t('patient.prescriptions.retry')}
+                    </Button>
                 </div>
             )}
             {!loading && !error && ( (prescriptions.length === 0 && searchTerm === '') ? (
                 <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
-                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('noPrescriptionsFound')}</h3>
-                    <p className="text-muted-foreground mb-4">{t('itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
-                    <p className="text-sm text-muted-foreground">{t('prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('patient.prescriptions.noPrescriptionsFound')}</h3>
+                    <p className="text-muted-foreground mb-4">{t('patient.prescriptions.itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
+                    <p className="text-sm text-muted-foreground">{t('patient.prescriptions.prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
                 </div>
             ) : (prescriptions.length === 0 && searchTerm !== '') ? (
                 <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
-                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('noMatchingPrescriptions')}</h3>
-                    <p className="text-muted-foreground mb-4">{t('yourSearchFor', { searchTerm })}</p>
-                    <Button onClick={() => setSearchTerm('')} className="mt-4">Clear Search</Button>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{t('patient.prescriptions.noMatchingPrescriptions')}</h3>
+                    <p className="text-muted-foreground mb-4">{t('patient.prescriptions.yourSearchFor', { searchTerm })}</p>
+                    <Button 
+                        onClick={() => setSearchTerm('')} 
+                        className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                    >
+                        {t('patient.prescriptions.clearSearch')}
+                    </Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                     {prescriptions.map((prescription) => (
                         <PrescriptionCard
                             key={prescription.id}

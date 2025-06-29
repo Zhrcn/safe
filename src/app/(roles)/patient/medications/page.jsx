@@ -798,7 +798,7 @@ const MedicationsPage = () => {
             />
 
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap">
+                <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap ">
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
                             style={{ color: muted }} />
@@ -806,7 +806,7 @@ const MedicationsPage = () => {
                             placeholder={t('patient.medications.searchPlaceholder', 'Search medications...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9"
+                            className="pl-9 rounded-2xl"
                             style={{
                                 borderColor: border,
                                 color: text,
@@ -818,7 +818,7 @@ const MedicationsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="w-[180px] justify-between"
+                                className="w-[180px] justify-between rounded-2xl"
                                 style={{
                                     borderColor: border,
                                     color: primary,
@@ -826,7 +826,7 @@ const MedicationsPage = () => {
                                     fontWeight: 500,
                                     transition: 'background 0.2s, color 0.2s'
                                 }}>
-                                <span style={{ color: primary }}>
+                                <span  style={{ color: primary }}>
                                     {(() => {
                                         switch (statusFilter) {
                                             case 'active': return t('patient.medications.status.active', 'Active');
@@ -858,7 +858,7 @@ const MedicationsPage = () => {
                     <Button
                         variant="outline"
                         onClick={handleViewPrescriptions}
-                        className="w-full md:w-auto"
+                        className="w-full md:w-auto rounded-2xl"
                         style={{
                             borderColor: border,
                             color: primary,
@@ -873,7 +873,7 @@ const MedicationsPage = () => {
                     </Button>
                     <Button
                         onClick={handleAddMedication}
-                        className="w-full md:w-auto"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl"  
                         style={{
                             background: primary,
                             color: 'var(--color-primary-foreground)',
@@ -888,12 +888,36 @@ const MedicationsPage = () => {
 
             <Separator style={{ borderColor: border }} />
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3"
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full`rounded-2xl">
+                <TabsList className="grid w-full grid-cols-3 rounded-2xl"
                     style={{ background: cardBg, borderColor: border }}>
-                    <TabsTrigger value="active" style={{ color: text }}>{t('patient.medications.status.active', 'Active')}</TabsTrigger>
-                    <TabsTrigger value="completed" style={{ color: text }}>{t('patient.medications.status.completed', 'Completed')}</TabsTrigger>
-                    <TabsTrigger value="expired" style={{ color: text }}>{t('patient.medications.status.expired', 'Expired')}</TabsTrigger>
+                    <TabsTrigger 
+                        value="active" 
+                        style={{ 
+                            color: activeTab === 'active' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'active' ? primary : 'transparent'
+                        }}
+                    >
+                        {t('patient.medications.status.active', 'Active')}
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="completed" 
+                        style={{ 
+                            color: activeTab === 'completed' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'completed' ? primary : 'transparent'
+                        }}
+                    >
+                        {t('patient.medications.status.completed', 'Completed')}
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="expired" 
+                        style={{ 
+                            color: activeTab === 'expired' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'expired' ? primary : 'transparent'
+                        }}
+                    >
+                        {t('patient.medications.status.expired', 'Expired')}
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
                     {filteredMedications.length > 0 ? (

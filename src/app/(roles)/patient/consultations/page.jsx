@@ -226,7 +226,10 @@ const ConsultationsPageContent = () => {
                 ]}
             />
             <div className="flex justify-end">
-                <Button onClick={() => setNewConsultationDialogOpen(true)}>
+                <Button 
+                    onClick={() => setNewConsultationDialogOpen(true)}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl"
+                >
                     {t('patient.consultations.askQuestion')}
                 </Button>
             </div>

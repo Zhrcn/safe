@@ -5,7 +5,8 @@ import {
     DropletIcon, Edit, Save, X, AlertCircle, Check, MapPin,
     Shield, Stethoscope, Pill, Clock, BarChart3, ChevronRight,
     History, FileImage, Download, FilePlus2, RefreshCcw,
-    Camera, Bell, Lock, CreditCard, CalendarIcon, Info, Plus,
+    Camera, Bell, Lock, CreditCard, CalendarIcon, Info, Plus, Trash2, Eye,
+    ChevronLeft,
 } from 'lucide-react';
 import { PatientPageContainer } from '@/components/patient/PatientComponents';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -37,8 +38,16 @@ import { Calendar } from '@/components/ui/Calendar';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from '@/components/ui/ScrollArea';
 import { useTranslation } from 'react-i18next';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
+const glassCard = "backdrop-blur-md bg-card/70 border border-border shadow-xl";
+const fadeIn = "animate-fade-in";
+const gradientBg = "fixed inset-0 -z-10 animate-gradient bg-gradient-to-br from-background via-card/80 to-muted/60";
+const avatarHover = "transition-transform duration-300 hover:scale-105 hover:shadow-2xl";
+const gradientBtn = "bg-gradient-to-r from-primary to-blue-400 text-white shadow-lg hover:from-blue-500 hover:to-primary";
+const stickyTabs = "sticky top-0 z-20";
 
 const ProfilePage = () => {
     const router = useRouter();
@@ -74,6 +83,9 @@ const ProfilePage = () => {
     const [medicalTabValue, setMedicalTabValue] = useState('vitalSigns');
     const { t } = useTranslation('common');
 
+    const isLoading = false;
+    const apiError = null;
+
     const medicalRecordCategories = [
         { id: 'vitalSigns', label: t('patient.profile.vitalSigns', 'Vital Signs'), icon: HeartPulse },
         { id: 'allergies', label: t('patient.profile.allergies', 'Allergies'), icon: DropletIcon },
@@ -90,15 +102,17 @@ const ProfilePage = () => {
         { id: 'generalHistory', label: t('patient.profile.generalHistory', 'General History'), icon: CalendarDays },
     ];
 
+    const handleTabChange = (newValue) => {
+        setMedicalTabValue(newValue);
+    };
+
     const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
     const [selectedPdf, setSelectedPdf] = useState(null);
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.2);
     
-    const isLoading = false; 
-    const apiError = null;   
-        useEffect(() => {
+    useEffect(() => {
         if (!initializedProfileData.current) {
             if (!isLoading && !apiError && mockPatientData.profile) {
                 setFormData({
@@ -154,6 +168,34 @@ const ProfilePage = () => {
         }));
     };
 
+    const handleDateChange = (date, field) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: date
+        }));
+    };
+
+    const handleInsuranceDateChange = (date, field) => {
+        setInsuranceData(prev => ({
+            ...prev,
+            [field]: date
+        }));
+    };
+
+    const handleMedicalRecordDelete = (category, id) => {
+        setMedicalRecordsData(prev => ({
+            ...prev,
+            [category]: prev[category]?.filter(item => item.id !== id) || []
+        }));
+    };
+
+    const handleMedicalRecordAdd = (category, newItem) => {
+        setMedicalRecordsData(prev => ({
+            ...prev,
+            [category]: [...(prev[category] || []), { ...newItem, id: Date.now() }]
+        }));
+    };
+
     const handleSave = async () => {
         if (!isFormValid()) {
             showNotification(t('patient.profile.saveRequired', 'Please fill in all required fields'), 'error');
@@ -181,10 +223,6 @@ const ProfilePage = () => {
         return '';
     };
 
-    const handleMedicalTabChange = (newValue) => {
-        setMedicalTabValue(newValue);
-    };
-
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
     };
@@ -208,63 +246,73 @@ const ProfilePage = () => {
     };
 
     const renderProfileHeader = () => (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-                <Avatar className="h-24 w-24">
+        <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
+            <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
+                <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}>
                     <AvatarImage src={mockPatientData.profile.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
-                    <AvatarFallback className="bg-primary/10 text-primary text-4xl font-semibold">
+                    <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
                         {mockPatientData.profile.firstName.charAt(0)}{mockPatientData.profile.lastName.charAt(0)}
                     </AvatarFallback>
                 </Avatar>
-                <div className="text-center sm:text-left">
-                    <h1 className="text-2xl font-bold text-foreground">
+                <div className="text-center md:text-left">
+                    <h1 className="text-3xl font-bold text-foreground mb-1">
                         {mockPatientData.profile.firstName} {mockPatientData.profile.lastName}
                     </h1>
-                    <p className="text-muted-foreground">{mockPatientData.profile.email}</p>
+                    <p className="text-muted-foreground text-lg">{mockPatientData.profile.email}</p>
+                    <div className="flex gap-2 justify-center md:justify-start mt-2">
+                        <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
+                        <span className="flex items-center gap-1 text-success text-xs font-semibold">
+                            <Check className="h-4 w-4" /> Active
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div className="flex gap-3">
-                <Button
-                    variant="outline"
-                    onClick={handleRefresh}
-                    className="flex items-center gap-2"
-                >
-                    <RefreshCcw className="w-4 h-4" />
-                    Refresh
-                </Button>
-                <Button
-                    variant={isEditing ? "destructive" : "default"}
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="flex items-center gap-2"
-                    disabled={saving}
-                >
-                    {isEditing ? (
-                        <>
-                            <X className="w-4 h-4" />
-                            Cancel
-                        </>
-                    ) : (
-                        <>
-                            <Edit className="w-4 h-4" />
-                            Edit Profile
-                        </>
-                    )}
-                </Button>
+            <div className="flex flex-col gap-4 w-full md:w-2/3 justify-between">
+                <div className="flex flex-wrap gap-3 justify-center md:justify-end">
+                    <Button
+                        variant="outline"
+                        onClick={handleRefresh}
+                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground flex items-center gap-2 rounded-full shadow"
+                        aria-label={t('patient.profile.refresh', 'Refresh')}
+                    >
+                        <RefreshCcw className="w-5 h-5" />
+                        {t('patient.profile.refresh', 'Refresh')}
+                    </Button>
+                    <Button
+                        variant={isEditing ? "destructive" : "default"}
+                        onClick={() => setIsEditing(!isEditing)}
+                        className={`flex items-center gap-2 border-primary rounded-full shadow ${isEditing ? '' : 'bg-primary text-white hover:bg-primary/90'}`}
+                        disabled={saving}
+                        aria-label={isEditing ? t('patient.profile.cancel', 'Cancel') : t('patient.profile.editProfile', 'Edit Profile')}
+                    >
+                        {isEditing ? (
+                            <>
+                                <X className="w-5 h-5" />
+                                {t('patient.profile.cancel', 'Cancel')}
+                            </>
+                        ) : (
+                            <>
+                                <Edit className="w-5 h-5" />
+                                {t('patient.profile.editProfile', 'Edit Profile')}
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
         </div>
     );
 
     const renderPersonalInfo = () => (
-        <Card>
+        <Card className="w-full min-w-0 max-w-full overflow-hidden">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" /> Personal Information
+                    <User className="h-5 w-5 text-primary" /> {t('patient.profile.personalInformation', 'Personal Information')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName">{t('patient.profile.firstName', 'First Name')}</Label>
                         <Input
                             id="firstName"
                             name="firstName"
@@ -275,7 +323,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName">{t('patient.profile.lastName', 'Last Name')}</Label>
                         <Input
                             id="lastName"
                             name="lastName"
@@ -286,7 +334,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('patient.profile.email', 'Email')}</Label>
                         <Input
                             id="email"
                             name="email"
@@ -298,7 +346,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
+                        <Label htmlFor="phone">{t('patient.profile.phone', 'Phone')}</Label>
                         <Input
                             id="phone"
                             name="phone"
@@ -310,7 +358,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label htmlFor="address">Address</Label>
+                        <Label htmlFor="address">{t('patient.profile.address', 'Address')}</Label>
                         <Input
                             id="address"
                             name="address"
@@ -320,18 +368,18 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <Label htmlFor="dateOfBirth">{t('patient.profile.dateOfBirth', 'Date of Birth')}</Label>
                         <Popover>
                             <PopoverTrigger asChild disabled={!isEditing || saving}>
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "w-full justify-start text-left font-normal",
+                                        "w-full justify-start text-left font-normal flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground",
                                         !formData.dateOfBirth && "text-muted-foreground"
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {formData.dateOfBirth ? format(formData.dateOfBirth, "PPP") : <span>Pick a date</span>}
+                                    {formData.dateOfBirth ? format(formData.dateOfBirth, "PPP") : <span>{t('patient.profile.pickDate', 'Pick a date')}</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -346,9 +394,9 @@ const ProfilePage = () => {
                     </div>
                 </div>
                 {isEditing && (
-                    <div className="flex justify-end pt-4 border-t">
-                        <Button onClick={handleSave} disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Changes'}
+                    <div className="flex justify-end pt-4 border-t ">
+                        <Button className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleSave} disabled={saving}>
+                            {saving ? t('patient.profile.saving', 'Saving...') : t('patient.profile.saveChanges', 'Save Changes')}
                         </Button>
                     </div>
                 )}
@@ -357,16 +405,16 @@ const ProfilePage = () => {
     );
 
     const renderEmergencyContact = () => (
-        <Card>
+        <Card className="w-full min-w-0 max-w-full overflow-hidden">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-primary" /> Emergency Contact
+                    <Bell className="h-5 w-5 text-primary" /> {t('patient.profile.emergencyContact', 'Emergency Contact')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="ec_name">Name</Label>
+                        <Label htmlFor="ec_name">{t('patient.profile.name', 'Name')}</Label>
                         <Input
                             id="ec_name"
                             name="name"
@@ -376,7 +424,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ec_relationship">Relationship</Label>
+                        <Label htmlFor="ec_relationship">{t('patient.profile.relationship', 'Relationship')}</Label>
                         <Input
                             id="ec_relationship"
                             name="relationship"
@@ -386,7 +434,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ec_phone">Phone</Label>
+                        <Label htmlFor="ec_phone">{t('patient.profile.phone', 'Phone')}</Label>
                         <Input
                             id="ec_phone"
                             name="phone"
@@ -397,7 +445,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ec_email">Email</Label>
+                        <Label htmlFor="ec_email">{t('patient.profile.email', 'Email')}</Label>
                         <Input
                             id="ec_email"
                             name="email"
@@ -411,7 +459,7 @@ const ProfilePage = () => {
                 {isEditing && (
                     <div className="flex justify-end pt-4 border-t">
                         <Button onClick={handleSave} disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Changes'}
+                            {saving ? t('patient.profile.saving', 'Saving...') : t('patient.profile.saveChanges', 'Save Changes')}
                         </Button>
                     </div>
                 )}
@@ -420,16 +468,16 @@ const ProfilePage = () => {
     );
 
     const renderInsuranceInfo = () => (
-        <Card>
+        <Card className="w-full min-w-0 max-w-full overflow-hidden">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" /> Insurance Information
+                    <CreditCard className="h-5 w-5 text-primary" /> {t('patient.profile.insuranceInformation', 'Insurance Information')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="ins_provider">Provider</Label>
+                        <Label htmlFor="ins_provider">{t('patient.profile.provider', 'Provider')}</Label>
                         <Input
                             id="ins_provider"
                             name="provider"
@@ -439,7 +487,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ins_policyNumber">Policy Number</Label>
+                        <Label htmlFor="ins_policyNumber">{t('patient.profile.policyNumber', 'Policy Number')}</Label>
                         <Input
                             id="ins_policyNumber"
                             name="policyNumber"
@@ -449,7 +497,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ins_groupNumber">Group Number</Label>
+                        <Label htmlFor="ins_groupNumber">{t('patient.profile.groupNumber', 'Group Number')}</Label>
                         <Input
                             id="ins_groupNumber"
                             name="groupNumber"
@@ -459,7 +507,7 @@ const ProfilePage = () => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ins_expiryDate">Expiry Date</Label>
+                        <Label htmlFor="ins_expiryDate">{t('patient.profile.expiryDate', 'Expiry Date')}</Label>
                         <Popover>
                             <PopoverTrigger asChild disabled={!isEditing || saving}>
                                 <Button
@@ -470,7 +518,7 @@ const ProfilePage = () => {
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {insuranceData.expiryDate ? format(insuranceData.expiryDate, "PPP") : <span>Pick a date</span>}
+                                    {insuranceData.expiryDate ? format(insuranceData.expiryDate, "PPP") : <span>{t('patient.profile.pickDate', 'Pick a date')}</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -486,8 +534,8 @@ const ProfilePage = () => {
                 </div>
                 {isEditing && (
                     <div className="flex justify-end pt-4 border-t">
-                        <Button onClick={handleSave} disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Changes'}
+                        <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                            {saving ? t('patient.profile.saving', 'Saving...') : t('patient.profile.saveChanges', 'Save Changes')}
                         </Button>
                     </div>
                 )}
@@ -496,36 +544,35 @@ const ProfilePage = () => {
     );
 
     const renderMedicalFile = () => (
-        <Card>
+        <Card className="w-full min-w-0 max-w-full overflow-hidden">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" /> Medical File
+                    <FileText className="h-5 w-5 text-primary" /> {t('patient.profile.medicalFile', 'Medical File')}
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <Tabs value={medicalTabValue} onValueChange={setMedicalTabValue} className="w-full">
-                    <ScrollArea className="w-full whitespace-nowrap pb-4">
-                        <TabsList className="inline-flex h-auto p-1 text-muted-foreground rounded-md bg-muted justify-start">
+            <CardContent className="space-y-6 w-full min-w-0 max-w-full overflow-x-visible">
+                <Tabs value={medicalTabValue} onValueChange={handleTabChange} className="w-full min-w-0 max-w-full">
+                    <div className="w-full max-w-screen-lg mx-auto overflow-x-auto">
+                        <TabsList className="flex w-max h-auto p-1 text-muted-foreground rounded-md bg-muted gap-1" style={{scrollBehavior: 'smooth'}}>
                             {medicalRecordCategories.map(category => (
                                 <TabsTrigger
                                     key={category.id}
                                     value={category.id}
-                                    className="px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                    className="flex items-center px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-xs whitespace-nowrap"
                                 >
-                                    <category.icon className="h-4 w-4 mr-2" />
-                                    {category.label}
+                                    <category.icon className="h-4 w-4 mr-2 flex-shrink-0" />
+                                    <span className="truncate">{category.label}</span>
                                 </TabsTrigger>
                             ))}
                         </TabsList>
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-
+                    </div>
+                    
                     <TabsContent value="vitalSigns" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Recent Vital Signs</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.recentVitalSigns', 'Recent Vital Signs')}</h3>
                         {medicalRecordsData.vitalSigns && medicalRecordsData.vitalSigns.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0 max-w-full">
                                 {medicalRecordsData.vitalSigns.map(vital => (
-                                    <Card key={vital.id} className="bg-muted/50">
+                                    <Card key={vital.id} className="bg-muted/50 w-full min-w-0">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <HeartPulse className="h-5 w-5 text-primary" />
@@ -539,17 +586,17 @@ const ProfilePage = () => {
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Vital Signs Recorded</AlertTitle>
-                                <AlertDescription>Your recent vital signs will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noVitalSignsRecorded', 'No Vital Signs Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.vitalSignsDescription', 'Your recent vital signs will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="allergies" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-lg font-semibold">My Allergies</h3>
+                            <h3 className="text-lg font-semibold">{t('patient.profile.myAllergies', 'My Allergies')}</h3>
                             <Button size="sm" onClick={() => setAllergyDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" /> Add Allergy
+                                <Plus className="h-4 w-4 mr-2" /> {t('patient.profile.addAllergy', 'Add Allergy')}
                             </Button>
                         </div>
                         {medicalRecordsData.allergies && medicalRecordsData.allergies.length > 0 ? (
@@ -560,7 +607,7 @@ const ProfilePage = () => {
                                             <DropletIcon className="h-5 w-5 text-destructive" />
                                             <div>
                                                 <p className="font-medium text-foreground">{allergy.name}</p>
-                                                <p className="text-sm text-muted-foreground">Severity: {allergy.severity}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.severity', 'Severity')}: {allergy.severity}</p>
                                             </div>
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('allergies', allergy.id)} className="text-muted-foreground hover:text-destructive">
@@ -571,17 +618,17 @@ const ProfilePage = () => {
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Allergies Recorded</AlertTitle>
-                                <AlertDescription>You can add your allergies here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noAllergiesRecorded', 'No Allergies Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.allergiesDescription', 'You can add your allergies here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="chronicConditions" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-lg font-semibold">Chronic Conditions</h3>
+                            <h3 className="text-lg font-semibold">{t('patient.profile.chronicConditionsTitle', 'Chronic Conditions')}</h3>
                             <Button size="sm" onClick={() => setChronicConditionDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" /> Add Condition
+                                <Plus className="h-4 w-4 mr-2" /> {t('patient.profile.addCondition', 'Add Condition')}
                             </Button>
                         </div>
                         {medicalRecordsData.chronicConditions && medicalRecordsData.chronicConditions.length > 0 ? (
@@ -592,7 +639,7 @@ const ProfilePage = () => {
                                             <Stethoscope className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{condition.name}</p>
-                                                <p className="text-sm text-muted-foreground">Diagnosed on {format(new Date(condition.diagnosedDate), 'PPP')}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {format(new Date(condition.diagnosedDate), 'PPP')}</p>
                                             </div>
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('chronicConditions', condition.id)} className="text-muted-foreground hover:text-destructive">
@@ -603,34 +650,34 @@ const ProfilePage = () => {
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Chronic Conditions Recorded</AlertTitle>
-                                <AlertDescription>You can add your chronic conditions here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noChronicConditionsRecorded', 'No Chronic Conditions Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.chronicConditionsDescription', 'You can add your chronic conditions here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="diagnoses" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">My Diagnoses</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myDiagnoses', 'My Diagnoses')}</h3>
                         {medicalRecordsData.diagnoses && medicalRecordsData.diagnoses.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.diagnoses.map(diagnosis => (
                                     <Card key={diagnosis.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{diagnosis.name}</p>
-                                        <p className="text-sm text-muted-foreground">Diagnosed by {diagnosis.doctor} on {format(new Date(diagnosis.date), 'PPP')}</p>
-                                        {diagnosis.notes && <p className="text-xs text-muted-foreground mt-2">Notes: {diagnosis.notes}</p>}
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedBy', 'Diagnosed by')} {diagnosis.doctor} {t('patient.profile.on', 'on')} {format(new Date(diagnosis.date), 'PPP')}</p>
+                                        {diagnosis.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {diagnosis.notes}</p>}
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Diagnoses Recorded</AlertTitle>
-                                <AlertDescription>Your medical diagnoses will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noDiagnosesRecorded', 'No Diagnoses Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.diagnosesDescription', 'Your medical diagnoses will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="labResults" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Lab Results</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.labResultsTitle', 'Lab Results')}</h3>
                         {medicalRecordsData.labResults && medicalRecordsData.labResults.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.labResults.map(result => (
@@ -639,25 +686,25 @@ const ProfilePage = () => {
                                             <BarChart3 className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{result.title}</p>
-                                                <p className="text-sm text-muted-foreground">Date: {format(new Date(result.date), 'PPP')}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(result.date), 'PPP')}</p>
                                             </div>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => handlePdfOpen(result)}>
-                                            <Eye className="h-4 w-4 mr-2" /> View Report
+                                            <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewReport', 'View Report')}
                                         </Button>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Lab Results Available</AlertTitle>
-                                <AlertDescription>Your lab test results will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noLabResultsAvailable', 'No Lab Results Available')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.labResultsDescription', 'Your lab test results will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="imagingReports" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Imaging Reports</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.imagingReportsTitle', 'Imaging Reports')}</h3>
                         {medicalRecordsData.imagingReports && medicalRecordsData.imagingReports.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.imagingReports.map(report => (
@@ -666,28 +713,28 @@ const ProfilePage = () => {
                                             <FileImage className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{report.title}</p>
-                                                <p className="text-sm text-muted-foreground">Date: {format(new Date(report.date), 'PPP')}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(report.date), 'PPP')}</p>
                                             </div>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => handlePdfOpen(report)}>
-                                            <Eye className="h-4 w-4 mr-2" /> View Report
+                                            <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewReport', 'View Report')}
                                         </Button>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Imaging Reports Available</AlertTitle>
-                                <AlertDescription>Your imaging reports (X-rays, MRIs, etc.) will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noImagingReportsAvailable', 'No Imaging Reports Available')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.imagingReportsDescription', 'Your imaging reports (X-rays, MRIs, etc.) will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="medications" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-lg font-semibold">Current Medications</h3>
+                            <h3 className="text-lg font-semibold">{t('patient.profile.currentMedications', 'Current Medications')}</h3>
                             <Button size="sm" onClick={() => setMedicationDialogOpen(true)}>
-                                <Plus className="h-4 w-4 mr-2" /> Add Medication
+                                <Plus className="h-4 w-4 mr-2" /> {t('patient.profile.addMedication', 'Add Medication')}
                             </Button>
                         </div>
                         {medicalRecordsData.medications && medicalRecordsData.medications.length > 0 ? (
@@ -698,7 +745,7 @@ const ProfilePage = () => {
                                             <Pill className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{med.name} - {med.dosage}</p>
-                                                <p className="text-sm text-muted-foreground">Frequency: {med.frequency}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.frequency', 'Frequency')}: {med.frequency}</p>
                                             </div>
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('medications', med.id)} className="text-muted-foreground hover:text-destructive">
@@ -709,57 +756,57 @@ const ProfilePage = () => {
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Medications Recorded</AlertTitle>
-                                <AlertDescription>Your current and past medications will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noMedicationsRecorded', 'No Medications Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.medicationsDescription', 'Your current and past medications will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="immunizations" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Immunizations History</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.immunizationsHistory', 'Immunizations History')}</h3>
                         {medicalRecordsData.immunizations && medicalRecordsData.immunizations.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.immunizations.map(imm => (
                                     <Card key={imm.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{imm.name}</p>
-                                        <p className="text-sm text-muted-foreground">Date: {format(new Date(imm.date), 'PPP')} - Administered by {imm.administeredBy}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(imm.date), 'PPP')} - {t('patient.profile.administeredBy', 'Administered by')} {imm.administeredBy}</p>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Immunizations Recorded</AlertTitle>
-                                <AlertDescription>Your immunization records will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noImmunizationsRecorded', 'No Immunizations Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.immunizationsDescription', 'Your immunization records will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="surgicalHistory" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Surgical History</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.surgicalHistoryTitle', 'Surgical History')}</h3>
                         {medicalRecordsData.surgicalHistory && medicalRecordsData.surgicalHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.surgicalHistory.map(surgery => (
                                     <Card key={surgery.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{surgery.procedure}</p>
-                                        <p className="text-sm text-muted-foreground">Date: {format(new Date(surgery.date), 'PPP')} - Hospital: {surgery.hospital}</p>
-                                        {surgery.notes && <p className="text-xs text-muted-foreground mt-2">Notes: {surgery.notes}</p>}
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(surgery.date), 'PPP')} - {t('patient.profile.hospital', 'Hospital')}: {surgery.hospital}</p>
+                                        {surgery.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {surgery.notes}</p>}
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Surgical History Recorded</AlertTitle>
-                                <AlertDescription>Your surgical history will appear here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noSurgicalHistoryRecorded', 'No Surgical History Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.surgicalHistoryDescription', 'Your surgical history will appear here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="documents" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">My Documents</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myDocuments', 'My Documents')}</h3>
                         <div className="flex justify-between items-center mb-3">
-                            <p className="text-muted-foreground text-sm">Upload and manage your medical documents.</p>
+                            <p className="text-muted-foreground text-sm">{t('patient.profile.uploadAndManageDocuments', 'Upload and manage your medical documents.')}</p>
                             <Button size="sm" onClick={() => router.push('/patient/medical-records/upload')}>
-                                <FilePlus2 className="h-4 w-4 mr-2" /> Upload Document
+                                <FilePlus2 className="h-4 w-4 mr-2" /> {t('patient.profile.uploadDocument', 'Upload Document')}
                             </Button>
                         </div>
                         {medicalRecordsData.documents && medicalRecordsData.documents.length > 0 ? (
@@ -770,76 +817,76 @@ const ProfilePage = () => {
                                             <FileText className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{doc.title}</p>
-                                                <p className="text-sm text-muted-foreground">Type: {doc.type} - Date: {format(new Date(doc.date), 'PPP')}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.type', 'Type')}: {doc.type} - {t('patient.profile.date', 'Date')}: {format(new Date(doc.date), 'PPP')}</p>
                                             </div>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => handlePdfOpen(doc)}>
-                                            <Eye className="h-4 w-4 mr-2" /> View Document
+                                            <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewDocument', 'View Document')}
                                         </Button>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Documents Uploaded</AlertTitle>
-                                <AlertDescription>You can upload your medical documents here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noDocumentsUploaded', 'No Documents Uploaded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.documentsDescription', 'You can upload your medical documents here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="familyHistory" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Family Medical History</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.familyMedicalHistory', 'Family Medical History')}</h3>
                         {medicalRecordsData.familyHistory && medicalRecordsData.familyHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.familyHistory.map(item => (
                                     <Card key={item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.condition}</p>
-                                        <p className="text-sm text-muted-foreground">Relationship: {item.relationship} - Notes: {item.notes}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.relationship', 'Relationship')}: {item.relationship} - {t('patient.profile.notes', 'Notes')}: {item.notes}</p>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Family History Recorded</AlertTitle>
-                                <AlertDescription>You can add relevant family medical history here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noFamilyHistoryRecorded', 'No Family History Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.familyHistoryDescription', 'You can add relevant family medical history here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="socialHistory" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">Social History</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.socialHistoryTitle', 'Social History')}</h3>
                         {medicalRecordsData.socialHistory && medicalRecordsData.socialHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.socialHistory.map(item => (
                                     <Card key={item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.aspect}</p>
-                                        <p className="text-sm text-muted-foreground">Details: {item.details}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.details', 'Details')}: {item.details}</p>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No Social History Recorded</AlertTitle>
-                                <AlertDescription>You can add your social history details here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noSocialHistoryRecorded', 'No Social History Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.socialHistoryDescription', 'You can add your social history details here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
 
                     <TabsContent value="generalHistory" className="mt-4">
-                        <h3 className="text-lg font-semibold mb-3">General Medical History</h3>
+                        <h3 className="text-lg font-semibold mb-3">{t('patient.profile.generalMedicalHistory', 'General Medical History')}</h3>
                         {medicalRecordsData.generalHistory && medicalRecordsData.generalHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.generalHistory.map(item => (
                                     <Card key={item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.question}</p>
-                                        <p className="text-sm text-muted-foreground">Answer: {item.answer}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.answer', 'Answer')}: {item.answer}</p>
                                     </Card>
                                 ))}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
-                                <AlertTitle>No General History Recorded</AlertTitle>
-                                <AlertDescription>You can add general medical history questions and answers here.</AlertDescription>
+                                <AlertTitle>{t('patient.profile.noGeneralHistoryRecorded', 'No General History Recorded')}</AlertTitle>
+                                <AlertDescription>{t('patient.profile.generalHistoryDescription', 'You can add general medical history questions and answers here.')}</AlertDescription>
                             </Alert>
                         )}
                     </TabsContent>
@@ -876,35 +923,118 @@ const ProfilePage = () => {
     };
 
     return (
-        <div className="flex flex-col space-y-6">
-            <PageHeader
-                title={t('patient.profile.myProfile')}
-                description={t('patient.profile.description')}
-                breadcrumbs={[
-                    { label: t('patient.profile.breadcrumb'), href: '/patient/dashboard' },
-                    { label: t('patient.profile.profile'), href: '/patient/profile' }
-                ]}
-            />
+        <div className="relative min-h-screen w-full overflow-x-hidden">
+            <div className={gradientBg} />
+            <div className="flex flex-col items-center w-full">
+                <div className="w-full max-w-screen-2xl px-2 sm:px-6 md:px-10 py-8">
+                    <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
+                        <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
+                            <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}> 
+                                <AvatarImage src={mockPatientData.profile.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
+                                <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
+                                    {mockPatientData.profile.firstName.charAt(0)}{mockPatientData.profile.lastName.charAt(0)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="text-center md:text-left">
+                                <h1 className="text-3xl font-bold text-foreground mb-1">
+                                    {mockPatientData.profile.firstName} {mockPatientData.profile.lastName}
+                                </h1>
+                                <p className="text-muted-foreground text-lg">{mockPatientData.profile.email}</p>
+                                <div className="flex gap-2 justify-center md:justify-start mt-2">
+                                    <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
+                                    <span className="flex items-center gap-1 text-success text-xs font-semibold">
+                                        <Check className="h-4 w-4" /> Active
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-4 w-full md:w-2/3 justify-between">
+                            <div className="flex flex-wrap gap-3 justify-center md:justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleRefresh}
+                                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground flex items-center gap-2 rounded-full shadow"
+                                    aria-label={t('patient.profile.refresh', 'Refresh')}
+                                >
+                                    <RefreshCcw className="w-5 h-5" />
+                                    {t('patient.profile.refresh', 'Refresh')}
+                                </Button>
+                                <Button
+                                    variant={isEditing ? "destructive" : "default"}
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    className={`flex items-center gap-2 border-primary rounded-full shadow ${isEditing ? '' : 'bg-primary text-white hover:bg-primary/90'}`}
+                                    disabled={saving}
+                                    aria-label={isEditing ? t('patient.profile.cancel', 'Cancel') : t('patient.profile.editProfile', 'Edit Profile')}
+                                >
+                                    {isEditing ? (
+                                        <>
+                                            <X className="w-5 h-5" />
+                                            {t('patient.profile.cancel', 'Cancel')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Edit className="w-5 h-5" />
+                                            {t('patient.profile.editProfile', 'Edit Profile')}
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
 
-            {renderProfileHeader()}
+                    <div className={`${glassCard} ${fadeIn} p-4 mb-8 w-full`}>
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className={`grid w-full grid-cols-4 gap-2 bg-blue-50 rounded-xl p-1 ${stickyTabs}`}> 
+                                <Tooltip content={t('patient.profile.tabs.personal', 'Personal Info')}>
+                                    <TabsTrigger
+                                        value="personal"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
+                                    >
+                                        <User className="h-5 w-5" />
+                                        {t('patient.profile.tabs.personal', 'Personal Info')}
+                                    </TabsTrigger>
+                                </Tooltip>
+                                <Tooltip content={t('patient.profile.tabs.emergency', 'Emergency Contact')}>
+                                    <TabsTrigger
+                                        value="emergency"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
+                                    >
+                                        <Bell className="h-5 w-5" />
+                                        {t('patient.profile.tabs.emergency', 'Emergency Contact')}
+                                    </TabsTrigger>
+                                </Tooltip>
+                                <Tooltip content={t('patient.profile.tabs.insurance', 'Insurance')}>
+                                    <TabsTrigger
+                                        value="insurance"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
+                                    >
+                                        <CreditCard className="h-5 w-5" />
+                                        {t('patient.profile.tabs.insurance', 'Insurance')}
+                                    </TabsTrigger>
+                                </Tooltip>
+                                <Tooltip content={t('patient.profile.tabs.medical', 'Medical File')}>
+                                    <TabsTrigger
+                                        value="medical"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
+                                    >
+                                        <FileText className="h-5 w-5" />
+                                        {t('patient.profile.tabs.medical', 'Medical File')}
+                                    </TabsTrigger>
+                                </Tooltip>
+                            </TabsList>
+                        </Tabs>
+                    </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="personal">{t('patient.profile.tabs.personal', 'Personal Info')}</TabsTrigger>
-                    <TabsTrigger value="emergency">{t('patient.profile.tabs.emergency', 'Emergency Contact')}</TabsTrigger>
-                    <TabsTrigger value="insurance">{t('patient.profile.tabs.insurance', 'Insurance')}</TabsTrigger>
-                    <TabsTrigger value="medical">{t('patient.profile.tabs.medical', 'Medical File')}</TabsTrigger>
-                </TabsList>
-            </Tabs>
-
-            <Separator />
-
-            {renderContent()}
+                    <div className={`${glassCard} ${fadeIn} p-6 border border-border w-full`}>
+                        {renderContent()}
+                    </div>
+                </div>
+            </div>
 
             <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
                 <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col p-4">
                     <DialogHeader className="pb-2">
-                        <DialogTitle className="text-xl font-bold">{selectedPdf?.title || 'Document'}</DialogTitle>
+                        <DialogTitle className="text-xl font-bold">{selectedPdf?.title || t('patient.profile.document', 'Document')}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 flex flex-col items-center justify-center overflow-hidden bg-muted/20 rounded-md">
                         {selectedPdf?.url ? (
@@ -921,7 +1051,7 @@ const ProfilePage = () => {
                             <Alert variant="destructive" className="w-fit">
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>Document URL is missing.</AlertDescription>
+                                <AlertDescription>{t('patient.profile.documentUrlMissing', 'Document URL is missing.')}</AlertDescription>
                             </Alert>
                         )}
                     </div>
@@ -933,10 +1063,10 @@ const ProfilePage = () => {
                                 onClick={() => changePage(-1)}
                                 disabled={pageNumber <= 1}
                             >
-                                Previous
+                                {t('patient.profile.previous', 'Previous')}
                             </Button>
                             <span className="text-sm text-muted-foreground">
-                                Page {pageNumber} of {numPages}
+                                {t('patient.profile.page', 'Page')} {pageNumber} {t('patient.profile.of', 'of')} {numPages}
                             </span>
                             <Button
                                 variant="outline"
@@ -944,17 +1074,17 @@ const ProfilePage = () => {
                                 onClick={() => changePage(1)}
                                 disabled={pageNumber >= numPages}
                             >
-                                Next
+                                {t('patient.profile.next', 'Next')}
                             </Button>
                         </div>
                     )}
                     <DialogFooter className="mt-4">
-                        <Button variant="outline" onClick={handlePdfClose}>Close</Button>
+                        <Button variant="outline" onClick={handlePdfClose}>{t('patient.profile.close', 'Close')}</Button>
                         {selectedPdf?.url && (
                             <Button asChild>
                                 <a href={selectedPdf.url} download={selectedPdf.title || 'document.pdf'}>
                                     <span className="flex items-center gap-2">
-                                        <Download className="h-4 w-4" /> Download
+                                        <Download className="h-4 w-4" /> {t('patient.profile.download', 'Download')}
                                     </span>
                                 </a>
                             </Button>

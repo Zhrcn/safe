@@ -1,47 +1,11 @@
-import { Separator } from '@/components/ui/Separator';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Menu as MenuIcon,
-  X as CloseIcon,
-  ArrowLeft as CollapseSidebarIcon,
-  Home,
-  Users,
-  Calendar,
-  FileText,
-  Stethoscope,
-  Pill,
-  MessageSquare,
-  ClipboardList,
-  Package,
-  ShoppingCart,
-  Settings as SettingsIcon,
-  User,
-  BarChart,
-  LayoutDashboard as DashboardIcon,
-  ShoppingCart as PharmacyIcon,
-  MessageSquare as ChatIcon,
-  LogOut as LogoutIcon,
-  Bell,
-  FileText as FileTextIcon,
-  Pill as PillIcon,
-  ClipboardList as ClipboardListIcon,
-  Stethoscope as StethoscopeIcon,
-  Store,
-  Shield,
-  Activity,
-  History,
-  FileCheck,
-  ClipboardCheck,
-  UserPlus,
-  Building2,
-  X,
-  ArrowLeft,
-} from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '@/store/slices/auth/authSlice';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/components/ThemeProviderWrapper';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { logout } from '@/store/slices/auth/authSlice';
 import { useNotification } from '@/components/ui/Notification';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
@@ -52,118 +16,186 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
-import { cn } from '@/lib/utils';
 import { ThemeButton } from '@/components/ThemeButton';
-import Link from 'next/link';
-import Image from 'next/image';
-
-import { useSelector as useUserSelector } from 'react-redux';
-import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import {
+  Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const drawerWidth = 240;
-
-const roleFolders = {
+const NAVIGATION_CONFIG = {
   doctor: [
-    { name: 'dashboard', path: '/doctor/dashboard' },
-    { name: 'patients', path: '/doctor/patients' },
-    { name: 'appointments', path: '/doctor/appointments' },
-    { name: 'analytics', path: '/doctor/analytics' },
-    { name: 'medicine', path: '/doctor/medicine' },
-    { name: 'messaging', path: '/doctor/messaging' },
-    { name: 'profile', path: '/doctor/profile' },
+    { name: 'dashboard', path: '/doctor/dashboard', icon: Home },
+    { name: 'patients', path: '/doctor/patients', icon: Users },
+    { name: 'appointments', path: '/doctor/appointments', icon: Calendar },
+    { name: 'analytics', path: '/doctor/analytics', icon: BarChart },
+    { name: 'medicine', path: '/doctor/medicine', icon: Pill },
+    { name: 'messaging', path: '/doctor/messaging', icon: MessageSquare },
+    { name: 'profile', path: '/doctor/profile', icon: User },
   ],
   patient: [
-    { name: 'dashboard', path: '/patient/dashboard' },
-    { name: 'appointments', path: '/patient/appointments' },
-    { name: 'consultations', path: '/patient/consultations' },
-    { name: 'medications', path: '/patient/medications' },
-    { name: 'messaging', path: '/patient/messaging' },
-    { name: 'prescriptions', path: '/patient/prescriptions' },
-    { name: 'profile', path: '/patient/profile' },
-    { name: 'providers', path: '/patient/providers' },
-    { name: 'medical-records', path: '/patient/medical-records' },
+    { name: 'dashboard', path: '/patient/dashboard', icon: Home },
+    { name: 'appointments', path: '/patient/appointments', icon: Calendar },
+    { name: 'consultations', path: '/patient/consultations', icon: Stethoscope },
+    { name: 'medications', path: '/patient/medications', icon: Pill },
+    { name: 'messaging', path: '/patient/messaging', icon: MessageSquare },
+    { name: 'prescriptions', path: '/patient/prescriptions', icon: ClipboardList },
+    { name: 'profile', path: '/patient/profile', icon: User },
+    { name: 'providers', path: '/patient/providers', icon: Users },
+    { name: 'medical-records', path: '/patient/medical-records', icon: FileText },
   ],
   pharmacist: [
-    { name: 'dashboard', path: '/pharmacist/dashboard' },
-    { name: 'inventory', path: '/pharmacist/inventory' },
-    { name: 'orders', path: '/pharmacist/orders' },
-    { name: 'prescriptions', path: '/pharmacist/prescriptions' },
-    { name: 'profile', path: '/pharmacist/profile' },
+    { name: 'dashboard', path: '/pharmacist/dashboard', icon: Home },
+    { name: 'inventory', path: '/pharmacist/inventory', icon: Package },
+    { name: 'orders', path: '/pharmacist/orders', icon: ShoppingCart },
+    { name: 'prescriptions', path: '/pharmacist/prescriptions', icon: ClipboardList },
+    { name: 'profile', path: '/pharmacist/profile', icon: User },
   ],
   admin: [
-    { name: 'dashboard', path: '/admin/dashboard' },
-    { name: 'users', path: '/admin/users' },
-    { name: 'settings', path: '/admin/settings' },
+    { name: 'dashboard', path: '/admin/dashboard', icon: Home },
+    { name: 'users', path: '/admin/users', icon: Users },
+    { name: 'settings', path: '/admin/settings', icon: SettingsIcon },
   ],
 };
 
-function prettify(name) {
-  return name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
+const formatNavigationName = (name) => name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+const getNavigationIcon = (IconComponent) => <IconComponent className="h-5 w-5" />;
 
-function getTabIcon(name) {
-  const n = name.toLowerCase();
-  if (n.includes('dashboard')) return <Home className="h-5 w-5" />;
-  if (n.includes('users')) return <Users className="h-5 w-5" />;
-  if (n.includes('appointments')) return <Calendar className="h-5 w-5" />;
-  if (n.includes('calendar')) return <Calendar className="h-5 w-5" />;
-  if (n.includes('records')) return <FileText className="h-5 w-5" />;
-  if (n.includes('consultations')) return <Stethoscope className="h-5 w-5" />;
-  if (n.includes('medications') || n.includes('medicine')) return <Pill className="h-5 w-5" />;
-  if (n.includes('messaging') || n.includes('messages')) return <MessageSquare className="h-5 w-5" />;
-  if (n.includes('prescriptions')) return <ClipboardList className="h-5 w-5" />;
-  if (n.includes('inventory')) return <Package className="h-5 w-5" />;
-  if (n.includes('orders')) return <ShoppingCart className="h-5 w-5" />;
-  if (n.includes('settings')) return <SettingsIcon className="h-5 w-5" />;
-  if (n.includes('profile')) return <User className="h-5 w-5" />;
-  if (n.includes('analytics')) return <BarChart className="h-5 w-5" />;
-  if (n.includes('providers')) return <Users className="h-5 w-5" />;
-  return <MenuIcon className="h-5 w-5" />;
-}
+const useSidebar = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const toggleMobile = useCallback(() => setMobileOpen(prev => !prev), []);
+  const toggleCollapse = useCallback(() => setSidebarCollapsed(prev => !prev), []);
+
+  useEffect(() => { if (!isMobile) setMobileOpen(false); }, [isMobile]);
+
+  return { mobileOpen, sidebarCollapsed, isMobile, toggleMobile, toggleCollapse };
+};
+
+const SidebarToggle = ({ collapsed, onToggle, isRtl, t }) => (
+  <Button
+    onClick={onToggle}
+    className={cn(
+      "absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-14 w-14 rounded-full border transition-colors shadow-lg hover:shadow-xl",
+      isRtl ? "-left-10" : "-right-10"
+    )}
+    style={{
+      background: "var(--color-card)",
+      borderColor: "var(--color-border)",
+      color: "var(--color-foreground)",
+      transition: "all 0.3s ease-in-out",
+      boxShadow: "0 8px 25px -8px rgba(0, 0, 0, 0.15)",
+      transform: "translateY(-50%)",
+    }}
+    aria-label={
+      collapsed
+        ? t("aria.expandSidebar", "Expand sidebar")
+        : t("aria.collapseSidebar", "Collapse sidebar")
+    }
+  >
+    {collapsed ? (
+      isRtl ? (
+        <ArrowLeft className="h-full w-full text-primary" />
+      ) : (
+        <ArrowRight className="h-full w-full text-primary" />
+      )
+    ) : isRtl ? (
+      <ArrowRight className="h-full w-full text-primary" />
+    ) : (
+      <ArrowLeft className="h-full w-full text-primary" />
+    )}
+  </Button>
+);
+
+const UserProfile = ({ user, collapsed, t }) => (
+  <div className={cn('flex flex-col items-center py-8 border-b border-border transition-all duration-300', collapsed ? 'px-0' : 'px-6')}>
+    <span className={cn("mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-2", "bg-primary/10 dark:bg-gray-800")}> 
+      <img
+        src="/logo(1).png"
+        alt="App Icon"
+        className="w-14 h-14 object-contain rounded-full"
+        style={{ backgroundColor: 'var(--color-navbar, #f0f4f8)', filter: 'var(--logo-img-filter, none)' }}
+      />
+    </span>
+    {!collapsed && (
+      <span className="font-extrabold text-2xl tracking-tight text-primary dark:text-white mb-3">
+        {t('appName', 'SafeApp')}
+      </span>
+    )}
+    {!collapsed && user && (
+      <div className="flex flex-row items-center gap-3 mb-6 w-full">
+        <Avatar className="h-14 w-14" src={user?.profile?.avatar} />
+        <div className="flex flex-col min-w-0">
+          <span className="font-semibold text-base text-gray-900 dark:text-white truncate">
+            {user?.firstName} {user?.lastName}
+          </span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
+            {user?.email}
+          </span>
+        </div>
+      </div>
+    )}
+    <div className="w-full h-px bg-border mb-2" />
+  </div>
+);
+
+const NavigationMenu = ({ items, pathname, collapsed, t }) => (
+  <nav className="px-1 py-4 space-y-2 overflow-y-auto">
+    {items.map((item) => {
+      const isActive = pathname.startsWith(item.path);
+      return (
+        <Link
+          key={item.path}
+          href={item.path}
+          className={cn(
+            'flex items-center gap-3 py-2 rounded-full font-medium transition-colors duration-200',
+            collapsed ? 'justify-center px-0 w-12 mx-auto' : 'px-4',
+            isActive
+              ? 'active-sidebar-link'
+              : 'hover:bg-muted hover:text-primary',
+            'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+          )}
+          style={
+            isActive
+              ? { background: 'var(--color-primary, #0077CC)', color: 'var(--color-primary-foreground, #fff)' }
+              : { color: 'var(--color-navbar-foreground)' }
+          }
+          aria-current={isActive ? 'page' : undefined}
+        >
+          {item.icon && getNavigationIcon(item.icon)}
+          {!collapsed && <span className="truncate">{t(`sidebar.${item.name}`, formatNavigationName(item.name))}</span>}
+        </Link>
+      );
+    })}
+  </nav>
+);
 
 const UnifiedLayout = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const { theme } = useTheme();
-  const { showNotification } = useNotification();
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const { t, i18n } = useTranslation();
-  
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { showNotification } = useNotification();
+  const { mobileOpen, sidebarCollapsed, isMobile, toggleMobile, toggleCollapse } = useSidebar();
+  const isRtl = i18n.language === 'ar';
   const [mounted, setMounted] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const userFromUserSlice = useUserSelector((state) => state.user?.user);
+  const userFromUserSlice = useSelector((state) => state.user?.user);
   const user = useSelector((state) => state.auth.user) || userFromUserSlice;
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const menuItems = useMemo(() => {
     const role = user?.role?.toLowerCase();
-    return (roleFolders[role] || []).map(item => ({
-      name: item.name,
-      label: prettify(item.name),
-      path: item.path,
-      icon: getTabIcon(item.name),
-    }));
+    return (NAVIGATION_CONFIG[role] || []);
   }, [user?.role]);
 
   const handleNavigation = useCallback((path) => {
-    if (typeof path !== 'string' || isNavigating) return;
-    setIsNavigating(true);
+    if (typeof path !== 'string') return;
     router.push(path);
-    setIsNavigating(false);
-    if (mobileOpen) {
-      setMobileOpen(false);
-    }
-  }, [router, mobileOpen, isNavigating]);
-
-  const handleDrawerToggle = useCallback(() => {
-    setMobileOpen(prev => !prev);
-  }, []);
+    if (mobileOpen) toggleMobile();
+  }, [router, mobileOpen, toggleMobile]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -188,17 +220,7 @@ const UnifiedLayout = ({ children }) => {
     }
   }, [mounted, isAuthenticated, user?.role, pathname, handleNavigation]);
 
-  useEffect(() => {
-    if (!isMobile) {
-      setMobileOpen(false);
-    }
-  }, [isMobile]);
-
-  const isRtl = i18n.language === 'ar';
-
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
     <div className={cn("flex min-h-screen bg-background", isRtl ? 'flex-row-reverse' : 'flex-row')}>
@@ -216,75 +238,10 @@ const UnifiedLayout = ({ children }) => {
             [isRtl ? 'right' : 'left']: 0
           }}
         >
-          <Button
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            className={cn(
-              'absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center h-10 w-10 rounded-full bg-white dark:bg-gray-800 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
-              isRtl ? 'left-[-20px]' : 'right-[-20px]'
-            )}
-            aria-label={sidebarCollapsed ? t('aria.expandSidebar', 'Expand sidebar') : t('aria.collapseSidebar', 'Collapse sidebar')}
-          >
-          </Button>
-          <div className={cn('flex flex-col items-center py-8 border-b border-border transition-all duration-300', sidebarCollapsed ? 'px-0' : 'px-6')}>
-            <span
-              className={cn(
-                "mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-2",
-                "bg-primary/10 dark:bg-gray-800"
-              )}
-            >
-              <img
-                src="/logo(1).png"
-                alt="App Icon"
-                className="w-14 h-14 object-contain rounded-full"
-                style={{
-                  backgroundColor: 'var(--color-navbar, #f0f4f8)',
-                  filter: 'var(--logo-img-filter, none)'
-                }}
-              />
-              <style jsx>{`
-                @media (prefers-color-scheme: dark) {
-                  img[alt="App Icon"] {
-                    background-color: var(--color-navbar, #23272f);
-                  }
-                }
-              `}</style>
-            </span>
-            {!sidebarCollapsed && (
-              <span className="font-extrabold text-2xl tracking-tight text-primary dark:text-white mb-3">{t('appName', 'SafeApp')}</span>
-            )}
-            {!sidebarCollapsed && user && (
-              <div className="flex flex-row items-center gap-3 mb-6 w-full">
-                <Avatar className="h-14 w-14" src={user?.profile?.avatar} />
-                <div className="flex flex-col min-w-0">
-                  <span className="font-semibold text-base text-gray-900 dark:text-white truncate">{user?.firstName} {user?.lastName}</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{user?.email}</span>
-                </div>
-              </div>
-            )}
-            <div className="w-full h-px bg-border mb-2" />
-          </div>
+          <SidebarToggle collapsed={sidebarCollapsed} onToggle={toggleCollapse} isRtl={isRtl} t={t} />
+          <UserProfile user={user} collapsed={sidebarCollapsed} t={t} />
           <div className="flex-1 flex flex-col justify-between">
-            <nav className="px-1 py-4 space-y-2 overflow-y-auto">
-              {menuItems.map((item, idx) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={cn(
-                    'flex items-center gap-3 py-2 rounded-full font-medium transition-colors duration-200',
-                    sidebarCollapsed ? 'justify-center px-0 w-12 mx-auto' : 'px-4',
-                    pathname.startsWith(item.path)
-                      ? 'bg-[color:var(--color-primary)/.1] text-[color:var(--color-primary)]'
-                      : 'hover:bg-[color:var(--color-muted)] hover:text-[color:var(--color-primary)]',
-                    'focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary)] focus:ring-offset-2'
-                  )}
-                  style={{ color: 'var(--color-navbar-foreground)' }}
-                  aria-current={pathname.startsWith(item.path) ? 'page' : undefined}
-                >
-                  {item.icon}
-                  {!sidebarCollapsed && <span className="truncate">{t(`sidebar.${item.name}`, prettify(item.name))}</span>}
-                </Link>
-              ))}
-            </nav>
+            <NavigationMenu items={menuItems} pathname={pathname} collapsed={sidebarCollapsed} t={t} />
             <div className="flex flex-col gap-2 pb-6 px-1">
               <Link
                 href="/settings"
@@ -299,7 +256,7 @@ const UnifiedLayout = ({ children }) => {
               <Link
                 href="/logout"
                 className={cn(
-                  'flex items-center gap-3 py-2 rounded-full font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition-colors duration-200 w-full',
+                  'flex items-center gap-3 py-2 rounded-full font-medium text-red-500 hover:bg-red-400 hover:text-white dark:hover:bg-red-900 transition-colors duration-200 w-full',
                   sidebarCollapsed ? 'justify-center px-0 w-12 mx-auto' : 'px-4'
                 )}
               >
@@ -352,16 +309,16 @@ const UnifiedLayout = ({ children }) => {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} disabled={isNavigating} className="rounded-lg">
+                <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} className="rounded-lg">
                   <User className="mr-2 h-4 w-4" />
                   <span>{t('profile', 'Profile')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/settings')} disabled={isNavigating} className="rounded-lg">
+                <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-lg">
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   <span>{t('settings', 'Settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} disabled={isNavigating} className="rounded-lg text-destructive">
+                <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-destructive">
                   <LogoutIcon className="mr-2 h-4 w-4" />
                   <span>{t('logout', 'Logout')}</span>
                 </DropdownMenuItem>

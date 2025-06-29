@@ -59,7 +59,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                             <h3 className="text-lg font-bold text-foreground">{record.title}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {t('addedBy')} <span className="font-semibold">{t('doctorWithName', { name: record.provider })}</span>
+                            {t('patient.medicalRecords.addedBy')} <span className="font-semibold">{t('doctorWithName', { name: record.provider })}</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-2">
                             <div className="flex items-center gap-1">
@@ -69,7 +69,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                             {record.attachments?.length > 0 && (
                                 <div className="flex items-center gap-1">
                                     <FileText className="h-4 w-4 text-primary" />
-                                    <span>{record.attachments.length} {t('attachments')}</span>
+                                    <span>{record.attachments.length} {t('patient.medicalRecords.attachments')}</span>
                                 </div>
                             )}
                         </div>
@@ -88,7 +88,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                                 <Link href={`/patient/medical-records/${record.id}`}>
                                     <span className="flex items-center gap-2">
                                         <Eye className="h-4 w-4" />
-                                        {t('view')}
+                                        {t('patient.medicalRecords.view')}
                                     </span>
                                 </Link>
                             </Button>
@@ -99,7 +99,7 @@ const RecordCard = ({ record, onView, onDownload }) => {
                                 className="flex items-center gap-2"
                             >
                                 <Download className="h-4 w-4" />
-                                {t('download')}
+                                {t('patient.medicalRecords.download')}
                             </Button>
                         </div>
                     </div>
@@ -138,11 +138,11 @@ const MedicalRecordsPage = () => {
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
-                title={t('medicalRecords')}
-                description={t('accessAndManageYourMedicalHistoryAndDocuments')}
+                title={t('patient.medicalRecords.title', 'Medical Records')}
+                description={t('patient.medicalRecords.accessAndManageYourMedicalHistoryAndDocuments')}
                 breadcrumbs={[
                     { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
-                    { label: t('medicalRecords'), href: '/patient/medical-records' }
+                    { label: t('patient.medicalRecords.title', 'Medical Records'), href: '/patient/medical-records' }
                 ]}
             />
 
@@ -151,7 +151,7 @@ const MedicalRecordsPage = () => {
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder={t('searchRecordsByTitleOrProvider')}
+                            placeholder={t('patient.medicalRecords.searchPlaceholder', 'Search records by title or provider')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9 border-border focus:border-primary focus:ring-primary/20"
@@ -163,34 +163,34 @@ const MedicalRecordsPage = () => {
                                 <span>
                                     {(() => {
                                         switch (typeFilter) {
-                                            case 'lab result': return t('labResults');
-                                            case 'prescription': return t('prescriptions');
-                                            case 'imaging': return t('imaging');
-                                            case 'note': return t('notes');
-                                            default: return t('allTypes');
+                                            case 'lab result': return t('patient.medicalRecords.labResults');
+                                            case 'prescription': return t('patient.medicalRecords.prescriptions');
+                                            case 'imaging': return t('patient.medicalRecords.imaging');
+                                            case 'note': return t('patient.medicalRecords.notes');
+                                            default: return t('patient.medicalRecords.allTypes');
                                         }
                                     })()}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setTypeFilter('all')}>{t('allTypes')}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('lab result')}>{t('labResults')}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('prescription')}>{t('prescriptions')}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('imaging')}>{t('imaging')}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTypeFilter('note')}>{t('notes')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('all')}>{t('patient.medicalRecords.allTypes')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('lab result')}>{t('patient.medicalRecords.labResults')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('prescription')}>{t('patient.medicalRecords.prescriptions')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('imaging')}>{t('patient.medicalRecords.imaging')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTypeFilter('note')}>{t('patient.medicalRecords.notes')}</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
                             <Button variant="outline" className="w-[180px] justify-between">
                                 <span>
-                                    {dateFilter === 'all' ? t('allTime') : dateFilter}
+                                    {dateFilter === 'all' ? t('patient.medicalRecords.allTime') : dateFilter}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setDateFilter('all')}>{t('allTime')}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDateFilter('all')}>{t('patient.medicalRecords.allTime')}</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2024')}>2024</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2023')}>2023</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setDateFilter('2022')}>2022</DropdownMenuItem>
@@ -201,7 +201,7 @@ const MedicalRecordsPage = () => {
                     <Link href="/patient/medical-records/upload">
                         <span className="flex items-center gap-2">
                             <Plus className="h-4 w-4 mr-2" />
-                            Upload New Record
+                            {t('patient.medicalRecords.upload', 'Upload New Record')}
                         </span>
                     </Link>
                 </Button>
@@ -211,11 +211,11 @@ const MedicalRecordsPage = () => {
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="all">All Records</TabsTrigger>
-                    <TabsTrigger value="lab result">Lab Results</TabsTrigger>
-                    <TabsTrigger value="prescription">Prescriptions</TabsTrigger>
-                    <TabsTrigger value="imaging">Imaging</TabsTrigger>
-                    <TabsTrigger value="note">Notes</TabsTrigger>
+                    <TabsTrigger value="all">{t('patient.medicalRecords.allRecords', 'All Records')}</TabsTrigger>
+                    <TabsTrigger value="lab result">{t('patient.medicalRecords.labResults', 'Lab Results')}</TabsTrigger>
+                    <TabsTrigger value="prescription">{t('patient.medicalRecords.prescriptions', 'Prescriptions')}</TabsTrigger>
+                    <TabsTrigger value="imaging">{t('patient.medicalRecords.imaging', 'Imaging')}</TabsTrigger>
+                    <TabsTrigger value="note">{t('patient.medicalRecords.notes', 'Notes')}</TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
                     <div>
@@ -232,17 +232,17 @@ const MedicalRecordsPage = () => {
                             ) : (
                                 <div className="text-center py-12 bg-card rounded-lg shadow-sm">
                                     <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
-                                    <h3 className="text-xl font-semibold mb-3 text-foreground">No Medical Records Found</h3>
+                                    <h3 className="text-xl font-semibold mb-3 text-foreground">{t('patient.medicalRecords.noRecordsFound', 'No Medical Records Found')}</h3>
                                     <p className="text-muted-foreground mb-6">
                                         {searchQuery || typeFilter !== 'all' || dateFilter !== 'all'
-                                            ? 'Try adjusting your search or filters to find records.'
-                                            : 'You don\'t have any medical records here yet. Upload your first document!'}
+                                            ? t('patient.medicalRecords.tryAdjusting', 'Try adjusting your search or filters to find records.')
+                                            : t('patient.medicalRecords.noRecordsYet', "You don't have any medical records here yet. Upload your first document!")}
                                     </p>
                                     <Button >
                                         <Link href="/patient/medical-records/upload">
                                             <span className="flex items-center gap-2">
                                                 <Plus className="h-4 w-4 mr-2" />
-                                                Upload New Record
+                                                {t('patient.medicalRecords.upload', 'Upload New Record')}
                                             </span>
                                         </Link>
                                     </Button>

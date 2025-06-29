@@ -94,7 +94,7 @@ const AppointmentsPage = () => {
     const [modalType, setModalType] = useState('new');
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-    const appointments = [
+    const [appointments, setAppointments] = useState([
         {
             id: 1,
             title: t('patient.appointments.annualCheckup', 'Annual Checkup'),
@@ -125,7 +125,7 @@ const AppointmentsPage = () => {
             location: t('patient.appointments.phoneConsultation', 'Phone Consultation'),
             status: 'completed'
         }
-    ];
+    ]);
 
     const filteredAppointments = appointments.filter(appointment => {
         const matchesSearch = appointment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -151,77 +151,122 @@ const AppointmentsPage = () => {
     };
 
     const handleSubmitAppointment = (data) => {
+        setAppointments(prev => [
+            ...prev,
+            {
+                ...data,
+                id: Date.now(),
+                title: data.title || t('patient.appointments.newAppointment', 'New Appointment'),
+                doctor: data.doctorName || 'Sarah Johnson',
+                date: data.date || new Date().toISOString().slice(0, 10),
+                time: data.time || '',
+                type: data.type || '',
+                location: data.location || '',
+                status: 'upcoming',
+            }
+        ]);
         handleCloseModal();
     };
 
     return (
-        <div className="flex flex-col space-y-6">
-            <PageHeader
-                title={t('patient.appointments.title')}
-                description={t('patient.appointments.description')}
-                breadcrumbs={[
-                    { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
-                    { label: t('patient.appointments.title'), href: '/patient/appointments' }
-                ]}
-                actions={
-                    <Dialog open={showModal} onOpenChange={setShowModal}>
-                        <DialogTrigger >
-                            <Button onClick={handleNewAppointment}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                {t('patient.appointments.new')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-xl w-full">
-                            <AppointmentForm
-                                open={showModal}
-                                onClose={handleCloseModal}
-                                onSubmit={handleSubmitAppointment}
-                                patient={{ id: 1, name: 'John Doe' }}
-                                doctor={selectedAppointment ? { id: 1, name: selectedAppointment.doctor } : { id: 1, name: 'Sarah Johnson' }}
-                                initialData={modalType === 'reschedule' ? selectedAppointment : null}
-                                isReschedule={modalType === 'reschedule'}
-                            />
-                        </DialogContent>
-                    </Dialog>
-                }
+      <div className="flex flex-col space-y-6">
+        <PageHeader
+          title={t("patient.appointments.title")}
+          description={t("patient.appointments.description")}
+          breadcrumbs={[
+            {
+              label: t("patient.dashboard.breadcrumb"),
+              href: "/patient/dashboard",
+            },
+            {
+              label: t("patient.appointments.title"),
+              href: "/patient/appointments",
+            },
+          ]}
+          actions={
+            <Dialog open={showModal} onOpenChange={setShowModal}>
+              <DialogTrigger>
+                <Button
+                  className="flex items-center gap-2 bg-primary text-white rounded-2xl"
+                  onClick={handleNewAppointment}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("patient.appointments.new")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl w-full">
+                <AppointmentForm
+                  open={showModal}
+                  onClose={handleCloseModal}
+                  onSubmit={handleSubmitAppointment}
+                  patient={{ id: 1, name: "John Doe" }}
+                  doctor={
+                    selectedAppointment
+                      ? { id: 1, name: selectedAppointment.doctor }
+                      : { id: 1, name: "Sarah Johnson" }
+                  }
+                  initialData={
+                    modalType === "reschedule" ? selectedAppointment : null
+                  }
+                  isReschedule={modalType === "reschedule"}
+                />
+              </DialogContent>
+            </Dialog>
+          }
+        />
+
+        <div className="flex flex-col md:flex-row gap-4 items-start  md:items-center justify-between">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("patient.appointments.searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 rounded-2xl"
             />
-
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        placeholder={t('patient.appointments.searchPlaceholder')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAppointments.length > 0 ? (
-                    filteredAppointments.map((appointment) => (
-                        <Dialog key={appointment.id} open={showModal && selectedAppointment?.id === appointment.id && modalType === 'reschedule'} onOpenChange={setShowModal}>
-                            <AppointmentCard appointment={appointment} onReschedule={handleReschedule} />
-                        </Dialog>
-                    ))
-                ) : (
-                    <div className="text-center py-12 bg-card rounded-lg shadow-sm col-span-full">
-                        <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
-                        <h3 className="text-xl font-semibold mb-3">{t('patient.appointments.noAppointments')}</h3>
-                        <p className="text-muted-foreground mb-6">
-                            {searchQuery
-                                ? t('patient.appointments.noAppointmentsSearch')
-                                : t('patient.appointments.noAppointmentsDefault')}
-                        </p>
-                        <Button onClick={handleNewAppointment}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            {t('patient.appointments.scheduleNew')}
-                        </Button>
-                    </div>
-                )}
-            </div>
+          </div>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAppointments.length > 0 ? (
+            filteredAppointments.map((appointment) => (
+              <Dialog
+                key={appointment.id}
+                open={
+                  showModal &&
+                  selectedAppointment?.id === appointment.id &&
+                  modalType === "reschedule"
+                }
+                onOpenChange={setShowModal}
+              >
+                <AppointmentCard
+                  appointment={appointment}
+                  onReschedule={handleReschedule}
+                />
+              </Dialog>
+            ))
+          ) : (
+            <div className="text-center py-12 bg-card rounded-lg shadow-sm col-span-full">
+              <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
+              <h3 className="text-xl font-semibold mb-3">
+                {t("patient.appointments.noAppointments")}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {searchQuery
+                  ? t("patient.appointments.noAppointmentsSearch")
+                  : t("patient.appointments.noAppointmentsDefault")}
+              </p>
+              <Button
+                onClick={handleNewAppointment}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t("patient.appointments.scheduleNew")}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
     );
 };
 
