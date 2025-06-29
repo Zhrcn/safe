@@ -15,7 +15,7 @@ const Pharmacist = require('../models/Pharmacist');
 
 console.log('Environment variables:', {
     NODE_ENV: process.env.NODE_ENV,
-    MONGO_URI: process.env.MONGO_URI,
+    MONGO_URI: "mongodb+srv://muhammadzouherkanaan:Zouher123@cluster0.jofcmme.mongodb.net/SAFE-Medical_Health_Platform?retryWrites=true&w=majority&appName=Cluster0",
     PORT: process.env.PORT
 });
 
@@ -262,16 +262,9 @@ const seedDatabase = async () => {
       await Consultation.create({
         patient: patient._id,
         doctor: doctor.user._id,
-        reason: 'Follow-up consultation',
-        preferredTime: '09:00',
-        status: 'In Progress',
-        messages: [
-          {
-            sender: patient.user._id,
-            content: 'Hello, I need a follow-up consultation.',
-            timestamp: new Date()
-          }
-        ]
+        question: 'I have been experiencing persistent headaches for the past week. What could be the cause?',
+        answer: 'Headaches can be caused by various factors including stress, dehydration, or underlying medical conditions. I recommend scheduling an appointment for a thorough examination.',
+        status: 'Answered'
       });
     }
     const medicines = [
