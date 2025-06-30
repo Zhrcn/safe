@@ -9,12 +9,22 @@ const logRequest = (request) => {
         headers: request.headers,
         body: request.body
     });
-}; 
+};
+
+// Get the appropriate API URL based on environment
+const getApiUrl = () => {
+    if (typeof window !== 'undefined') {
+        // Client-side: use environment variable or fallback
+        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    }
+    // Server-side: default to localhost
+    return 'http://localhost:5001';
+};
 
 export const api = createApi({
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
+        baseUrl: getApiUrl(),
         prepareHeaders: (headers) => {
             const token = localStorage.getItem('safe_auth_token');
             console.log('Current token in prepareHeaders:', token);
