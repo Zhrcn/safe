@@ -67,7 +67,7 @@ export function NotificationProvider({ children }) {
             >
                 <div
                     className={cn(
-                        'flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg',
+                        'flex items-center gap-2 px-4 py-3 rounded-2xl shadow-lg',
                         severityStyles[notification.severity]
                     )}
                 >

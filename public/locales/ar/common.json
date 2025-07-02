@@ -18,7 +18,9 @@
     "twitter": "Twitter",
     "noAccount": "ليس لديك حساب؟",
     "error": "فشل تسجيل الدخول",
-    "invalid": "البريد الإلكتروني أو كلمة المرور غير صالحة"
+    "invalid": "البريد الإلكتروني أو كلمة المرور غير صالحة",
+    "google": "جوجل",
+    "facebook": "فيسبوك"
   },
   "register": "إنشاء حساب",
   "logout": "تسجيل الخروج",
@@ -96,7 +98,8 @@
       "phone": "هاتف",
       "mainClinicRoom101": "العيادة الرئيسية، غرفة 101",
       "virtualMeeting": "اجتماع افتراضي",
-      "phoneConsultation": "استشارة هاتفية"
+      "phoneConsultation": "استشارة هاتفية",
+      "scheduled": "مجدولة"
     },
     "consultations": {
       "title": "الاستشارات",
@@ -127,6 +130,11 @@
     "dashboard": {
       "heartRate": "معدل ضربات القلب",
       "bloodPressure": "ضغط الدم",
+      "temperature": "درجة الحرارة",
+      "respiratoryRate": "معدل التنفس",
+      "bmi": "مؤشر كتلة الجسم (BMI)",
+      "oxygenSaturation": "تشبع الأكسجين",
+      "noData": "لا توجد بيانات",
       "medicationAdherence": "الالتزام بالدواء",
       "stepsToday": "الخطوات اليوم",
       "adherence": "الالتزام",
@@ -152,7 +160,8 @@
       "quickActions": "إجراءات سريعة",
       "upcomingAppointments": "المواعيد القادمة",
       "recentActivity": "النشاط الأخير",
-      "noRecentActivity": "لا يوجد نشاط حديث بعد."
+      "noRecentActivity": "لا يوجد نشاط حديث بعد.",
+      "noUpcomingAppointments": "لا توجد مواعيد قادمة"
     },
     "medications": {
       "days": {
@@ -429,7 +438,7 @@
       "noAppointments": "لا يوجد مواعيد",
       "appointmentsOverview": "نبذة عن المواعيد",
       "patientDistribution": "توزيع المرضى",
-      "mon": "الإثنين",
+      "mon": "الاثنين",
       "tue": "الثلاثاء",
       "wed": "الأربعاء",
       "thu": "الخميس",
@@ -439,8 +448,8 @@
       "appointments": "المواعيد",
       "new": "جديد",
       "followUp": "متابعة",
-      "emergency": "طارئة",
-      "regular": "عادية",
+      "emergency": "طارئ",
+      "regular": "منتظم",
       "status": {
         "scheduled": "مجدولة",
         "completed": "مكتملة",
@@ -451,7 +460,16 @@
     "analytics": {
       "title": "تحليلات المرضى",
       "description": "عرض تحليلات وإحصائيات عن مرضاك، المواعيد، والوصفات.",
-      "loading": "جارٍ تحميل التحليلات…"
+      "loading": "جارٍ تحميل التحليلات…",
+      "topConditions": "أكثر الحالات شيوعًا",
+      "appointments": "المواعيد",
+      "condition": {
+        "diabetes": "داء السكري",
+        "hypertension": "ارتفاع ضغط الدم",
+        "asthma": "الربو",
+        "heart disease": "أمراض القلب",
+        "other": "أخرى"
+      }
     },
     "appointments": {
       "title": "المواعيد",
@@ -471,40 +489,36 @@
     },
     "messaging": {
       "title": "الرسائل",
-      "startNewChat": "ابدأ دردشة جديدة (غير متوفرة)",
+      "startNewChat": "بدء محادثة جديدة (غير مفعلة)",
       "noChats": "لا توجد محادثات",
-      "send": "إرسال"
+      "send": "إرسال",
+      "selectConversation": "اختر محادثة لبدء الدردشة."
     },
     "profile": {
       "title": "ملف الطبيب",
-      "description": "قم بإدارة معلوماتك الشخصية، تعليمك، وإنجازاتك المهنية."
+      "description": "قم بإدارة معلوماتك الشخصية والتعليمية وإنجازاتك المهنية."
     },
     "medicine": {
-      "title": "إدارة الأدوية",
-      "add": "إضافة دواء جديد",
-      "edit": "تحرير الدواء",
-      "delete": "حذف الدواء",
-      "name": "اسم الدواء",
-      "dosage": "الجرعة",
-      "instructions": "تعليمات"
+      "title": "توفر الأدوية",
+      "description": "تحقق من توفر الأدوية في الصيدليات الشريكة وابحث عن البدائل عند الحاجة."
     },
     "patients": {
       "title": "إدارة المرضى",
       "addNew": "إضافة مريض جديد",
-      "searchPlaceholder": "ابحث عن المرضى بالاسم أو الحالة أو الرقم...",  
+      "searchPlaceholder": "ابحث عن المرضى بالاسم أو الحالة أو الرقم...",
       "advancedFilters": "فلاتر متقدمة",
-      "all": "جميع المرضى ({{count}})",
-      "active": "النشطون ({{count}})",
-      "urgent": "العاجلون ({{count}})",
-      "inactive": "غير النشطين ({{count}})",
-      "noPatients": "لم يُعثر على مرضى",
-      "noSearchResults": "جرب مصطلح بحث مختلف أو حذف الفلاتر",
-      "addPrompt": "أضف مريضًا جديدًا للبدء",
-      "loadError": "فشل تحميل المرضى"
+      "all": "كل المرضى ({{count}})",
+      "active": "نشط ({{count}})",
+      "urgent": "طارئ ({{count}})",
+      "inactive": "غير نشط ({{count}})",
+      "loadError": "فشل في تحميل المرضى",
+      "noPatients": "لم يتم العثور على مرضى",
+      "noSearchResults": "جرب مصطلح بحث مختلف أو أزل الفلاتر",
+      "addPrompt": "أضف مريضًا جديدًا للبدء"
     },
     "patientDetail": {
-      "notFound": "المريض غير موجود",  
-      "newPrescription": "وصفة طبية جديدة",
+      "notFound": "المريض غير موجود",
+      "newPrescription": "وصفة جديدة",
       "cancel": "إلغاء",
       "createPrescription": "إنشاء وصفة",
       "medication": "الدواء",
@@ -513,31 +527,20 @@
       "duration": "المدة",
       "startDate": "تاريخ البدء",
       "endDate": "تاريخ الانتهاء",
-      "instructions": "تعليمات",
-      "notes": "ملاحظات إضافية",
+      "instructions": "التعليمات",
+      "notes": "ملاحظات",
       "medicationRequired": "الدواء مطلوب",
       "dosageRequired": "الجرعة مطلوبة",
       "frequencyRequired": "التكرار مطلوب",
       "durationRequired": "المدة مطلوبة",
       "startDateRequired": "تاريخ البدء مطلوب",
       "endDateRequired": "تاريخ الانتهاء مطلوب",
-      "personalInfo": "معلومات شخصية",
-      "medicalHistory": "التاريخ الطبي",
-      "medications": "الأدوية",
-      "appointments": "المواعيد",
-      "insurance": "التأمين",
-      "emergencyContact": "جهة الاتصال للطوارئ",
-      "consultations": "الاستشارات",
-      "question": "السؤال",
-      "answer": "الإجابة",
-      "submit": "إرسال",
-      "chat": "دردشة",
-      "status": "الحالة",
-      "answered": "تم الرد",
-      "pending": "قيد الانتظار",
-      "prescriptionCreated": "تم إنشاء الوصفة بنجاح",
-      "answerSubmitted": "تم إرسال الإجابة!",
-      "noConsultations": "لا توجد استشارات لهذا المريض."
+      "selectFrequency": "اختر التكرار",
+      "onceDaily": "مرة يوميًا",
+      "twiceDaily": "مرتين يوميًا",
+      "thriceDaily": "ثلاث مرات يوميًا",
+      "fourTimesDaily": "أربع مرات يوميًا",
+      "asNeeded": "عند الحاجة"
     }
   },
   "pharmacist": "الصيدلي",
@@ -673,7 +676,10 @@
   },
   "sidebar": {
     "dashboard": "لوحة التحكم",
+    "patients": "المرضى",
     "appointments": "المواعيد",
+    "analytics": "تحليلات",
+    "medicine": "الأدوية",
     "consultations": "الاستشارات",
     "medications": "الأدوية",
     "messaging": "الرسائل",
@@ -750,5 +756,68 @@
   "messages": {
     "title": "الرسائل",
     "chat_securely": "تواصل بأمان مع فريق الرعاية الصحية الخاص بك."
-  }
+  },
+  "admin": {
+    "dashboard": {
+      "loading": "جارٍ تحميل بيانات لوحة التحكم...",
+      "totalUsers": "إجمالي المستخدمين",
+      "appointments": "المواعيد",
+      "prescriptions": "الوصفات الطبية",
+      "systemHealth": "حالة النظام"
+    },
+    "users": {
+      "title": "إدارة المستخدمين",
+      "description": "إدارة المستخدمين في النظام (أطباء، مرضى، صيادلة، مدراء).",
+      "usersList": "قائمة المستخدمين",
+      "searchPlaceholder": "ابحث عن المستخدمين",
+      "loading": "جارٍ تحميل المستخدمين..."
+    },
+    "settings": {
+      "title": "إعدادات المدير",
+      "description": "إدارة إعدادات النظام والتكوينات."
+    },
+    "support": {
+      "title": "الدعم وإدارة التذاكر",
+      "ticketId": "رقم التذكرة",
+      "user": "المستخدم",
+      "subject": "الموضوع",
+      "status": "الحالة",
+      "createdAt": "تاريخ الإنشاء",
+      "actions": "الإجراءات",
+      "noTickets": "لا توجد تذاكر.",
+      "view": "عرض"
+    },
+    "reports": {
+      "title": "التقارير والتحليلات",
+      "userActivity": "تقرير نشاط المستخدم",
+      "systemUsage": "تقرير استخدام النظام",
+      "compliance": "تقرير الامتثال",
+      "download": "تنزيل",
+      "comingSoon": "قريبًا"
+    },
+    "logs": {
+      "title": "سجلات النظام والتدقيق",
+      "searchPlaceholder": "ابحث في السجلات...",
+      "timestamp": "الوقت",
+      "user": "المستخدم",
+      "action": "الإجراء",
+      "details": "التفاصيل",
+      "ip": "IP",
+      "noLogs": "لا توجد سجلات."
+    },
+    "notifications": {
+      "loading": "جارٍ تحميل الإشعارات..."
+    }
+  },
+  "loading": "جاري التحميل...",
+  "error": "حدث خطأ",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "close": "إغلاق",
+  "submit": "إرسال",
+  "confirm": "تأكيد",
+  "success": "تم بنجاح",
+  "failed": "فشل"
 }

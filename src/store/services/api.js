@@ -2,23 +2,11 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { getToken } from '@/utils/tokenUtils';
 import { handleApiError } from '@/utils/errorHandling';
 
-const logRequest = (request) => {
-    console.log('API Request:', {
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        body: request.body
-    });
-};
-
-// Get the appropriate API URL based on environment
 const getApiUrl = () => {
     if (typeof window !== 'undefined') {
-        // Client-side: use environment variable or fallback
-        return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+        return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001') + '/api/v1';
     }
-    // Server-side: default to localhost
-    return 'http://localhost:5001';
+    return 'http://localhost:5001/api/v1';
 };
 
 export const api = createApi({
@@ -27,16 +15,13 @@ export const api = createApi({
         baseUrl: getApiUrl(),
         prepareHeaders: (headers) => {
             const token = localStorage.getItem('safe_auth_token');
-            console.log('Current token in prepareHeaders:', token);
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
             headers.set('Content-Type', 'application/json');
             headers.set('Accept', 'application/json');
-            // Set origin dynamically based on environment
             const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
             headers.set('Origin', origin);
-            console.log('Final headers:', headers);
             return headers;
         },
         credentials: 'include',

@@ -1,46 +1,46 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { consultationApi } from '@/store/services/patient/consultationApi';
-const initialState = {
-    consultations: [],
-    loading: false,
-    error: null,
-};
+import { getConsultations, createConsultation, answerConsultation } from '@/store/services/patient/consultationApi';
+
 export const fetchConsultations = createAsyncThunk(
     'consultations/fetchConsultations',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await consultationApi.getConsultations();
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || error.message);
+            return await getConsultations();
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
         }
     }
 );
-export const createConsultation = createAsyncThunk(
-    'consultations/createConsultation',
+
+export const addConsultation = createAsyncThunk(
+    'consultations/addConsultation',
     async ({ doctorId, question }, { rejectWithValue }) => {
         try {
-            const response = await consultationApi.createConsultation({ doctorId, question });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || error.message);
+            return await createConsultation(doctorId, question);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
         }
     }
 );
-export const answerConsultation = createAsyncThunk(
-    'consultations/answerConsultation',
+
+export const replyConsultation = createAsyncThunk(
+    'consultations/replyConsultation',
     async ({ id, answer }, { rejectWithValue }) => {
         try {
-            const response = await consultationApi.answerConsultation({ id, answer });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data || error.message);
+            return await answerConsultation(id, answer);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
         }
     }
 );
+
 const consultationsSlice = createSlice({
     name: 'consultations',
-    initialState,
+    initialState: {
+        consultations: [],
+        loading: false,
+        error: null,
+    },
     reducers: {
         clearError: (state) => {
             state.error = null;
@@ -60,36 +60,15 @@ const consultationsSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(createConsultation.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(createConsultation.fulfilled, (state, action) => {
-                state.loading = false;
+            .addCase(addConsultation.fulfilled, (state, action) => {
                 state.consultations.push(action.payload);
             })
-            .addCase(createConsultation.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            .addCase(answerConsultation.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(answerConsultation.fulfilled, (state, action) => {
-                state.loading = false;
-                const index = state.consultations.findIndex(
-                    (consultation) => consultation.id === action.payload.id
-                );
-                if (index !== -1) {
-                    state.consultations[index] = action.payload;
-                }
-            })
-            .addCase(answerConsultation.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
+            .addCase(replyConsultation.fulfilled, (state, action) => {
+                const idx = state.consultations.findIndex(c => c.id === action.payload.id);
+                if (idx !== -1) state.consultations[idx] = action.payload;
             });
     },
 });
+
 export const { clearError } = consultationsSlice.actions;
 export default consultationsSlice.reducer; 

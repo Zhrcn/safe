@@ -324,207 +324,186 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div className="p-6 sm:p-8 bg-background min-h-screen text-foreground flex justify-center">
-      <div className="w-full max-w-screen-xl">
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+    <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-h-screen">
+      <div className="flex flex-col gap-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-card-foreground drop-shadow-sm">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-card-foreground drop-shadow-sm">
               {t('doctor.dashboard.title', 'Dashboard')}
             </h1>
-            <p className="text-lg mt-1 text-muted-foreground">
+            <p className="text-base sm:text-lg mt-1 text-muted-foreground">
               {t('doctor.dashboard.welcome', 'Welcome back')}, <span className="font-semibold text-primary">{doctorName}</span>
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 md:gap-8 mb-10">
-          <div className="col-span-12 md:col-span-5 flex flex-col">
-            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-card transition-all hover:shadow-2xl focus-within:shadow-2xl">
-              <CardHeader className="flex flex-row items-center justify-between mb-2 p-6 pb-2">
-                <CardTitle className="text-2xl font-bold text-card-foreground">
-                  {t('doctor.dashboard.recentPatients', 'Recent Patients')}
-                </CardTitle>
-                <Link
-                  href="/doctor/patients"
-                  className="inline-flex items-center gap-1 text-primary hover:underline text-base font-semibold transition-colors hover:text-accent"
-                >
-                  <span>{t('doctor.dashboard.viewAll', 'View All')}</span>
-                  <ChevronRight size={20} />
-                </Link>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="border-b mb-4 border-muted" />
-                {recentPatients.length === 0 ? (
-                  <div className="py-10 text-center text-muted-foreground">
-                    <Users size={72} className="mx-auto mb-4 opacity-40" />
-                    <p className="text-lg">{t('doctor.dashboard.noRecentPatients', 'No recent patients found')}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
+          <Card className="flex flex-col min-w-0" noPadding>
+            <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+              <CardTitle className="text-lg sm:text-xl font-bold text-card-foreground">
+                {t('doctor.dashboard.recentPatients', 'Recent Patients')}
+              </CardTitle>
+              <Link
+                href="/doctor/patients"
+                className="inline-flex items-center gap-1 text-primary hover:underline text-base font-semibold transition-colors hover:text-accent"
+              >
+                <span>{t('doctor.dashboard.viewAll', 'View All')}</span>
+                <ChevronRight size={20} />
+              </Link>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="border-b mb-4 border-muted" />
+              {recentPatients.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <div className="mx-auto mb-4 opacity-40 w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center">
+                    <Users width="100%" height="100%" />
                   </div>
-                ) : (
-                  <div className="flex flex-col gap-6 flex-grow">
-                    {recentPatients.map((patient) => (
-                      <div
-                        key={patient._id}
-                        className="flex items-center gap-5 group transition hover:bg-primary/5 rounded-xl px-2 py-2"
-                      >
-                        <div
-                          className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg group-hover:scale-105 transition-transform bg-primary text-card border-4 border-card"
-                        >
-                          {patient.firstName?.[0]}
-                          {patient.lastName?.[0]}
-                        </div>
-                        <div className="flex-grow">
-                          <p className="text-lg font-semibold text-card-foreground">
-                            {patient.firstName} {patient.lastName}
-                          </p>
-                          <p className="text-sm mt-1 text-muted-foreground">
-                            {t('doctor.dashboard.lastVisit', 'Last visit')}: {' '}
-                            {patient.lastVisit
-                              ? new Date(patient.lastVisit).toLocaleDateString()
-                              : t('doctor.dashboard.notAvailable', 'N/A')}
-                          </p>
-                        </div>
-                        <Link
-                          href={`/doctor/patients/${patient._id}`}
-                          className="inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-semibold border-0 transition-colors shadow-md bg-primary text-card hover:bg-accent focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          {t('doctor.dashboard.view', 'View')}
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="col-span-12 md:col-span-4 flex flex-col">
-            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
-              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
-                  {t('doctor.dashboard.quickActions', 'Quick Actions')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 gap-4 md:gap-5 flex-grow">
-                  {quickActions.map((action) => (
-                    <Link
-                      key={action.href}
-                      href={action.href}
-                      className="group flex flex-col items-center justify-center gap-3 rounded-2xl h-32 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl"
-                      tabIndex={0}
+                  <p className="text-base sm:text-lg">{t('doctor.dashboard.noRecentPatients', 'No recent patients found')}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {recentPatients.map((patient) => (
+                    <div
+                      key={patient._id}
+                      className="flex flex-col sm:flex-row items-center gap-3 group hover:bg-primary/5 rounded-xl px-2 py-2 transition"
                     >
-                      <div
-                        className="flex items-center justify-center w-14 h-14 rounded-xl mb-1 transition-all shadow bg-primary/10 group-hover:bg-primary/20 group-focus:bg-primary/20 text-primary"
-                      >
-                        {action.icon}
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg group-hover:scale-105 transition-transform bg-primary text-card border-4 border-card">
+                        {patient.firstName?.[0]}{patient.lastName?.[0]}
                       </div>
-                      <span className="text-lg font-bold text-card-foreground group-hover:text-primary group-focus:text-primary transition-colors">{action.label}</span>
-                    </Link>
+                      <div className="flex-grow text-center sm:text-left">
+                        <p className="text-base sm:text-lg font-semibold text-card-foreground">
+                          {patient.firstName} {patient.lastName}
+                        </p>
+                        <p className="text-xs sm:text-sm mt-1 text-muted-foreground">
+                          {t('doctor.dashboard.lastVisit', 'Last visit')}: {' '}
+                          {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : t('doctor.dashboard.notAvailable', 'N/A')}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/doctor/patients/${patient._id}`}
+                        className="inline-flex items-center justify-center rounded-2xl px-3 sm:px-5 py-2 text-sm sm:text-base font-semibold border-0 transition-colors shadow-md bg-primary text-card hover:bg-accent focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary mt-2 sm:mt-0"
+                      >
+                        {t('doctor.dashboard.view', 'View')}
+                      </Link>
+                    </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div className="col-span-12 md:col-span-3 flex flex-col">
-            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-card p-0 transition-all hover:shadow-2xl focus-within:shadow-2xl">
-              <CardContent className="p-0">
-                <div className="p-6">
-                  <label
-                    className="block mb-3 font-semibold text-lg text-card-foreground"
-                    htmlFor="dashboard-calendar"
+          <Card className="flex flex-col min-w-0" noPadding>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-lg sm:text-xl font-bold mb-2 text-card-foreground">
+                {t('doctor.dashboard.quickActions', 'Quick Actions')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {quickActions.map((action) => (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="group flex flex-row items-center gap-3 rounded-2xl p-3 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl"
+                    tabIndex={0}
                   >
-                    {t('doctor.dashboard.calendar', 'Calendar')}
-                  </label>
-                  <Calendar
-                    value={selectedDate}
-                    onChange={setSelectedDate}
-                    className="calendar-bg modern-calendar"
-                    tileClassName={({ date }) => {
-                      const isToday =
-                        date.toDateString() === new Date().toDateString();
-                      const isSelected =
-                        selectedDate &&
-                        date.toDateString() === selectedDate.toDateString();
-                      if (isSelected) return 'calendar-selected';
-                      if (isToday) return 'calendar-today';
-                      return null;
-                    }}
-                  />
-                  <div className="mt-6">
-                    <div className="font-semibold mb-2 text-base text-card-foreground">
-                      {t('doctor.dashboard.appointmentsOn', 'Appointments on')} {selectedDate.toLocaleDateString()}:
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl transition-all shadow bg-primary/10 group-hover:bg-primary/20 group-focus:bg-primary/20 text-primary">
+                      {action.icon}
                     </div>
-                    {appointmentsForSelectedDate.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">
-                        {t('doctor.dashboard.noAppointments', 'No appointments')}
-                      </div>
-                    ) : (
-                      <ul className="space-y-3">
-                        {appointmentsForSelectedDate.map((app) => (
-                          <li
-                            key={app.id}
-                            className="flex items-center gap-3 text-base rounded-lg px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors"
-                          >
-                            <span className="font-semibold text-primary">{app.time}</span>
-                            <span className="text-muted-foreground">-</span>
-                            <span className="text-card-foreground">
-                              {app.patient.firstName} {app.patient.lastName}
-                            </span>
-                            <span
-                              className="ml-auto px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20"
-                            >
-                              {t('doctor.dashboard.status.' + app.status, app.status)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                    <span className="text-base font-bold text-card-foreground group-hover:text-primary group-focus:text-primary transition-colors">{action.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="flex flex-col min-w-0" noPadding>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-lg sm:text-xl font-bold mb-2 text-card-foreground">
+                {t('doctor.dashboard.calendar', 'Calendar')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="overflow-x-auto">
+                <Calendar
+                  value={selectedDate}
+                  onChange={setSelectedDate}
+                  className="calendar-bg modern-calendar min-w-[260px]"
+                  tileClassName={({ date }) => {
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
+                    if (isSelected) return 'calendar-selected';
+                    if (isToday) return 'calendar-today';
+                    return null;
+                  }}
+                />
+              </div>
+              <div className="mt-4">
+                <div className="font-semibold mb-1 text-sm text-card-foreground">
+                  {t('doctor.dashboard.appointmentsOn', 'Appointments on')} {selectedDate.toLocaleDateString()}:
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                {appointmentsForSelectedDate.length === 0 ? (
+                  <div className="text-xs text-muted-foreground">
+                    {t('doctor.dashboard.noAppointments', 'No appointments')}
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {appointmentsForSelectedDate.map((app) => (
+                      <li
+                        key={app.id}
+                        className="flex flex-col sm:flex-row items-center gap-2 text-sm rounded-2xl px-2 py-2 bg-primary/5 hover:bg-primary/10 transition-colors"
+                      >
+                        <span className="font-semibold text-primary">{app.time}</span>
+                        <span className="text-muted-foreground">-</span>
+                        <span className="text-card-foreground">
+                          {app.patient.firstName} {app.patient.lastName}
+                        </span>
+                        <span className="sm:ml-auto px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20">
+                          {t('doctor.dashboard.status.' + app.status, app.status)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 md:gap-8">
-          <div className="col-span-12 md:col-span-7 flex flex-col">
-            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
-              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
-                  {t('doctor.dashboard.appointmentsOverview', 'Appointments Overview')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex-grow min-h-0 h-72">
-                  <Bar
-                    key={mode + '-' + chartKey}
-                    data={chartData.appointments}
-                    options={chartOptions}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-y-6 gap-x-6 mt-2">
+          <Card className="flex flex-col min-w-0 col-span-1 lg:col-span-2" noPadding>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-lg sm:text-xl font-bold mb-2 text-card-foreground">
+                {t('doctor.dashboard.appointmentsOverview', 'Appointments Overview')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="flex-grow min-h-[180px] h-[220px] sm:h-72">
+                <Bar
+                  key={mode + '-' + chartKey}
+                  data={chartData.appointments}
+                  options={chartOptions}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="col-span-12 md:col-span-5 flex flex-col">
-            <Card className="flex-grow rounded-3xl shadow-xl border-0 bg-gradient-to-br from-card to-primary/10 transition-all hover:shadow-2xl focus-within:shadow-2xl">
-              <CardHeader className="p-6 pb-2">
-                <CardTitle className="text-2xl font-bold mb-2 text-card-foreground">
-                  {t('doctor.dashboard.patientDistribution', 'Patient Distribution')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex-grow min-h-0 h-72">
-                  <Doughnut
-                    key={mode + '-' + chartKey}
-                    data={chartData.patientDistribution}
-                    options={doughnutOptions}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="flex flex-col min-w-0 col-span-1" noPadding>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-lg sm:text-xl font-bold mb-2 text-card-foreground">
+                {t('doctor.dashboard.patientDistribution', 'Patient Distribution')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="flex-grow min-h-[180px] h-[220px] sm:h-72">
+                <Doughnut
+                  key={mode + '-' + chartKey}
+                  data={chartData.patientDistribution}
+                  options={doughnutOptions}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
       <style jsx global>{`

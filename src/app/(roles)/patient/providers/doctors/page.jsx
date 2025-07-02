@@ -83,14 +83,14 @@ export default function DoctorsPage() {
         );
     }
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Find a Doctor</h1>
-                <p className="text-muted-foreground">
+        <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">Find a Doctor</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">
                     Search and connect with healthcare professionals
                 </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="flex flex-col md:grid md:grid-cols-4 gap-y-4 gap-x-4 mb-8">
                 <div className="md:col-span-2">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -102,53 +102,57 @@ export default function DoctorsPage() {
                         />
                     </div>
                 </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                            {specialty === 'all' ? 'All Specialties' : specialties.find(s => s.toLowerCase() === specialty) || 'Select Specialty'}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {specialties.map(spec => (
-                            <DropdownMenuItem key={spec} onClick={() => setSpecialty(spec.toLowerCase())}>
-                                {spec}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                            {(() => {
-                                switch (sortBy) {
-                                    case 'rating': return 'Rating';
-                                    case 'name': return 'Name';
-                                    case 'experience': return 'Experience';
-                                    default: return 'Sort by';
-                                }
-                            })()}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => setSortBy('rating')}>Rating</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSortBy('experience')}>Experience</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="w-full">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                                {specialty === 'all' ? 'All Specialties' : specialties.find(s => s.toLowerCase() === specialty) || 'Select Specialty'}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-full min-w-[180px]">
+                            {specialties.map(spec => (
+                                <DropdownMenuItem key={spec} onClick={() => setSpecialty(spec.toLowerCase())}>
+                                    {spec}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="w-full">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                                {(() => {
+                                    switch (sortBy) {
+                                        case 'rating': return 'Rating';
+                                        case 'name': return 'Name';
+                                        case 'experience': return 'Experience';
+                                        default: return 'Sort by';
+                                    }
+                                })()}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-full min-w-[140px]">
+                            <DropdownMenuItem onClick={() => setSortBy('rating')}>Rating</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSortBy('experience')}>Experience</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredDoctors.map((doctor) => (
-                    <Card key={doctor.id} className="hover:shadow-lg transition-shadow">
+                    <Card key={doctor.id} className="hover:shadow-lg transition-shadow min-w-0">
                         <CardHeader>
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-16 w-16">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
                                         <AvatarImage src={doctor.avatar} alt={doctor.name} />
                                         <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                        <CardTitle className="text-xl">{doctor.name}</CardTitle>
-                                        <p className="text-muted-foreground">{doctor.specialty}</p>
+                                    <div className="min-w-0">
+                                        <CardTitle className="text-lg sm:text-xl truncate">{doctor.name}</CardTitle>
+                                        <p className="text-muted-foreground text-sm truncate">{doctor.specialty}</p>
                                     </div>
                                 </div>
                                 <Badge variant="secondary" className="flex items-center gap-1">
@@ -158,18 +162,18 @@ export default function DoctorsPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="space-y-3 sm:space-y-4">
+                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                     <MapPin className="h-4 w-4" />
-                                    <span>{doctor.location}</span>
+                                    <span className="truncate">{doctor.location}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                     <Clock className="h-4 w-4" />
                                     <span>{doctor.experience} years experience</span>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <Button
-                                        className="flex-1"
+                                        className="w-full sm:w-auto flex-1"
                                         onClick={() => handleBookAppointment(doctor.id)}
                                     >
                                         <Calendar className="h-4 w-4 mr-2" />
@@ -177,6 +181,7 @@ export default function DoctorsPage() {
                                     </Button>
                                     <Button
                                         variant="outline"
+                                        className="w-full sm:w-auto"
                                         onClick={() => handleSendMessage(doctor.id)}
                                     >
                                         <MessageCircle className="h-4 w-4" />

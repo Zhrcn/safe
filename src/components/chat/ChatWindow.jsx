@@ -13,7 +13,7 @@ function Message({ message, isOwn }) {
             className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}
         >
             <div
-                className={`max-w-[70%] rounded-lg p-3 ${
+                className={`max-w-[70%] rounded-2xl p-3 ${
                     isOwn
                         ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-900'

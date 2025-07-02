@@ -18,14 +18,12 @@ const baseQuery = fetchBaseQuery({
     credentials: 'include',
     prepareHeaders: (headers) => {
         const token = getToken();
-        console.log('Current token in prepareHeaders:', token);
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
         headers.set('Origin', 'http://localhost:3000');
-        console.log('Final headers:', headers);
         return headers;
     },
 });
@@ -45,11 +43,9 @@ export const authApi = createApi({
                         role: credentials.role?.toLowerCase()
                     }
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Login response:', response);
                 if (response.success && response.data) {
                     const userData = {
                         ...response.data.user,
@@ -80,7 +76,6 @@ export const authApi = createApi({
                         dispatch(setCredentials(data));
                     }
                 } catch (error) {
-                    console.error('Login error:', error);
                     removeToken();
                 }
             },
@@ -91,11 +86,9 @@ export const authApi = createApi({
                     url: AUTH_CONSTANTS.API_ENDPOINTS.CURRENT_USER,
                     method: 'GET'
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Token verification response:', response);
                 if (response.success && response.data) {
                     const userData = {
                         ...response.data,
@@ -109,7 +102,6 @@ export const authApi = createApi({
                                 userData.role = payload.role?.toLowerCase();
                             }
                         } catch (error) {
-                            console.error('Error parsing token:', error);
                         }
                     }
                     return {
@@ -123,7 +115,6 @@ export const authApi = createApi({
                 };
             },
             transformErrorResponse: (response) => {
-                console.error('Token verification error:', response);
                 removeToken();
                 return {
                     success: false,
@@ -139,7 +130,6 @@ export const authApi = createApi({
                         dispatch(logout());
                     }
                 } catch (error) {
-                    console.error('Token verification error:', error);
                     dispatch(logout());
                 }
             },
@@ -150,7 +140,6 @@ export const authApi = createApi({
                     url: AUTH_CONSTANTS.API_ENDPOINTS.LOGOUT,
                     method: 'POST'
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
@@ -171,7 +160,6 @@ export const authApi = createApi({
                     await queryFulfilled;
                     dispatch(logout());
                 } catch (error) {
-                    console.error('Logout error:', error);
                 }
             },
         }),

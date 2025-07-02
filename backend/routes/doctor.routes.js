@@ -8,7 +8,6 @@ const {
 } = require('../controllers/doctor.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 router.use(protect);
-router.use(authorize('doctor'));
 router.get('/', getDoctors);
 router.get('/:id', getDoctor);
 router

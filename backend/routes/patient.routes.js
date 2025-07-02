@@ -22,6 +22,7 @@ const {
     getMessages,
     sendMessage,
     getDashboardSummary,
+    getLatestVitals,
 } = require('../controllers/patient.controller');
 const {
     getDoctors,
@@ -55,4 +56,5 @@ router.get('/doctors/:id', protect, getDoctor);
 router.get('/pharmacists', protect, getPharmacists);
 router.get('/pharmacists/:id', protect, getPharmacist);
 router.get('/dashboard/summary', protect, getDashboardSummary);
+router.get('/vitals/latest', protect, getLatestVitals);
 module.exports = router;

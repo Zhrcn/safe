@@ -1,82 +1,91 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-export const patientsApi = createApi({
-    reducerPath: 'patientsApi',
-    baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5001',
-        prepareHeaders: (headers, { getState }) => {
-            const token = getState().auth.token;
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
+import { api } from '../api';
+import axiosInstance from '../axiosInstance';
+
+export const getPatients = async () => {
+  const res = await axiosInstance.get('/patients');
+  return res.data.data;
+};
+
+export const getPatientById = async (id) => {
+  const res = await axiosInstance.get(`/patients/${id}`);
+  return res.data.data;
+};
+
+export const createPatient = async (patientData) => {
+  const res = await axiosInstance.post('/patients', patientData);
+  return res.data.data;
+};
+
+export const updatePatient = async (id, patientData) => {
+  const res = await axiosInstance.put(`/patients/${id}`, patientData);
+  return res.data.data;
+};
+
+export const deletePatient = async (id) => {
+  const res = await axiosInstance.delete(`/patients/${id}`);
+  return res.data.data;
+};
+
+export const updatePatientNotes = async (patientId, notes) => {
+  const res = await axiosInstance.put(`/patients/${patientId}/notes`, { notes });
+  return res.data.data;
+};
+
+export const addToFavorites = async (patientId) => {
+  const res = await axiosInstance.post(`/patients/${patientId}/favorite`);
+  return res.data.data;
+};
+
+export const removeFromFavorites = async (patientId) => {
+  const res = await axiosInstance.delete(`/patients/${patientId}/favorite`);
+  return res.data.data;
+};
+
+export const getPatientMedicalHistory = async (patientId) => {
+  const res = await axiosInstance.get(`/patients/${patientId}/medical-history`);
+  return res.data.data;
+};
+
+export const getPatientAppointments = async (patientId) => {
+  const res = await axiosInstance.get(`/patients/${patientId}/appointments`);
+  return res.data.data;
+};
+
+export const getPatientPrescriptions = async (patientId) => {
+  const res = await axiosInstance.get(`/patients/${patientId}/prescriptions`);
+  return res.data.data;
+};
+
+export const getPatientConsultations = async (patientId) => {
+  const res = await axiosInstance.get(`/patients/${patientId}/consultations`);
+  return res.data.data;
+};
+
+export const searchPatients = async (searchTerm) => {
+  const res = await axiosInstance.get(`/search?q=${searchTerm}`);
+  return res.data.data;
+};
+
+export const patientsApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    getPatients: builder.query({
+      query: () => ({
+        url: '/patients',
+        method: 'GET',
+      }),
+      providesTags: ['Patients'],
     }),
-    tagTypes: ['Patients', 'PatientDetails'],
-    endpoints: (builder) => ({
-        getPatients: builder.query({
-            query: () => '/',
-            providesTags: ['Patients'],
-        }),
-        getPatientDetails: builder.query({
-            query: (patientId) => `/${patientId}`,
-            providesTags: (result, error, patientId) => [{ type: 'PatientDetails', id: patientId }],
-        }),
-        updatePatientNotes: builder.mutation({
-            query: ({ patientId, notes }) => ({
-                url: `/${patientId}/notes`,
-                method: 'PUT',
-                body: { notes },
-            }),
-            invalidatesTags: (result, error, { patientId }) => [
-                { type: 'PatientDetails', id: patientId },
-                'Patients'
-            ],
-        }),
-        addToFavorites: builder.mutation({
-            query: (patientId) => ({
-                url: `/${patientId}/favorite`,
-                method: 'POST',
-            }),
-            invalidatesTags: ['Patients'],
-        }),
-        removeFromFavorites: builder.mutation({
-            query: (patientId) => ({
-                url: `/${patientId}/favorite`,
-                method: 'DELETE',
-            }),
-            invalidatesTags: ['Patients'],
-        }),
-        getPatientMedicalHistory: builder.query({
-            query: (patientId) => `/${patientId}/medical-history`,
-            providesTags: (result, error, patientId) => [{ type: 'PatientDetails', id: patientId }],
-        }),
-        getPatientAppointments: builder.query({
-            query: (patientId) => `/${patientId}/appointments`,
-            providesTags: (result, error, patientId) => [{ type: 'PatientDetails', id: patientId }],
-        }),
-        getPatientPrescriptions: builder.query({
-            query: (patientId) => `/${patientId}/prescriptions`,
-            providesTags: (result, error, patientId) => [{ type: 'PatientDetails', id: patientId }],
-        }),
-        getPatientConsultations: builder.query({
-            query: (patientId) => `/${patientId}/consultations`,
-            providesTags: (result, error, patientId) => [{ type: 'PatientDetails', id: patientId }],
-        }),
-        searchPatients: builder.query({
-            query: (searchTerm) => `/search?q=${searchTerm}`,
-            providesTags: ['Patients'],
-        }),
+    getPatientById: builder.query({
+      query: (id) => ({
+        url: `/patients/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Patients', id }],
     }),
+  }),
 });
+
 export const {
-    useGetPatientsQuery,
-    useGetPatientDetailsQuery,
-    useUpdatePatientNotesMutation,
-    useAddToFavoritesMutation,
-    useRemoveFromFavoritesMutation,
-    useGetPatientMedicalHistoryQuery,
-    useGetPatientAppointmentsQuery,
-    useGetPatientPrescriptionsQuery,
-    useGetPatientConsultationsQuery,
-    useSearchPatientsQuery,
+  useGetPatientsQuery,
+  useGetPatientByIdQuery,
 } = patientsApi; 

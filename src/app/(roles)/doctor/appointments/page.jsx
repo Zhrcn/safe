@@ -179,7 +179,7 @@ const AppointmentsPage = () => {
                                 placeholder={t('doctor.appointments.searchPlaceholder', 'Search appointments...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-4 py-2 rounded-lg"
+                                className="pl-10 pr-4 py-2 rounded-2xl"
                             />
                         </div>
                         <div className="w-36">

@@ -25,7 +25,7 @@ export const login = async (email, password) => {
 
         const token = btoa(`${email}:${Date.now()}`);
         
-        localStorage.setItem('token', token);
+        localStorage.setItem('safe_auth_token', token);
         localStorage.setItem('user', JSON.stringify(user.profile));
         localStorage.setItem('role', user.role);
 
@@ -41,7 +41,7 @@ export const login = async (email, password) => {
 };
 
 export const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('safe_auth_token');
     localStorage.removeItem('user');
     localStorage.removeItem('role');
 };
@@ -56,5 +56,5 @@ export const getCurrentRole = () => {
 };
 
 export const isAuthenticated = () => {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('safe_auth_token');
 }; 

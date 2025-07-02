@@ -138,7 +138,7 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
         }
     };
     return (
-        <div className="p-6 bg-card border border-border rounded-lg">
+        <div className="p-6 bg-card border border-border rounded-2xl">
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-2xl text-foreground font-bold mb-1">
@@ -152,13 +152,13 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                 </div>
             </div>
             {error && (
-                <div className="bg-red-100 text-red-800 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                <div className="bg-red-100 text-red-800 border border-red-200 rounded-2xl p-3 mb-4 flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
                     <p className="text-sm">{error}</p>
                 </div>
             )}
             {success && (
-                <div className="bg-green-100 text-green-800 border border-green-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                <div className="bg-green-100 text-green-800 border border-green-200 rounded-2xl p-3 mb-4 flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5" />
                     <p className="text-sm">{success}</p>
                 </div>

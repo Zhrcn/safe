@@ -8,6 +8,8 @@ import {
 import { Button } from '@/components/ui/Button';
 
 const Medications = ({ patient }) => {
+    // Defensive: ensure medications is always an array
+    const medsArray = Array.isArray(patient.medications) ? patient.medications : (patient.medications?.data && Array.isArray(patient.medications.data) ? patient.medications.data : []);
     function handleRefill() {
         alert('Refill requested!');
     }
@@ -15,11 +17,11 @@ const Medications = ({ patient }) => {
         alert('Remove requested!');
     }
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-8">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
             <h2 className="text-xl font-extrabold mb-6 tracking-tight text-primary">Current Medications</h2>
-            {patient.medications?.length > 0 ? (
+            {medsArray.length > 0 ? (
                 <div className="divide-y divide-border">
-                    {patient.medications.map((medication, index) => (
+                    {medsArray.map((medication, index) => (
                         <div key={index} className="py-5 first:pt-0 last:pb-0">
                             <div className="flex items-start gap-5">
                                 <div className="mt-1">
@@ -30,7 +32,7 @@ const Medications = ({ patient }) => {
                                         <h3 className="text-lg font-bold text-foreground">
                                             {medication.name}
                                         </h3>
-                                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-sm">
                                             {medication.dosage}
                                         </span>
                                     </div>
@@ -42,7 +44,7 @@ const Medications = ({ patient }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold border shadow-sm ${
+                                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-2xl text-xs font-semibold border shadow-sm ${
                                         medication.status === 'active'
                                             ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                             : 'bg-muted text-muted-foreground border-border'

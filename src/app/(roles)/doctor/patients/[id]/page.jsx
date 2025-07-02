@@ -89,7 +89,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
     if (!open) return null;
     return (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-card text-card-foreground rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg border border-border">
+            <div className="bg-card text-card-foreground rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg border border-border">
                 <div className="p-6 border-b border-border">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">{t('doctor.patientDetail.newPrescription', 'New Prescription')}</h2>
@@ -393,7 +393,7 @@ const PatientPageContent = () => {
     }
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden border border-border">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-lg overflow-hidden border border-border">
                 <div className="p-6 border-b border-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -469,7 +469,7 @@ const PatientPageContent = () => {
                                     ) : (
                                         <div className="space-y-6">
                                             {patientConsultations.map((consultation) => (
-                                                <div key={consultation.id} className="bg-muted rounded-lg p-4 border border-border flex flex-col gap-2">
+                                                <div key={consultation.id} className="bg-muted rounded-2xl p-4 border border-border flex flex-col gap-2">
                                                     <div className="flex items-center gap-2">
                                                         <User className="w-5 h-5 text-primary" />
                                                         <span className="font-semibold">Question:</span>

@@ -39,11 +39,9 @@ export const userApi = createApi({
                     method: 'POST',
                     body: credentials,
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Login response:', response);
                 if (response.success && response.data) {
                     const { token, user } = response.data;
                     localStorage.setItem('safe_auth_token', token);
@@ -53,7 +51,6 @@ export const userApi = createApi({
                 throw new Error(response.message || 'Login failed');
             },
             transformErrorResponse: (response) => {
-                console.error('Login error response:', response);
                 return response;
             },
             invalidatesTags: ['Auth']
@@ -71,15 +68,12 @@ export const userApi = createApi({
                         'Origin': 'http://localhost:3000'
                     }
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Token verification response:', response);
                 return response;
             },
             transformErrorResponse: (response) => {
-                console.error('Token verification error:', response);
                 return response;
             },
         }),
@@ -89,7 +83,6 @@ export const userApi = createApi({
                     url: '/api/v1/auth/me',
                     method: 'GET'
                 };
-                logRequest(request);
                 return request;
             },
             providesTags: ['User']
@@ -104,7 +97,6 @@ export const userApi = createApi({
                         'Content-Type': 'application/json'
                     }
                 };
-                logRequest(request);
                 return request;
             },
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -118,7 +110,6 @@ export const userApi = createApi({
                     }
                     dispatch(logout());
                 } catch (error) {
-                    console.error('Logout error:', error);
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('safe_auth_token');
                         localStorage.removeItem('user');
@@ -137,11 +128,9 @@ export const userApi = createApi({
                     method: 'POST',
                     body: userData
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Register response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -156,11 +145,9 @@ export const userApi = createApi({
                     method: 'POST',
                     body: data
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Reset password response:', response);
                 if (response.success) {
                     return true;
                 }
@@ -175,11 +162,9 @@ export const userApi = createApi({
                     method: 'POST',
                     body: data
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Update password response:', response);
                 if (response.success) {
                     return true;
                 }
@@ -193,11 +178,9 @@ export const userApi = createApi({
                     url: '/api/v1/users/profile',
                     method: 'GET'
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Get profile response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -212,11 +195,9 @@ export const userApi = createApi({
                     method: 'PUT',
                     body: userData
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Update profile response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -231,11 +212,9 @@ export const userApi = createApi({
                     method: 'GET',
                     params
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Get users response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -249,11 +228,9 @@ export const userApi = createApi({
                     url: `/users/${id}`,
                     method: 'GET'
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Get user by id response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -268,11 +245,9 @@ export const userApi = createApi({
                     method: 'PATCH',
                     body: data
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Update user response:', response);
                 if (response.success && response.data) {
                     return response.data;
                 }
@@ -286,11 +261,9 @@ export const userApi = createApi({
                     url: `/users/${id}`,
                     method: 'DELETE'
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Delete user response:', response);
                 if (response.success) {
                     return true;
                 }
@@ -305,11 +278,9 @@ export const userApi = createApi({
                     method: 'POST',
                     body: passwordData
                 };
-                logRequest(request);
                 return request;
             },
             transformResponse: (response) => {
-                console.log('Change password response:', response);
                 if (response.success) {
                     return true;
                 }

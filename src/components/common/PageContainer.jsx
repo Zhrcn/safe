@@ -82,7 +82,7 @@ export default function PageContainer({
             )}
           </div>
         </div>
-        <div className="bg-background rounded-lg border border-border shadow-sm">
+        <div className="bg-background rounded-2xl border border-border shadow-sm">
           {children}
         </div>
       </div>

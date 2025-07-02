@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { 
@@ -14,7 +14,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Separator } from '@/components/ui/Separator';
-import { medicalRecords } from '@/mockdata/medicalRecords';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchMedicalRecords } from '@/store/slices/patient/medical-recordsSlice';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useTranslation } from 'react-i18next';
@@ -117,6 +118,11 @@ const MedicalRecordsPage = () => {
     const [activeTab, setActiveTab] = useState('all');
     const { t, i18n } = useTranslation('common');
     const isRtl = i18n.language === 'ar';
+    const dispatch = useDispatch();
+    useEffect(() => {
+        dispatch(fetchMedicalRecords());
+    }, [dispatch]);
+    const { medicalRecords, loading: isLoading, error } = useSelector(state => state.medicalRecords);
 
     const handleViewRecord = (record) => {
         router.push(`/patient/medical-records/${record.id}`);
@@ -207,7 +213,6 @@ const MedicalRecordsPage = () => {
                 </Button>
             </div>
 
-            <Separator />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
@@ -230,7 +235,7 @@ const MedicalRecordsPage = () => {
                                     />
                                 ))
                             ) : (
-                                <div className="text-center py-12 bg-card rounded-lg shadow-sm">
+                                <div className="text-center py-12 bg-card rounded-2xl shadow-sm">
                                     <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
                                     <h3 className="text-xl font-semibold mb-3 text-foreground">{t('patient.medicalRecords.noRecordsFound', 'No Medical Records Found')}</h3>
                                     <p className="text-muted-foreground mb-6">

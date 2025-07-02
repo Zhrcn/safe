@@ -50,7 +50,7 @@ export default function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-all duration-200 min-w-[120px] justify-between text-primary-foreground border-0 shadow-none"
+          className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-all duration-200 min-w-[120px] justify-between text-primary-foreground border-0 shadow-none"
           aria-label={t('language')}
         >
           <div className="flex items-center gap-2">
@@ -76,7 +76,7 @@ export default function LanguageSwitcher() {
           <DropdownMenuItem
             key={language.code}
             onClick={() => changeLanguage(language.code)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl cursor-pointer transition-all duration-150 ${
               i18n.language === language.code
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'hover:bg-primary/20 text-primary-foreground/90 hover:text-primary-foreground'

@@ -192,7 +192,7 @@ export default function AppLayout({
                             <Link
                                 key={item.path}
                                 href={item.path}
-                                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                className={`flex items-center px-4 py-2 text-sm font-medium rounded-2xl transition-colors ${
                                     pathname === item.path
                                         ? 'bg-primary text-primary-foreground'
                                         : 'text-muted-foreground hover:bg-muted/40'
@@ -207,7 +207,7 @@ export default function AppLayout({
             </div>
             <div className="p-4 mt-auto">
                 <div className="h-px bg-border mb-4" />
-                <Button onClick={handleLogout} variant="ghost" className="flex items-center w-full p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors duration-200">
+                <Button onClick={handleLogout} variant="ghost" className="flex items-center w-full p-2 rounded-2xl hover:bg-muted/40 cursor-pointer transition-colors duration-200">
                     <LogOut className="mr-3 h-5 w-5 text-muted-foreground" />
                     <span className="font-medium text-muted-foreground">Logout</span>
                 </Button>
@@ -270,7 +270,7 @@ export default function AppLayout({
                                         )}
                                     </Button>
                                     {notificationsMenuOpen && (
-                                        <div className="absolute right-0 mt-2 w-80 rounded-lg border border-border bg-card shadow-lg">
+                                        <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-card shadow-lg">
                                             <div className="p-2">
                                                 <h3 className="px-2 py-1.5 text-sm font-semibold">Notifications</h3>
                                                 <div className="mt-1 max-h-96 overflow-y-auto">
@@ -310,14 +310,14 @@ export default function AppLayout({
                                         }`} />
                                     </Button>
                                     {profileMenuOpen && (
-                                        <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg">
+                                        <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-border bg-card shadow-lg">
                                             <div className="p-1">
                                                 <Button
                                                     onClick={() => {
                                                         router.push('/profile');
                                                         setProfileMenuOpen(false);
                                                     }}
-                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors"
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-2xl hover:bg-muted/40 transition-colors"
                                                 >
                                                     <User className="mr-2 h-4 w-4" />
                                                     Profile
@@ -327,7 +327,7 @@ export default function AppLayout({
                                                         router.push('/settings');
                                                         setProfileMenuOpen(false);
                                                     }}
-                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors"
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-2xl hover:bg-muted/40 transition-colors"
                                                 >
                                                     <Settings className="mr-2 h-4 w-4" />
                                                     Settings
@@ -335,7 +335,7 @@ export default function AppLayout({
                                                 <div className="h-px bg-border my-1" />
                                                 <Button
                                                     onClick={handleLogout}
-                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-muted/40 transition-colors text-destructive"
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-2xl hover:bg-muted/40 transition-colors text-destructive"
                                                 >
                                                     <LogOut className="mr-2 h-4 w-4" />
                                                     Logout

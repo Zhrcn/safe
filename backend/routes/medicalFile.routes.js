@@ -5,4 +5,7 @@ const { getMedicalFileById, updateEmergencyContact, updateInsuranceDetails } = r
 router.route('/:id').get(protect, getMedicalFileById);
 router.patch('/:id/emergency-contact', protect, updateEmergencyContact);
 router.patch('/:id/insurance', protect, updateInsuranceDetails);
+router.get('/', protect, (req, res) => {
+  res.status(400).json({ message: "Please provide a medical record ID." });
+});
 module.exports = router;

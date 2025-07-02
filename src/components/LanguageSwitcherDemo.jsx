@@ -47,7 +47,7 @@ export default function LanguageSwitcherDemo() {
             key={variant.id}
             onClick={() => setSelectedVariant(variant.id)}
             className={`
-              px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200
               ${selectedVariant === variant.id
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

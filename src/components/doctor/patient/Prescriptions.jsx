@@ -105,11 +105,11 @@ const Prescriptions = ({ patientId }) => {
         );
     }
     return (
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Prescriptions</h2>
                 <Button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 flex items-center space-x-2"
                     onClick={() => handleOpenDialog()}
                 >
                     <AddIcon className="h-5 w-5" />
@@ -162,7 +162,7 @@ const Prescriptions = ({ patientId }) => {
             </div>
             {openDialog && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">
+                    <div className="relative p-6 bg-white rounded-2xl shadow-xl max-w-md mx-auto">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             {selectedPrescription ? 'Edit Prescription' : 'New Prescription'}
                         </h3>

@@ -69,7 +69,7 @@ const CalendarComponent = ({ appointments }) => {
     isSameDay(new Date(appointment.date), selectedDate)
   );
   return (
-    <div className="bg-card rounded-lg shadow-lg border border-border flex flex-col h-full">
+    <div className="bg-card rounded-2xl shadow-lg border border-border flex flex-col h-full">
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-card-foreground">Calendar</h2>
@@ -105,7 +105,7 @@ const CalendarComponent = ({ appointments }) => {
             <Button
               key={day.toISOString()}
               onClick={() => setSelectedDate(day)}
-              className={`p-2 rounded-lg transition-colors duration-200
+              className={`p-2 rounded-2xl transition-colors duration-200
                 ${isSameMonth(day, currentMonth) ? 'hover:bg-accent hover:text-accent-foreground text-card-foreground' : 'text-muted-foreground cursor-not-allowed'}
               `}
               style={{
@@ -133,7 +133,7 @@ const CalendarComponent = ({ appointments }) => {
         ) : (
           <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
             {appointmentsForSelectedDay.map((appointment) => (
-              <div key={appointment.id} className="flex items-center gap-3 bg-secondary p-3 rounded-lg border border-border">
+              <div key={appointment.id} className="flex items-center gap-3 bg-secondary p-3 rounded-2xl border border-border">
                 <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary text-base font-medium">
                   {appointment.patientName[0]}
                 </div>

@@ -20,32 +20,17 @@ export default function ProtectedLayout({ children }) {
   });
 
   useEffect(() => {
-    console.log('ProtectedLayout state:', {
-      isAuthenticated: !!user,
-      user,
-      verifyData,
-      isVerifying,
-      verifyError,
-      pathname,
-      hasToken
-    });
-  }, [user, verifyData, isVerifying, verifyError, pathname, hasToken]);
-
-  useEffect(() => {
     const handleAuthorization = async () => {
       if (!hasToken) {
-        console.log('No token found, redirecting to login');
         router.replace('/login');
         return;
       }
 
       if (isVerifying) {
-        console.log('Verifying token...');
         return;
       }
 
       if (verifyError) {
-        console.error('Token verification failed:', verifyError);
         removeToken();
         dispatch(logout());
         router.replace('/login');
@@ -53,7 +38,6 @@ export default function ProtectedLayout({ children }) {
       }
 
       if (verifyData?.success && verifyData?.user) {
-        console.log('Token verified successfully');
         let userRole = verifyData.user.role?.toUpperCase();
         if (!userRole) {
           try {
@@ -63,12 +47,10 @@ export default function ProtectedLayout({ children }) {
               userRole = payload.role?.toUpperCase();
             }
           } catch (error) {
-            console.error('Error parsing token:', error);
           }
         }
 
         if (!userRole) {
-          console.error('No user role found');
           removeToken();
           dispatch(logout());
           router.replace('/login');
@@ -77,14 +59,12 @@ export default function ProtectedLayout({ children }) {
 
         const pathRole = pathname.split('/')[1]?.toUpperCase();
         if (pathRole && pathRole !== userRole) {
-          console.log(`User role (${userRole}) does not match path role (${pathRole})`);
           router.replace(`/${userRole.toLowerCase()}/dashboard`);
           return;
         }
 
         setIsAuthorized(true);
       } else {
-        console.log('Token verification unsuccessful');
         removeToken();
         dispatch(logout());
         router.replace('/login');

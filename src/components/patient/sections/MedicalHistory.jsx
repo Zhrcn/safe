@@ -96,7 +96,7 @@ const RecordCard = ({ record }) => {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-4 hover:shadow-lg transition-shadow duration-200">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-4 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {getIcon(record.type)}
@@ -238,7 +238,7 @@ const MedicalHistory = ({ patient }) => {
     }
     if (error) {
         return (
-            <div className="bg-destructive/10 text-destructive border border-destructive rounded-lg p-4 flex items-center gap-3">
+            <div className="bg-destructive/10 text-destructive border border-destructive rounded-2xl p-4 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="text-sm">Error loading medical history: {error.message || 'An unknown error occurred.'}</p>
             </div>

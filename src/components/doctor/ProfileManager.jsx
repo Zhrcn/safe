@@ -17,6 +17,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { doctors as mockDoctors } from '@/mockdata/doctors';
 import { Button } from '@/components/ui/Button';
+import AddEducationDialog from './AddEducationDialog';
+import AddAchievementDialog from './AddAchievementDialog';
+import ProfileInfoCard from './ProfileInfoCard';
+import EducationList from './EducationList';
+import AchievementList from './AchievementList';
 const personalInfoSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     specialty: z.string().min(2, 'Specialty is required'),
@@ -44,6 +49,8 @@ function PersonalInfoForm({ profile, onSave }) {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [previewUrl, setPreviewUrl] = useState('');
+    const [openEducationDialog, setOpenEducationDialog] = useState(false);
+    const [openAchievementDialog, setOpenAchievementDialog] = useState(false);
     const { 
         control, 
         handleSubmit, 
@@ -112,103 +119,22 @@ function PersonalInfoForm({ profile, onSave }) {
             reader.readAsDataURL(file);
         }
     };
+    const handleAddEducation = (education) => {
+        console.log('New education added:', education);
+    };
+    const handleAddAchievement = (achievement) => {
+        console.log('New achievement added:', achievement);
+    };
     return (
-        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Personal Information
-            </h2>
-            {error && (
-                <div className="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
-                    {error}
-                </div>
-            )}
-            {success && (
-                <div className="p-3 mb-4 text-sm text-green-800 rounded-lg bg-green-50">
-                    {success}
-                </div>
-            )}
-            {!isEditing ? (
-                <div>
-                    <div className="flex items-center mb-6">
-                        <img 
-                            src={profile?.profileImage || '/placeholder-avatar.jpg'} 
-                            alt="Profile" 
-                            className="w-24 h-24 rounded-full mr-4 object-cover"
-                        />
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900">
-                                {profile?.name}
-                            </h3>
-                            <p className="text-gray-600">
-                                {profile?.specialty}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm text-gray-500">Name</p>
-                            <p className="text-gray-900 font-medium">{profile?.name}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500">Specialty</p>
-                            <p className="text-gray-900 font-medium">{profile?.specialty}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500">Email</p>
-                            <p className="text-gray-900 font-medium">{profile?.contact?.email}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500">Phone</p>
-                            <p className="text-gray-900 font-medium">{profile?.contact?.phone}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500">License Number</p>
-                            <p className="text-gray-900 font-medium">{profile?.licenseNumber}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500">Experience (Years)</p>
-                            <p className="text-gray-900 font-medium">{profile?.experienceYears}</p>
-                        </div>
-                    </div>
-                    <div className="mt-6">
-                        <Button 
-                            type="button"
-                            onClick={() => setIsEditing(true)}
-                        >
-                            Edit
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="flex items-center space-x-4">
-                        <img 
-                            src={previewUrl || profile?.profileImage || '/placeholder-avatar.jpg'} 
-                            alt="Profile Preview" 
-                            className="w-24 h-24 rounded-full object-cover"
-                        />
-                        <div>
-                            <label htmlFor="profileImageInput" className="cursor-pointer inline-block bg-gray-100 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200">
-                                Upload Image
-                            </label>
-                            <input
-                                id="profileImageInput"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                            />
-                        </div>
-                    </div>
-                    {tabValue === 2 && (
-                        <AchievementsList 
-                            achievements={doctorProfile.achievements}
-                            onEdit={() => {  }}
-                            onDelete={handleDeleteAchievement}
-                            onAdd={() => setOpenAchievementDialog(true)}
-                        />
-                    )}
-                </form>
-            )}
+        <div className="max-w-3xl mx-auto space-y-6">
+            <ProfileInfoCard
+                profile={profile}
+                onEdit={() => setIsEditing(true)}
+                onAddEducation={() => setOpenEducationDialog(true)}
+                onAddAchievement={() => setOpenAchievementDialog(true)}
+            />
+            <EducationList education={profile?.education} />
+            <AchievementList achievements={profile?.achievements} />
             <AddEducationDialog
                 open={openEducationDialog}
                 onClose={() => setOpenEducationDialog(false)}

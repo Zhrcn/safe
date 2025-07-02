@@ -54,6 +54,10 @@ const NAVIGATION_CONFIG = {
   admin: [
     { name: 'dashboard', path: '/admin/dashboard', icon: Home },
     { name: 'users', path: '/admin/users', icon: Users },
+    { name: 'logs', path: '/admin/logs', icon: FileText },
+    { name: 'reports', path: '/admin/reports', icon: BarChart },
+    { name: 'support', path: '/admin/support', icon: MessageSquare },
+    { name: 'notifications', path: '/admin/notifications', icon: Bell },
     { name: 'settings', path: '/admin/settings', icon: SettingsIcon },
   ],
 };
@@ -312,16 +316,16 @@ const UnifiedLayout = ({ children }) => {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} className="rounded-lg">
+                <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} className="rounded-2xl">
                   <User className="mr-2 h-4 w-4" />
                   <span>{t('profile', 'Profile')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-lg">
+                <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-2xl">
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   <span>{t('settings', 'Settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-destructive">
+                <DropdownMenuItem onClick={handleLogout} className="rounded-2xl text-destructive">
                   <LogoutIcon className="mr-2 h-4 w-4" />
                   <span>{t('logout', 'Logout')}</span>
                 </DropdownMenuItem>

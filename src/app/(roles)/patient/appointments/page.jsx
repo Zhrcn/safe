@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { 
@@ -17,15 +17,17 @@ import { Separator } from '@/components/ui/Separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import Link from 'next/link';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/Dialog';
+import { DialogTitle, DialogDescription } from '@radix-ui/react-dialog';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
 import { useTranslation } from 'react-i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchAppointments, createAppointment } from '@/store/slices/patient/appointmentsSlice';
 
 const AppointmentCard = ({ appointment, onReschedule }) => {
     const getStatusProps = (status) => {
         switch (status?.toLowerCase()) {
-            case 'upcoming':
             case 'scheduled':
-                return { variant: 'secondary', label: 'Upcoming' };
+                return { variant: 'secondary', label: 'Scheduled' };
             case 'completed':
                 return { variant: 'outline', label: 'Completed' };
             case 'cancelled':
@@ -33,13 +35,29 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
             case 'pending':
                 return { variant: 'ghost', label: 'Pending' };
             default:
-                return { variant: 'outline', label: status };
+                return { variant: 'outline', label: status || 'Unknown' };
         }
     };
     const now = new Date();
-    const appointmentDate = new Date(appointment.date || appointment.appointmentDate);
-    const hoursDiff = (appointmentDate - now) / (1000 * 60 * 60);
-    const canReschedule = hoursDiff >= 72;
+    const appointmentDate = appointment.date ? new Date(appointment.date) : null;
+    const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
+    const canReschedule = appointmentDate && hoursDiff >= 72;
+    // Doctor name for title only
+    let doctorName = '';
+    if (appointment.doctor && appointment.doctor.user) {
+        const { firstName, lastName } = appointment.doctor.user;
+        doctorName = `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    if (!doctorName) doctorName = 'No doctor assigned';
+    // Subtitle can show specialty or ID if desired
+    let doctorSubtitle = '';
+    if (appointment.doctor && appointment.doctor.specialty) {
+        doctorSubtitle = `Specialty: ${appointment.doctor.specialty}`;
+    } else if (appointment.doctor && appointment.doctor._id) {
+        doctorSubtitle = `Doctor ID: ${appointment.doctor._id}`;
+    } else {
+        doctorSubtitle = 'No doctor assigned';
+    }
     const statusProps = getStatusProps(appointment.status);
     return (
         <Card className="hover:shadow-lg transition-shadow border border-border bg-card flex flex-col h-full relative">
@@ -52,25 +70,32 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
                         <div className="p-2 rounded-full bg-primary/10">
                             <Calendar className="h-5 w-5 text-primary" />
                         </div>
-                        <h3 className="text-lg font-bold text-primary">{appointment.title || appointment.consultationType}</h3>
+                        <h3 className="text-lg font-bold text-primary">
+                            {doctorName}
+                        </h3>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4" />
-                        <span>Dr. {appointment.doctor?.name || appointment.doctor?.firstName + ' ' + appointment.doctor?.lastName || 'Select Doctor'}</span>
+                        <span>{doctorSubtitle}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            <span>{appointment.time || appointment.appointmentTime}</span>
+                            <span>{appointment.time || 'TBD'}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            {appointment.type && <span>{appointment.type}</span>}
+                            <span>{appointment.type || 'N/A'}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4" />
-                        <span>{appointment.reason}</span>
+                        <span>{appointment.reason || 'No reason provided'}</span>
                     </div>
+                    {appointment.notes && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <span>Notes: {appointment.notes}</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-col items-end gap-3">
                     {canReschedule && (
@@ -93,43 +118,18 @@ const AppointmentsPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState('new');
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const dispatch = useDispatch();
 
-    const [appointments, setAppointments] = useState([
-        {
-            id: 1,
-            title: t('patient.appointments.annualCheckup', 'Annual Checkup'),
-            doctor: t('patient.appointments.doctorSarahJohnson', 'Sarah Johnson'),
-            date: '2024-03-20',
-            time: '10:00 AM',
-            type: t('patient.appointments.inPerson', 'In Person'),
-            location: t('patient.appointments.mainClinicRoom101', 'Main Clinic, Room 101'),
-            status: 'upcoming'
-        },
-        {
-            id: 2,
-            title: t('patient.appointments.followUpConsultation', 'Follow-up Consultation'),
-            doctor: t('patient.appointments.doctorMichaelChen', 'Michael Chen'),
-            date: '2024-03-22',
-            time: '2:30 PM',
-            type: t('patient.appointments.video', 'Video'),
-            location: t('patient.appointments.virtualMeeting', 'Virtual Meeting'),
-            status: 'upcoming'
-        },
-        {
-            id: 3,
-            title: t('patient.appointments.labResultsReview', 'Lab Results Review'),
-            doctor: t('patient.appointments.doctorEmilyRodriguez', 'Emily Rodriguez'),
-            date: '2024-03-15',
-            time: '11:00 AM',
-            type: t('patient.appointments.phone', 'Phone'),
-            location: t('patient.appointments.phoneConsultation', 'Phone Consultation'),
-            status: 'completed'
-        }
-    ]);
+    useEffect(() => {
+        dispatch(fetchAppointments());
+    }, [dispatch]);
+
+    const { appointments, loading: isLoading, error } = useSelector(state => state.appointments);
 
     const filteredAppointments = appointments.filter(appointment => {
-        const matchesSearch = appointment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            appointment.doctor.toLowerCase().includes(searchQuery.toLowerCase());
+        const doctorName = appointment.doctor?.name || appointment.doctor?.firstName + ' ' + appointment.doctor?.lastName || '';
+        const matchesSearch = (appointment.title || appointment.consultationType || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            doctorName.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesSearch;
     });
 
@@ -150,22 +150,23 @@ const AppointmentsPage = () => {
         setSelectedAppointment(null);
     };
 
-    const handleSubmitAppointment = (data) => {
-        setAppointments(prev => [
-            ...prev,
-            {
-                ...data,
-                id: Date.now(),
-                title: data.title || t('patient.appointments.newAppointment', 'New Appointment'),
-                doctor: data.doctorName || 'Sarah Johnson',
-                date: data.date || new Date().toISOString().slice(0, 10),
-                time: data.time || '',
-                type: data.type || '',
-                location: data.location || '',
-                status: 'upcoming',
-            }
-        ]);
-        handleCloseModal();
+    const handleSubmitAppointment = async (data) => {
+        try {
+            await dispatch(createAppointment({
+                doctorId: data.doctorId,
+                date: '1970-01-01',
+                time: 'TBD',
+                reason: data.reason,
+                type: data.type,
+                notes: data.notes,
+            })).unwrap();
+            setShowModal(false);
+            setSelectedAppointment(null);
+            dispatch(fetchAppointments());
+        } catch (e) {
+            console.error('Error creating appointment:', e);
+            showNotification(t('patient.appointments.createError', 'Failed to create appointment'), 'error');
+        }
     };
 
     return (
@@ -185,7 +186,7 @@ const AppointmentsPage = () => {
           ]}
           actions={
             <Dialog open={showModal} onOpenChange={setShowModal}>
-              <DialogTrigger>
+              <DialogTrigger asChild>
                 <Button
                   className="flex items-center gap-2 bg-primary text-white rounded-2xl"
                   onClick={handleNewAppointment}
@@ -195,19 +196,13 @@ const AppointmentsPage = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-xl w-full">
+                <DialogTitle>{modalType === 'reschedule' ? 'Reschedule Appointment' : 'Schedule Appointment'}</DialogTitle>
+                <DialogDescription>Fill out the form below to {modalType === 'reschedule' ? 'reschedule' : 'schedule'} your appointment.</DialogDescription>
                 <AppointmentForm
                   open={showModal}
                   onClose={handleCloseModal}
                   onSubmit={handleSubmitAppointment}
-                  patient={{ id: 1, name: "John Doe" }}
-                  doctor={
-                    selectedAppointment
-                      ? { id: 1, name: selectedAppointment.doctor }
-                      : { id: 1, name: "Sarah Johnson" }
-                  }
-                  initialData={
-                    modalType === "reschedule" ? selectedAppointment : null
-                  }
+                  initialData={modalType === "reschedule" ? selectedAppointment : null}
                   isReschedule={modalType === "reschedule"}
                 />
               </DialogContent>
@@ -227,14 +222,25 @@ const AppointmentsPage = () => {
           </div>
         </div>
 
+        {isLoading ? (
+          <div className="text-center py-12 bg-card rounded-2xl shadow-sm col-span-full">
+            <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
+            <h3 className="text-xl font-semibold mb-3">{t("loading")}</h3>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 bg-card rounded-2xl shadow-sm col-span-full">
+            <h3 className="text-xl font-semibold mb-3 text-red-500">{t("error")}</h3>
+            <p className="text-muted-foreground mb-6">{error?.data?.message || error?.error || 'Failed to load appointments.'}</p>
+          </div>
+        ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredAppointments.length > 0 ? (
-            filteredAppointments.map((appointment) => (
+            filteredAppointments.map((appointment, idx) => (
               <Dialog
-                key={appointment.id}
+                key={appointment.id || appointment._id || idx}
                 open={
                   showModal &&
-                  selectedAppointment?.id === appointment.id &&
+                  selectedAppointment?.id === (appointment.id || appointment._id) &&
                   modalType === "reschedule"
                 }
                 onOpenChange={setShowModal}
@@ -246,7 +252,7 @@ const AppointmentsPage = () => {
               </Dialog>
             ))
           ) : (
-            <div className="text-center py-12 bg-card rounded-lg shadow-sm col-span-full">
+            <div className="text-center py-12 bg-card rounded-2xl shadow-sm col-span-full">
               <Calendar className="h-16 w-16 mx-auto mb-6 text-muted-foreground opacity-50" />
               <h3 className="text-xl font-semibold mb-3">
                 {t("patient.appointments.noAppointments")}
@@ -266,6 +272,7 @@ const AppointmentsPage = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     );
 };

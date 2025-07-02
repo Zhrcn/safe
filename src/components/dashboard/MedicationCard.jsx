@@ -4,8 +4,9 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 export default function MedicationCard({ medications = [] }) {
-    console.log('MedicationCard received medications:', medications);
-    if (!medications?.length) {
+    const medsArray = Array.isArray(medications) ? medications : (medications?.data && Array.isArray(medications.data) ? medications.data : []);
+    console.log('MedicationCard received medications:', medsArray);
+    if (!medsArray?.length) {
         return (
             <Card className="p-6 text-center text-muted-foreground">
                 <p>No active medications</p>
@@ -38,10 +39,10 @@ export default function MedicationCard({ medications = [] }) {
                 <CardTitle className="text-xl font-semibold">Medications</CardTitle>
             </CardHeader>
             <CardContent className="p-0 flex flex-col gap-4">
-                {medications.map((medication, index) => (
+                {medsArray.map((medication, index) => (
                     <div
                         key={medication?.id || index}
-                        className="flex items-center p-4 border border-border rounded-lg"
+                        className="flex items-center p-4 border border-border rounded-2xl"
                     >
                         <div className="flex-1">
                             <h3 className="text-lg font-semibold text-foreground">

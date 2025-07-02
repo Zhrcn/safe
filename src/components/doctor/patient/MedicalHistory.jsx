@@ -139,7 +139,7 @@ const MedicalHistory = ({ patient }) => {
   ];
   if (!medicalHistory) {
     return (
-      <div className="p-6 bg-card rounded-lg shadow-md border border-border text-center text-muted-foreground">
+      <div className="p-6 bg-card rounded-2xl shadow-md border border-border text-center text-muted-foreground">
         <Folder className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
         <h3 className="text-lg font-semibold">No Medical History Available</h3>
         <p className="text-sm">Please ensure the patient has a medical file associated.</p>
@@ -149,7 +149,7 @@ const MedicalHistory = ({ patient }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {categories.map((category) => (
-        <div key={category.id} className="p-6 bg-card rounded-lg shadow-md border border-border">
+        <div key={category.id} className="p-6 bg-card rounded-2xl shadow-md border border-border">
           <h3 className="flex items-center gap-3 text-xl font-bold text-foreground mb-4">
             <category.icon className={cn('w-6 h-6', category.color)} />
             {category.title}
@@ -171,7 +171,7 @@ const MedicalHistory = ({ patient }) => {
       ))}
       {}
       {medicalHistory.familyMedicalHistory && medicalHistory.familyMedicalHistory.length > 0 && (
-        <div className="p-6 bg-card rounded-lg shadow-md border border-border md:col-span-2 lg:col-span-3">
+        <div className="p-6 bg-card rounded-2xl shadow-md border border-border md:col-span-2 lg:col-span-3">
           <h3 className="flex items-center gap-3 text-xl font-bold text-foreground mb-4">
             <User className="w-6 h-6 text-primary" />
             Family Medical History
@@ -188,7 +188,7 @@ const MedicalHistory = ({ patient }) => {
         </div>
       )}
       {medicalHistory.socialHistory && Object.keys(medicalHistory.socialHistory).length > 0 && (
-        <div className="p-6 bg-card rounded-lg shadow-md border border-border">
+        <div className="p-6 bg-card rounded-2xl shadow-md border border-border">
           <h3 className="flex items-center gap-3 text-xl font-bold text-foreground mb-4">
             <User className="w-6 h-6 text-primary" />
             Social History

@@ -8,13 +8,13 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   const patientId = req.user.id; 
   const {
     doctorId, 
-    appointmentDate,
-    appointmentTime,
+    date,
+    time,
     reason,
-    consultationType, 
+    type, 
   } = req.body;
-  if (!doctorId || !appointmentDate || !appointmentTime || !reason || !consultationType) {
-    return res.status(400).json(new ApiResponse(400, null, 'Please provide all required fields for the appointment (doctorId, appointmentDate, appointmentTime, reason, consultationType).'));
+  if (!doctorId || !date || !time || !reason || !type) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide all required fields for the appointment (doctorId, date, time, reason, type).'));
   }
   const doctorUser = await User.findById(doctorId);
   if (!doctorUser || doctorUser.role !== 'doctor') {
@@ -24,10 +24,10 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   if (!doctorRecord) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor profile not found.'));
   }
-  const [hours, minutes] = appointmentTime.split(':').map(Number);
-  let requestedDateObject = new Date(appointmentDate);
+  const [hours, minutes] = time.split(':').map(Number);
+  let requestedDateObject = new Date(date);
   if (isNaN(requestedDateObject.getTime())) {
-    requestedDateObject = new Date(appointmentDate.split('T')[0]); 
+    requestedDateObject = new Date(date.split('T')[0]); 
     if(isNaN(requestedDateObject.getTime())){
         return res.status(400).json(new ApiResponse(400, null, 'Invalid appointment date format. Please use YYYY-MM-DD.'));
     }
@@ -43,8 +43,8 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   }
   const conflictingAppointment = await Appointment.findOne({
     doctor: doctorRecord.user._id, 
-    appointmentDate: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
-    appointmentTime: appointmentTime,         
+    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
+    time: time,         
     status: { $in: ['pending', 'confirmed'] } 
   });
   if (conflictingAppointment) {
@@ -53,10 +53,10 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   const appointment = new Appointment({
     patient: patientId,
     doctor: doctorRecord.user._id, 
-    appointmentDate: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
-    appointmentTime,
+    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
+    time,
     reason,
-    consultationType,
+    type,
     status: 'pending', 
   });
   const populatedAppointmentForNotif = await Appointment.findById(appointment._id).populate('patient', 'firstName lastName');
@@ -65,7 +65,7 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
     await createNotification(
       doctorRecord.user._id.toString(),
       'New Appointment Request',
-      `${patientName} has requested an appointment with you on ${appointmentDate} at ${appointmentTime}. Reason: ${reason}.`,
+      `${patientName} has requested an appointment with you on ${date} at ${time}. Reason: ${reason}.`,
       'appointment',
       appointment._id.toString(),
       'Appointment'
@@ -89,8 +89,15 @@ exports.getAppointments = asyncHandler(async (req, res, next) => {
   }
   const appointments = await Appointment.find(query)
     .populate('patient', 'firstName lastName email profilePictureUrl')
-    .populate('doctor', 'firstName lastName email profilePictureUrl specialization')
-    .sort({ appointmentDate: -1, appointmentTime: -1 });
+    .populate({
+      path: 'doctor',
+      select: 'user specialty',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    })
+    .sort({ date: -1, time: -1 });
   res.status(200).json(new ApiResponse(200, appointments, 'Appointments fetched successfully.'));
 });
 exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
@@ -179,7 +186,14 @@ exports.getAppointmentById = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const appointment = await Appointment.findById(appointmentId)
     .populate('patient', 'firstName lastName email profilePictureUrl')
-    .populate('doctor', 'firstName lastName email profilePictureUrl specialization');
+    .populate({
+      path: 'doctor',
+      select: 'user specialty',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }

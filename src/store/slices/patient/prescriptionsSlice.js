@@ -1,1 +1,89 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';import { prescriptionApi } from '@/store/services/patient/prescriptionApi';const initialState = {    prescriptions: [],    activePrescriptions: [],    loading: false,    error: null,};export const fetchPrescriptions = createAsyncThunk(    'prescriptions/fetchPrescriptions',    async (_, { rejectWithValue }) => {        try {            const response = await prescriptionApi.getPrescriptions();            return response.data;        } catch (error) {            return rejectWithValue(error.response?.data || error.message);        }    });export const fetchActivePrescriptions = createAsyncThunk(    'prescriptions/fetchActivePrescriptions',    async (_, { rejectWithValue }) => {        try {            const response = await prescriptionApi.getActivePrescriptions();            return response.data;        } catch (error) {            return rejectWithValue(error.response?.data || error.message);        }    });const prescriptionsSlice = createSlice({    name: 'prescriptions',    initialState,    reducers: {        clearError: (state) => {            state.error = null;        },    },    extraReducers: (builder) => {        builder            .addCase(fetchPrescriptions.pending, (state) => {                state.loading = true;                state.error = null;            })            .addCase(fetchPrescriptions.fulfilled, (state, action) => {                state.loading = false;                state.prescriptions = action.payload;            })            .addCase(fetchPrescriptions.rejected, (state, action) => {                state.loading = false;                state.error = action.payload;            })            .addCase(fetchActivePrescriptions.pending, (state) => {                state.loading = true;                state.error = null;            })            .addCase(fetchActivePrescriptions.fulfilled, (state, action) => {                state.loading = false;                state.activePrescriptions = action.payload;            })            .addCase(fetchActivePrescriptions.rejected, (state, action) => {                state.loading = false;                state.error = action.payload;            });    },});export const { clearError } = prescriptionsSlice.actions;export default prescriptionsSlice.reducer; 
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getPrescriptions, addPrescription, updatePrescription, deletePrescription } from '@/store/services/patient/prescriptionApi';
+
+export const fetchPrescriptions = createAsyncThunk(
+    'prescriptions/fetchPrescriptions',
+    async (_, { rejectWithValue }) => {
+        try {
+            return await getPrescriptions();
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const createNewPrescription = createAsyncThunk(
+    'prescriptions/createNewPrescription',
+    async (prescriptionData, { rejectWithValue }) => {
+        try {
+            return await addPrescription(prescriptionData);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const editPrescription = createAsyncThunk(
+    'prescriptions/editPrescription',
+    async ({ id, prescriptionData }, { rejectWithValue }) => {
+        try {
+            return await updatePrescription(id, prescriptionData);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const removePrescription = createAsyncThunk(
+    'prescriptions/removePrescription',
+    async (id, { rejectWithValue }) => {
+        try {
+            await deletePrescription(id);
+            return id;
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+const prescriptionsSlice = createSlice({
+    name: 'prescriptions',
+    initialState: {
+        prescriptions: [],
+        loading: false,
+        error: null,
+    },
+    reducers: {
+        clearError: (state) => {
+            state.error = null;
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchPrescriptions.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchPrescriptions.fulfilled, (state, action) => {
+                state.loading = false;
+                state.prescriptions = Array.isArray(action.payload) ? action.payload : [];
+            })
+            .addCase(fetchPrescriptions.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(createNewPrescription.fulfilled, (state, action) => {
+                state.prescriptions.push(action.payload);
+            })
+            .addCase(editPrescription.fulfilled, (state, action) => {
+                const idx = state.prescriptions.findIndex(p => p.id === action.payload.id);
+                if (idx !== -1) state.prescriptions[idx] = action.payload;
+            })
+            .addCase(removePrescription.fulfilled, (state, action) => {
+                state.prescriptions = state.prescriptions.filter(p => p.id !== action.payload);
+            });
+    },
+});
+
+export const { clearError } = prescriptionsSlice.actions;
+export default prescriptionsSlice.reducer; 

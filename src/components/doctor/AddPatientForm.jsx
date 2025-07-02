@@ -107,7 +107,7 @@ export default function AddPatientForm({ onClose, onSuccess }) {
         }
     };
     return (
-        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
                     Add Patient
@@ -143,12 +143,12 @@ export default function AddPatientForm({ onClose, onSuccess }) {
                 </nav>
             </div>
             {error && (
-                <div className="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
+                <div className="p-3 mb-4 text-sm text-red-800 rounded-2xl bg-red-50">
                     {error}
                 </div>
             )}
             {success && (
-                <div className="p-3 mb-4 text-sm text-green-800 rounded-lg bg-green-50">
+                <div className="p-3 mb-4 text-sm text-green-800 rounded-2xl bg-green-50">
                     {success}
                 </div>
             )}

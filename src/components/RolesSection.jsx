@@ -165,7 +165,7 @@ const RoleCard = ({
             onMouseEnter={() => setHoveredFeature(i)}
             onMouseLeave={() => setHoveredFeature(null)}
             className={clsx(
-              'flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 cursor-pointer',
+              'flex items-center gap-2 rounded-2xl px-3 py-2 transition-colors duration-150 cursor-pointer',
               isHovered
                 ? 'bg-primary/10 text-foreground'
                 : 'bg-transparent text-muted-foreground'

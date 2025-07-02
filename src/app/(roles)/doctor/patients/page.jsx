@@ -90,14 +90,14 @@ export default function PatientsPage() {
       <Card className="mb-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
           <h1 className="text-2xl font-bold text-card-foreground">{t('doctor.patients.title', 'Patient Management')}</h1>
-          <Button onClick={handleOpenAddDialog} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-md">
+          <Button onClick={handleOpenAddDialog} className="rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground  shadow-md">
             <UserPlus className="mr-2 h-4 w-4" />
             {t('doctor.patients.addNew', 'Add New Patient')}
           </Button>
         </CardContent>
       </Card>
       {error && (
-        <Alert variant="destructive" className="mb-6 rounded-lg bg-destructive/10 border border-destructive text-destructive-foreground">
+        <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/10 border border-destructive text-destructive-foreground">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -105,30 +105,30 @@ export default function PatientsPage() {
         <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/3 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('doctor.patients.searchPlaceholder', 'Search patients by name, condition, or ID...')}
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="pl-10 bg-background border border-border text-foreground rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                className="rounded-2xl pl-10 bg-background border border-border text-foreground    focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
               />
             </div>
             <Button
               variant="outline"
-              className="whitespace-nowrap text-muted-foreground border border-border hover:bg-muted/50 rounded-lg shadow-sm"
+              className="rounded-2xl whitespace-nowrap text-muted-foreground border border-border hover:bg-muted/50  shadow-sm"
             >
               <Filter className="mr-2 h-4 w-4" />
               {t('doctor.patients.advancedFilters', 'Advanced Filters')}
             </Button>
-          </div>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
-            <TabsList className="bg-muted rounded-lg p-1">
-              <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.all}</TabsTrigger>
-              <TabsTrigger value="active" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.active}</TabsTrigger>
-              <TabsTrigger value="urgent" className="rounded-lg data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">{tabLabels.urgent}</TabsTrigger>
-              <TabsTrigger value="inactive" className="rounded-lg data-[state=active]:bg-muted-foreground/10 data-[state=active]:text-foreground">{tabLabels.inactive}</TabsTrigger>
+            <TabsList className="bg-muted rounded-2xl p-1">
+              <TabsTrigger value="all" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.all}</TabsTrigger>
+              <TabsTrigger value="active" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.active}</TabsTrigger>
+              <TabsTrigger value="urgent" className="rounded-2xl data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">{tabLabels.urgent}</TabsTrigger>
+              <TabsTrigger value="inactive" className="rounded-2xl data-[state=active]:bg-muted-foreground/10 data-[state=active]:text-foreground">{tabLabels.inactive}</TabsTrigger>
             </TabsList>
           </Tabs>
+          </div>  
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -148,7 +148,7 @@ export default function PatientsPage() {
               <Button
                 variant="outline"
                 onClick={handleOpenAddDialog}
-                className="text-primary border-primary hover:bg-primary/10 rounded-lg"
+                className="text-primary border-primary hover:bg-primary/10 rounded-2xl"
               >
                 {t('doctor.patients.addNew', 'Add New Patient')}
               </Button>

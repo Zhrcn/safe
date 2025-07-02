@@ -38,20 +38,20 @@ const ThemeSwitcher = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="relative focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow hover:bg-primary/10 transition-colors"
+          className="relative focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl shadow hover:bg-primary/10 transition-colors"
           aria-label={t('themeSwitcher.toggleTheme', 'Toggle theme')}
         >
           <Palette className="h-5 w-5" />
           <span className="sr-only">{t('themeSwitcher.toggleTheme', 'Toggle theme')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44 rounded-lg shadow-xl border border-border bg-card">
+      <DropdownMenuContent align="end" className="w-44 rounded-2xl shadow-xl border border-border bg-card">
         {themes.map((theme) => (
           <DropdownMenuItem
             key={theme.name}
             onClick={() => setTheme(theme.name)}
             className={cn(
-              "flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-3 py-2 text-base font-medium transition-all",
+              "flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl px-3 py-2 text-base font-medium transition-all",
               currentTheme === theme.name && "bg-primary/10 text-primary shadow"
             )}
             tabIndex={0}
@@ -59,7 +59,7 @@ const ThemeSwitcher = () => {
           >
             <span>{theme.label}</span>
             {currentTheme === theme.name && (
-              <span className="h-2.5 w-2.5 rounded-lg bg-primary border-2 border-primary" />
+              <span className="h-2.5 w-2.5 rounded-2xl bg-primary border-2 border-primary" />
             )}
           </DropdownMenuItem>
         ))}

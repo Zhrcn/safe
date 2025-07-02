@@ -14,7 +14,7 @@ export default function SuccessState({
         className
       )}
     >
-      <div className="rounded-lg bg-success/10 p-4 mb-4">
+      <div className="rounded-2xl bg-success/10 p-4 mb-4">
         <CheckCircle2 className="h-8 w-8 text-success" />
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -40,7 +40,7 @@ export function SuccessCard({
   return (
     <div
       className={cn(
-        'p-6 rounded-lg border border-success/50 bg-success/10',
+        'p-6 rounded-2xl border border-success/50 bg-success/10',
         className
       )}
     >

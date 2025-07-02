@@ -1,27 +1,44 @@
 'use client';
 import { Users, Search, Edit, UserX } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Button from '@/components/ui/Button';
 import { AdminPageContainer, AdminCard } from '@/components/admin/AdminComponents';
-const mockUsers = [
-  { id: 1, name: 'Dr. Ahmad Al-Ali', role: 'Doctor', email: 'ahmad.ali@example.com', status: 'Active' },
-  { id: 2, name: 'Patient A', role: 'Patient', email: 'patient.a@example.com', status: 'Active' },
-  { id: 3, name: 'Fatima Al-Abbas', role: 'Pharmacist', email: 'fatima.abbas@example.com', status: 'Active' },
-  { id: 4, name: 'Admin User', role: 'Admin', email: 'admin@example.com', status: 'Active' },
-  { id: 5, name: 'Patient B', role: 'Patient', email: 'patient.b@example.com', status: 'Inactive' },
-];
+import { getUsers } from '@/services/adminService';
+import { UserTable } from '@/components/admin/UserTable';
+
 export default function AdminUsersPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const filteredUsers = mockUsers.filter(user =>
+
+  useEffect(() => {
+    async function fetchUsers() {
+      setLoading(true);
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (error) {
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const handleEditUser = (userId) => {
     console.log('Edit User clicked for ID:', userId);
   };
   const handleToggleUserStatus = (userId, currentStatus) => {
     console.log(`Toggle status for User ID: ${userId}, current status: ${currentStatus}`);
   };
+
   return (
     <AdminPageContainer
       title="User Management"
@@ -43,74 +60,13 @@ export default function AdminUsersPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Role</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Status</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
-                    No users found.
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                  >
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-                      <div className="flex items-center">
-                        <Users size={20} className="mr-2 text-gray-600 dark:text-gray-300" />
-                        {user.name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{user.role}</td>
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{user.email}</td>
-                    <td className={`px-4 py-3 ${user.status === 'Active' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {user.status}
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2">
-                      <Button
-                        onClick={() => handleEditUser(user.id)}
-                        className="inline-flex items-center px-3 py-1.5 border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors duration-200"
-                      >
-                        <Edit size={16} className="mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleToggleUserStatus(user.id, user.status)}
-                        className={`inline-flex items-center px-3 py-1.5 rounded-md transition-colors duration-200 ${
-                          user.status === 'Active'
-                            ? 'border border-red-600 dark:border-red-400 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50'
-                            : 'bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600'
-                        }`}
-                      >
-                        {user.status === 'Active' ? (
-                          <>
-                            <UserX size={16} className="mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <Users size={16} className="mr-1" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Loading users...</p>
+            </div>
+          ) : (
+            <UserTable users={filteredUsers} />
+          )}
         </div>
       </AdminCard>
     </AdminPageContainer>

@@ -48,7 +48,7 @@ export default function Footer() {
                     key={social.label}
                     href={social.href}
                     aria-label={t(`footer.social.${social.label.toLowerCase()}`, social.label)}
-                    className="p-2 text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg bg-muted shadow hover:bg-primary/10 hover:scale-110 active:scale-95 duration-150"
+                    className="p-2 text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl bg-muted shadow hover:bg-primary/10 hover:scale-110 active:scale-95 duration-150"
                   >
                     <social.icon className="w-5 h-5" />
                   </a>
@@ -60,7 +60,7 @@ export default function Footer() {
                 <Mail className="w-4 h-4 mr-2 text-muted-foreground" />
                 <a
                   href="mailto:contact@safemedical.com"
-                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg hover:underline"
+                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl hover:underline"
                 >
                   {t('footer.email', 'contact@safemedical.com')}
                 </a>
@@ -69,7 +69,7 @@ export default function Footer() {
                 <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
                 <a
                   href="tel:+1234567890"
-                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-lg hover:underline"
+                  className="text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl hover:underline"
                 >
                   {t('footer.phone', '(123) 456-7890')}
                 </a>
@@ -90,7 +90,7 @@ export default function Footer() {
                   <div key={link.name} className="mb-3">
                     <a
                       href={link.href}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5 hover:underline hover:scale-105 duration-150"
+                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl px-1 py-0.5 hover:underline hover:scale-105 duration-150"
                     >
                       {link.name}
                     </a>
@@ -102,7 +102,7 @@ export default function Footer() {
                   <div key={link.name} className="mb-3">
                     <a
                       href={link.href}
-                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5 hover:underline hover:scale-105 duration-150"
+                      className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl px-1 py-0.5 hover:underline hover:scale-105 duration-150"
                     >
                       {link.name}
                     </a>
@@ -117,7 +117,7 @@ export default function Footer() {
               <div key={link.name} className="mb-3">
                 <a
                   href={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-lg px-1 py-0.5 hover:underline hover:scale-105 duration-150"
+                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary rounded-2xl px-1 py-0.5 hover:underline hover:scale-105 duration-150"
                 >
                   {link.name}
                 </a>
@@ -125,7 +125,7 @@ export default function Footer() {
             ))}
             <div className="mt-8">
               <p className="text-muted-foreground mb-2 font-medium">{t('footer.subscribe', 'Subscribe to our newsletter')}</p>
-              <form className="flex rounded-lg overflow-hidden shadow border border-border bg-background/70 backdrop-blur-md">
+              <form className="flex rounded-2xl overflow-hidden shadow border border-border bg-background/70 backdrop-blur-md">
                 <input
                   type="email"
                   placeholder={t('footer.emailPlaceholder', 'Enter your email')}

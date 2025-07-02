@@ -7,7 +7,7 @@ export default function AppointmentCard({ appointments = [] }) {
     console.log('AppointmentCard received appointments:', appointments);
     if (!appointments?.length) {
         return (
-            <div className="rounded-lg border p-6">
+            <div className="rounded-2xl border p-6">
                 <p className="text-center text-gray-500">
                     No upcoming appointments
                 </p>
@@ -38,7 +38,7 @@ export default function AppointmentCard({ appointments = [] }) {
         }
     };
     return (
-        <div className="rounded-lg border p-6">
+        <div className="rounded-2xl border p-6">
             <h2 className="mb-4 text-lg font-semibold">
                 Upcoming Appointments
             </h2>

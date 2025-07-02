@@ -5,7 +5,7 @@ const Patient = require('../models/Patient');
 const MedicalFile = require('../models/MedicalFile');
 const ErrorResponse = require('../utils/errorResponse');
 const getProfile = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .select('-password')
         .populate('medicalFile');
     if (!patient) {
@@ -29,7 +29,7 @@ const updateProfile = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient, 'Patient profile updated successfully.'));
 });
 const getMedicalFile = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .select('medicalFile')
         .populate('medicalFile');
     if (!patient) {
@@ -40,7 +40,7 @@ const getMedicalFile = asyncHandler(async (req, res) => {
 });
 const updateMedicalFile = asyncHandler(async (req, res) => {
     const { height, weight, bloodType, allergies, chronicConditions } = req.body;
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate('medicalFile');
     if (!patient) {
         res.status(404);
@@ -55,7 +55,7 @@ const updateMedicalFile = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.medicalFile, 'Medical file updated successfully.'));
 });
 const getAppointments = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate({
             path: 'appointments',
             populate: {
@@ -70,26 +70,29 @@ const getAppointments = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.appointments, 'Appointments retrieved successfully.'));
 });
 const createAppointment = asyncHandler(async (req, res) => {
-    const { doctorId, date, time, reason } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const { doctorId, date, time, reason, type } = req.body;
+    const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
     }
-    const appointment = {
+    const Appointment = require('../models/Appointment');
+    const appointment = await Appointment.create({
+        patient: patient._id,
         doctor: doctorId,
         date,
         time,
         reason,
+        type,
         status: 'scheduled'
-    };
-    patient.appointments.push(appointment);
+    });
+    patient.appointments.push(appointment._id);
     await patient.save();
     res.status(201).json(new ApiResponse(201, appointment, 'Appointment created successfully.'));
 });
 const updateAppointment = asyncHandler(async (req, res) => {
     const { date, time, reason, status } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     const appointment = patient.appointments.id(req.params.id);
     if (!appointment) {
         res.status(404);
@@ -103,7 +106,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, appointment, 'Appointment updated successfully.'));
 });
 const deleteAppointment = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     const appointment = patient.appointments.id(req.params.id);
     if (!appointment) {
         res.status(404);
@@ -114,7 +117,7 @@ const deleteAppointment = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, null, 'Appointment deleted successfully.'));
 });
 const getMedications = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate('medications');
     if (!patient) {
         res.status(404);
@@ -124,7 +127,7 @@ const getMedications = asyncHandler(async (req, res) => {
 });
 const addMedication = asyncHandler(async (req, res) => {
     const { name, dosage, frequency, startDate, endDate } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
@@ -143,7 +146,7 @@ const addMedication = asyncHandler(async (req, res) => {
 });
 const updateMedication = asyncHandler(async (req, res) => {
     const { dosage, frequency, endDate, status } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     const medication = patient.medications.id(req.params.id);
     if (!medication) {
         res.status(404);
@@ -157,7 +160,7 @@ const updateMedication = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, medication, 'Medication updated successfully.'));
 });
 const deleteMedication = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     const medication = patient.medications.id(req.params.id);
     if (!medication) {
         res.status(404);
@@ -168,7 +171,7 @@ const deleteMedication = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, null, 'Medication deleted successfully.'));
 });
 const getConsultations = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate({
             path: 'consultations',
             populate: {
@@ -184,7 +187,7 @@ const getConsultations = asyncHandler(async (req, res) => {
 });
 const createConsultation = asyncHandler(async (req, res) => {
     const { doctorId, date, symptoms, notes } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
@@ -202,7 +205,7 @@ const createConsultation = asyncHandler(async (req, res) => {
 });
 const updateConsultation = asyncHandler(async (req, res) => {
     const { symptoms, notes, status } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     const consultation = patient.consultations.id(req.params.id);
     if (!consultation) {
         res.status(404);
@@ -215,7 +218,7 @@ const updateConsultation = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, consultation, 'Consultation updated successfully.'));
 });
 const getPrescriptions = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate({
             path: 'prescriptions',
             populate: {
@@ -230,7 +233,7 @@ const getPrescriptions = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.prescriptions, 'Prescriptions retrieved successfully.'));
 });
 const getActivePrescriptions = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate({
             path: 'prescriptions',
             match: { status: 'active' },
@@ -246,7 +249,7 @@ const getActivePrescriptions = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.prescriptions, 'Active prescriptions retrieved successfully.'));
 });
 const getMessages = asyncHandler(async (req, res) => {
-    const patient = await Patient.findById(req.user.id)
+    const patient = await Patient.findOne({ user: req.user._id })
         .populate({
             path: 'messages',
             populate: {
@@ -262,7 +265,7 @@ const getMessages = asyncHandler(async (req, res) => {
 });
 const sendMessage = asyncHandler(async (req, res) => {
     const { recipientId, content } = req.body;
-    const patient = await Patient.findById(req.user.id);
+    const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
@@ -313,6 +316,24 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
     };
     res.status(200).json(new ApiResponse(200, summary, 'Dashboard summary retrieved successfully.'));
 });
+const getLatestVitals = asyncHandler(async (req, res) => {
+    const Patient = require('../models/Patient');
+    const MedicalFile = require('../models/MedicalFile');
+    // Find the patient by user ID
+    const patient = await Patient.findOne({ user: req.user._id });
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+    // Populate the medical file
+    const medicalFile = await MedicalFile.findById(patient.medicalFile);
+    if (!medicalFile || !medicalFile.vitalSigns || medicalFile.vitalSigns.length === 0) {
+        return res.status(404).json(new ApiResponse(404, null, 'No vital signs found.'));
+    }
+    // Get the latest vital signs (last entry)
+    const latestVitals = medicalFile.vitalSigns[medicalFile.vitalSigns.length - 1];
+    res.status(200).json(new ApiResponse(200, latestVitals, 'Latest vital signs retrieved successfully.'));
+});
 module.exports = {
     getProfile,
     updateProfile,
@@ -334,4 +355,5 @@ module.exports = {
     getMessages,
     sendMessage,
     getDashboardSummary,
+    getLatestVitals,
 };

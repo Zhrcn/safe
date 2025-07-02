@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import PageHeader from '@/components/patient/PageHeader';
-import { mockPatientData } from '@/mockdata/patientData';
 import {
     Pill,
     Calendar,
@@ -28,6 +27,8 @@ import { ChevronDown, ListFilter, Search } from 'lucide-react';
 import StatusBadge from '@/components/common/StatusBadge';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchPrescriptions } from '@/store/slices/patient/prescriptionsSlice';
 const pillColors = [
   'bg-blue-100 text-blue-800',
   'bg-green-100 text-green-800',
@@ -142,14 +143,14 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                                 {t('patient.prescriptions.medications')}
                             </h4>
                             <span className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full font-semibold shadow-sm border border-gray-200 dark:border-gray-700">
-                                {prescription.medications.length}
+                                {(Array.isArray(prescription.medications) ? prescription.medications : []).length}
                             </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {prescription.medications.map((medication, index) => (
+                            {(Array.isArray(prescription.medications) ? prescription.medications : []).map((medication, index) => (
                                 <span
                                     key={index}
-                                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border-2 shadow-sm transition-all duration-300 hover:shadow-md ${getPillColor(index)}`}
+                                    className={`inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-semibold border-2 shadow-sm transition-all duration-300 hover:shadow-md ${getPillColor(index)}`}
                                     aria-label={`${t('patient.prescriptions.medications')}: ${medication.name}`}
                                 >
                                     <Pill className="w-3 h-3" />
@@ -183,7 +184,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                         <Tooltip content={t('patient.prescriptions.viewDetails')}>
                             <Button
                                 onClick={() => onViewDetails(prescription)}
-                                className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 text-sm"
+                                className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 text-sm"
                                 aria-label={t('patient.prescriptions.viewDetails')}
                             >
                                 <Eye className="w-4 h-4 mr-1.5" />
@@ -199,7 +200,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                                     variant="outline"
                                     size="icon"
                                     onClick={() => onShowQR(prescription)}
-                                    className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                    className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
                                     aria-label={t('patient.prescriptions.showQRCode')}
                                 >
                                     <QrCode className="w-5 h-5" />
@@ -210,7 +211,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
                                 aria-label={t('patient.prescriptions.download')}
                             >
                                 <Download className="w-5 h-5" />
@@ -220,7 +221,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                                className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 dark:bg-primary/20 dark:hover:bg-primary/30 dark:text-primary-foreground dark:hover:text-primary-foreground/80 border-2 border-primary/30 dark:border-primary/50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
                                 aria-label={t('patient.prescriptions.print')}
                             >
                                 <Printer className="w-5 h-5" />
@@ -261,7 +262,7 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                     <DialogTitle className="text-2xl font-bold text-foreground">{t('patient.prescriptions.prescriptionDetails')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2 -mr-2">
-                    <div className="flex items-center gap-4 p-4 bg-info/10 rounded-lg">
+                    <div className="flex items-center gap-4 p-4 bg-info/10 rounded-2xl">
                         <Avatar className="h-20 w-20 border-4 border-info/20 shadow-md">
                             <AvatarImage src={prescription.doctorPhoto} alt={prescription.doctorName} />
                             <AvatarFallback>
@@ -286,9 +287,9 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                     </div>
                     <Separator />
                     <div className="space-y-4">
-                        <h4 className="text-xl font-semibold text-foreground">{t('patient.prescriptions.medications')} ({prescription.medications.length})</h4>
+                        <h4 className="text-xl font-semibold text-foreground">{t('patient.prescriptions.medications')} {(Array.isArray(prescription.medications) ? prescription.medications : []).length}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {prescription.medications.map((medication, index) => (
+                            {(Array.isArray(prescription.medications) ? prescription.medications : []).map((medication, index) => (
                                 <Card key={index} className="p-4 border border-border shadow-sm transition-shadow hover:shadow-md">
                                     <CardContent className="p-0">
                                         <div className="flex items-center gap-3 mb-2">
@@ -313,7 +314,7 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                         </div>
                     </div>
                     {prescription.notes && (
-                        <div className="space-y-3 p-4 bg-muted rounded-lg border border-border">
+                        <div className="space-y-3 p-4 bg-muted rounded-2xl border border-border">
                             <h4 className="text-xl font-semibold text-foreground">{t('patient.prescriptions.doctorsNotes')}</h4>
                             <p className="text-muted-foreground leading-relaxed">{prescription.notes}</p>
                         </div>
@@ -343,19 +344,19 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                 <DialogHeader className="pb-4 mb-4 border-b border-border">
                     <DialogTitle className="text-2xl font-bold text-foreground">{t('patient.prescriptions.prescriptionQRCode')}</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col items-center space-y-6 py-4 bg-info/10 rounded-lg border border-info/20">
+                <div className="flex flex-col items-center space-y-6 py-4 bg-info/10 rounded-2xl border border-info/20">
                     <p className="text-md text-info font-medium">
                         {t('patient.prescriptions.scanThisCodeAtThePharmacyToGetYourPrescription')}
                     </p>
-                    <div className="p-5 bg-card rounded-lg shadow-xl border-4 border-primary/30">
+                    <div className="p-5 bg-card rounded-2xl shadow-xl border-4 border-primary/30">
                         <QRCodeSVG
                             value={JSON.stringify({
                                 id: prescription.id,
                                 doctor: prescription.doctorName,
                                 date: prescription.date,
-                                medications: prescription.medications.map(med => med.name).join(', '),
-                                patientId: mockPatientData.id,
-                                patientName: mockPatientData.name,
+                                medications: (Array.isArray(prescription.medications) ? prescription.medications : []).map(med => med.name).join(', '),
+                                patientId: prescription.patientId || '',
+                                patientName: prescription.patientName || '',
                             })}
                             size={250}
                             level="H"
@@ -364,7 +365,7 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                     </div>
                     <div className="text-sm text-muted-foreground mt-2">
                         <p><span className="font-semibold">{t('patient.prescriptions.prescriptionID')}:</span> {prescription.id}</p>
-                        <p><span className="font-semibold">{t('patient.prescriptions.medications')}:</span> {prescription.medications.map(med => med.name).join(', ')}</p>
+                        <p><span className="font-semibold">{t('patient.prescriptions.medications')}:</span> {(Array.isArray(prescription.medications) ? prescription.medications : []).map(med => med.name).join(', ')}</p>
                     </div>
                 </div>
                 <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end">
@@ -377,12 +378,13 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
     );
 };
 const PrescriptionsPage = () => {
-    const [prescriptions, setPrescriptions] = useState([]);
+    const dispatch = useDispatch();
+    const { prescriptions, loading: isLoading, error } = useSelector(state => state.prescriptions);
+    // Defensive: ensure prescriptions is always an array
+    const prescriptionsSafe = Array.isArray(prescriptions) ? prescriptions : (prescriptions?.data && Array.isArray(prescriptions.data) ? prescriptions.data : []);
     const [selectedPrescription, setSelectedPrescription] = useState(null);
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
     const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [sortBy, setSortBy] = useState('date');
@@ -390,42 +392,8 @@ const PrescriptionsPage = () => {
     const { t, i18n } = useTranslation('common');
     const isRtl = i18n.language === 'ar';
     useEffect(() => {
-        loadPrescriptions();
-    }, [filterStatus, searchTerm, sortBy, sortOrder]);
-    const loadPrescriptions = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            let filtered = mockPatientData.prescriptions || [];
-            if (searchTerm) {
-                filtered = filtered.filter(
-                    (p) =>
-                        p.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        p.medications.some((m) =>
-                            m.name.toLowerCase().includes(searchTerm.toLowerCase())
-                        )
-                );
-            }
-            if (filterStatus !== 'all') {
-                filtered = filtered.filter((p) => p.status === filterStatus);
-            }
-            filtered.sort((a, b) => {
-                let comparison = 0;
-                if (sortBy === 'date') {
-                    comparison = new Date(a.date) - new Date(b.date);
-                } else if (sortBy === 'doctorName') {
-                    comparison = a.doctorName.localeCompare(b.doctorName);
-                }
-                return sortOrder === 'asc' ? comparison : -comparison;
-            });
-            setPrescriptions(filtered);
-        } catch (err) {
-            setError('Failed to load prescriptions');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        dispatch(fetchPrescriptions());
+    }, [dispatch]);
     const handleShowQR = (prescription) => {
         setSelectedPrescription(prescription);
         setIsQrDialogOpen(true);
@@ -443,7 +411,7 @@ const PrescriptionsPage = () => {
         setSelectedPrescription(null);
     };
     const handleRetry = () => {
-        loadPrescriptions();
+        dispatch(fetchPrescriptions());
     };
     return (
         <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -530,7 +498,7 @@ const PrescriptionsPage = () => {
                     </DropdownMenu>
                 </div>
             </div>
-            {loading && (
+            {isLoading && (
                 <div className="text-center py-10">
                     <p className="text-lg text-muted-foreground">{t('patient.prescriptions.loadingPrescriptions')}</p>
                 </div>
@@ -546,14 +514,14 @@ const PrescriptionsPage = () => {
                     </Button>
                 </div>
             )}
-            {!loading && !error && ( (prescriptions.length === 0 && searchTerm === '') ? (
-                <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
+            {!isLoading && !error && ( (prescriptionsSafe.length === 0 && searchTerm === '') ? (
+                <div className="bg-card p-6 rounded-2xl shadow-sm text-center py-10 border border-border">
                     <h3 className="text-xl font-semibold text-foreground mb-3">{t('patient.prescriptions.noPrescriptionsFound')}</h3>
                     <p className="text-muted-foreground mb-4">{t('patient.prescriptions.itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
                     <p className="text-sm text-muted-foreground">{t('patient.prescriptions.prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
                 </div>
-            ) : (prescriptions.length === 0 && searchTerm !== '') ? (
-                <div className="bg-card p-6 rounded-lg shadow-sm text-center py-10 border border-border">
+            ) : (prescriptionsSafe.length === 0 && searchTerm !== '') ? (
+                <div className="bg-card p-6 rounded-2xl shadow-sm text-center py-10 border border-border">
                     <h3 className="text-xl font-semibold text-foreground mb-3">{t('patient.prescriptions.noMatchingPrescriptions')}</h3>
                     <p className="text-muted-foreground mb-4">{t('patient.prescriptions.yourSearchFor', { searchTerm })}</p>
                     <Button 
@@ -565,7 +533,7 @@ const PrescriptionsPage = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                    {prescriptions.map((prescription) => (
+                    {prescriptionsSafe.map((prescription) => (
                         <PrescriptionCard
                             key={prescription.id}
                             prescription={prescription}

@@ -126,7 +126,7 @@ export default function PatientCard({ patient }) {
                             type="button"
                             variant="default"
                             size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
                             onClick={handleViewPatient}
                         >
                         <Eye className="h-4 w-4 mr-1" /> View
@@ -135,7 +135,7 @@ export default function PatientCard({ patient }) {
                             type="button"
                             variant="outline"
                             size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium text-primary"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium text-primary"
                             onClick={() => handleOpenDialog('condition')}
                         >
                             <Activity className="h-4 w-4 mr-1" /> Update
@@ -144,7 +144,7 @@ export default function PatientCard({ patient }) {
                             type="button"
                             variant="outline"
                             size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium text-primary"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium text-primary"
                             onClick={() => handleOpenDialog('prescription')}
                         >
                             <FileText className="h-4 w-4 mr-1" /> Prescribe
@@ -153,7 +153,7 @@ export default function PatientCard({ patient }) {
                 {Boolean(menuAnchor) && (
                     <div
                         ref={menuRef}
-                        className="absolute right-0 top-12 w-48 bg-card rounded-lg shadow-lg py-1 border border-border z-20"
+                        className="absolute right-0 top-12 w-48 bg-card rounded-2xl shadow-lg py-1 border border-border z-20"
                     >
                         <Button
                             onClick={() => handleOpenDialog('edit')}

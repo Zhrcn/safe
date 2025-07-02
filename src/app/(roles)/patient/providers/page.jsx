@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { mockPatientData } from '@/mockdata/patientData';
 import PageHeader from '@/components/patient/PageHeader';
 import {
     Clock,
@@ -59,6 +58,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { useTranslation } from 'react-i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchProviders } from '@/store/slices/patient/providersSlice';
 
 const ProviderCardSkeleton = () => (
     <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-0 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 animate-pulse">
@@ -394,6 +395,12 @@ const ProvidersPageContent = () => {
     const [dialogType, setDialogType] = useState('');
     const [messageContent, setMessageContent] = useState('');
 
+    const dispatch = useDispatch();
+    useEffect(() => {
+        dispatch(fetchProviders());
+    }, [dispatch]);
+    const { providers, loading, error } = useSelector(state => state.providers);
+
     const allDoctors = [
         {
             id: 'doc1',
@@ -657,7 +664,7 @@ const ProvidersPageContent = () => {
                                 />
                                 
                                 {showSearchSuggestions && searchSuggestions.length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-2xl shadow-lg z-50 max-h-60 overflow-y-auto">
                                         {searchSuggestions.map((suggestion, index) => (
                                             <div
                                                 key={index}

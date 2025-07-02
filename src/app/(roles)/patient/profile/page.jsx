@@ -30,7 +30,6 @@ import AddMedicationDialog from '@/components/patient/medical-file/AddMedication
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { mockPatientData } from '@/mockdata/patientData';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
@@ -39,6 +38,8 @@ import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from '@/components/ui/ScrollArea';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchMedicalRecords } from '@/store/slices/patient/medical-recordsSlice';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -78,12 +79,18 @@ const ProfilePage = () => {
         groupNumber: '',
         expiryDate: null,
     });
-    const [medicalRecordsData, setMedicalRecordsData] = useState(mockPatientData.medicalRecords || {});
+    const [medicalRecordsData, setMedicalRecordsData] = useState({});
     const initializedProfileData = useRef(false);
     const [medicalTabValue, setMedicalTabValue] = useState('vitalSigns');
     const { t } = useTranslation('common');
+    const dispatch = useDispatch();
 
-    const isLoading = false;
+    useEffect(() => {
+        dispatch(fetchMedicalRecords());
+    }, [dispatch]);
+
+    const { medicalRecords, loading, error } = useSelector(state => state.medicalRecords);
+
     const apiError = null;
 
     const medicalRecordCategories = [
@@ -114,32 +121,32 @@ const ProfilePage = () => {
     
     useEffect(() => {
         if (!initializedProfileData.current) {
-            if (!isLoading && !apiError && mockPatientData.profile) {
+            if (!loading && !error && medicalRecords) {
                 setFormData({
-                    firstName: mockPatientData.profile.firstName || '',
-                    lastName: mockPatientData.profile.lastName || '',
-                    email: mockPatientData.profile.email || '',
-                    phone: mockPatientData.profile.phone || '',
-                    address: mockPatientData.profile.address || '',
-                    dateOfBirth: mockPatientData.profile.dateOfBirth ? new Date(mockPatientData.profile.dateOfBirth) : null,
+                    firstName: medicalRecords.profile?.firstName || '',
+                    lastName: medicalRecords.profile?.lastName || '',
+                    email: medicalRecords.profile?.email || '',
+                    phone: medicalRecords.profile?.phone || '',
+                    address: medicalRecords.profile?.address || '',
+                    dateOfBirth: medicalRecords.profile?.dateOfBirth ? new Date(medicalRecords.profile.dateOfBirth) : null,
                 });
-                setEmergencyContactData(mockPatientData.profile.emergencyContact || {
+                setEmergencyContactData(medicalRecords.profile?.emergencyContact || {
                     name: '',
                     relationship: '',
                     phone: '',
                     email: '',
                 });
-                setInsuranceData(mockPatientData.profile.insuranceDetails || {
+                setInsuranceData(medicalRecords.profile?.insuranceDetails || {
                     provider: '',
                     policyNumber: '',
                     groupNumber: '',
                     expiryDate: null,
                 });
-                setMedicalRecordsData(mockPatientData.medicalRecords || {});
+                setMedicalRecordsData(medicalRecords.medicalRecords || {});
                 initializedProfileData.current = true;
             }
         }
-    }, [isLoading, apiError, mockPatientData]);
+    }, [loading, error, medicalRecords]);
 
     const handleRefresh = () => {
     };
@@ -249,16 +256,16 @@ const ProfilePage = () => {
         <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
             <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
                 <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}>
-                    <AvatarImage src={mockPatientData.profile.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
+                    <AvatarImage src={medicalRecords?.profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
                     <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
-                        {mockPatientData.profile.firstName.charAt(0)}{mockPatientData.profile.lastName.charAt(0)}
+                        {medicalRecords?.profile?.firstName.charAt(0)}{medicalRecords?.profile?.lastName.charAt(0)}
                     </AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-left">
                     <h1 className="text-3xl font-bold text-foreground mb-1">
-                        {mockPatientData.profile.firstName} {mockPatientData.profile.lastName}
+                        {medicalRecords?.profile?.firstName} {medicalRecords?.profile?.lastName}
                     </h1>
-                    <p className="text-muted-foreground text-lg">{mockPatientData.profile.email}</p>
+                    <p className="text-muted-foreground text-lg">{medicalRecords?.profile?.email}</p>
                     <div className="flex gap-2 justify-center md:justify-start mt-2">
                         <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
                         <span className="flex items-center gap-1 text-success text-xs font-semibold">
@@ -896,7 +903,7 @@ const ProfilePage = () => {
     );
 
     const renderContent = () => {
-        if (isLoading) {
+        if (loading) {
             return (
                 <div className="min-h-[400px] flex items-center justify-center">
                     <LoadingSpinner />
@@ -904,10 +911,10 @@ const ProfilePage = () => {
             );
         }
 
-        if (apiError) {
+        if (error) {
             return (
                 <div className="min-h-[400px] flex items-center justify-center">
-                    <ErrorState message={apiError} onRetry={handleRefresh} />
+                    <ErrorState message={error} onRetry={handleRefresh} />
                 </div>
             );
         }
@@ -930,16 +937,16 @@ const ProfilePage = () => {
                     <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
                         <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
                             <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}> 
-                                <AvatarImage src={mockPatientData.profile.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
+                                <AvatarImage src={medicalRecords?.profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
                                 <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
-                                    {mockPatientData.profile.firstName.charAt(0)}{mockPatientData.profile.lastName.charAt(0)}
+                                    {medicalRecords?.profile?.firstName.charAt(0)}{medicalRecords?.profile?.lastName.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="text-center md:text-left">
                                 <h1 className="text-3xl font-bold text-foreground mb-1">
-                                    {mockPatientData.profile.firstName} {mockPatientData.profile.lastName}
+                                    {medicalRecords?.profile?.firstName} {medicalRecords?.profile?.lastName}
                                 </h1>
-                                <p className="text-muted-foreground text-lg">{mockPatientData.profile.email}</p>
+                                <p className="text-muted-foreground text-lg">{medicalRecords?.profile?.email}</p>
                                 <div className="flex gap-2 justify-center md:justify-start mt-2">
                                     <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
                                     <span className="flex items-center gap-1 text-success text-xs font-semibold">

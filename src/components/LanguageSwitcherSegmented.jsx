@@ -44,7 +44,7 @@ export default function LanguageSwitcherSegmented() {
     <div className="relative inline-flex items-center rounded-xl bg-primary/20 p-1 backdrop-blur-sm">
       <div 
         className={`
-          absolute top-1 bottom-1 rounded-lg bg-primary shadow-sm
+          absolute top-1 bottom-1 rounded-2xl bg-primary shadow-sm
           transition-all duration-300 ease-out z-0
           ${i18n.language === 'en' ? 'left-1 w-[calc(50%-4px)]' : 'right-1 w-[calc(50%-4px)]'}
         `}
@@ -56,7 +56,7 @@ export default function LanguageSwitcherSegmented() {
           onClick={() => changeLanguage(language.code)}
           disabled={isAnimating}
           className={`
-            relative z-10 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+            relative z-10 flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-medium
             transition-all duration-200 ease-out min-w-[80px] justify-center
             ${i18n.language === language.code
               ? 'text-primary-foreground'

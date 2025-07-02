@@ -17,7 +17,6 @@ export const verifyToken = (token) => {
     const currentTime = Date.now() / 1000;
     return decoded.exp > currentTime;
   } catch (error) {
-    console.error('Token verification error:', error);
     return false;
   }
 };
@@ -59,7 +58,6 @@ export const getTokenExpiration = () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.exp * 1000; 
     } catch (error) {
-        console.error('Error getting token expiration:', error);
         return null;
     }
 };
@@ -81,7 +79,6 @@ export const getUserData = () => {
       role: parsedData.role?.toLowerCase() || ROLES.PATIENT
     };
   } catch (error) {
-    console.error('Error getting user data from storage:', error);
     return null;
   }
 };
@@ -94,7 +91,6 @@ export const setUserData = (userData) => {
     };
     localStorage.setItem(AUTH_CONSTANTS.USER_STORAGE_KEY, JSON.stringify(dataToStore));
   } catch (error) {
-    console.error('Error setting user data in storage:', error);
   }
 };
 
@@ -102,14 +98,12 @@ export const removeUserData = () => {
   try {
     localStorage.removeItem(AUTH_CONSTANTS.USER_STORAGE_KEY);
   } catch (error) {
-    console.error('Error removing user data from storage:', error);
   }
 };
 
 export const hasToken = () => {
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem(TOKEN_KEY);
-        console.log('Checking token:', !!token);
         return !!token;
     }
     return false;

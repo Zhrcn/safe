@@ -83,7 +83,7 @@ const DashboardLayout = ({ children }) => {
   };
   const activePath = router.pathname; 
   const sidebarContent = (
-    <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm rounded-lg">
+    <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm rounded-2xl">
       <div className="flex h-16 items-center px-4">
         <h1 className="text-xl font-semibold text-foreground">SAFE Health</h1>
       </div>

@@ -20,7 +20,7 @@ export default function ProfileDialog({
       />
       <div
         className={cn(
-          'relative z-50 w-full max-w-sm rounded-lg border border-border bg-card shadow-lg',
+          'relative z-50 w-full max-w-sm rounded-2xl border border-border bg-card shadow-lg',
           className
         )}
       >
@@ -36,7 +36,7 @@ export default function ProfileDialog({
             size="icon"
             variant="ghost"
             aria-label="Close profile dialog"
-            className="rounded-lg hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-2xl hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -44,10 +44,10 @@ export default function ProfileDialog({
         <div className="p-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary" />
               </div>
-              <div className="absolute bottom-0 right-0 h-4 w-4 rounded-lg border-2 border-background bg-success" />
+              <div className="absolute bottom-0 right-0 h-4 w-4 rounded-2xl border-2 border-background bg-success" />
             </div>
             <div>
               <h4 className="font-medium text-foreground">

@@ -18,7 +18,7 @@ function OrderDetailDialog({ open, onClose, order, onMarkAsProcessed }) {
   return (
     <div className={`fixed inset-0 z-50 ${open ? 'block' : 'hidden'}`}>
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-bold">Order Details</h2>
           <Button
@@ -149,7 +149,7 @@ export default function PharmacistOrdersPage() {
           />
         }
       >
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-2">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-2">
           <Table>
             <TableHead>
               <TableRow>

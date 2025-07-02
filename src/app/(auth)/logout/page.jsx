@@ -20,7 +20,7 @@ export default function LogoutPage() {
   }, [isAuthenticated, dispatch, router]);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="bg-white p-4 rounded-lg shadow-md">
+      <div className="bg-white p-4 rounded-2xl shadow-md">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <h2 className="mt-4 text-lg font-medium text-foreground">
           {t('logout.loggingOut', 'Logging out...')}

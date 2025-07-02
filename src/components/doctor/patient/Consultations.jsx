@@ -66,7 +66,7 @@ const Consultations = ({ patientId }) => {
         );
     }
     return (
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Consultations</h2>
                 <Button
@@ -135,7 +135,7 @@ const Consultations = ({ patientId }) => {
             </div>
             {openDialog && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">
+                    <div className="relative p-6 bg-white rounded-2xl shadow-xl max-w-md mx-auto">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             {selectedConsultation ? 'Edit Consultation' : 'New Consultation'}
                         </h3>

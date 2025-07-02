@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Button from '@/components/ui/Button';
 import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 
 
@@ -19,7 +20,7 @@ export function AdminPageContainer({ title, description, children }) {
 
 export function AdminCard({ title, subtitle, actions, children, className = '' }) {
   return (
-    <div className={`border border-border bg-card shadow-sm rounded-lg ${className}`}>
+    <div className={`border border-border bg-card shadow-sm rounded-2xl ${className}`}>
       <div className="p-4">
         {(title || subtitle || actions) && (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
@@ -45,7 +46,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
   };
 
   const getWrapperClass = () => {
-    let baseClass = 'border border-border bg-card text-card-foreground rounded-lg p-4 transition-all duration-200';
+    let baseClass = 'border border-border bg-card text-card-foreground rounded-2xl p-4 transition-all duration-200';
     if (onClick) baseClass += ' cursor-pointer hover:shadow-md';
     return `${baseClass} ${className}`;
   };
@@ -86,7 +87,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
 
 export function ChartContainer({ title, subtitle, children, className = '' }) {
   return (
-    <div className={`border border-border bg-card text-card-foreground rounded-lg ${className}`}>
+    <div className={`border border-border bg-card text-card-foreground rounded-2xl ${className}`}>
       {title && (
         <div className="border-b border-border p-4">
           <h2 className="text-lg font-medium text-foreground">{title}</h2>

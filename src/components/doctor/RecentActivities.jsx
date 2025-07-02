@@ -47,7 +47,7 @@ const RecentActivities = () => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4">
             <h2 className="text-lg font-semibold mb-4">Recent Activities</h2>
             <div className="space-y-4">
                 {activities.map((activity, index) => (

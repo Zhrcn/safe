@@ -38,7 +38,7 @@ const PatientAnalytics = () => {
   }
   if (error) {
     return (
-      <div className="p-4 text-red-700 bg-red-100 rounded-lg">
+      <div className="p-4 text-red-700 bg-red-100 rounded-2xl">
         {error}
       </div>
     );
@@ -47,19 +47,19 @@ const PatientAnalytics = () => {
     <div className="space-y-6">
       {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-sm font-medium text-gray-500">Total Patients</h3>
           <p className="text-2xl font-semibold text-gray-900">{analytics.totalPatients}</p>
         </div>
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-sm font-medium text-gray-500">Active Patients</h3>
           <p className="text-2xl font-semibold text-gray-900">{analytics.activePatients}</p>
         </div>
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-sm font-medium text-gray-500">New Patients</h3>
           <p className="text-2xl font-semibold text-gray-900">{analytics.newPatients}</p>
         </div>
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-sm font-medium text-gray-500">Average Age</h3>
           <p className="text-2xl font-semibold text-gray-900">{analytics.averageAge}</p>
         </div>
@@ -67,7 +67,7 @@ const PatientAnalytics = () => {
       {}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {}
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Gender Distribution</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -82,7 +82,7 @@ const PatientAnalytics = () => {
           </div>
         </div>
         {}
-        <div className="p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-2xl shadow-sm">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Condition Distribution</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -98,7 +98,7 @@ const PatientAnalytics = () => {
         </div>
       </div>
       {}
-      <div className="p-4 bg-white rounded-lg shadow-sm">
+      <div className="p-4 bg-white rounded-2xl shadow-sm">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Patient Trends</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">

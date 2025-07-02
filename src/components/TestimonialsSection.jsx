@@ -219,14 +219,17 @@ export default function TestimonialsSection() {
             </Button>
             <div className="flex items-center gap-1">
               {testimonials.map((_, index) => (
-                <button
+                <span
                   key={index}
                   onClick={() => handleDotClick(index)}
+                  role="button"
+                  tabIndex={0}
                   aria-label={t('testimonials.goto', { index: index + 1, defaultValue: 'Go to testimonial {{index}}' })}
                   className={`w-2.5 h-2.5 rounded-full border-2 border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
                     activeIndex === index ? 'bg-primary' : 'bg-muted-foreground/20'
                   }`}
-                  style={{ transition: 'background 0.3s, border 0.3s' }}
+                  style={{ transition: 'background 0.3s, border 0.3s', cursor: 'pointer' }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleDotClick(index); }}
                 />
               ))}
             </div>

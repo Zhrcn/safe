@@ -16,7 +16,7 @@ export function PatientPageContainer({ children }) {
 }
 export function PatientCard({ title, subtitle, status, date, time, location, actions }) {
     return (
-        <Card className="p-6 hover:shadow-lg transition-all duration-200 rounded-lg border-border/50 bg-card">
+        <Card className="p-6 hover:shadow-lg transition-all duration-200 rounded-2xl border-border/50 bg-card">
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-lg font-semibold mb-1 text-foreground">
@@ -97,7 +97,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
                         )}
                     </div>
                     {icon && (
-                        <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
                             {icon}
                         </div>
                     )}
@@ -144,7 +144,7 @@ export function HealthIndicator({ value, type, className = '' }) {
     const info = getIndicatorInfo();
     return (
         <div className={`flex items-center ${className}`}>
-            <div className={`w-3 h-3 rounded-lg ${info.color} mr-2`}></div>
+            <div className={`w-3 h-3 rounded-2xl ${info.color} mr-2`}></div>
             <p className="text-sm text-muted-foreground">
                 {info.label}
             </p>
@@ -153,7 +153,7 @@ export function HealthIndicator({ value, type, className = '' }) {
 }
 export function MedicationStatusBadge({ status }) {
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-2xl text-xs font-medium bg-muted text-muted-foreground`}>
             {status}
         </span>
     );
@@ -188,7 +188,7 @@ export function AppointmentStatusBadge({ status }) {
         }
     };
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium ${getStatusColor(status)}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-2xl text-xs font-medium ${getStatusColor(status)}`}>
             {getStatusLabel(status)}
         </span>
     );

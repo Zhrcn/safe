@@ -3,7 +3,7 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 export function DoctorPageContainer({ title, description, children }) {
     return (
         <div>
-            <div className="bg-card text-card-foreground rounded-lg shadow-md min-h-[80vh] p-6">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-md min-h-[80vh] p-6">
                 <h1 className="text-2xl font-bold text-foreground mb-4">
                     {title}
                 </h1>
@@ -17,7 +17,7 @@ export function DoctorPageContainer({ title, description, children }) {
 }
 export function DoctorCard({ title, children, actions }) {
     return (
-        <div className="shadow-lg rounded-lg border border-border bg-card">
+        <div className="shadow-lg rounded-2xl border border-border bg-card">
             <div className="p-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
                     <h1 className="text-xl font-bold text-foreground">{title}</h1>
@@ -34,7 +34,7 @@ export function DoctorCard({ title, children, actions }) {
 }
 export function DashboardCard({ title, icon: IconComponent, children, actionButton }) {
     return (
-        <div className="h-full shadow-lg rounded-lg border border-border bg-card text-card-foreground transition-colors duration-200 hover:shadow-xl">
+        <div className="h-full shadow-lg rounded-2xl border border-border bg-card text-card-foreground transition-colors duration-200 hover:shadow-xl">
             <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center">
@@ -56,7 +56,7 @@ export function DashboardCard({ title, icon: IconComponent, children, actionButt
 }
 export function ChartContainer({ title, children, height = 300 }) {
     return (
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
                 {title}
             </h2>

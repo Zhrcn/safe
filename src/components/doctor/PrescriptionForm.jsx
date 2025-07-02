@@ -162,7 +162,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
   );
   return (
     <div className="max-w-xl mx-auto p-0">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-0">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-0">
         <div className="p-6 sm:p-8">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -182,19 +182,19 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             )}
           </div>
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
+            <div className="p-3 mb-4 text-sm text-red-800 rounded-2xl bg-red-50">
               {error}
             </div>
           )}
           {success && (
-            <div className="p-3 mb-4 text-sm text-green-800 rounded-lg bg-green-50">
+            <div className="p-3 mb-4 text-sm text-green-800 rounded-2xl bg-green-50">
               {success}
             </div>
           )}
           <SectionHeader icon={<Info size={18} className="text-blue-600" />}>
             Medications
           </SectionHeader>
-          <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+          <div className="border border-gray-200 rounded-2xl overflow-hidden mb-4">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -243,7 +243,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 id="newMedication"
                 value={newMedication}
                 onChange={(e) => handleMedicationChange(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
               >
                 <option value="">Select medication</option>
                 {commonMedications.map((med) => (
@@ -260,7 +260,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 value={newDosage}
                 onChange={(e) => setNewDosage(e.target.value)}
                 placeholder="Dosage"
-                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-lg"
+                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-2xl"
               />
             </div>
             <div>
@@ -269,7 +269,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 id="newFrequency"
                 value={newFrequency}
                 onChange={(e) => setNewFrequency(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
               >
                 <option value="">Select frequency</option>
                 {defaultFrequencyOptions.map((freq) => (
@@ -281,7 +281,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               <Button
                 type="button"
                 onClick={handleAddMedication}
-                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-2xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Plus className="h-5 w-5 mr-2" />Add Medication
               </Button>
@@ -304,7 +304,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                     {...field}
                     disabled={isSubmitting}
                     placeholder="e.g., Take with food, complete the full course..."
-                    className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-1 block w-full px-3 py-2 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}
                   ></textarea>
                 )}
               />
@@ -324,7 +324,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                     {...field}
                     disabled={isSubmitting}
                     placeholder="e.g., 7 days, 2 weeks, indefinitely"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.duration ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-1 block w-full px-3 py-2 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.duration ? 'border-red-500' : 'border-gray-300'}`}
                   />
                 )}
               />
@@ -344,7 +344,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                     {...field}
                     disabled={isSubmitting}
                     placeholder="Any additional notes for the pharmacist or patient"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   ></textarea>
                 )}
               />
@@ -353,7 +353,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               <Button
                 type="button"
                 onClick={handleReset}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-2xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 disabled={isSubmitting}
               >
                 Reset
@@ -361,14 +361,14 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               <Button
                 type="button"
                 onClick={handleSaveDraft}
-                className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-transparent rounded-lg shadow-sm hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-transparent rounded-2xl shadow-sm hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 disabled={isSubmitting}
               >
                 Save Draft
               </Button>
               <Button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-2xl shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating...' : 'Create Prescription'}
@@ -379,7 +379,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
       </div>
       {editDialogOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="relative p-6 bg-white rounded-lg shadow-xl max-w-md mx-auto">
+          <div className="relative p-6 bg-white rounded-2xl shadow-xl max-w-md mx-auto">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Medication Instructions</h3>
             <form className="space-y-4">
               <div>
@@ -387,7 +387,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 <textarea
                   id="editInstructions"
                   rows="4"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   value={editInstructions}
                   onChange={(e) => setEditInstructions(e.target.value)}
                 ></textarea>
@@ -396,14 +396,14 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             <div className="mt-6 flex justify-end space-x-3">
               <Button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-2xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 onClick={() => setEditDialogOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-2xl shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 onClick={handleEditDialogSave}
               >
                 Save Changes

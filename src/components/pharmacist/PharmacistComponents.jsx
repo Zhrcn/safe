@@ -20,7 +20,7 @@ export function PharmacistPageContainer({ title, description, children }) {
 }
 export function PharmacistCard({ title, children, actions }) {
     return (
-        <Card className="p-6 bg-card border border-border rounded-lg mb-6">
+        <Card className="p-6 bg-card border border-border rounded-2xl mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                 <h3 className="font-semibold text-xl text-foreground mb-2 sm:mb-0">
                     {title}

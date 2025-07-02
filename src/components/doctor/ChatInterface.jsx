@@ -45,7 +45,7 @@ function ConversationItem({ conversation, isActive, onClick }) {
     return (
         <div 
             onClick={() => onClick(conversation.id)}
-            className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+            className={`flex items-center p-3 rounded-2xl cursor-pointer transition-colors ${isActive ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
         >
             <div className="relative mr-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${getRoleColor(otherParticipant.role)}`}>
@@ -78,7 +78,7 @@ function MessageBubble({ message, isCurrentUser }) {
                 </div>
             )}
             <div>
-                <div className={`px-4 py-2 rounded-lg max-w-xs md:max-w-md ${isCurrentUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-bl-none'}`}>
+                <div className={`px-4 py-2 rounded-2xl max-w-xs md:max-w-md ${isCurrentUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-bl-none'}`}>
                     {message.content}
                 </div>
                 <div className="text-xs text-gray-400 mt-1 text-right">
@@ -335,7 +335,7 @@ export default function ChatInterface() {
                             <input
                                 type="text"
                                 placeholder="Search conversations..."
-                                className="text-foreground bg-background border border-border rounded-lg px-4 py-2"
+                                className="text-foreground bg-background border border-border rounded-2xl px-4 py-2"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -483,13 +483,13 @@ export default function ChatInterface() {
                             <div className="flex items-end">
                                 <textarea
                                     placeholder="Type a message..."
-                                    className="text-foreground bg-background border border-border rounded-lg px-4 py-2"
+                                    className="text-foreground bg-background border border-border rounded-2xl px-4 py-2"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     onKeyPress={handleKeyPress}
                                 ></textarea>
                                 <Button 
-                                    className="ml-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg"
+                                    className="ml-2 bg-primary text-primary-foreground px-4 py-2 rounded-2xl"
                                     onClick={handleSendMessage}
                                     disabled={!newMessage.trim()}
                                 >

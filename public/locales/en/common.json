@@ -152,7 +152,8 @@
       "quickActions": "Quick Actions",
       "upcomingAppointments": "Upcoming Appointments",
       "recentActivity": "Recent Activity",
-      "noRecentActivity": "No recent activity yet."
+      "noRecentActivity": "No recent activity yet.",
+      "noUpcomingAppointments": "No upcoming appointments"
     },
     "medications": {
       "days": {
@@ -175,7 +176,6 @@
       "addMedication": "Add Medication",
       "name": "Medication Name",
       "dosage": "Dosage",
-      "frequency": "Frequency",
       "selectFrequency": "Select frequency",
       "refillDate": "Refill Date",
       "prescribedBy": "Prescribed By",
@@ -451,7 +451,16 @@
     "analytics": {
       "title": "Patient Analytics",
       "description": "View analytics and statistics about your patients, appointments, and prescriptions.",
-      "loading": "Loading analytics..."
+      "loading": "Loading analytics...",
+      "topConditions": "Top Patient Conditions",
+      "appointments": "Appointments",
+      "condition": {
+        "diabetes": "Diabetes",
+        "hypertension": "Hypertension",
+        "asthma": "Asthma",
+        "heart disease": "Heart Disease",
+        "other": "Other"
+      }
     },
     "appointments": {
       "title": "Appointments",
@@ -460,33 +469,25 @@
       "scheduled": "Scheduled",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "allTypes": "All Types",
-      "inPerson": "In Person",
-      "video": "Video",
-      "phone": "Phone",
+      "unknown": "Unknown",
       "unknownPatient": "Unknown Patient",
       "unknownDoctor": "Unknown Doctor",
-      "consultation": "Consultation",
-      "unknown": "Unknown"
+      "consultation": "Consultation"
     },
     "messaging": {
       "title": "Messages",
       "startNewChat": "Start a new chat (not implemented)",
       "noChats": "No chats",
-      "send": "Send"
+      "send": "Send",
+      "selectConversation": "Select a conversation to start chatting."
     },
     "profile": {
       "title": "Doctor Profile",
       "description": "Manage your personal information, education, and professional achievements."
     },
     "medicine": {
-      "title": "Medicine Management",
-      "add": "Add New Medicine",
-      "edit": "Edit Medicine",
-      "delete": "Delete Medicine",
-      "name": "Medicine Name",
-      "dosage": "Dosage",
-      "instructions": "Instructions"
+      "title": "Medicine Availability",
+      "description": "Check the availability of medicines at partner pharmacies and find alternatives when needed."
     },
     "patients": {
       "title": "Patient Management",
@@ -497,10 +498,10 @@
       "active": "Active ({{count}})",
       "urgent": "Urgent ({{count}})",
       "inactive": "Inactive ({{count}})",
+      "loadError": "Failed to load patients",
       "noPatients": "No patients found",
       "noSearchResults": "Try a different search term or clear the filters",
-      "addPrompt": "Add a new patient to get started",
-      "loadError": "Failed to load patients"
+      "addPrompt": "Add a new patient to get started"
     },
     "patientDetail": {
       "notFound": "Patient not found",
@@ -673,7 +674,10 @@
   },
   "sidebar": {
     "dashboard": "Dashboard",
+    "patients": "Patients",
     "appointments": "Appointments",
+    "analytics": "Analytics",
+    "medicine": "Medicine",
     "consultations": "Consultations",
     "medications": "Medications",
     "messaging": "Messaging",
@@ -750,5 +754,57 @@
   "messages": {
     "title": "Messages",
     "chat_securely": "Chat securely with your healthcare team."
+  },
+  "admin": {
+    "dashboard": {
+      "loading": "Loading dashboard data...",
+      "totalUsers": "Total Users",
+      "appointments": "Appointments",
+      "prescriptions": "Prescriptions",
+      "systemHealth": "System Health"
+    },
+    "users": {
+      "title": "User Management",
+      "description": "Manage users in the system (Doctors, Patients, Pharmacists, Admins).",
+      "usersList": "Users List",
+      "searchPlaceholder": "Search Users",
+      "loading": "Loading users..."
+    },
+    "settings": {
+      "title": "Admin Settings",
+      "description": "Manage system settings and configurations."
+    }
+  },
+  "support": {
+    "title": "Support & Ticket Management",
+    "ticketId": "Ticket ID",
+    "user": "User",
+    "subject": "Subject",
+    "status": "Status",
+    "createdAt": "Created At",
+    "actions": "Actions",
+    "noTickets": "No tickets found.",
+    "view": "View"
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "userActivity": "User Activity Report",
+    "systemUsage": "System Usage Report",
+    "compliance": "Compliance Report",
+    "download": "Download",
+    "comingSoon": "Coming Soon"
+  },
+  "logs": {
+    "title": "Audit & System Logs",
+    "searchPlaceholder": "Search logs...",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "action": "Action",
+    "details": "Details",
+    "ip": "IP",
+    "noLogs": "No logs found."
+  },
+  "notifications": {
+    "loading": "Loading notifications..."
   }
 } 

@@ -33,7 +33,7 @@ const DropdownMenuSubTrigger = React.forwardRef(
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none",
+        "flex cursor-pointer select-none items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium outline-none",
         "bg-white text-black border border-border shadow-md hover:bg-muted/70 focus:bg-muted/80",
         darkBg, darkText, darkBorder, darkHover, transition,
         "focus:ring-2 focus:ring-primary/40 focus:z-10",
@@ -54,7 +54,7 @@ const DropdownMenuSubContent = React.forwardRef(
     <DropdownMenuPrimitive.SubContent
       ref={ref}
       className={cn(
-        "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-white text-black p-2 shadow-2xl",
+        "z-50 min-w-[10rem] overflow-hidden rounded-2xl border border-border bg-white text-black p-2 shadow-2xl",
         darkBg, darkText, darkBorder, transition,
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
@@ -72,7 +72,7 @@ const DropdownMenuContent = React.forwardRef(
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-white text-black p-2 shadow-2xl",
+          "z-50 min-w-[10rem] overflow-hidden rounded-2xl border border-border bg-white text-black p-2 shadow-2xl",
           darkBg, darkText, darkBorder, transition,
           "animate-in fade-in-80",
           className
@@ -89,7 +89,7 @@ const DropdownMenuItem = React.forwardRef(
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none border border-transparent",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium outline-none border border-transparent",
         "bg-white text-black hover:bg-muted/70 focus:bg-muted/80",
         darkBg, darkText, darkBorder, darkHover, transition,
         "focus:ring-2 focus:ring-primary/40 focus:z-10",
@@ -121,7 +121,7 @@ const DropdownMenuCheckboxItem = React.forwardRef(
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-2xl py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
         "bg-popover text-popover-foreground",
         "focus:bg-accent focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/90",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted data-[disabled]:text-muted-foreground",
@@ -132,7 +132,7 @@ const DropdownMenuCheckboxItem = React.forwardRef(
     >
       <span className="absolute left-3 flex h-5 w-5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <span className="flex h-5 w-5 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -162,7 +162,7 @@ const DropdownMenuRadioItem = React.forwardRef(
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-2xl py-2 pl-10 pr-3 text-sm font-medium outline-none transition-all duration-150",
         "bg-popover text-popover-foreground", 
         "focus:bg-accent focus:text-accent-foreground hover:bg-accent/80 active:bg-accent/90",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:bg-muted data-[disabled]:text-muted-foreground",
@@ -172,7 +172,7 @@ const DropdownMenuRadioItem = React.forwardRef(
     >
       <span className="absolute left-3 flex h-5 w-5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <span className="flex h-4 w-4 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <span className="flex h-4 w-4 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -224,7 +224,7 @@ DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
 const DropdownMenuShortcut = ({ className, ...props }) => (
   <span
     className={cn(
-      "ml-auto rounded-lg bg-muted px-2 py-0.5 text-xs font-mono tracking-widest text-muted-foreground shadow-inner",
+      "ml-auto rounded-2xl bg-muted px-2 py-0.5 text-xs font-mono tracking-widest text-muted-foreground shadow-inner",
       className
     )}
     {...props}

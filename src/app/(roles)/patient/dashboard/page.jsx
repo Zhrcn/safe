@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
     Calendar, Clock, Heart, Activity, 
@@ -7,8 +7,7 @@ import {
     ArrowRight, TrendingUp, TrendingDown
 } from 'lucide-react';
 import PageHeader from '@/components/patient/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent} from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Progress } from '@/components/ui/Progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -17,6 +16,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchProfile } from '@/store/slices/patient/profileSlice';
+import AppointmentForm from '@/components/appointments/AppointmentForm';
+import { createAppointment, fetchAppointments } from '@/store/slices/patient/appointmentsSlice';
+import { doctors } from '@/mockdata/doctors';
 
 const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t }) => (
   <motion.div
@@ -62,7 +66,7 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t 
   </motion.div>
 );
 
-const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, tooltip }) => (
+const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, tooltip, onClick }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
@@ -73,7 +77,7 @@ const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, toolti
     <Card className="hover:shadow-2xl transition-all duration-300 rounded-2xl bg-card/95 border-none h-full flex flex-col">
       <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
         <Tooltip content={tooltip}>
-          <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1">
+          <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1" onClick={onClick}>
             <div className={`p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform ${bgClass}`} tabIndex={0} aria-label={title}>
               <Icon className="h-6 w-6 text-primary-foreground" />
             </div>
@@ -117,7 +121,7 @@ const AppointmentCard = ({ appointment, t }) => (
               </div>
             </div>
           </div>
-          <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'} className="capitalize rounded-lg px-3 py-1 text-sm">
+          <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'} className="capitalize rounded-2xl px-3 py-1 text-sm">
             {t(`patient.appointments.${appointment.status}`)}
           </Badge>
         </div>
@@ -129,38 +133,76 @@ const AppointmentCard = ({ appointment, t }) => (
 const DashboardPage = () => {
     const { t, i18n } = useTranslation('common');
     const router = useRouter();
-    const user = { firstName: 'John' };
+    const dispatch = useDispatch();
+    const [isAppointmentFormOpen, setAppointmentFormOpen] = React.useState(false);
+    const [vitals, setVitals] = useState(null);
+    const [loadingVitals, setLoadingVitals] = useState(true);
+
+    useEffect(() => {
+        dispatch(fetchProfile());
+    }, [dispatch]);
+    const { profile: user, loading, error } = useSelector(state => state.profile);
+    const { appointments, loading: isLoadingAppointments, error: appointmentsError } = useSelector(state => state.appointments);
     const isRtl = i18n.language === 'ar';
+
+    const loadVitals = async () => {
+      setLoadingVitals(true);
+      try {
+  
+      } catch (err) {
+        setVitals(null);
+      } finally {
+        setLoadingVitals(false);
+      }
+    };
+
+    React.useEffect(() => {
+      dispatch(fetchAppointments());
+      loadVitals();
+    }, [dispatch]);
 
     const healthMetrics = [
         {
-            title: t('patient.dashboard.heartRate'),
-            value: '72 BPM',
+            title: t('patient.dashboard.heartRate', 'Heart Rate'),
+            value: vitals && vitals.heartRate ? `${vitals.heartRate} BPM` : t('patient.dashboard.noData', 'No Data'),
             icon: Heart,
-            trend: -2,
+            trend: 0,
             color: 'bg-error',
         },
         {
-            title: t('patient.dashboard.bloodPressure'),
-            value: '120/80',
+            title: t('patient.dashboard.bloodPressure', 'Blood Pressure'),
+            value: vitals && vitals.bloodPressure ? vitals.bloodPressure : t('patient.dashboard.noData', 'No Data'),
             icon: Activity,
             trend: 0,
             color: 'bg-info',
         },
         {
-            title: t('patient.dashboard.medicationAdherence'),
-            value: '95%',
+            title: t('patient.dashboard.temperature', 'Temperature'),
+            value: vitals && vitals.temperature ? `${vitals.temperature}°C` : t('patient.dashboard.noData', 'No Data'),
             icon: Pill,
-            trend: 5,
+            trend: 0,
             color: 'bg-success',
-            progress: 95,
         },
         {
-            title: t('patient.dashboard.stepsToday'),
-            value: '6,543',
+            title: t('patient.dashboard.respiratoryRate', 'Respiratory Rate'),
+            value: vitals && vitals.respiratoryRate ? `${vitals.respiratoryRate} bpm` : t('patient.dashboard.noData', 'No Data'),
             icon: Activity,
-            trend: 12,
+            trend: 0,
             color: 'bg-secondary',
+        },
+        {
+            title: t('patient.dashboard.bmi', 'BMI'),
+            value: vitals && vitals.bmi ? `${vitals.bmi}` : t('patient.dashboard.noData', 'No Data'),
+            icon: TrendingUp,
+            trend: 0,
+            color: 'bg-warning',
+        },
+        {
+            title: t('patient.dashboard.oxygenSaturation', 'Oxygen Saturation'),
+            value: vitals && vitals.oxygenSaturation ? `${vitals.oxygenSaturation}%` : t('patient.dashboard.noData', 'No Data'),
+            icon: Clock,
+            trend: 0,
+            color: 'bg-primary',
         }
     ];
 
@@ -169,9 +211,10 @@ const DashboardPage = () => {
             title: t('patient.dashboard.scheduleAppointment'),
             description: t('patient.dashboard.scheduleAppointmentDesc'),
             icon: Calendar,
-            href: '/patient/appointments/new',
+            href: '#',
             bgClass: 'bg-primary/90 dark:bg-primary/80',
             tooltip: t('patient.dashboard.scheduleAppointmentTooltip'),
+            onClick: () => setAppointmentFormOpen(true),
         },
         {
             title: t('patient.dashboard.viewMedicalRecords'),
@@ -191,22 +234,7 @@ const DashboardPage = () => {
         }
     ];
 
-    const upcomingAppointments = [
-        {
-            id: 1,
-            title: t('patient.dashboard.annualCheckup'),
-            doctor: 'Sarah Johnson',
-            time: t('patient.dashboard.tomorrowAt', { time: '10:00 AM' }),
-            status: 'upcoming'
-        },
-        {
-            id: 2,
-            title: t('patient.dashboard.followUpConsultation'),
-            doctor: 'Michael Chen',
-            time: t('patient.dashboard.nextMondayAt', { time: '2:30 PM' }),
-            status: 'upcoming'
-        }
-    ];
+    const upcomingAppointments = appointments.filter(a => a.status === 'scheduled' || a.status === 'upcoming');
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">
@@ -224,12 +252,10 @@ const DashboardPage = () => {
                     { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' }
                 ]}
             />
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 z-10 rounded-2xl auto-rows-fr">
-                <AnimatePresence>
-                    {healthMetrics.map((metric, index) => (
-                        <HealthMetricCard key={index} {...metric} t={t} />
-                    ))}
-                </AnimatePresence>
+            <section className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8 w-full">
+                {healthMetrics.map((metric, idx) => (
+                    <HealthMetricCard key={idx} {...metric} t={t} />
+                ))}
             </section>
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 z-10 rounded-2xl">
                 <div className="lg:col-span-1 space-y-6">
@@ -239,7 +265,9 @@ const DashboardPage = () => {
                     <div className="space-y-4">
                         <AnimatePresence>
                             {quickActions.map((action, index) => (
-                                <QuickActionCard key={index} {...action} />
+                                <div key={index} onClick={action.onClick}>
+                                    <QuickActionCard {...action} />
+                                </div>
                             ))}
                         </AnimatePresence>
                     </div>
@@ -253,9 +281,17 @@ const DashboardPage = () => {
                         <TabsContent value="appointments">
                             <div className="space-y-4">
                                 <AnimatePresence>
-                                    {upcomingAppointments.map((appointment) => (
-                                        <AppointmentCard key={appointment.id} appointment={appointment} t={t} />
-                                    ))}
+                                    {isLoadingAppointments ? (
+                                        <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
+                                    ) : appointmentsError ? (
+                                        <div className="text-center py-8 text-red-500">{t('error')}</div>
+                                    ) : upcomingAppointments.length > 0 ? (
+                                        upcomingAppointments.map((appointment) => (
+                                            <AppointmentCard key={appointment._id || appointment.id} appointment={appointment} t={t} />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground">{t('patient.dashboard.noUpcomingAppointments')}</div>
+                                    )}
                                 </AnimatePresence>
                             </div>
                         </TabsContent>
@@ -267,6 +303,25 @@ const DashboardPage = () => {
                     </Tabs>
                 </div>
             </section>
+            {isAppointmentFormOpen && (
+                <AppointmentForm
+                    onClose={() => setAppointmentFormOpen(false)}
+                    onSubmit={async (appointmentData) => {
+                        await dispatch(createAppointment({
+                            doctorId: appointmentData.doctorId,
+                            date: '1970-01-01',
+                            time: 'TBD',
+                            reason: appointmentData.reason,
+                            type: appointmentData.type,
+                            notes: appointmentData.notes,
+                        })).unwrap();
+                        setAppointmentFormOpen(false);
+                        dispatch(fetchAppointments());
+                    }}
+                    initialData={null}
+                    isReschedule={false}
+                />
+            )}
         </div>
     );
 };

@@ -84,7 +84,7 @@ const recentPatients = [
 
 function StatCard({ value, label }) {
   return (
-    <div className="flex flex-col items-center justify-center bg-muted rounded-lg p-6">
+    <div className="flex flex-col items-center justify-center bg-muted rounded-2xl p-6">
       <span className="text-3xl font-bold text-primary">{value}</span>
       <span className="text-muted-foreground">{label}</span>
     </div>
@@ -93,7 +93,7 @@ function StatCard({ value, label }) {
 
 function SmallStatCard({ value, label }) {
   return (
-    <div className="flex flex-col items-center justify-center bg-muted rounded-lg p-4">
+    <div className="flex flex-col items-center justify-center bg-muted rounded-2xl p-4">
       <span className="text-xl font-bold text-primary">{value}</span>
       <span className="text-muted-foreground">{label}</span>
     </div>
@@ -102,7 +102,7 @@ function SmallStatCard({ value, label }) {
 
 function ChartCard({ title, children, className = '' }) {
   return (
-    <div className={`bg-background rounded-lg p-6 shadow ${className}`}>
+    <div className={`bg-background rounded-2xl p-6 shadow ${className}`}>
       <h3 className="text-lg font-semibold mb-4">{title}</h3>
       {children}
     </div>
@@ -112,7 +112,7 @@ function ChartCard({ title, children, className = '' }) {
 function TopConditions({ conditions }) {
   const { t } = useTranslation();
   return (
-    <div className="bg-background rounded-lg p-6 shadow mb-4">
+    <div className="bg-background rounded-2xl p-6 shadow mb-4">
       <h3 className="text-lg font-semibold mb-4">{t('doctor.analytics.topConditions', 'Top Patient Conditions')}</h3>
       <ul className="divide-y divide-border">
         {conditions.map((cond) => (
@@ -399,7 +399,7 @@ export default function AnalyticsPage() {
       <CardContent>
         <div className="mb-8">
           <h3 className="text-lg font-semibold mb-4">{t('doctor.analytics.recentPatients', 'Recent Patients')}</h3>
-          <ul className="divide-y divide-border bg-muted rounded-lg">
+          <ul className="divide-y divide-border bg-muted rounded-2xl">
             {recentPatients.map((patient) => (
               <li
                 key={patient.name}

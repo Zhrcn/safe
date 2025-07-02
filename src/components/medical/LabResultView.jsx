@@ -8,7 +8,7 @@ export default function LabResultView({ record }) {
         <CardTitle>Lab Result</CardTitle>
       </CardHeader>
       <CardContent>
-        <pre className="text-sm bg-muted p-4 rounded-lg overflow-x-auto">
+        <pre className="text-sm bg-muted p-4 rounded-2xl overflow-x-auto">
           {JSON.stringify(record, null, 2)}
         </pre>
       </CardContent>

@@ -27,7 +27,7 @@ const AppointmentCard = ({ appointment, onChat, onCall, onVideo }) => {
         }
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-4 mb-4">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-4 mb-4">
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-lg font-semibold mb-2">{appointment.type}</h3>
@@ -93,7 +93,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg w-full max-w-md p-6">
+            <div className="relative bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg w-full max-w-md p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold">Schedule New Appointment</h2>
                     <Button
@@ -109,7 +109,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                         <select
                             value={formData.type}
                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         >
                             <option value="">Select type</option>
@@ -125,7 +125,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="date"
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -135,7 +135,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="time"
                             value={formData.time}
                             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -145,7 +145,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             type="text"
                             value={formData.location}
                             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         />
                     </div>
@@ -155,7 +155,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             value={formData.notes}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                             rows={4}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                     </div>
                     <div className="flex justify-end gap-2 mt-6">
@@ -203,7 +203,7 @@ const Appointments = ({ patient }) => {
         setAppointments([...appointments, newAppointment]);
     };
     return (
-        <div className="bg-card text-card-foreground rounded-lg border border-primary/20 shadow-lg p-6">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold">Appointments</h2>
                 <Button

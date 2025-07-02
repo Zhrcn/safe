@@ -20,7 +20,7 @@ export default function NotificationDialog({
       />
       <div
         className={cn(
-          'relative z-50 w-full max-w-lg rounded-lg border border-border bg-card shadow-lg',
+          'relative z-50 w-full max-w-lg rounded-2xl border border-border bg-card shadow-lg',
           className
         )}
       >
@@ -36,7 +36,7 @@ export default function NotificationDialog({
             size="icon"
             variant="ghost"
             aria-label="Close notifications dialog"
-            className="rounded-lg p-1 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-2xl p-1 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -55,11 +55,11 @@ export default function NotificationDialog({
                 <div
                   key={notification.id}
                   className={cn(
-                    'flex items-start gap-4 rounded-lg border border-border p-4',
+                    'flex items-start gap-4 rounded-2xl border border-border p-4',
                     !notification.read && 'bg-accent/50'
                   )}
                 >
-                  <div className="rounded-lg bg-primary/10 p-2">
+                  <div className="rounded-2xl bg-primary/10 p-2">
                     <Bell className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">

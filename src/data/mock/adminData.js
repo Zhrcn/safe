@@ -54,6 +54,30 @@ export const mockUsers = [
 ];
 
 export const mockStats = {
+    users: {
+        total: 150,
+        active: 142,
+        byRole: {
+            doctor: 25,
+            nurse: 40,
+            pharmacist: 15,
+            patient: 70
+        }
+    },
+    appointments: {
+        total: 200,
+        scheduled: 50,
+        completed: 140,
+        cancelled: 10
+    },
+    prescriptions: {
+        total: 120,
+        active: 80
+    },
+    systemHealth: {
+        status: "Healthy",
+        uptime: "99.9%"
+    },
     totalUsers: 150,
     activeUsers: 142,
     inactiveUsers: 8,
@@ -63,7 +87,6 @@ export const mockStats = {
     totalPatients: 70,
     newUsersThisMonth: 12,
     activeSessions: 45,
-    systemUptime: "99.9%",
     lastBackup: "2024-03-15T00:00:00Z"
 };
 

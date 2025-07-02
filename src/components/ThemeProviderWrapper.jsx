@@ -29,7 +29,6 @@ export function ThemeProvider({ children }) {
       themeVars = themes[defaultTheme];
       setCurrentTheme(defaultTheme);
     }
-    console.log('Applying theme:', currentTheme, themeVars);
     const root = document.documentElement;
     Object.entries(themeVars).forEach(([key, value]) => {
       root.style.setProperty(key, value);

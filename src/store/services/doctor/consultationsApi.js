@@ -1,50 +1,58 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-export const consultationsApi = createApi({
-    reducerPath: 'consultationsApi',
-    baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:5001',
-        prepareHeaders: (headers, { getState }) => {
-            const token = getState().auth.token;
-            if (token) {
-                headers.set('authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
+import { api } from '../api';
+
+export const consultationsApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    getConsultations: builder.query({
+      query: () => ({
+        url: '/consultations',
+        method: 'GET',
+      }),
+      providesTags: ['Consultations'],
     }),
-    tagTypes: ['Consultations', 'ConsultationDetails'],
-    endpoints: (builder) => ({
-        getConsultations: builder.query({
-            query: () => '/consultations',
-            providesTags: ['Consultations'],
-        }),
-        getConsultationDetails: builder.query({
-            query: (consultationId) => `/consultations/${consultationId}`,
-            providesTags: (result, error, consultationId) => [{ type: 'ConsultationDetails', id: consultationId }],
-        }),
-        createConsultation: builder.mutation({
-            query: ({ doctorId, question }) => ({
-                url: '/consultations',
-                method: 'POST',
-                body: { doctorId, question },
-            }),
-            invalidatesTags: ['Consultations'],
-        }),
-        answerConsultation: builder.mutation({
-            query: ({ consultationId, answer }) => ({
-                url: `/consultations/${consultationId}`,
-                method: 'PUT',
-                body: { answer },
-            }),
-            invalidatesTags: (result, error, { consultationId }) => [
-                { type: 'ConsultationDetails', id: consultationId },
-                'Consultations'
-            ],
-        }),
+    getConsultationById: builder.query({
+      query: (id) => ({
+        url: `/consultations/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Consultations', id }],
     }),
+    createConsultation: builder.mutation({
+      query: (consultationData) => ({
+        url: '/consultations',
+        method: 'POST',
+        body: consultationData,
+      }),
+      invalidatesTags: ['Consultations'],
+    }),
+    answerConsultation: builder.mutation({
+      query: ({ id, answerData }) => ({
+        url: `/consultations/${id}/answer`,
+        method: 'POST',
+        body: answerData,
+      }),
+      invalidatesTags: ['Consultations'],
+    }),
+  }),
 });
+
 export const {
-    useGetConsultationsQuery,
-    useGetConsultationDetailsQuery,
-    useCreateConsultationMutation,
-    useAnswerConsultationMutation,
-} = consultationsApi; 
+  useGetConsultationsQuery,
+  useGetConsultationByIdQuery,
+  useCreateConsultationMutation,
+  useAnswerConsultationMutation,
+} = consultationsApi;
+
+export const createConsultation = async (consultationData) => {
+  const res = await axiosInstance.post('/consultations', consultationData);
+  return res.data.data;
+};
+
+export const updateConsultation = async (id, consultationData) => {
+  const res = await axiosInstance.put(`/consultations/${id}`, consultationData);
+  return res.data.data;
+};
+
+export const deleteConsultation = async (id) => {
+  const res = await axiosInstance.delete(`/consultations/${id}`);
+  return res.data.data;
+}; 

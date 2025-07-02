@@ -40,20 +40,20 @@ const PatientList = () => {
     }
     if (error) {
         return (
-            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg">
+            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-2xl">
                 Error loading patients: {error.message}
             </div>
         );
     }
     return (
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-white rounded-2xl shadow-md p-4">
             <h2 className="text-xl font-semibold mb-4">
                 Patients
             </h2>
             <div className="relative mb-4">
                 <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Search patients..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -65,7 +65,7 @@ const PatientList = () => {
                     <div
                         key={patient.id}
                         onClick={() => handlePatientClick(patient.id)}
-                        className="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                        className="flex items-center p-3 rounded-2xl hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                         <div className="flex-shrink-0 mr-4">
                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">

@@ -1,4 +1,31 @@
+import axiosInstance from '../axiosInstance';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const getSchedules = async () => {
+  const res = await axiosInstance.get('/schedules');
+  return res.data.data;
+};
+
+export const getScheduleById = async (id) => {
+  const res = await axiosInstance.get(`/schedules/${id}`);
+  return res.data.data;
+};
+
+export const createSchedule = async (scheduleData) => {
+  const res = await axiosInstance.post('/schedules', scheduleData);
+  return res.data.data;
+};
+
+export const updateSchedule = async (id, scheduleData) => {
+  const res = await axiosInstance.put(`/schedules/${id}`, scheduleData);
+  return res.data.data;
+};
+
+export const deleteSchedule = async (id) => {
+  const res = await axiosInstance.delete(`/schedules/${id}`);
+  return res.data.data;
+};
+
 export const scheduleApi = createApi({
     reducerPath: 'scheduleApi',
     baseQuery: fetchBaseQuery({

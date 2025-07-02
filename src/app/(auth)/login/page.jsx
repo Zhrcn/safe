@@ -204,7 +204,7 @@ const LoginPage = () => {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-primary text-white font-semibold hover:bg-primary/90 transition-colors rounded-lg py-2"
+                                className="w-full bg-primary text-white font-semibold hover:bg-primary/90 transition-colors rounded-2xl py-2"
                                 disabled={isLoading}
                             >
                                 {isLoading ? t('login.signingIn') : t('login.signIn')}
@@ -220,7 +220,7 @@ const LoginPage = () => {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-1/2 border-border text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-lg"
+                                    className="w-1/2 border-border text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-2xl"
                                     onClick={() => {}}
                                 >
                                     <GoogleIcon className="mr-1" />
@@ -229,7 +229,7 @@ const LoginPage = () => {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-1/2 border-border text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-lg"
+                                    className="w-1/2 border-border text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-2xl"
                                     onClick={() => {}}
                                 >
                                     <FacebookIcon className="mr-1" />
