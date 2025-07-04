@@ -13,7 +13,8 @@ const socialLinks = [
 ];
 
 export default function Footer() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
+  if (!ready) return null;
   const currentYear = new Date().getFullYear();
   const quickLinks = [
     { name: t('footer.about', 'About'), href: '#' },

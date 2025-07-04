@@ -1,4 +1,5 @@
 import axiosInstance from '../axiosInstance';
+import { getSocket } from '@/utils/socket';
 
 export const getConversations = async () => {
   const res = await axiosInstance.get('/conversations');
@@ -7,11 +8,6 @@ export const getConversations = async () => {
 
 export const getConversationById = async (id) => {
   const res = await axiosInstance.get(`/conversations/${id}`);
-  return res.data.data;
-};
-
-export const sendMessage = async (conversationId, message) => {
-  const res = await axiosInstance.post(`/conversations/${conversationId}/messages`, { message });
   return res.data.data;
 };
 
@@ -33,4 +29,40 @@ export const updateConversation = async (id, conversationData) => {
 export const deleteConversation = async (id) => {
   const res = await axiosInstance.delete(`/conversations/${id}`);
   return res.data.data;
-}; 
+};
+
+export const sendMessage = ({ conversationId, message }) => {
+  const socket = getSocket();
+  return new Promise((resolve, reject) => {
+    console.log('[sendMessageSocket] emitting send_message', { conversationId, message });
+    socket.emit('send_message', { conversationId, message }, (response) => {
+      console.log('[sendMessageSocket] callback response:', response);
+      if (response && response.error) {
+        reject(response.error);
+      } else {
+        resolve(response.data);
+      }
+    });
+  });
+};
+
+export const onReceiveMessage = (handler) => {
+  const socket = getSocket();
+  socket.on('receive_message', handler);
+  return () => socket.off('receive_message', handler);
+};
+
+export const joinConversation = (conversationId) => {
+  const socket = getSocket();
+  socket.emit('join_conversation', { conversationId });
+};
+
+export const leaveConversation = (conversationId) => {
+  const socket = getSocket();
+  socket.emit('leave_conversation', { conversationId });
+};
+
+export const sendTyping = ({ conversationId, userId }) => {
+  const socket = getSocket();
+  socket.emit('typing', { conversationId, userId });
+};

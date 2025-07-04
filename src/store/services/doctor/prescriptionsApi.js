@@ -1,29 +1,4 @@
-import { api } from '../api';
 import axiosInstance from '../axiosInstance';
-
-export const prescriptionsApi = api.injectEndpoints({
-  endpoints: (builder) => ({
-    getPrescriptions: builder.query({
-      query: () => ({
-        url: '/prescriptions',
-        method: 'GET',
-      }),
-      providesTags: ['Prescriptions'],
-    }),
-    getPrescriptionById: builder.query({
-      query: (id) => ({
-        url: `/prescriptions/${id}`,
-        method: 'GET',
-      }),
-      providesTags: (result, error, id) => [{ type: 'Prescriptions', id }],
-    }),
-  }),
-});
-
-export const {
-  useGetPrescriptionsQuery,
-  useGetPrescriptionByIdQuery,
-} = prescriptionsApi;
 
 export const getPrescriptions = async () => {
   const res = await axiosInstance.get('/prescriptions');

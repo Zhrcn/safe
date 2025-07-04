@@ -1,6 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { userApi } from '@/store/services/user/userApi';
-import { users } from '@/mockdata/users';
 import { AUTH_CONSTANTS, ROLES } from '@/config/constants';
 
 const getStoredToken = () => {
@@ -127,139 +125,11 @@ const authSlice = createSlice({
                 }
             }
         }
-    },
-    extraReducers: (builder) => {
-        builder
-            .addMatcher(
-                userApi.endpoints.login.matchFulfilled,
-                (state, { payload }) => {
-                    const { username, password } = payload;
-                    const user = users.find(u => u.username === username && u.password === password);
-                    if (user) {
-                        state.user = user;
-                        state.token = `mock-token-${user.id}`;
-                        state.isAuthenticated = true;
-                        state.role = user.role?.toLowerCase() || ROLES.PATIENT;
-                        state.permissions = user.permissions || [];
-                        state.loading = false;
-                        state.error = null;
-                        state.lastActivity = Date.now();
-                        
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, state.token);
-                            localStorage.setItem('user', JSON.stringify(user));
-                            localStorage.setItem('role', state.role);
-                        }
-                    } else {
-                        state.loading = false;
-                        state.error = 'Invalid credentials';
-                    }
-                }
-            )
-            .addMatcher(
-                userApi.endpoints.login.matchRejected,
-                (state, { payload }) => {
-                    state.loading = false;
-                    state.error = payload?.data?.message || 'Login failed';
-                }
-            )
-            .addMatcher(
-                userApi.endpoints.getCurrentUser.matchFulfilled,
-                (state, { payload }) => {
-                    if (state.token) {
-                        const userId = state.token.split('-')[2];
-                        const user = users.find(u => u.id === userId);
-                        if (user) {
-                            state.user = user;
-                            state.role = user.role?.toLowerCase() || ROLES.PATIENT;
-                            state.permissions = user.permissions || [];
-                            state.isAuthenticated = true;
-                            state.loading = false;
-                            state.error = null;
-                            state.authChecked = true;
-                            state.lastActivity = Date.now();
-                        } else {
-                            state.user = null;
-                            state.token = null;
-                            state.isAuthenticated = false;
-                            state.role = null;
-                            state.permissions = [];
-                            state.loading = false;
-                            state.error = 'User not found';
-                            state.authChecked = true;
-                        }
-                    } else {
-                        state.user = null;
-                        state.token = null;
-                        state.isAuthenticated = false;
-                        state.role = null;
-                        state.permissions = [];
-                        state.loading = false;
-                        state.error = 'No token found';
-                        state.authChecked = true;
-                    }
-                }
-            )
-            .addMatcher(
-                userApi.endpoints.getCurrentUser.matchRejected,
-                (state, { payload }) => {
-                    state.user = null;
-                    state.token = null;
-                    state.isAuthenticated = false;
-                    state.role = null;
-                    state.permissions = [];
-                    state.loading = false;
-                    state.error = payload?.data?.message || 'Failed to fetch user data';
-                    state.authChecked = true;
-                }
-            )
-            .addMatcher(
-                (action) => action.type.endsWith('/fulfilled') && action.type.includes('verifyToken'),
-                (state, { payload }) => {
-                    if (payload?.success && payload?.data) {
-                        state.user = payload.data.user;
-                        state.token = payload.data.token || getStoredToken();
-                        state.isAuthenticated = true;
-                        state.role = payload.data.user.role?.toLowerCase() || ROLES.PATIENT;
-                        state.permissions = payload.data.user.permissions || [];
-                        state.error = null;
-                        state.lastActivity = Date.now();
-                        state.authChecked = true;
-                        
-                        if (payload.data.token && typeof window !== 'undefined') {
-                            localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, payload.data.token);
-                            localStorage.setItem('user', JSON.stringify(payload.data.user));
-                            localStorage.setItem('role', state.role);
-                        }
-                    }
-                }
-            )
-            .addMatcher(
-                (action) => action.type.endsWith('/rejected') && action.type.includes('verifyToken'),
-                (state, { payload }) => {
-                    state.error = payload?.message || 'Token verification failed';
-                    state.isAuthenticated = false;
-                    state.user = null;
-                    state.token = null;
-                    state.role = null;
-                    state.permissions = [];
-                    state.authChecked = true;
-                }
-            );
     }
 });
 
-export const {
-    setCredentials,
-    logout,
-    setLoading,
-    setError,
-    clearError,
-    updateUser,
-    updateLastActivity,
-    setSessionTimeout,
-    checkSessionTimeout
-} = authSlice.actions;
+export const { setCredentials, logout, setLoading, setError, clearError, updateUser, updateLastActivity, setSessionTimeout, checkSessionTimeout } = authSlice.actions;
+export default authSlice.reducer;
 
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
@@ -270,6 +140,4 @@ export const selectAuthChecked = (state) => state.auth.authChecked;
 export const selectLastActivity = (state) => state.auth.lastActivity;
 export const selectUserRole = (state) => state.auth.role;
 export const selectUserPermissions = (state) => state.auth.permissions;
-export const selectSessionTimeout = (state) => state.auth.sessionTimeout;
-
-export default authSlice.reducer; 
+export const selectSessionTimeout = (state) => state.auth.sessionTimeout; 

@@ -212,7 +212,8 @@ const RoleCard = ({
 };
 
 export default function RolesSection() {
-  const { t } = useTranslation('common');
+  const { t, ready } = useTranslation();
+  if (!ready) return null;
   const roles = [
     {
       icon: User,

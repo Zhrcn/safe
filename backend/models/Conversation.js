@@ -5,7 +5,7 @@ const MessageSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  recever:{
+  receiver:{
     type: mongoose.Schema.Types.ObjectId,
     ref:'User',
     required: true
@@ -32,7 +32,6 @@ const MessageSchema = new mongoose.Schema({
   ]
 });
 const Message = mongoose.model('Message', MessageSchema);
-module.exports = Message;
 const ConversationSchema = new mongoose.Schema({
   participants: [{
     type: mongoose.Schema.Types.ObjectId,

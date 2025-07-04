@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import anime from 'animejs';
 import Section from '@/components/common/Section';
 import { useTranslation } from 'react-i18next';
+import MedicalIconsBackground from '@/components/MedicalIconsBackground';
 
 const HeartSVG = forwardRef(({ style, className }, ref) => (
   <svg ref={ref} width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
@@ -214,57 +215,15 @@ function generateMedicalPattern(count = 48) {
   return icons;
 }
 
-const MEDICAL_ICONS = generateMedicalPattern(48);
-
 export default function Home() {
-  const { t } = useTranslation();
-  const bgRef = useRef(null);
+  const { t, ready } = useTranslation();
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
   const aboutRef = useRef(null);
   const rolesRef = useRef(null);
   const testimonialsRef = useRef(null);
 
-  const iconRefs = useRef(MEDICAL_ICONS.map(() => React.createRef()));
-  const mouseTarget = useRef({ x: 0, y: 0 });
-  const iconStates = useRef(MEDICAL_ICONS.map(() => ({ x: 0, y: 0 })));
-  const animFrame = useRef();
-
-  const handleMouseMove = (e) => {
-    const rect = bgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    mouseTarget.current = { x, y };
-  };
-  const handleMouseLeave = () => {
-    mouseTarget.current = { x: 0, y: 0 };
-  };
-
-  useEffect(() => {
-    let running = true;
-    function animate() {
-      const now = performance.now() / 1000;
-      MEDICAL_ICONS.forEach((icon, i) => {
-        const moveX = -mouseTarget.current.x * icon.move.x;
-        const moveY = -mouseTarget.current.y * icon.move.y;
-        iconStates.current[i].x += (moveX - iconStates.current[i].x) * icon.lag;
-        iconStates.current[i].y += (moveY - iconStates.current[i].y) * icon.lag;
-        const floatY = Math.sin(now * 1.1 + icon.phase) * icon.float;
-        const floatR = Math.sin(now * 0.7 + icon.phase) * 2;
-        const ref = iconRefs.current[i].current;
-        if (ref) {
-          ref.style.transform = `translate(${iconStates.current[i].x}px, ${iconStates.current[i].y + floatY}px) scale(${icon.scale}) rotate(${floatR}deg)`;
-        }
-      });
-      if (running) animFrame.current = requestAnimationFrame(animate);
-    }
-    animFrame.current = requestAnimationFrame(animate);
-    return () => {
-      running = false;
-      if (animFrame.current) cancelAnimationFrame(animFrame.current);
-    };
-  }, []);
-
+  // Section fade-in animations
   useSectionInView(heroRef, node => {
     anime({
       targets: node,
@@ -311,45 +270,26 @@ export default function Home() {
     });
   });
 
+  if (!ready) return null;
+
   return (
-    <div
-      ref={bgRef}
-      className="min-h-screen w-full bg-background text-foreground relative overflow-x-hidden transition-colors duration-700"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="pointer-events-none select-none fixed inset-0 z-0 opacity-30 contrast-125 dark:opacity-40" aria-hidden="true">
-        {MEDICAL_ICONS.map(({ SVG, left, top, size }, i) => (
-          <span
-            key={i}
-            style={{
-              position: 'absolute',
-              left,
-              top,
-              width: size,
-              height: size,
-              display: 'inline-block',
-            }}
-          >
-            <SVG ref={iconRefs.current[i]} />
-          </span>
-        ))}
-      </div>
+    <div className="min-h-screen w-full bg-background text-foreground relative overflow-x-hidden transition-colors duration-700">
+      <MedicalIconsBackground />
       <main className="relative z-10 w-full flex flex-col gap-0">
         <Navbar />
-        <Section as="section" className="mt-20 !py-0 !px-0 !max-w-none bg-transparent shadow-none border-none">
+        <Section as="section" ref={heroRef} className="mt-20 !py-0 !px-0 !max-w-none bg-transparent shadow-none border-none">
           <HeroSection />
         </Section>
-        <Section as="section" id="features" className="bg-transparent shadow-none border-none !py-12">
+        <Section as="section" id="features" ref={featuresRef} className="bg-transparent shadow-none border-none !py-12">
           <FeaturesSection />
         </Section>
-        <Section as="section" id="about" className="bg-transparent shadow-none border-none !py-12">
+        <Section as="section" id="about" ref={aboutRef} className="bg-transparent shadow-none border-none !py-12">
           <AboutSection />
         </Section>
-        <Section as="section" id="roles" className="bg-transparent shadow-none border-none !py-12">
+        <Section as="section" id="roles" ref={rolesRef} className="bg-transparent shadow-none border-none !py-12">
           <RolesSection />
         </Section>
-        <Section as="section" id="testimonials" className="bg-transparent shadow-none border-none !py-12">
+        <Section as="section" id="testimonials" ref={testimonialsRef} className="bg-transparent shadow-none border-none !py-12">
           <TestimonialsSection />
         </Section>
         <Footer />

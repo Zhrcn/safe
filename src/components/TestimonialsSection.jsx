@@ -8,7 +8,12 @@ import GlassCard from './common/GlassCard';
 import { useTranslation } from 'react-i18next';
 
 export default function TestimonialsSection() {
-  const { t, i18n } = useTranslation();
+  const { t, i18n, ready } = useTranslation();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
+  const progressRef = useRef();
+  const AUTOPLAY_INTERVAL = 6000;
+  const isRtl = i18n.language === 'ar';
   const testimonials = useMemo(() => [
     {
       id: 1,
@@ -52,13 +57,6 @@ export default function TestimonialsSection() {
     }
   ], [t]);
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [autoplay, setAutoplay] = useState(true);
-  const progressRef = useRef();
-  const AUTOPLAY_INTERVAL = 6000;
-
-  const isRtl = i18n.language === 'ar';
-
   useEffect(() => {
     if (!autoplay) return;
     if (progressRef.current) {
@@ -95,6 +93,8 @@ export default function TestimonialsSection() {
     setAutoplay(false);
     setActiveIndex(index);
   };
+
+  if (!ready) return null;
 
   return (
     <Section

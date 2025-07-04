@@ -1,45 +1,54 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { getToken } from '@/utils/tokenUtils';
+import { API_BASE_URL } from '@/config/api';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
     baseQuery: fetchBaseQuery({ 
-        baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+        baseUrl: `${API_BASE_URL}/api/v1`,
         credentials: 'include',
+        prepareHeaders: (headers) => {
+            const token = getToken();
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            return headers;
+        },
     }),
     endpoints: (builder) => ({
         login: builder.mutation({
             query: (credentials) => ({
-                url: '/auth/login',
+                url: 'auth/login',
                 method: 'POST',
                 body: credentials,
             }),
         }),
         register: builder.mutation({
             query: (userData) => ({
-                url: '/auth/register',
+                url: 'auth/register',
                 method: 'POST',
                 body: userData,
             }),
         }),
         logout: builder.mutation({
             query: () => ({
-                url: '/auth/logout',
+                url: 'auth/logout',
                 method: 'POST',
             }),
         }),
         getCurrentUser: builder.query({
-            query: () => '/auth/me',
+            query: () => 'auth/me',
         }),
         updateProfile: builder.mutation({
             query: (profileData) => ({
-                url: '/auth/profile',
+                url: 'auth/profile',
                 method: 'PUT',
                 body: profileData,
             }),
         }),
         refreshToken: builder.mutation({
             query: () => ({
-                url: '/auth/refresh',
+                url: 'auth/refresh',
                 method: 'POST',
             }),
         }),

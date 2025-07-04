@@ -41,13 +41,13 @@ export const ROLES = {
 };
 export const AUTH_CONSTANTS = {
   API_ENDPOINTS: {
-    LOGIN: '/api/v1/auth/login',
-    REGISTER: '/api/v1/auth/register',
-    LOGOUT: '/api/v1/auth/logout',
-    VERIFY: '/api/v1/auth/verify',
-    CURRENT_USER: '/api/v1/auth/me',
-    RESET_PASSWORD: '/api/v1/auth/reset-password',
-    UPDATE_PASSWORD: '/api/v1/auth/update-password',
+    LOGIN: '/auth/login',
+    REGISTER: '/auth/register',
+    LOGOUT: '/auth/logout',
+    VERIFY: '/auth/verify',
+    CURRENT_USER: '/auth/me',
+    RESET_PASSWORD: '/auth/reset-password',
+    UPDATE_PASSWORD: '/auth/update-password',
   },
   TOKEN_KEY: 'safe_auth_token',
   REFRESH_TOKEN_KEY: 'safe_refresh_token',

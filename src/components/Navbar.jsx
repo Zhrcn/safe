@@ -43,7 +43,7 @@ function HideOnScroll({ children }) {
 }
 
 export default function Navbar() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [logoHovered, setLogoHovered] = useState(false);
 
@@ -91,6 +91,8 @@ export default function Navbar() {
       }
     }
   };
+
+  if (!ready) return null;
 
   return (
     <HideOnScroll>

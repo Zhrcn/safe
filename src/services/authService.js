@@ -1,5 +1,6 @@
 import { mockAdminProfile } from '@/data/mock/adminData';
 import { mockPharmacistProfile } from '@/data/mock/pharmacistData';
+import { getToken } from '@/utils/tokenUtils';
 
 const MOCK_USERS = {
     'admin@safemedical.com': {
@@ -56,5 +57,5 @@ export const getCurrentRole = () => {
 };
 
 export const isAuthenticated = () => {
-    return !!localStorage.getItem('safe_auth_token');
+    return !!getToken();
 }; 

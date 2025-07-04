@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import { useLoginMutation } from '@/store/services/user/authApi';
+import { login } from '@/store/services/user/authApi';
 import { setCredentials } from '@/store/slices/auth/authSlice';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -11,12 +11,12 @@ import { ROLES, ROLE_ROUTES } from '@/config/app-config';
 const Login = () => {
     const router = useRouter();
     const dispatch = useDispatch();
-    const [login, { isLoading }] = useLoginMutation();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
-    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,12 +26,11 @@ const Login = () => {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-
+    const handleLogin = async (credentials) => {
+        setIsLoading(true);
+        setError(null);
         try {
-            const result = await login(formData).unwrap();
+            const result = await login(credentials);
             
             if (result.success) {
                 dispatch(setCredentials(result));
@@ -40,9 +39,16 @@ const Login = () => {
             } else {
                 setError(result.message || 'Login failed');
             }
-        } catch (error) {
-            setError(error.message || 'Invalid email or password');
+        } catch (err) {
+            setError(err.message || 'Login failed');
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await handleLogin(formData);
     };
 
     return (

@@ -1,18 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getToken } from '@/utils/tokenUtils';
 import { handleApiError } from '@/utils/errorHandling';
-
-const getApiUrl = () => {
-    if (typeof window !== 'undefined') {
-        return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001') + '/api/v1';
-    }
-    return 'http://localhost:5001/api/v1';
-};
+import { API_BASE_URL } from '@/config/api';
 
 export const api = createApi({
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
-        baseUrl: getApiUrl(),
+        baseUrl: `${API_BASE_URL}`,
         prepareHeaders: (headers) => {
             const token = localStorage.getItem('safe_auth_token');
             if (token) {

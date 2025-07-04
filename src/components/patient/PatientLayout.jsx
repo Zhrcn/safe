@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/Separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
-import { useLogoutMutation } from '@/store/services/user/userApi';
+import { useLogoutMutation } from '@/store/services/user/authApi';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
 import { Badge } from '@/components/ui/Badge';
 import { useTranslation } from 'react-i18next';

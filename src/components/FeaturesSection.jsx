@@ -6,7 +6,9 @@ import GlassCard from './common/GlassCard';
 import { useTranslation } from 'react-i18next';
 
 export default function FeaturesSection() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
+  if (!ready) return null;
+
   const features = [
     {
       icon: Shield,

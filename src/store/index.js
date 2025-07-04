@@ -1,8 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { api } from './services/api';
-import { authApi } from './services/user/authApi';
-import { medicineApi } from './services/doctor/medicineApi';
+import { authApi } from './api/authApi';
 import authReducer from './slices/auth/authSlice';
 import userReducer from './slices/user/userSlice';
 import doctorProfileReducer from './slices/doctor/doctorProfileSlice';
@@ -10,6 +9,7 @@ import doctorScheduleReducer from './slices/doctor/doctorScheduleSlice';
 import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
 import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice';
 import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
+import doctorAppointmentsReducer from './slices/doctor/doctorAppointmentsSlice';
 import dashboardReducer from './slices/patient/dashboardSlice';
 import appointmentsReducer from './slices/patient/appointmentsSlice';
 import medicationsReducer from './slices/patient/medicationsSlice';
@@ -25,7 +25,6 @@ export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     [authApi.reducerPath]: authApi.reducer,
-    [medicineApi.reducerPath]: medicineApi.reducer,
     auth: authReducer,
     user: userReducer,
     doctorProfile: doctorProfileReducer,
@@ -33,6 +32,7 @@ export const store = configureStore({
     doctorPatients: doctorPatientsReducer,
     doctorConsultations: doctorConsultationsReducer,
     doctorPrescriptions: doctorPrescriptionsReducer,
+    doctorAppointments: doctorAppointmentsReducer,
     dashboard: dashboardReducer,
     appointments: appointmentsReducer,
     medications: medicationsReducer,
@@ -48,7 +48,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
       immutableCheck: false,
-    }).concat(api.middleware, authApi.middleware, medicineApi.middleware),
+    }).concat(api.middleware, authApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

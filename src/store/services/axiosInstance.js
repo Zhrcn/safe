@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken } from '@/utils/tokenUtils';
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL
@@ -12,10 +13,11 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('safe_auth_token') : null;
+  const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log('Axios Request:', config.url, 'Authorization:', config.headers.Authorization);
   return config;
 });
 

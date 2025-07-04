@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { useGetDoctorsQuery } from '@/store/services/doctor/doctorApi';
+import { getDoctors } from '@/store/services/doctor/doctorApi';
 
 const initialFormState = {
     doctorId: '',
-    date: '',
-    timeSlot: '',
+    date: '1111-01-01',
+    time: 'TBD',
     type: '',
     reason: '',
     notes: ''
@@ -30,7 +30,6 @@ const timeSlots = [
     { value: 'afternoon', label: 'Afternoon (2:00 PM - 5:00 PM)' },
     { value: 'evening', label: 'Evening (6:00 PM - 9:00 PM)' }
 ];
-
 
 function DoctorSelect({ value, onChange, doctors, loading, error }) {
     return (
@@ -117,11 +116,27 @@ function ReasonTextarea({ value, onChange, error }) {
 }
 
 function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
-    const [formData, setFormData] = useState(initialData || initialFormState);
+    const [formData, setFormData] = useState({
+        ...initialFormState,
+        ...initialData,
+        date: '1111-01-01',
+        time: initialData?.time || 'TBD',
+    });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { data, isLoading: doctorsLoading, error: doctorsError } = useGetDoctorsQuery();
-    const doctors = data?.data || [];
+
+    const [doctorsData, setDoctorsData] = useState([]);
+    const [doctorsLoading, setDoctorsLoading] = useState(false);
+    const [doctorsError, setDoctorsError] = useState(null);
+
+    useEffect(() => {
+        setDoctorsLoading(true);
+        setDoctorsError(null);
+        getDoctors()
+            .then(data => setDoctorsData(data))
+            .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
+            .finally(() => setDoctorsLoading(false));
+    }, []);
 
     const handleChange = (field, value) => {
         setFormData((prevData) => ({
@@ -133,16 +148,15 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
-        if (!formData.doctorId) newErrors.doctorId = 'Doctor is required';
+        if (!formData.doctorId && !isReschedule) newErrors.doctorId = 'Doctor is required';
         if (!formData.type) newErrors.type = 'Appointment type is required';
         if (!formData.reason) newErrors.reason = 'Reason for visit is required';
-
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
         } else {
             setIsSubmitting(true);
             try {
-                await onSubmit(formData);
+                await onSubmit({ ...formData, date: '1111-01-01', time: 'TBD' });
             } catch (err) {
             } finally {
                 setIsSubmitting(false);
@@ -162,33 +176,48 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="doctor">Doctor</Label>
-                                <Select
-                                    value={formData.doctorId}
-                                    onValueChange={(value) => handleChange('doctorId', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Doctor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {doctorsLoading
-                                            ? null
-                                            : doctors.map((doc) => (
-                                                <SelectItem key={doc._id} value={doc._id}>
-                                                    {doc.firstName && doc.lastName
-                                                        ? `${doc.firstName} ${doc.lastName}`
-                                                        : doc.name
-                                                            ? doc.name
-                                                            : doc.user?.firstName && doc.user?.lastName
-                                                                ? `${doc.user.firstName} ${doc.user.lastName}`
-                                                                : doc.user?.email
-                                                                    ? doc.user.email
-                                                                    : doc._id}
-                                                </SelectItem>
-                                            ))
-                                        }
-                                    </SelectContent>
-                                </Select>
-                                {errors.doctorId && (
+                                {isReschedule ? (
+                                    <Input
+                                        value={(() => {
+                                            if (initialData && initialData.doctor && initialData.doctor.user) {
+                                                const { firstName, lastName } = initialData.doctor.user;
+                                                return `${firstName || ''} ${lastName || ''}`.trim();
+                                            }
+                                            return '';
+                                        })()}
+                                        disabled
+                                        readOnly
+                                        className="bg-muted cursor-not-allowed"
+                                    />
+                                ) : (
+                                    <Select
+                                        value={formData.doctorId}
+                                        onValueChange={(value) => handleChange('doctorId', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Doctor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {doctorsLoading
+                                                ? null
+                                                : doctorsData.map((doc) => (
+                                                    <SelectItem key={doc._id} value={doc._id}>
+                                                        {doc.firstName && doc.lastName
+                                                            ? `${doc.firstName} ${doc.lastName}`
+                                                            : doc.name
+                                                                ? doc.name
+                                                                : doc.user?.firstName && doc.user?.lastName
+                                                                    ? `${doc.user.firstName} ${doc.user.lastName}`
+                                                                    : doc.user?.email
+                                                                        ? doc.user.email
+                                                                        : doc._id}
+                                                    </SelectItem>
+                                                ))
+                                            }
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                                {!isReschedule && errors.doctorId && (
                                     <p className="text-sm text-red-500">{errors.doctorId}</p>
                                 )}
                             </div>

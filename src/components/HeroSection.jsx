@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 
 export default function HeroSection() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   const scrollToSection = (sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
@@ -39,6 +39,8 @@ export default function HeroSection() {
     }, 2200);
     return () => clearInterval(interval);
   }, []);
+
+  if (!ready) return null;
 
   return (
     <section className="relative overflow-hidden text-primary-foreground py-16 md:py-20 bg-transparent mt-0">

@@ -19,14 +19,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
-import { NotificationProvider, useNotification } from '@/components/ui/Notification';
+// Remove NotificationProvider and useNotification import
+// import { NotificationProvider, useNotification } from '@/components/ui/Notification';
 import { Textarea } from '@/components/ui/Textarea';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchConsultations, addConsultation } from '@/store/slices/patient/consultationsSlice';
-import { useGetDoctorsQuery } from '@/store/services/doctor/doctorApi';
+import { fetchConsultations, addConsultation, deleteConsultation, sendFollowUpQuestion } from '@/store/slices/patient/consultationsSlice';
+import { getDoctors } from '@/store/services/doctor/doctorApi';
 
-const ConsultationCard = ({ consultation, onOpenDialog, onCancel }) => {
+// Use Alert from @/components/ui/Alert.jsx
+import { Alert } from '@/components/ui/Alert';
+
+const getDoctorNameFromConsultation = (consultation, doctorsList) => {
+  // Case 1: Populated doctor object
+  if (consultation.doctor && typeof consultation.doctor === 'object') {
+    const firstName = consultation.doctor.firstName || consultation.doctor.user?.firstName || '';
+    const lastName = consultation.doctor.lastName || consultation.doctor.user?.lastName || '';
+    if (firstName || lastName) return `${firstName} ${lastName}`.trim();
+  }
+  // Case 2: doctorName field
+  if (consultation.doctorName) return consultation.doctorName;
+  // Case 3: doctor is an ID, look up in doctorsList
+  if (consultation.doctor && Array.isArray(doctorsList)) {
+    // Try matching _id, id, or user._id
+    const doc = doctorsList.find(
+      d => d._id === consultation.doctor || d.id === consultation.doctor || d.user?._id === consultation.doctor
+    );
+    if (doc) {
+      const firstName = doc.firstName || doc.user?.firstName || '';
+      const lastName = doc.lastName || doc.user?.lastName || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+  }
+  return 'Doctor';
+};
+
+const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doctorsList }) => {
   const statusColors = {
     scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
     completed: 'bg-green-100 text-green-800 border-green-200',
@@ -58,105 +86,82 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel }) => {
     }
   };
 
-  const getLastMessage = () => {
-    if (!consultation?.messages?.length) return "No messages yet";
-    const lastMessage = consultation.messages[consultation.messages.length - 1];
-    return lastMessage.message || "No message content";
-  };
-
-  const getLastMessageTime = () => {
-    if (!consultation?.messages?.length) {
-      return new Date(consultation?.date || new Date()).toLocaleString();
-    }
-    const lastMessage = consultation.messages[consultation.messages.length - 1];
-    return new Date(lastMessage.timestamp || consultation.date).toLocaleString();
-  };
-
-  const getUnreadCount = () => {
-    if (!consultation?.messages?.length) return 0;
-    return consultation.messages.filter(msg => !msg.isDoctor && !msg.read).length;
-  };
-
   const StatusIconComponent = statusIcons[consultation.status] || Info;
   const TypeIconComponent = getTypeIcon(consultation.type) || MessageCircle;
 
+  const getDoctorName = () => getDoctorNameFromConsultation(consultation, doctorsList);
+
   return (
-    <Card className="flex flex-col shadow-sm border border-border rounded-2xl hover:shadow-lg transition-all duration-200 w-full h-full min-h-[340px]">
-      <CardContent className="p-8 flex flex-col gap-6 h-full">
-        <div className="flex items-center gap-8">
-          <div className="relative">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={consultation.doctorAvatar || '/images/default-avatar.png'} />
-              <AvatarFallback className="bg-primary text-primary text-2xl font-semibold">
-                {consultation.doctorName?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            {getUnreadCount() > 0 && (
-              <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 text-sm font-bold text-primary-foreground bg-primary rounded-full ring-2 ring-card">
-                {getUnreadCount()}
-              </span>
+    <Card className="flex flex-col shadow-sm border border-border rounded-2xl hover:shadow-lg transition-all duration-200 w-full h-full min-h-[220px]">
+      <CardContent className="p-4 flex flex-col gap-3 h-full text-sm">
+        {/* Doctor Info */}
+        <div className="flex items-center gap-3 mb-1">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={consultation.doctorAvatar || '/images/default-avatar.png'} />
+            <AvatarFallback className="bg-primary text-primary text-base font-semibold">
+              {getDoctorName().charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <div className="font-semibold text-base text-foreground truncate">{getDoctorName()}</div>
+            {consultation.doctorSpecialty && (
+              <div className="text-xs text-muted-foreground truncate">{consultation.doctorSpecialty}</div>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <h3 className="text-2xl font-semibold truncate">{consultation.doctorName}</h3>
-              <Badge className={statusColors[consultation.status] || 'bg-muted text-muted-foreground border-border'} size="lg">
-                <StatusIconComponent className="w-4 h-4 mr-1" />
-                {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 mt-2 text-base text-muted-foreground">
-              <TypeIconComponent className="h-5 w-5" />
-              <span>{getTypeLabel(consultation.type)} Consultation</span>
-            </div>
-          </div>
+          <Badge className={statusColors[consultation.status] || 'bg-muted text-muted-foreground border-border'} size="sm">
+            <StatusIconComponent className="w-3 h-3 mr-1" />
+            {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
+          </Badge>
         </div>
-        <Separator />
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 text-base">
-            <span className="font-medium text-foreground">Last Message:</span>
-            <span className="truncate">{getLastMessage()}</span>
-          </div>
-          <div className="text-sm text-muted-foreground">{getLastMessageTime()}</div>
-          {consultation.attachments?.length > 0 && (
-            <div className="flex flex-col gap-1 mt-2">
-              <span className="font-medium text-base text-foreground">Attachments:</span>
-              <div className="flex flex-wrap gap-2">
-                {consultation.attachments.map((attachment, idx) => (
-                  <a
-                    key={idx}
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-muted text-sm font-medium hover:bg-accent transition"
-                  >
-                    <Paperclip className="w-4 h-4" />
-                    {attachment.name}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Type Section */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+          <TypeIconComponent className="h-4 w-4" />
+          <span className="font-medium">{getTypeLabel(consultation.type)} Consultation</span>
         </div>
-        <div className="flex gap-3 mt-4">
+        {/* Question Section */}
+        <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
+          <div className="flex items-center gap-1 mb-0.5">
+            <Info className="h-3 w-3 text-primary" />
+            <span className="font-semibold text-xs text-foreground">Question</span>
+          </div>
+          <div className="text-muted-foreground text-xs">{consultation.question || 'No question provided.'}</div>
+        </div>
+        {/* Answer Section */}
+        <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
+          <div className="flex items-center gap-1 mb-0.5">
+            <Check className="h-3 w-3 text-success" />
+            <span className="font-semibold text-xs text-foreground">Answer</span>
+          </div>
+          <div className="text-muted-foreground text-xs">{consultation.answer || <span className="italic text-warning">No answer yet.</span>}</div>
+        </div>
+        {/* Last Message/Time/Attachments can be shown below if desired */}
+        <div className="flex gap-2 mt-1">
           <Button
-            className="flex-1 border-primary text-primary text-base py-3"
+            className="flex-1 border-primary text-primary text-xs py-2"
             variant="default"
             onClick={() => onOpenDialog(consultation)}
           >
-            <MessageCircle className="h-5 w-5 mr-2" />
-            {consultation.status === 'pending' ? 'View' : 'Continue Chat'}
+            <MessageCircle className="h-4 w-4 mr-1" />
+            {consultation.status === 'pending' ? 'Continue Chat' : 'View'}
           </Button>
           {consultation.status === 'pending' && (
             <Button
               variant="outline"
-              className="flex-1 border-destructive text-destructive hover:bg-destructive/10 text-base py-3"
+              className="flex-1 border-destructive text-destructive hover:bg-destructive/10 text-xs py-2"
               onClick={() => onCancel && onCancel(consultation)}
             >
-              <X className="h-5 w-5 mr-2" />
+              <X className="h-4 w-4 mr-1" />
               Cancel
             </Button>
           )}
+          <Button
+            variant="outline"
+            className="flex-1 text-xs py-2 bg-secondary"
+            onClick={() => onDelete && onDelete(consultation)}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -166,72 +171,219 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel }) => {
 const ConsultationsPageContent = () => {
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
-  const { showNotification } = useNotification();
+  // Remove useNotification
+  // const { showNotification } = useNotification();
   const [newConsultationDialogOpen, setNewConsultationDialogOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
+  const [selectedDoctorName, setSelectedDoctorName] = useState('');
+  // Local state for alert
+  const [alert, setAlert] = useState(null);
   const dispatch = useDispatch();
-  const { data: doctorsData, isLoading: doctorsLoading, error: doctorsError } = useGetDoctorsQuery();
+  const [doctorsData, setDoctorsData] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsError, setDoctorsError] = useState(null);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [consultationToDelete, setConsultationToDelete] = useState(null);
+  const [continueChatDialogOpen, setContinueChatDialogOpen] = useState(false);
+  const [continueChatConsultation, setContinueChatConsultation] = useState(null);
+  const [newQuestion, setNewQuestion] = useState('');
+
   useEffect(() => {
     dispatch(fetchConsultations());
   }, [dispatch]);
+
+  useEffect(() => {
+    setDoctorsLoading(true);
+    setDoctorsError(null);
+    getDoctors()
+      .then(data => {
+        setDoctorsData(data);
+        console.log('Fetched doctorsData:', data);
+      })
+      .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
+      .finally(() => setDoctorsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (selectedDoctor && doctorsData?.data) {
+      const doc = doctorsData.data.find(
+        d => d._id === selectedDoctor || d.id === selectedDoctor
+      );
+      if (doc) {
+        const firstName = doc.firstName || doc.user?.firstName || '';
+        const lastName = doc.lastName || doc.user?.lastName || '';
+        setSelectedDoctorName(`${firstName} ${lastName}`.trim());
+      } else {
+        setSelectedDoctorName('');
+      }
+    } else {
+      setSelectedDoctorName('');
+    }
+  }, [selectedDoctor, doctorsData]);
+
   const { consultations, loading: consultationsLoading, error } = useSelector(state => state.consultations);
 
+  useEffect(() => {
+    if (consultations && consultations.length > 0) {
+      console.log('Consultations:', consultations);
+    }
+  }, [consultations]);
+
   const handleCancelConsultation = (consultation) => {
-    showNotification({ message: 'Cancel feature coming soon.', severity: 'info' });
+    setAlert({ message: 'Cancel feature coming soon.', severity: 'info' });
   };
 
   const handleNewConsultationSubmit = async () => {
     if (!question.trim() || !selectedDoctor) return;
+    console.log('Submitting consultation with doctorId:', selectedDoctor);
     try {
       await dispatch(addConsultation({ doctorId: selectedDoctor, question })).unwrap();
-      showNotification({ message: t('patient.consultations.submitSuccess'), severity: 'success' });
+      setAlert({ message: t('patient.consultations.submitSuccess'), severity: 'success' });
       setNewConsultationDialogOpen(false);
       setQuestion('');
       setSelectedDoctor('');
     } catch (e) {
-      showNotification({ message: e?.message || 'Failed to submit question', severity: 'error' });
+      setAlert({ message: e?.message || 'Failed to submit question', severity: 'error' });
     }
   };
 
   const handleChat = (consultation) => {
-    router.push(`/chat/${consultation.doctor?._id || consultation.doctor}`);
+    if (consultation.status === 'pending') {
+      // For pending consultations, show the continue chat dialog
+      setContinueChatConsultation(consultation);
+      setContinueChatDialogOpen(true);
+    } else {
+      // For completed consultations, show the details modal
+      setSelectedConsultation(consultation);
+    }
   };
+
+  const handleDeleteConsultation = (consultation) => {
+    setConsultationToDelete(consultation);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteConsultation = async () => {
+    if (!consultationToDelete) return;
+    try {
+      await dispatch(deleteConsultation(consultationToDelete._id)).unwrap();
+      setAlert({ message: 'Consultation deleted successfully.', severity: 'success' });
+    } catch (e) {
+      setAlert({ message: e?.message || 'Failed to delete consultation', severity: 'error' });
+    } finally {
+      setDeleteDialogOpen(false);
+      setConsultationToDelete(null);
+    }
+  };
+
+  const handleContinueChatSubmit = async () => {
+    if (!newQuestion.trim() || !continueChatConsultation) return;
+    try {
+      await dispatch(sendFollowUpQuestion({ 
+        consultationId: continueChatConsultation._id, 
+        question: newQuestion 
+      })).unwrap();
+      setAlert({ message: 'Question sent successfully. Waiting for doctor response.', severity: 'success' });
+      setContinueChatDialogOpen(false);
+      setNewQuestion('');
+      setContinueChatConsultation(null);
+      // Refresh consultations to get updated data
+      dispatch(fetchConsultations());
+    } catch (e) {
+      setAlert({ message: e?.message || 'Failed to send question', severity: 'error' });
+    }
+  };
+
+  // Helper to get full name, fallback to empty string if missing
+  const getDoctorFullName = (doc) => {
+    const firstName = doc.firstName || doc.user?.firstName || '';
+    const lastName = doc.lastName || doc.user?.lastName || '';
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    // If either is missing, fallback to empty string (so not shown in list)
+    return '';
+  };
+
+  // Handle both array and object-with-data cases
+  const filteredDoctors = Array.isArray(doctorsData)
+    ? doctorsData.filter(
+        (doc) => {
+          const firstName = doc.firstName || doc.user?.firstName;
+          const lastName = doc.lastName || doc.user?.lastName;
+          return Boolean(firstName && lastName);
+        }
+      )
+    : Array.isArray(doctorsData?.data)
+      ? doctorsData.data.filter(
+          (doc) => {
+            const firstName = doc.firstName || doc.user?.firstName;
+            const lastName = doc.lastName || doc.user?.lastName;
+            return Boolean(firstName && lastName);
+          }
+        )
+      : [];
 
   return (
     <div
       className="flex flex-col gap-8 w-full max-w-none px-0 py-8"
-      dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
-      style={{ width: '100%' }}
+      dir={i18n.language === "ar" ? "rtl" : "ltr"}
+      style={{ width: "100%" }}
     >
       <PageHeader
-        title={t('patient.consultations.title')}
-        description={t('patient.consultations.description')}
+        title={t("patient.consultations.title")}
+        description={t("patient.consultations.description")}
         breadcrumbs={[
-          { label: t('patient.dashboard.breadcrumb'), href: '/patient/dashboard' },
-          { label: t('patient.consultations.title'), href: '/patient/consultations' }
+          {
+            label: t("patient.dashboard.breadcrumb"),
+            href: "/patient/dashboard",
+          },
+          {
+            label: t("patient.consultations.title"),
+            href: "/patient/consultations",
+          },
         ]}
       />
+      {/* Show alert if present */}
+      {alert && (
+        <div className="w-full px-4">
+          <Alert>
+            {typeof alert.message === "string"
+              ? alert.message
+              : alert.message?.message || JSON.stringify(alert.message)}
+          </Alert>
+        </div>
+      )}
       <div className="flex justify-end w-full px-6">
         <Button
           onClick={() => setNewConsultationDialogOpen(true)}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 py-3 font-semibold text-lg"
         >
-          {t('patient.consultations.askQuestion')}
+          {t("patient.consultations.askQuestion")}
         </Button>
       </div>
       <div className="w-full px-4">
         {consultationsLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-muted-foreground text-xl">{t('patient.consultations.loading')}</span>
+            <span className="text-muted-foreground text-xl">
+              {t("patient.consultations.loading")}
+            </span>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-destructive text-xl">{error}</span>
+            <span className="text-destructive text-xl">
+              {typeof error === "string"
+                ? error
+                : error?.message || JSON.stringify(error)}
+            </span>
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-muted-foreground text-xl">{t('patient.consultations.noConsultations')}</span>
+            <span className="text-muted-foreground text-xl">
+              {t("patient.consultations.noConsultations")}
+            </span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
@@ -239,42 +391,143 @@ const ConsultationsPageContent = () => {
               <div key={consultation._id} className="w-full h-full flex">
                 <ConsultationCard
                   consultation={consultation}
+                  doctorsList={filteredDoctors}
                   onOpenDialog={handleChat}
                   onCancel={handleCancelConsultation}
+                  onDelete={handleDeleteConsultation}
                 />
               </div>
             ))}
           </div>
         )}
       </div>
-      <Dialog open={newConsultationDialogOpen} onOpenChange={setNewConsultationDialogOpen}>
+      {/* Modal for viewing consultation Q&A */}
+      <Dialog
+        open={!!selectedConsultation}
+        onOpenChange={(open) => !open && setSelectedConsultation(null)}
+      >
+        <DialogContent className="max-w-lg w-full">
+          <DialogHeader>
+            <DialogTitle>Consultation Details</DialogTitle>
+          </DialogHeader>
+          {selectedConsultation && (
+            <div className="flex flex-col gap-6">
+              {/* Doctor Info */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
+                <Avatar className="h-14 w-14">
+                  <AvatarImage
+                    src={
+                      selectedConsultation.doctorAvatar ||
+                      "/images/default-avatar.png"
+                    }
+                  />
+                  <AvatarFallback className="bg-primary text-primary text-xl font-semibold">
+                    {getDoctorNameFromConsultation(
+                      selectedConsultation,
+                      filteredDoctors
+                    ).charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-semibold text-lg text-foreground">
+                    {getDoctorNameFromConsultation(
+                      selectedConsultation,
+                      filteredDoctors
+                    )}
+                  </div>
+                  {selectedConsultation.doctorSpecialty && (
+                    <div className="text-sm text-muted-foreground">
+                      {selectedConsultation.doctorSpecialty}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Question Section */}
+              <div className="p-4 rounded-xl bg-muted/40 border border-border flex flex-col gap-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-base text-foreground">
+                    Question
+                  </span>
+                </div>
+                <div className="text-muted-foreground text-base">
+                  {selectedConsultation.question || "No question provided."}
+                </div>
+              </div>
+              {/* Answer Section */}
+              <div className="p-4 rounded-xl bg-muted/40 border border-border flex flex-col gap-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Check className="h-5 w-5 text-success" />
+                  <span className="font-semibold text-base text-foreground">
+                    Answer
+                  </span>
+                </div>
+                <div className="text-muted-foreground text-base">
+                  {selectedConsultation.answer || (
+                    <span className="italic text-warning">No answer yet.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="mt-4 flex gap-2">
+            <Button
+              className="border-primary text-primary"
+              variant="outline"
+              onClick={() => setSelectedConsultation(null)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={newConsultationDialogOpen}
+        onOpenChange={setNewConsultationDialogOpen}
+      >
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>{t('patient.consultations.askQuestion')}</DialogTitle>
+            <DialogTitle>{t("patient.consultations.askQuestion")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
-            <Label htmlFor="doctor" className="text-sm font-medium">Select Doctor</Label>
+            <Label htmlFor="doctor" className="text-sm font-medium">
+              Select Doctor
+            </Label>
             {doctorsLoading ? (
               <div className="text-muted-foreground">Loading doctors...</div>
             ) : doctorsError ? (
               <div className="text-destructive">Failed to load doctors</div>
+            ) : filteredDoctors.length === 0 ? (
+              <div className="text-muted-foreground">No doctors available.</div>
             ) : (
-              <select
-                id="doctor"
-                className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                value={selectedDoctor}
-                onChange={e => setSelectedDoctor(e.target.value)}
-                required
-              >
-                <option value="">Select a doctor</option>
-                {doctorsData?.data?.map((doc) => (
-                  <option key={doc._id || doc.id} value={doc._id || doc.id}>
-                    {doc.firstName && doc.lastName ? `${doc.firstName} ${doc.lastName}` : doc.name || doc.user?.firstName || doc._id}
-                  </option>
-                ))}
-              </select>
+              <>
+                <select
+                  id="doctor"
+                  className="border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={selectedDoctor}
+                  onChange={(e) => setSelectedDoctor(e.target.value)}
+                  required
+                >
+                  <option value="">Select a doctor</option>
+                  {filteredDoctors.map((doc) => (
+                    <option
+                      key={doc.user?._id || doc._id || doc.id}
+                      value={doc.user?._id || doc._id || doc.id}
+                    >
+                      {getDoctorFullName(doc)}
+                    </option>
+                  ))}
+                </select>
+                {selectedDoctorName && (
+                  <div className="mt-2 text-base text-foreground font-semibold">
+                    Selected Doctor: Dr. {selectedDoctorName}
+                  </div>
+                )}
+              </>
             )}
-            <Label htmlFor="question" className="text-sm font-medium">Your Question</Label>
+            <Label htmlFor="question" className="text-sm font-medium">
+              Your Question
+            </Label>
             <Textarea
               id="question"
               rows={4}
@@ -282,7 +535,7 @@ const ConsultationsPageContent = () => {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Type your question here..."
               required
-              className="rounded-lg"
+              className="rounded-2xl"
             />
           </div>
           <DialogFooter className="mt-4 flex gap-2">
@@ -299,7 +552,120 @@ const ConsultationsPageContent = () => {
               onClick={handleNewConsultationSubmit}
               disabled={!selectedDoctor || !question.trim()}
             >
-              {t('patient.consultations.askQuestion')}
+              {t("patient.consultations.askQuestion")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md w-full">
+          <DialogHeader>
+            <DialogTitle>Delete Consultation</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            Are you sure you want to delete this consultation?
+          </div>
+          <DialogFooter className="mt-4 flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="border-primary text-primary"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              className="bg-red-500 text-white"
+              onClick={confirmDeleteConsultation}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Continue Chat Dialog */}
+      <Dialog open={continueChatDialogOpen} onOpenChange={setContinueChatDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Continue Chat with Doctor</DialogTitle>
+          </DialogHeader>
+          {continueChatConsultation && (
+            <div className="flex flex-col gap-4 py-2">
+              {/* Doctor Info */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={continueChatConsultation.doctorAvatar || '/images/default-avatar.png'} />
+                  <AvatarFallback className="bg-primary text-primary text-lg font-semibold">
+                    {getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors).charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-semibold text-lg text-foreground">
+                    {getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors)}
+                  </div>
+                  {continueChatConsultation.doctorSpecialty && (
+                    <div className="text-sm text-muted-foreground">{continueChatConsultation.doctorSpecialty}</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Previous Question */}
+              <div className="p-3 rounded-lg bg-muted/40 border border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm text-foreground">Previous Question</span>
+                </div>
+                <div className="text-muted-foreground text-sm">{continueChatConsultation.question}</div>
+              </div>
+              
+              {/* Previous Answer */}
+              {continueChatConsultation.answer && (
+                <div className="p-3 rounded-lg bg-muted/40 border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="h-4 w-4 text-success" />
+                    <span className="font-semibold text-sm text-foreground">Doctor's Response</span>
+                  </div>
+                  <div className="text-muted-foreground text-sm">{continueChatConsultation.answer}</div>
+                </div>
+              )}
+              
+              {/* New Question */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="newQuestion" className="text-sm font-medium">
+                  Your New Question
+                </Label>
+                <Textarea
+                  id="newQuestion"
+                  rows={4}
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  placeholder="Type your follow-up question here..."
+                  required
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="mt-4 flex gap-2">
+            <Button
+              className="border-primary text-primary"
+              variant="outline"
+              onClick={() => {
+                setContinueChatDialogOpen(false);
+                setNewQuestion('');
+                setContinueChatConsultation(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-primary text-foreground"
+              variant="default"
+              onClick={handleContinueChatSubmit}
+              disabled={!newQuestion.trim()}
+            >
+              Send Question
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -312,10 +678,9 @@ export default function ConsultationsPage() {
   const { i18n } = useTranslation('common');
   const isRtl = i18n.language === 'ar';
   return (
-    <NotificationProvider>
-      <main className={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%' }}>
-        <ConsultationsPageContent />
-      </main>
-    </NotificationProvider>
+    // Remove NotificationProvider
+    <main className={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%' }}>
+      <ConsultationsPageContent />
+    </main>
   );
 }

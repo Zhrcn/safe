@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { addMedication } from '@/store/slices/patient/profileSlice';
+import { addMedication } from '@/store/services/patient/medicationApi';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/Calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';

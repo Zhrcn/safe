@@ -1,37 +1,19 @@
-import { api } from '../api';
+import axiosInstance from '../axiosInstance';
 
-export const doctorApi = api.injectEndpoints({
-  tagTypes: ['Doctors', 'Patients'],
-  endpoints: (builder) => ({
-    getDoctors: builder.query({
-      query: () => ({
-        url: '/patients/doctors',
-        method: 'GET',
-      }),
-      providesTags: ['Doctors'],
-    }),
-    getDoctorById: builder.query({
-      query: (id) => ({
-        url: `/doctors/${id}`,
-        method: 'GET',
-      }),
-      providesTags: (result, error, id) => [{ type: 'Doctors', id }],
-    }),
-    getPatientDetails: builder.query({
-      query: (id) => ({
-        url: `/patients/${id}`,
-        method: 'GET',
-      }),
-      providesTags: (result, error, id) => [{ type: 'Patients', id }],
-    }),
-  }),
-});
+export const getDoctors = async () => {
+  const res = await axiosInstance.get('/patients/doctors');
+  return res.data.data;
+};
 
-export const {
-  useGetDoctorsQuery,
-  useGetDoctorByIdQuery,
-  useGetPatientDetailsQuery,
-} = doctorApi;
+export const getDoctorById = async (id) => {
+  const res = await axiosInstance.get(`/doctors/${id}`);
+  return res.data.data;
+};
+
+export const getPatientDetails = async (id) => {
+  const res = await axiosInstance.get(`/patients/${id}`);
+  return res.data.data;
+};
 
 export const createDoctor = async (doctorData) => {
   const res = await axiosInstance.post('/doctors', doctorData);

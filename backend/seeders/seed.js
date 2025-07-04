@@ -340,23 +340,54 @@ const seedDatabase = async () => {
       });
       patient.appointments.push(appointment._id);
       await patient.save();
-      await Prescription.create({
-        patientId: patient.user,
-        doctorId: doctor.user,
-        issueDate: new Date(),
-        expiryDate: new Date(2025, 11, 31),
-        medications: [
-          {
-            name: 'Amlodipine',
-            dosage: '5mg',
-            frequency: 'Once daily',
-            duration: '30 days',
-            instructions: 'Take in the morning'
-          }
-        ],
-        diagnosis: 'Hypertension',
-        status: 'active'
-      });
+      await Prescription.create([
+        {
+          patientId: patient.user,
+          doctorId: doctor.user,
+          issueDate: new Date(),
+          expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days from now
+          medications: [
+            {
+              name: 'Amlodipine',
+              dosage: '5mg',
+              frequency: 'Once daily',
+              duration: '30 days',
+              route: 'oral',
+              instructions: 'Take in the morning'
+            },
+            {
+              name: 'Lisinopril',
+              dosage: '10mg',
+              frequency: 'Once daily',
+              duration: '30 days',
+              route: 'oral',
+              instructions: 'Take with food'
+            }
+          ],
+          diagnosis: 'Hypertension',
+          notes: 'Monitor blood pressure daily. Return for follow-up in 1 month.',
+          status: 'active'
+        },
+        {
+          patientId: patient.user,
+          doctorId: doctor.user,
+          issueDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60), // 60 days ago
+          expiryDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
+          medications: [
+            {
+              name: 'Metformin',
+              dosage: '500mg',
+              frequency: 'Twice daily',
+              duration: '30 days',
+              route: 'oral',
+              instructions: 'Take after meals'
+            }
+          ],
+          diagnosis: 'Type 2 Diabetes',
+          notes: 'Check blood sugar regularly.',
+          status: 'expired'
+        }
+      ]);
       await Consultation.create({
         patient: patient._id,
         doctor: doctor.user,
@@ -364,6 +395,38 @@ const seedDatabase = async () => {
         answer: 'Lifestyle changes and regular medication.',
         status: 'Answered'
       });
+    }
+
+    const allUsers = [adminUser, ...doctorUsers, ...pharmacistUsers, ...patientUsers];
+    const getRoleById = (id) => {
+      if (adminUser._id.equals(id)) return 'admin';
+      if (doctorUsers.some(u => u._id.equals(id))) return 'doctor';
+      if (pharmacistUsers.some(u => u._id.equals(id))) return 'pharmacist';
+      if (patientUsers.some(u => u._id.equals(id))) return 'patient';
+      return null;
+    };
+    for (let i = 0; i < allUsers.length; i++) {
+      for (let j = i + 1; j < allUsers.length; j++) {
+        const userA = allUsers[i];
+        const userB = allUsers[j];
+        const roleA = getRoleById(userA._id);
+        const roleB = getRoleById(userB._id);
+        if (roleA === 'patient' && roleB === 'patient') continue;
+        const conversation = await Conversation.create({
+          participants: [userA._id, userB._id],
+          subject: `Conversation between ${userA.firstName} and ${userB.firstName}`,
+          messages: [{
+            sender: userA._id,
+            receiver: userB._id,
+            content: `Hello ${userB.firstName}, this is ${userA.firstName}.`,
+            timestamp: new Date(),
+            read: false
+          }],
+          status: 'active',
+          lastMessageTimestamp: new Date()
+        });
+        await conversation.populate('participants', 'firstName lastName email role');
+      }
     }
 
     console.log('Database seeded successfully');

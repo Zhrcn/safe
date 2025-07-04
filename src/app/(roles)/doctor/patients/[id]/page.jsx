@@ -40,7 +40,7 @@ import Appointments from '@/components/patient/sections/Appointments';
 import Insurance from '@/components/patient/sections/Insurance';
 import EmergencyContact from '@/components/patient/sections/EmergencyContact';
 import { Button } from '@/components/ui/Button';
-import { consultations as mockConsultations } from '@/mockdata/consultations';
+import { getPatientConsultations, answerConsultation } from '@/store/services/doctor/consultationsApi';
 import { useTranslation } from 'react-i18next';
 function PrescriptionForm({ open, onClose, onSubmit, patient }) {
     const { t } = useTranslation();
@@ -359,13 +359,46 @@ const PatientPageContent = () => {
     const handleSendMessage = () => {
         router.push(`/chat/${patient.id}`);
     };
-    const patientConsultations = mockConsultations.filter(c => c.patientId === params.id);
+    const [patientConsultations, setPatientConsultations] = useState([]);
+    const [consultationsLoading, setConsultationsLoading] = useState(false);
+
+    useEffect(() => {
+        const loadConsultations = async () => {
+            if (patient?.id) {
+                setConsultationsLoading(true);
+                try {
+                    const consultations = await getPatientConsultations(patient.id);
+                    setPatientConsultations(consultations);
+                } catch (error) {
+                    console.error('Failed to load consultations:', error);
+                    showNotification('Failed to load consultations', 'error');
+                } finally {
+                    setConsultationsLoading(false);
+                }
+            }
+        };
+        loadConsultations();
+    }, [patient?.id]);
+
     const handleAnswerChange = (consultationId, value) => {
         setAnswerInputs(prev => ({ ...prev, [consultationId]: value }));
     };
-    const handleAnswerSubmit = (consultationId) => {
-        showNotification('Answer submitted!', 'success');
-        setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
+
+    const handleAnswerSubmit = async (consultationId) => {
+        const answer = answerInputs[consultationId];
+        if (!answer?.trim()) return;
+
+        try {
+            await answerConsultation(consultationId, answer);
+            showNotification('Answer submitted successfully!', 'success');
+            setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
+            // Reload consultations to get updated data
+            const consultations = await getPatientConsultations(patient.id);
+            setPatientConsultations(consultations);
+        } catch (error) {
+            console.error('Failed to submit answer:', error);
+            showNotification('Failed to submit answer', 'error');
+        }
     };
     const handleChat = (consultation) => {
         router.push(`/chat/${consultation.patientId}`);
@@ -464,42 +497,85 @@ const PatientPageContent = () => {
                             {activeTab === 6 && (
                                 <div>
                                     <h2 className="text-xl font-bold mb-4">Consultations</h2>
-                                    {patientConsultations.length === 0 ? (
+                                    {consultationsLoading ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                        </div>
+                                    ) : patientConsultations.length === 0 ? (
                                         <div className="text-muted-foreground">No consultations for this patient.</div>
                                     ) : (
                                         <div className="space-y-6">
                                             {patientConsultations.map((consultation) => (
-                                                <div key={consultation.id} className="bg-muted rounded-2xl p-4 border border-border flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="w-5 h-5 text-primary" />
-                                                        <span className="font-semibold">Question:</span>
-                                                        <span>{consultation.question}</span>
+                                                <div key={consultation._id} className="bg-muted rounded-2xl p-4 border border-border flex flex-col gap-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="w-5 h-5 text-primary" />
+                                                            <span className="font-semibold">Initial Question:</span>
+                                                        </div>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                            consultation.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            consultation.status === 'Answered' ? 'bg-green-100 text-green-800' :
+                                                            'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                            {consultation.status}
+                                                        </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                                                        <span className="font-semibold">Answer:</span>
-                                                        {consultation.answer ? (
-                                                            <span>{consultation.answer}</span>
-                                                        ) : (
-                                                            <>
-                                                                <input
-                                                                    type="text"
-                                                                    value={answerInputs[consultation.id] || ''}
-                                                                    onChange={e => handleAnswerChange(consultation.id, e.target.value)}
-                                                                    placeholder="Type your answer..."
-                                                                    className="border rounded px-2 py-1 text-sm w-64"
-                                                                />
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="ml-2"
-                                                                    onClick={() => handleAnswerSubmit(consultation.id)}
-                                                                >
-                                                                    Submit
-                                                                </Button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-2 mt-2">
+                                                    <p className="text-sm text-foreground bg-background p-3 rounded-md">
+                                                        {consultation.question}
+                                                    </p>
+                                                    
+                                                    {consultation.messages && consultation.messages.length > 0 && (
+                                                        <div className="space-y-3">
+                                                            <h4 className="font-medium text-sm">Conversation History:</h4>
+                                                            <div className="max-h-48 overflow-y-auto space-y-2">
+                                                                {consultation.messages.slice(1).map((message, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className={`flex ${message.sender === 'patient' ? 'justify-start' : 'justify-end'}`}
+                                                                    >
+                                                                        <div
+                                                                            className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                                                                                message.sender === 'patient'
+                                                                                    ? 'bg-blue-100 text-blue-900'
+                                                                                    : 'bg-green-100 text-green-900'
+                                                                            }`}
+                                                                        >
+                                                                            <p>{message.message}</p>
+                                                                            <p className="text-xs mt-1 opacity-70">
+                                                                                {new Date(message.timestamp).toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {consultation.status === 'Pending' && (
+                                                        <div className="flex items-center gap-2">
+                                                            <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                                                            <span className="font-semibold text-sm">Your Answer:</span>
+                                                            <input
+                                                                type="text"
+                                                                value={answerInputs[consultation._id] || ''}
+                                                                onChange={e => handleAnswerChange(consultation._id, e.target.value)}
+                                                                placeholder="Type your answer..."
+                                                                className="border rounded px-3 py-2 text-sm flex-1"
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleAnswerSubmit(consultation._id)}
+                                                                disabled={!answerInputs[consultation._id]?.trim()}
+                                                            >
+                                                                Submit
+                                                            </Button>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Created: {new Date(consultation.createdAt).toLocaleDateString()}
+                                                        </span>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -508,7 +584,6 @@ const PatientPageContent = () => {
                                                             <MessageCircle className="w-4 h-4 mr-1" />
                                                             Chat
                                                         </Button>
-                                                        <span className="ml-4 text-xs text-muted-foreground">Status: {consultation.answer ? 'Answered' : 'Pending'}</span>
                                                     </div>
                                                 </div>
                                             ))}

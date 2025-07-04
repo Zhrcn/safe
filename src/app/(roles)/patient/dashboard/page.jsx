@@ -20,7 +20,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchProfile } from '@/store/slices/patient/profileSlice';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
 import { createAppointment, fetchAppointments } from '@/store/slices/patient/appointmentsSlice';
-import { doctors } from '@/mockdata/doctors';
+import {
+    fetchDashboardSummary,
+    fetchUpcomingAppointments,
+    fetchActiveMedications,
+    fetchMedicalFile,
+    fetchRecentLabResults,
+    fetchVitalSigns,
+    fetchChronicConditions,
+    fetchAllergies,
+    fetchRecentMessages,
+    fetchRecentConsultations
+} from '@/store/slices/patient/dashboardSlice';
 
 const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t }) => (
   <motion.div
@@ -135,71 +146,83 @@ const DashboardPage = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     const [isAppointmentFormOpen, setAppointmentFormOpen] = React.useState(false);
-    const [vitals, setVitals] = useState(null);
-    const [loadingVitals, setLoadingVitals] = useState(true);
 
     useEffect(() => {
         dispatch(fetchProfile());
     }, [dispatch]);
-    const { profile: user, loading, error } = useSelector(state => state.profile);
+    const { profile: user, loading: profileLoading, error: profileError } = useSelector(state => state.profile);
     const { appointments, loading: isLoadingAppointments, error: appointmentsError } = useSelector(state => state.appointments);
     const isRtl = i18n.language === 'ar';
 
-    const loadVitals = async () => {
-      setLoadingVitals(true);
-      try {
-  
-      } catch (err) {
-        setVitals(null);
-      } finally {
-        setLoadingVitals(false);
-      }
-    };
+    // Dashboard slice state
+    const {
+        summary,
+        upcomingAppointments,
+        activeMedications,
+        medicalFile,
+        recentLabResults,
+        vitalSigns,
+        chronicConditions,
+        allergies,
+        recentMessages,
+        recentConsultations,
+        loading: dashboardLoading,
+        error: dashboardError
+    } = useSelector(state => state.dashboard);
 
-    React.useEffect(() => {
-      dispatch(fetchAppointments());
-      loadVitals();
+    useEffect(() => {
+        dispatch(fetchDashboardSummary());
+        dispatch(fetchUpcomingAppointments());
+        dispatch(fetchActiveMedications());
+        dispatch(fetchMedicalFile());
+        dispatch(fetchRecentLabResults());
+        dispatch(fetchVitalSigns());
+        dispatch(fetchChronicConditions());
+        dispatch(fetchAllergies());
+        dispatch(fetchRecentMessages());
+        dispatch(fetchRecentConsultations());
+        dispatch(fetchAppointments()); // keep this for legacy appointments slice if needed
     }, [dispatch]);
 
     const healthMetrics = [
         {
             title: t('patient.dashboard.heartRate', 'Heart Rate'),
-            value: vitals && vitals.heartRate ? `${vitals.heartRate} BPM` : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.heartRate ? `${vitalSigns.heartRate} BPM` : t('patient.dashboard.noData', 'No Data'),
             icon: Heart,
             trend: 0,
             color: 'bg-error',
         },
         {
             title: t('patient.dashboard.bloodPressure', 'Blood Pressure'),
-            value: vitals && vitals.bloodPressure ? vitals.bloodPressure : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.bloodPressure ? vitalSigns.bloodPressure : t('patient.dashboard.noData', 'No Data'),
             icon: Activity,
             trend: 0,
             color: 'bg-info',
         },
         {
             title: t('patient.dashboard.temperature', 'Temperature'),
-            value: vitals && vitals.temperature ? `${vitals.temperature}°C` : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.temperature ? `${vitalSigns.temperature}°C` : t('patient.dashboard.noData', 'No Data'),
             icon: Pill,
             trend: 0,
             color: 'bg-success',
         },
         {
             title: t('patient.dashboard.respiratoryRate', 'Respiratory Rate'),
-            value: vitals && vitals.respiratoryRate ? `${vitals.respiratoryRate} bpm` : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.respiratoryRate ? `${vitalSigns.respiratoryRate} bpm` : t('patient.dashboard.noData', 'No Data'),
             icon: Activity,
             trend: 0,
             color: 'bg-secondary',
         },
         {
             title: t('patient.dashboard.bmi', 'BMI'),
-            value: vitals && vitals.bmi ? `${vitals.bmi}` : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.bmi ? `${vitalSigns.bmi}` : t('patient.dashboard.noData', 'No Data'),
             icon: TrendingUp,
             trend: 0,
             color: 'bg-warning',
         },
         {
             title: t('patient.dashboard.oxygenSaturation', 'Oxygen Saturation'),
-            value: vitals && vitals.oxygenSaturation ? `${vitals.oxygenSaturation}%` : t('patient.dashboard.noData', 'No Data'),
+            value: vitalSigns && vitalSigns.oxygenSaturation ? `${vitalSigns.oxygenSaturation}%` : t('patient.dashboard.noData', 'No Data'),
             icon: Clock,
             trend: 0,
             color: 'bg-primary',
@@ -234,7 +257,10 @@ const DashboardPage = () => {
         }
     ];
 
-    const upcomingAppointments = appointments.filter(a => a.status === 'scheduled' || a.status === 'upcoming');
+    // Use dashboard's upcomingAppointments if available, fallback to legacy appointments slice
+    const upcoming = (upcomingAppointments && upcomingAppointments.length > 0)
+        ? upcomingAppointments
+        : (appointments || []).filter(a => a.status === 'scheduled' || a.status === 'upcoming');
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">
@@ -281,12 +307,12 @@ const DashboardPage = () => {
                         <TabsContent value="appointments">
                             <div className="space-y-4">
                                 <AnimatePresence>
-                                    {isLoadingAppointments ? (
+                                    {(dashboardLoading || isLoadingAppointments) ? (
                                         <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
-                                    ) : appointmentsError ? (
+                                    ) : (dashboardError || appointmentsError) ? (
                                         <div className="text-center py-8 text-red-500">{t('error')}</div>
-                                    ) : upcomingAppointments.length > 0 ? (
-                                        upcomingAppointments.map((appointment) => (
+                                    ) : upcoming.length > 0 ? (
+                                        upcoming.map((appointment) => (
                                             <AppointmentCard key={appointment._id || appointment.id} appointment={appointment} t={t} />
                                         ))
                                     ) : (

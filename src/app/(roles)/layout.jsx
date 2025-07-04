@@ -1,5 +1,5 @@
 'use client';
-import ProtectedLayout from '@/components/layout/ProtectedLayout';
+import ProtectedLayout from './ProtectedLayout';
 
 export default function RolesLayout({ children }) {
     return (

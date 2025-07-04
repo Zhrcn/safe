@@ -197,7 +197,7 @@ safe/
 │   │   │   ├── redux/
 │   │   │   │   ├── services/
 │   │   │   │   │   ├── authApi.js
-│   │   │   │   │   └── userApi.js
+│   │   │   │   │   └── authApi.js
 │   │   │   │   ├── slices/
 │   │   │   │   │   ├── authSlice.js
 │   │   │   │   │   └── uiSlice.js

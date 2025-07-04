@@ -3,7 +3,10 @@ const router = express.Router();
 const {
   getConsultations,
   requestConsultation,
-  updateConsultation
+  updateConsultation,
+  deleteConsultation,
+  addFollowUpQuestion,
+  getConsultationMessages
 } = require('../controllers/consultation.controller');
 const { protect } = require('../middleware/auth.middleware');
 router.use(protect);
@@ -11,5 +14,10 @@ router.route('/')
   .get(getConsultations)
   .post(requestConsultation);
 router.route('/:id')
-  .patch(updateConsultation);
+  .patch(updateConsultation)
+  .delete(deleteConsultation);
+router.route('/:id/follow-up')
+  .post(addFollowUpQuestion);
+router.route('/:id/messages')
+  .get(getConsultationMessages);
 module.exports = router;

@@ -1,13 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getPrescriptions, addPrescription, updatePrescription, deletePrescription } from '@/store/services/patient/prescriptionApi';
+import { fetchPrescriptionsService } from '@/services/prescriptionService';
 
 export const fetchPrescriptions = createAsyncThunk(
     'prescriptions/fetchPrescriptions',
-    async (_, { rejectWithValue }) => {
+    async (_, thunkAPI) => {
         try {
-            return await getPrescriptions();
-        } catch (err) {
-            return rejectWithValue(err.response?.data || err.message);
+            const response = await fetchPrescriptionsService();
+            return response.data;
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
@@ -66,7 +68,7 @@ const prescriptionsSlice = createSlice({
             })
             .addCase(fetchPrescriptions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.prescriptions = Array.isArray(action.payload) ? action.payload : [];
+                state.prescriptions = action.payload;
             })
             .addCase(fetchPrescriptions.rejected, (state, action) => {
                 state.loading = false;

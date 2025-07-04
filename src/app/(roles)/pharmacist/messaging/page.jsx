@@ -140,38 +140,46 @@ export default function PharmacistMessagingPage() {
   if (mobileView) {
     if (!selected) {
       return (
-        <div className="min-h-screen bg-background p-2">
-          <ChatList
-            conversations={filtered}
-            selectedId={selected?.id}
-            onSelect={handleSelect}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onNewChat={handleNewChat}
-          />
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="mb-4 px-4 pt-4">
+            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+            <p className="text-muted-foreground text-sm">Select a conversation to start chatting.</p>
+          </div>
+          <div className="flex-1">
+            <ChatList
+              conversations={filtered}
+              selectedId={selected?.id}
+              onSelect={handleSelect}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onNewChat={handleNewChat}
+            />
+          </div>
         </div>
       );
     } else {
       return (
-        <div className="min-h-screen bg-background p-2">
-          <ChatPage
-            conversation={selected}
-            onSend={handleSend}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            isMobile={true}
-            onBack={() => setSelected(null)}
-            typing={typing}
-          />
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="flex-1">
+            <ChatPage
+              conversation={selected}
+              onSend={handleSend}
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              isMobile={true}
+              onBack={() => setSelected(null)}
+              typing={typing}
+            />
+          </div>
         </div>
       );
     }
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto grid grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-        <div className="col-span-12 md:col-span-4 lg:col-span-3 h-full">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="max-w-6xl mx-auto flex flex-1 gap-4 h-[calc(100vh-40px)] p-4">
+        <div className="hidden md:flex flex-col w-full max-w-xs h-full rounded-2xl bg-muted/40 shadow-lg">
           <ChatList
             conversations={filtered}
             selectedId={selected?.id}
@@ -181,7 +189,7 @@ export default function PharmacistMessagingPage() {
             onNewChat={handleNewChat}
           />
         </div>
-        <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full">
+        <div className="flex-1 flex flex-col h-full rounded-2xl bg-background shadow-lg">
           {selected ? (
             <ChatPage
               conversation={selected}
@@ -193,7 +201,7 @@ export default function PharmacistMessagingPage() {
               typing={typing}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-lg">
               Select a conversation to start chatting.
             </div>
           )}

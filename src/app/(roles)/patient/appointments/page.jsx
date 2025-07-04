@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { format, differenceInCalendarDays } from 'date-fns';
+import { format, differenceInCalendarDays, parseISO } from 'date-fns';
 import { 
     Calendar, Clock, MapPin, Video, Phone, 
     User, ChevronRight, Plus, Search, Filter,
-    Calendar as CalendarIcon, List, Grid
+    Calendar as CalendarIcon, List, Grid, Info
 } from 'lucide-react';
 import PageHeader from '@/components/patient/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -21,21 +21,42 @@ import { DialogTitle, DialogDescription } from '@radix-ui/react-dialog';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchAppointments, createAppointment } from '@/store/slices/patient/appointmentsSlice';
+import { fetchAppointments, createAppointment, removeAppointment, editAppointment } from '@/store/slices/patient/appointmentsSlice';
 
-const AppointmentCard = ({ appointment, onReschedule }) => {
+const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
+    // Map status to color classes and label
     const getStatusProps = (status) => {
         switch (status?.toLowerCase()) {
             case 'scheduled':
-                return { variant: 'secondary', label: 'Scheduled' };
+                return { 
+                    label: 'Scheduled', 
+                    className: 'bg-blue-100 text-blue-800 border-blue-200' 
+                };
             case 'completed':
-                return { variant: 'outline', label: 'Completed' };
+                return { 
+                    label: 'Completed', 
+                    className: 'bg-green-100 text-green-800 border-green-200' 
+                };
             case 'cancelled':
-                return { variant: 'destructive', label: 'Cancelled' };
+                return { 
+                    label: 'Cancelled', 
+                    className: 'bg-red-100 text-red-800 border-red-200' 
+                };
             case 'pending':
-                return { variant: 'ghost', label: 'Pending' };
+                return { 
+                    label: 'Pending', 
+                    className: 'bg-yellow-100 text-yellow-800 border-yellow-200' 
+                };
+            case 'rescheduled':
+                return { 
+                    label: 'Rescheduled', 
+                    className: 'bg-purple-100 text-purple-800 border-purple-200' 
+                };
             default:
-                return { variant: 'outline', label: status || 'Unknown' };
+                return { 
+                    label: status || 'Unknown', 
+                    className: 'bg-gray-100 text-gray-800 border-gray-200' 
+                };
         }
     };
     const now = new Date();
@@ -60,54 +81,83 @@ const AppointmentCard = ({ appointment, onReschedule }) => {
     }
     const statusProps = getStatusProps(appointment.status);
     return (
-        <Card className="hover:shadow-lg transition-shadow border border-border bg-card flex flex-col h-full relative">
-            <div className="absolute top-4 right-4">
-                <Button variant={statusProps.variant} size="sm" className="rounded-full px-4 py-1 cursor-default" disabled>{statusProps.label}</Button>
+      <Card className="hover:shadow-lg transition-shadow border border-border bg-card flex flex-col h-full relative">
+        <div className="absolute top-4 right-4">
+          <span
+            className={`rounded-full px-4 py-1 text-sm font-medium border cursor-default select-none ${statusProps.className}`}
+          >
+            {statusProps.label}
+          </span>
+        </div>
+        <CardContent className="p-6 flex flex-col h-full justify-between">
+          <div className="flex-1 space-y-2 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-primary">{doctorName}</h3>
             </div>
-            <CardContent className="p-6 flex flex-col h-full justify-between">
-                <div className="flex-1 space-y-2 mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="p-2 rounded-full bg-primary/10">
-                            <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-bold text-primary">
-                            {doctorName}
-                        </h3>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        <span>{doctorSubtitle}</span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{appointment.time || 'TBD'}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span>{appointment.type || 'N/A'}</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{appointment.reason || 'No reason provided'}</span>
-                    </div>
-                    {appointment.notes && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <span>Notes: {appointment.notes}</span>
-                        </div>
-                    )}
-                </div>
-                <div className="flex flex-col items-end gap-3">
-                    {canReschedule && (
-                        <DialogTrigger >
-                            <Button variant="outline" size="sm" onClick={() => onReschedule(appointment)}>
-                                Reschedule
-                            </Button>
-                        </DialogTrigger>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarIcon className="h-4 w-4" />
+              <span>{
+                appointment.date && appointment.date.startsWith('1111-01-01')
+                  ? 'TBD'
+                  : format(parseISO(appointment.date), 'yyyy-MM-dd')
+              }</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{doctorSubtitle}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span>{appointment.time || "TBD"}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span>{appointment.type || "N/A"}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Info className="h-4 w-4" />
+              <span>{appointment.reason || "No reason provided"}</span>
+            </div>
+            {appointment.location && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{appointment.location}</span>
+              </div>
+            )}
+            {appointment.notes && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <span>Notes: {appointment.notes}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex  items-end gap-3">
+            {appointment.status === "pending" && (
+              <Button
+                variant="default"
+                size="sm"
+                className="mt-5 bg-primary text-foreground"
+                onClick={() => onReschedule(appointment)}
+              >
+                Edit
+              </Button>
+            )}
+            {appointment.status === "pending" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onCancel(appointment)}
+                className="mt-2 border-primary text-primary"
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     );
 };
 
@@ -150,22 +200,53 @@ const AppointmentsPage = () => {
         setSelectedAppointment(null);
     };
 
+    const timeSlotToTime = {
+        morning: '09:00',
+        afternoon: '14:00',
+        evening: '18:00'
+    };
+
     const handleSubmitAppointment = async (data) => {
+        // Prefer data.time, else map from data.timeSlot, else fallback
+        const time = data.time || timeSlotToTime[data.timeSlot] || data.timeSlot || '09:00';
         try {
-            await dispatch(createAppointment({
-                doctorId: data.doctorId,
-                date: '1970-01-01',
-                time: 'TBD',
-                reason: data.reason,
-                type: data.type,
-                notes: data.notes,
-            })).unwrap();
+            if (modalType === 'reschedule' && selectedAppointment) {
+                await dispatch(editAppointment({
+                    id: selectedAppointment.id || selectedAppointment._id,
+                    appointmentData: {
+                        date: data.date,
+                        time,
+                        type: data.type,
+                        reason: data.reason,
+                        notes: data.notes,
+                    }
+                })).unwrap();
+            } else {
+                await dispatch(createAppointment({
+                    doctorId: data.doctorId,
+                    date: data.date,
+                    time,
+                    reason: data.reason,
+                    type: data.type,
+                    notes: data.notes,
+                })).unwrap();
+            }
             setShowModal(false);
             setSelectedAppointment(null);
             dispatch(fetchAppointments());
         } catch (e) {
-            console.error('Error creating appointment:', e);
-            showNotification(t('patient.appointments.createError', 'Failed to create appointment'), 'error');
+            console.error('Error submitting appointment:', e);
+            // Optionally show notification
+        }
+    };
+
+    const handleCancel = async (appointment) => {
+        try {
+            await dispatch(removeAppointment(appointment.id || appointment._id)).unwrap();
+            dispatch(fetchAppointments());
+        } catch (e) {
+            console.error('Error cancelling appointment:', e);
+            // Optionally show notification
         }
     };
 
@@ -236,20 +317,12 @@ const AppointmentsPage = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredAppointments.length > 0 ? (
             filteredAppointments.map((appointment, idx) => (
-              <Dialog
+              <AppointmentCard
                 key={appointment.id || appointment._id || idx}
-                open={
-                  showModal &&
-                  selectedAppointment?.id === (appointment.id || appointment._id) &&
-                  modalType === "reschedule"
-                }
-                onOpenChange={setShowModal}
-              >
-                <AppointmentCard
-                  appointment={appointment}
-                  onReschedule={handleReschedule}
-                />
-              </Dialog>
+                appointment={appointment}
+                onReschedule={handleReschedule}
+                onCancel={handleCancel}
+              />
             ))
           ) : (
             <div className="text-center py-12 bg-card rounded-2xl shadow-sm col-span-full">

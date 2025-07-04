@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { useLoginMutation } from '@/store/services/user/authApi';
+import { login } from '@/store/services/user/authApi';
 import { setCredentials, setError, clearError } from '@/store/slices/auth/authSlice';
 import { motion } from 'framer-motion';
 import { ROLE_ROUTES } from '@/config/app-config';
@@ -23,8 +23,8 @@ const loginSchema = z.object({
 export default function LoginForm({ role, redirectUrl }) {
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const [login, { isLoading }] = useLoginMutation();
-    const [error, setLocalError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
     const userRole = useAppSelector(state => state.auth.role);
     const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
@@ -50,14 +50,11 @@ export default function LoginForm({ role, redirectUrl }) {
         }
     }, [isAuthenticated, userRole, router]);
 
-    const onSubmit = async (data) => {
+    const handleLogin = async (credentials) => {
+        setIsLoading(true);
+        setError(null);
         try {
-            setLocalError(null);
-            dispatch(clearError());
-            const result = await login({
-                ...data,
-                role: role?.toLowerCase()
-            }).unwrap();
+            const result = await login(credentials);
             if (result.success && result.data) {
                 const userRole = result.data.user?.role?.toLowerCase() || 'patient';
                 dispatch(setCredentials({
@@ -81,7 +78,24 @@ export default function LoginForm({ role, redirectUrl }) {
         } catch (err) {
             console.error('Login error:', err);
             const errorMessage = err.data?.message || err.message || 'An error occurred during login';
-            setLocalError(errorMessage);
+            setError(errorMessage);
+            dispatch(setError(errorMessage));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const onSubmit = async (data) => {
+        try {
+            dispatch(clearError());
+            await handleLogin({
+                ...data,
+                role: role?.toLowerCase()
+            });
+        } catch (err) {
+            console.error('Login error:', err);
+            const errorMessage = err.data?.message || err.message || 'An error occurred during login';
+            setError(errorMessage);
             dispatch(setError(errorMessage));
         }
     };

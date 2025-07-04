@@ -9,8 +9,20 @@ const getConsultations = asyncHandler(async (req, res) => {
     ]
   };
   const consultations = await Consultation.find(filter)
-    .populate('doctor', 'firstName lastName specialization')
-    .populate('patient', 'firstName lastName')
+    .populate({
+      path: 'doctor',
+      model: 'User',
+      select: 'firstName lastName email'
+    })
+    .populate({
+      path: 'patient',
+      model: 'Patient',
+      populate: {
+        path: 'user',
+        model: 'User',
+        select: 'firstName lastName email'
+      }
+    })
     .sort('-createdAt');
   res.json({
     success: true,
@@ -46,8 +58,13 @@ const answerConsultation = asyncHandler(async (req, res) => {
   }
   consultation.answer = req.body.answer;
   consultation.status = 'Answered';
+  consultation.messages.push({
+    sender: 'doctor',
+    message: req.body.answer,
+    timestamp: new Date()
+  });
   await consultation.save();
-  await consultation.populate('doctor', 'firstName lastName specialization');
+  await consultation.populate('doctor', 'firstName lastName email');
   await consultation.populate('patient', 'firstName lastName');
   res.json({
     success: true,
@@ -72,9 +89,84 @@ const updateConsultation = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteConsultation = asyncHandler(async (req, res) => {
+  const consultation = await Consultation.findById(req.params.id);
+  if (!consultation) {
+    res.status(404);
+    throw new Error('Consultation not found');
+  }
+  if (consultation.patient.toString() !== req.user.id) {
+    res.status(403);
+    throw new Error('Not authorized to delete this consultation');
+  }
+  await consultation.deleteOne();
+  res.json({ success: true, message: 'Consultation deleted' });
+});
+
+const addFollowUpQuestion = asyncHandler(async (req, res) => {
+  const { question } = req.body;
+  const consultation = await Consultation.findById(req.params.id);
+  
+  if (!consultation) {
+    res.status(404);
+    throw new Error('Consultation not found');
+  }
+  
+  if (consultation.patient.toString() !== req.user.id) {
+    res.status(403);
+    throw new Error('Not authorized to add questions to this consultation');
+  }
+  
+  consultation.messages.push({
+    sender: 'patient',
+    message: question,
+    timestamp: new Date()
+  });
+  
+  consultation.status = 'Pending';
+  
+  await consultation.save();
+  await consultation.populate('doctor', 'firstName lastName email');
+  await consultation.populate('patient', 'firstName lastName');
+  
+  res.json({
+    success: true,
+    data: consultation,
+    message: 'Follow-up question added successfully'
+  });
+});
+
+const getConsultationMessages = asyncHandler(async (req, res) => {
+  const consultation = await Consultation.findById(req.params.id);
+  
+  if (!consultation) {
+    res.status(404);
+    throw new Error('Consultation not found');
+  }
+  
+  if (consultation.patient.toString() !== req.user.id && consultation.doctor.toString() !== req.user.id) {
+    res.status(403);
+    throw new Error('Not authorized to view this consultation');
+  }
+  
+  await consultation.populate('doctor', 'firstName lastName email');
+  await consultation.populate('patient', 'firstName lastName');
+  
+  res.json({
+    success: true,
+    data: {
+      consultation,
+      messages: consultation.messages
+    }
+  });
+});
+
 module.exports = {
   getConsultations,
   requestConsultation,
   answerConsultation,
-  updateConsultation
+  updateConsultation,
+  deleteConsultation,
+  addFollowUpQuestion,
+  getConsultationMessages
 };

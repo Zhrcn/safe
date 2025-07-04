@@ -38,15 +38,13 @@ function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/logo(1).png" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        {mounted && (
-          <Providers>
-            <ErrorBoundary>
-              <SessionWrapper>
-                {children}
-              </SessionWrapper>
-            </ErrorBoundary>
-          </Providers>
-        )}
+        <Providers>
+          <ErrorBoundary>
+            <SessionWrapper>
+              {mounted ? children : null}
+            </SessionWrapper>
+          </ErrorBoundary>
+        </Providers>
       </body>
     </html>
   );

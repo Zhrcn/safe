@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { userApi } from '@/store/services/user/userApi';
+import {
+  login,
+  register,
+  logout
+} from '@/store/services/user/authApi';
 import { getToken, setToken, removeToken } from '@/utils/tokenUtils';
 import { handleAuthError } from '@/utils/errorHandling';
 const initialState = {
@@ -17,11 +21,8 @@ export const loginUser = createAsyncThunk(
   'user/loginUser',
   async ({ email, password, role }, { rejectWithValue }) => {
     try {
-      const response = await userApi.endpoints.login.initiate({ email, password, role });
-      if ('error' in response) {
-        throw response.error;
-      }
-      const { token, user } = response.data.data;
+      const response = await login({ email, password, role });
+      const { token, user } = response;
       setToken(token);
       return { token, user };
     } catch (error) {
@@ -33,11 +34,9 @@ export const registerUser = createAsyncThunk(
   'user/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await userApi.endpoints.register.initiate(userData);
-      if ('error' in response) {
-        throw response.error;
-      }
-      const { token, user } = response.data.data;
+      const response = await register(userData);
+      // If register returns a token and user, set them
+      const { token, user } = response;
       setToken(token);
       return { token, user };
     } catch (error) {
@@ -49,7 +48,7 @@ export const logoutUser = createAsyncThunk(
   'user/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      await userApi.endpoints.logout.initiate();
+      await logout();
       removeToken();
       return null;
     } catch (error) {

@@ -1,37 +1,145 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchConversations, createConversation } from '@/store/slices/patient/conversationsSlice';
+import {
+  fetchConversations,
+  createConversation,
+  sendMessage,
+  addMessageToConversation,
+  setCurrentConversation,
+  markConversationAsRead,
+} from '@/store/slices/patient/conversationsSlice';
+import {
+  onReceiveMessage,
+  joinConversation,
+  leaveConversation,
+  sendTyping
+} from '@/store/services/patient/conversationApi';
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
 import { MessageCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { getSocket } from "@/utils/socket";
-import { doctors } from '@/mockdata/doctors';
-import { pharmacists } from '@/mockdata/pharmacists';
-import { useGetDoctorsQuery } from '@/store/services/doctor/doctorApi';
+import { getNonPatientUsers } from '@/store/services/user/userApi';
+import toast from 'react-hot-toast';
+import { getDoctors } from '@/store/services/doctor/doctorApi';
+
+function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelectedUser, subject, setSubject, loading, error }) {
+  const { t } = useTranslation('common');
+  if (!open) return null;
+
+  const allUsers = [
+    ...users.map(user => ({
+      ...user,
+      id: user._id,
+      type: user.role,
+      displayName: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+    })),
+  ].filter(u => u.displayName && u.id);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-4">{t('Start New Chat')}</h2>
+        <label className="block mb-2 text-sm font-medium">{t('Select User')}</label>
+        <select
+          className="w-full border rounded px-2 py-1 mb-4"
+          value={selectedUser ? selectedUser.id : ""}
+          onChange={e => {
+            const user = allUsers.find(u => u.id === e.target.value);
+            setSelectedUser(user || null);
+          }}
+        >
+          <option value="">{t('Choose a user')}</option>
+          {allUsers.map(user => (
+            <option key={user.id} value={user.id}>
+              {user.displayName} {user.type === 'doctor' ? t('(Doctor)') : user.type === 'pharmacist' ? t('(Pharmacist)') : user.type === 'admin' ? t('(Admin)') : ''}
+            </option>
+          ))}
+        </select>
+        <label className="block mb-2 text-sm font-medium">{t('Subject')}</label>
+        <input
+          className="w-full border rounded px-2 py-1 mb-4"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+          placeholder={t('Enter subject')}
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-4 py-2 bg-gray-200 rounded"
+            onClick={onClose}
+          >
+            {t('Cancel')}
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+            onClick={onCreate}
+            disabled={!selectedUser}
+          >
+            {t('Create')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PatientMessagingPage() {
-  const [conversations, setConversations] = useState([]);
+  const dispatch = useDispatch();
+  const { t } = useTranslation('common');
   const [selected, setSelected] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [mobileView, setMobileView] = useState(false);
-  const router = useRouter();
-  const { t, i18n } = useTranslation('common');
-  const isRtl = i18n.language === 'ar';
-  const dispatch = useDispatch();
-  const [socket, setSocket] = useState(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [subject, setSubject] = useState("");
-  const { conversations: reduxConversations, loading, error } = useSelector(state => state.conversations);
-  const currentUser = useSelector(state => state.user?.user); // adjust as needed
+  const [isTyping, setIsTyping] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const conversations = useSelector(state => state.conversations.conversations);
+  const currentUser = useSelector(state => state.user?.user);
+  console.log('[MessagingPage] currentUser:', currentUser);
+  const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState(null);
 
   useEffect(() => {
     dispatch(fetchConversations());
+    setDoctorsLoading(true);
+    setDoctorsError(null);
+    getDoctors()
+      .then(data => setDoctors(data))
+      .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
+      .finally(() => setDoctorsLoading(false));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (selected) {
+      joinConversation(selected._id);
+      dispatch(setCurrentConversation(selected));
+      return () => leaveConversation(selected._id);
+    }
+  }, [selected, dispatch]);
+
+  useEffect(() => {
+    const off = onReceiveMessage(({ conversationId, message }) => {
+      console.log('[onReceiveMessage] received', { conversationId, message });
+      dispatch(addMessageToConversation({ conversationId, message }));
+      if (!selected || selected._id !== conversationId) {
+        toast('New message received!');
+        setUnreadCounts(prev => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] || 0) + 1
+        }));
+      } else {
+        setIsTyping(false);
+      }
+    });
+    return off;
+  }, [dispatch, selected]);
 
   useEffect(() => {
     function handleResize() {
@@ -43,209 +151,176 @@ export default function PatientMessagingPage() {
   }, []);
 
   useEffect(() => {
-    const sock = getSocket();
-    sock.connect();
-    setSocket(sock);
-    // Optionally: sock.emit("join", { userId: ... });
-    return () => {
-      sock.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!socket) return;
-    // Listen for incoming messages
-    const handleReceive = (data) => {
-      setConversations((prevConvs) => {
-        return prevConvs.map((conv) =>
-          conv.id === data.conversationId
-            ? { ...conv, messages: [...conv.messages, data.message] }
-            : conv
-        );
-      });
-      if (selected && selected.id === data.conversationId) {
-        setSelected((prev) => ({
-          ...prev,
-          messages: [...prev.messages, data.message],
-        }));
+    const socket = getSocket();
+    if (!socket || !selected) return;
+    const handleTyping = ({ conversationId, userId }) => {
+      if (selected && conversationId === selected._id && userId !== currentUser._id) {
+        setIsTyping(true);
+        setTimeout(() => setIsTyping(false), 2000);
       }
     };
-    socket.on("receive_message", handleReceive);
-    return () => {
-      socket.off("receive_message", handleReceive);
-    };
-  }, [socket, selected]);
+    socket.on('typing', handleTyping);
+    return () => socket.off('typing', handleTyping);
+  }, [selected, currentUser]);
 
-  // Join conversation room when selected
   useEffect(() => {
-    if (!socket || !selected) return;
-    socket.emit("join_conversation", { conversationId: selected.id });
-    return () => {
-      socket.emit("leave_conversation", { conversationId: selected.id });
-    };
-  }, [socket, selected]);
+    if (selected) {
+      setUnreadCounts(prev => ({ ...prev, [selected._id]: 0 }));
+      dispatch(markConversationAsRead(selected._id));
+    }
+  }, [selected, dispatch]);
 
-  const filtered = reduxConversations.filter(conv =>
-    conv.title.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    setUsersLoading(true);
+    setUsersError(null);
+    getNonPatientUsers()
+      .then(data => setUsers(data))
+      .catch(err => setUsersError(err.message || 'Failed to fetch users'))
+      .finally(() => setUsersLoading(false));
+  }, []);
+
+  const handleInputChange = (value) => {
+    setNewMessage(value);
+    if (selected && currentUser && currentUser._id) {
+      sendTyping({ conversationId: selected._id, userId: currentUser._id });
+    }
+  };
+
+  const filtered = conversations.filter(conv =>
+    (conv.title || "Untitled Conversation").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = conv => {
     setSelected(conv);
   };
 
-  const handleSend = () => {
-    if (!newMessage.trim() || !selected) return;
-    const message = {
-      id: Date.now(),
-      content: newMessage,
-      timestamp: new Date(),
-      sender: "You", // Replace with actual user info
-      read: false,
-    };
-    if (socket) {
-      socket.emit("send_message", {
-        conversationId: selected.id,
-        message,
-      });
+  const handleSend = async () => {
+    console.log('[handleSend] called', { newMessage, selected, currentUser });
+    if (!newMessage.trim()) {
+      console.warn('[handleSend] Tried to send empty message.');
+      return;
     }
-    setSelected((prev) => ({
-      ...prev,
-      messages: [...prev.messages, message],
-    }));
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === selected.id
-          ? { ...c, messages: [...c.messages, message] }
-          : c
-      )
-    );
+    if (!selected) {
+      console.error('[handleSend] No conversation selected.');
+      toast.error('No conversation selected.');
+      return;
+    }
+    if (!currentUser || !currentUser._id) {
+      console.error('[handleSend] User not loaded.');
+      toast.error('User not loaded. Please log in again.');
+      return;
+    }
+    await dispatch(sendMessage({
+      conversationId: selected._id,
+      content: newMessage,
+      currentUserId: currentUser._id,
+    }))
+      .unwrap()
+      .then((result) => {
+        console.log('[handleSend] Message sent successfully:', result);
+      })
+      .catch(err => {
+        console.error('[handleSend] Send message error:', err);
+        toast.error('Failed to send message');
+      });
     setNewMessage("");
   };
 
-  // New chat handler
   const handleCreateChat = async () => {
     if (!selectedUser) return;
-    const participants = [currentUser?.id, selectedUser.user?.id || selectedUser.id];
-    const result = await dispatch(createConversation({ participants, subject })).unwrap();
+    if (!currentUser || !currentUser._id) {
+      toast.error('User not loaded. Please log in again.');
+      return;
+    }
+    const participants = [selectedUser.id, currentUser._id];
+    const result = await dispatch(createConversation({ participants, subject }));
+    if (result.payload && result.payload._id) {
+      setSelected(result.payload);
+    }
     setShowNewChat(false);
-    setSelected(result);
-    setSubject("");
     setSelectedUser(null);
+    setSubject("");
   };
 
   const handleNewChat = () => {
     setShowNewChat(true);
   };
 
-  // User picker modal
-  const NewChatModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-card p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{t('messages.start_new_chat')}</h2>
-        <div className="mb-2 font-semibold">{t('messages.select_user')}</div>
-        <div className="max-h-40 overflow-y-auto mb-4">
-          {[...doctors, ...pharmacists].map(user => (
-            <div
-              key={user.id}
-              className={`p-2 rounded cursor-pointer flex items-center gap-2 ${selectedUser?.id === user.id ? 'bg-primary/10' : ''}`}
-              onClick={() => setSelectedUser(user)}
-            >
-              <img src={user.user?.profileImage || user.profileImage} alt={user.user?.name || user.name} className="w-8 h-8 rounded-full" />
-              <span>{user.user?.name || user.name}</span>
-              <span className="text-xs text-muted-foreground ml-2">({user.user?.role || user.role})</span>
-            </div>
-          ))}
-        </div>
-        <input
-          type="text"
-          className="input input-bordered w-full mb-4"
-          placeholder={t('messages.subject_placeholder')}
-          value={subject}
-          onChange={e => setSubject(e.target.value)}
-        />
-        <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={() => setShowNewChat(false)}>{t('common.cancel')}</button>
-          <button className="btn btn-primary" onClick={handleCreateChat} disabled={!selectedUser}>{t('messages.start_chat')}</button>
-        </div>
-      </div>
-    </div>
-  );
+  const handleCloseNewChat = () => {
+    setShowNewChat(false);
+    setSelectedUser(null);
+    setSubject("");
+  };
 
-  if (mobileView) {
-    if (!selected) {
-      return (
-        <div className="min-h-screen bg-background p-2">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground">{t('messages.title')}</h1>
-            <p className="text-muted-foreground text-sm">{t('messages.select_conversation')}</p>
-          </div>
-          <ChatList
-            conversations={filtered}
-            selectedId={selected?.id}
-            onSelect={handleSelect}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onNewChat={handleNewChat}
+  if (!currentUser) {
+    return <div>Loading user...</div>;
+  }
+
+  return (
+    <div className="flex h-full w-full bg-gray-50">
+      {/* New Chat Modal */}
+      <NewChatModal
+        open={showNewChat}
+        onClose={handleCloseNewChat}
+        onCreate={handleCreateChat}
+        users={users}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        subject={subject}
+        setSubject={setSubject}
+        loading={usersLoading}
+        error={usersError}
+      />
+
+      {/* Sidebar: Chat List */}
+      <div className={`border-r bg-white h-full ${mobileView && selected ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <MessageCircle className="w-6 h-6" />
+            {t('Messages')}
+          </h1>
+          <button
+            className="px-3 py-1 bg-blue-600 text-white rounded"
+            onClick={handleNewChat}
+          >
+            {t('New Chat')}
+          </button>
+        </div>
+        <div className="p-3">
+          <input
+            className="w-full border rounded px-2 py-1"
+            placeholder={t('Search conversations')}
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
-      );
-    } else {
-      return (
-        <div className="min-h-screen bg-background p-2">
+        <ChatList
+          conversations={filtered}
+          selected={selected}
+          onSelect={handleSelect}
+          unreadCounts={unreadCounts}
+        />
+      </div>
+
+      {/* Main: Chat Page */}
+      <div className={`flex-1 h-full ${mobileView && !selected ? "hidden" : "flex"} flex-col`}>
+        {selected ? (
           <ChatPage
             conversation={selected}
             onSend={handleSend}
             newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            isMobile={true}
+            onInputChange={handleInputChange}
+            isMobile={mobileView}
             onBack={() => setSelected(null)}
+            isTyping={isTyping}
           />
-        </div>
-      );
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-background p-4">
-      {showNewChat && <NewChatModal />}
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">{t('messages.title')}</h1>
-          <p className="text-muted-foreground text-base">{t('messages.chat_securely')}</p>
-        </div>
-        <div className="container mx-auto grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
-          <div className="col-span-12 md:col-span-4 lg:col-span-3 h-full">
-            <ChatList
-              conversations={filtered}
-              selectedId={selected?.id}
-              onSelect={handleSelect}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              onNewChat={handleNewChat}
-            />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <MessageCircle className="w-16 h-16 mb-4" />
+            <p className="text-lg">{t('Select a conversation or start a new chat')}</p>
           </div>
-          <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full">
-            <div className="h-full flex flex-col bg-card/80 rounded-2xl shadow-lg p-6">
-              {selected ? (
-                <ChatPage
-                  conversation={selected}
-                  onSend={handleSend}
-                  newMessage={newMessage}
-                  setNewMessage={setNewMessage}
-                  isMobile={false}
-                  onBack={() => setSelected(null)}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-lg">
-                  <MessageCircle className="w-12 h-12 mb-4 text-primary/60" />
-                  <div className="font-semibold mb-1">{t('messages.no_conversation_selected')}</div>
-                  <div className="text-sm text-muted-foreground">{t('messages.select_conversation')}</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
-} 
+}

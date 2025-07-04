@@ -1,4 +1,3 @@
-import { api } from '../api';
 import axiosInstance from '../axiosInstance';
 
 export const getPatients = async () => {
@@ -64,28 +63,4 @@ export const getPatientConsultations = async (patientId) => {
 export const searchPatients = async (searchTerm) => {
   const res = await axiosInstance.get(`/search?q=${searchTerm}`);
   return res.data.data;
-};
-
-export const patientsApi = api.injectEndpoints({
-  endpoints: (builder) => ({
-    getPatients: builder.query({
-      query: () => ({
-        url: '/patients',
-        method: 'GET',
-      }),
-      providesTags: ['Patients'],
-    }),
-    getPatientById: builder.query({
-      query: (id) => ({
-        url: `/patients/${id}`,
-        method: 'GET',
-      }),
-      providesTags: (result, error, id) => [{ type: 'Patients', id }],
-    }),
-  }),
-});
-
-export const {
-  useGetPatientsQuery,
-  useGetPatientByIdQuery,
-} = patientsApi; 
+}; 

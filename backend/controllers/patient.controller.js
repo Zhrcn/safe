@@ -60,7 +60,11 @@ const getAppointments = asyncHandler(async (req, res) => {
             path: 'appointments',
             populate: {
                 path: 'doctor',
-                select: 'name specialty hospital'
+                populate: {
+                    path: 'user',
+                    select: 'firstName lastName'
+                },
+                select: 'user specialty hospital'
             }
         });
     if (!patient) {
@@ -84,36 +88,57 @@ const createAppointment = asyncHandler(async (req, res) => {
         time,
         reason,
         type,
-        status: 'scheduled'
+        status: 'pending'
     });
     patient.appointments.push(appointment._id);
     await patient.save();
     res.status(201).json(new ApiResponse(201, appointment, 'Appointment created successfully.'));
 });
 const updateAppointment = asyncHandler(async (req, res) => {
-    const { date, time, reason, status } = req.body;
-    const patient = await Patient.findOne({ user: req.user._id });
-    const appointment = patient.appointments.id(req.params.id);
+    const { date, time, reason, status, type, notes } = req.body;
+    const Appointment = require('../models/Appointment');
+    const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
         res.status(404);
         throw new Error('Appointment not found');
+    }
+    // Only allow editing if status is pending
+    if (appointment.status !== 'pending') {
+        res.status(400);
+        throw new Error('Only pending appointments can be edited');
+    }
+    // Only allow the patient who owns the appointment to edit
+    if (appointment.patient.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to edit this appointment');
     }
     appointment.date = date || appointment.date;
     appointment.time = time || appointment.time;
     appointment.reason = reason || appointment.reason;
-    appointment.status = status || appointment.status;
-    await patient.save();
+    appointment.type = type || appointment.type;
+    appointment.notes = notes || appointment.notes;
+    await appointment.save();
     res.status(200).json(new ApiResponse(200, appointment, 'Appointment updated successfully.'));
 });
 const deleteAppointment = asyncHandler(async (req, res) => {
     const patient = await Patient.findOne({ user: req.user._id });
-    const appointment = patient.appointments.id(req.params.id);
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+    const Appointment = require('../models/Appointment');
+    const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
         res.status(404);
         throw new Error('Appointment not found');
     }
-    appointment.remove();
+    // Remove the appointment ObjectId from the patient's appointments array
+    patient.appointments = patient.appointments.filter(
+        appId => appId.toString() !== req.params.id
+    );
     await patient.save();
+    // Delete the appointment document itself
+    await appointment.deleteOne();
     res.status(200).json(new ApiResponse(200, null, 'Appointment deleted successfully.'));
 });
 const getMedications = asyncHandler(async (req, res) => {
@@ -290,7 +315,11 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
             options: { limit: 5 },
             populate: {
                 path: 'doctor',
-                select: 'name specialty hospital'
+                populate: {
+                    path: 'user',
+                    select: 'firstName lastName'
+                },
+                select: 'user specialty hospital'
             }
         })
         .populate({

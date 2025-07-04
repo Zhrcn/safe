@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLoginMutation } from '@/store/services/user/authApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, selectUserLoading, selectUserError } from '@/store/slices/user/userSlice';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
@@ -59,16 +60,16 @@ function getCssVar(name, fallback) {
 }
 
 const LoginPage = () => {
-    const { t } = useTranslation();
+    const { t, ready } = useTranslation();
     const router = useRouter();
+    const dispatch = useDispatch();
+    const isLoading = useSelector(selectUserLoading);
+    const error = useSelector(selectUserError);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
-    const [login, { isLoading }] = useLoginMutation();
-
-    const [pattern, setPattern] = useReactState('');
+    const [pattern, setPattern] = useState('');
 
     useEffect(() => {
         const primary = getCssVar('--primary', '#00b894');
@@ -81,39 +82,45 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-
-        try {
-            const result = await login({ email, password }).unwrap();
-            if (result.success) {
-                if (result.user.role === 'patient') {
-                    router.push('/patient/dashboard');
-                } else if (result.user.role === 'doctor') {
-                    router.push('/doctor/dashboard');
-                } else if (result.user.role === 'admin') {
-                    router.push('/admin/dashboard');
-                }
-            } else {
-                setError(result.message || t('login.error'));
+        const resultAction = await dispatch(loginUser({ email, password }));
+        console.log('Login resultAction:', resultAction);
+        if (loginUser.fulfilled.match(resultAction)) {
+            const { user } = resultAction.payload || {};
+            console.log('Logged in user:', user);
+            if (!user || !user.role) {
+                alert('Login succeeded but user or user role is missing.');
+                return;
             }
-        } catch (error) {
-            setError(error.message || t('login.invalid'));
+            if (user.role === 'patient') {
+                console.log('Redirecting to /patient/dashboard');
+                router.push('/patient/dashboard');
+            } else if (user.role === 'doctor') {
+                console.log('Redirecting to /doctor/dashboard');
+                router.push('/doctor/dashboard');
+            } else if (user.role === 'admin') {
+                console.log('Redirecting to /admin/dashboard');
+                router.push('/admin/dashboard');
+            } else {
+                alert('Unknown user role: ' + user.role);
+            }
+        } else {
+            // error is handled by Redux state
         }
     };
 
-    const backgroundStyle = {
-        backgroundColor: 'var(--background)',
-        backgroundImage: pattern,
-        backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
-        minHeight: '100vh',
-        transition: 'background 0.3s',
-    };
+    if (!ready) return null;
 
     return (
         <div
             className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
-            style={backgroundStyle}
+            style={{
+                backgroundColor: 'var(--background)',
+                backgroundImage: pattern,
+                backgroundRepeat: 'repeat',
+                backgroundSize: 'auto',
+                minHeight: '100vh',
+                transition: 'background 0.3s',
+            }}
         >
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center mb-4">

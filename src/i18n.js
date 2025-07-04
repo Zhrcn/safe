@@ -13,6 +13,7 @@ i18n
     supportedLngs: ['ar', 'en'],
     ns: ['common'],
     defaultNS: 'common',
+    returnObjects: true,
     interpolation: {
       escapeValue: false,
     },

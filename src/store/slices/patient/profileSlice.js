@@ -23,6 +23,42 @@ export const editProfile = createAsyncThunk(
     }
 );
 
+export const addAllergy = createAsyncThunk(
+    'profile/addAllergy',
+    async (allergyData, { rejectWithValue }) => {
+        try {
+            // TODO: Replace with API call
+            return allergyData;
+        } catch (err) {
+            return rejectWithValue(err.message);
+        }
+    }
+);
+
+export const addChronicCondition = createAsyncThunk(
+    'profile/addChronicCondition',
+    async (conditionData, { rejectWithValue }) => {
+        try {
+            // TODO: Replace with API call
+            return conditionData;
+        } catch (err) {
+            return rejectWithValue(err.message);
+        }
+    }
+);
+
+export const addMedication = createAsyncThunk(
+    'profile/addMedication',
+    async (medicationData, { rejectWithValue }) => {
+        try {
+            // TODO: Replace with API call
+            return medicationData;
+        } catch (err) {
+            return rejectWithValue(err.message);
+        }
+    }
+);
+
 const profileSlice = createSlice({
     name: 'profile',
     initialState: {

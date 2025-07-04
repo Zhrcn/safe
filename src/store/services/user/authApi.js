@@ -1,173 +1,73 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { setCredentials, logout } from '@/store/slices/auth/authSlice';
+import axiosInstance from '../axiosInstance';
 import { setToken, getToken, removeToken } from '@/utils/tokenUtils';
 import { AUTH_CONSTANTS } from '@/config/constants';
-import { ROLES } from '@/config/app-config';
 
-const logRequest = (request) => {
-    console.log('API Request:', {
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        body: request.body
-    });
+export const login = async (credentials) => {
+  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.LOGIN, {
+    ...credentials,
+    role: credentials.role?.toLowerCase(),
+  });
+  if (res.data.success && res.data.data) {
+    setToken(res.data.data.token);
+    return {
+      success: true,
+      user: { ...res.data.data.user, role: res.data.data.user.role?.toLowerCase() },
+      token: res.data.data.token,
+    };
+  }
+  return {
+    success: false,
+    message: res.data.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS,
+  };
 };
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
-    credentials: 'include',
-    prepareHeaders: (headers) => {
-        const token = getToken();
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('Content-Type', 'application/json');
-        headers.set('Accept', 'application/json');
-        headers.set('Origin', 'http://localhost:3000');
-        return headers;
-    },
-});
+export const verifyToken = async () => {
+  const res = await axiosInstance.get(AUTH_CONSTANTS.API_ENDPOINTS.CURRENT_USER);
+  if (res.data.success && res.data.data) {
+    return {
+      success: true,
+      user: { ...res.data.data, role: res.data.data.role?.toLowerCase() },
+    };
+  }
+  removeToken();
+  return {
+    success: false,
+    message: res.data.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_TOKEN,
+  };
+};
 
-export const authApi = createApi({
-    reducerPath: 'authApi',
-    baseQuery,
-    tagTypes: ['Auth'],
-    endpoints: (builder) => ({
-        login: builder.mutation({
-            query: (credentials) => {
-                const request = {
-                    url: AUTH_CONSTANTS.API_ENDPOINTS.LOGIN,
-                    method: 'POST',
-                    body: {
-                        ...credentials,
-                        role: credentials.role?.toLowerCase()
-                    }
-                };
-                return request;
-            },
-            transformResponse: (response) => {
-                if (response.success && response.data) {
-                    const userData = {
-                        ...response.data.user,
-                        role: response.data.user.role?.toLowerCase()
-                    };
-                    setToken(response.data.token);
-                    return {
-                        success: true,
-                        user: userData,
-                        token: response.data.token
-                    };
-                }
-                return {
-                    success: false,
-                    message: response.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS
-                };
-            },
-            transformErrorResponse: (response) => {
-                return {
-                    success: false,
-                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS
-                };
-            },
-            async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                try {
-                    const { data } = await queryFulfilled;
-                    if (data.success) {
-                        dispatch(setCredentials(data));
-                    }
-                } catch (error) {
-                    removeToken();
-                }
-            },
-        }),
-        verifyToken: builder.query({
-            query: () => {
-                const request = {
-                    url: AUTH_CONSTANTS.API_ENDPOINTS.CURRENT_USER,
-                    method: 'GET'
-                };
-                return request;
-            },
-            transformResponse: (response) => {
-                if (response.success && response.data) {
-                    const userData = {
-                        ...response.data,
-                        role: response.data.role?.toLowerCase()
-                    };
-                    if (!userData.role) {
-                        try {
-                            const token = getToken();
-                            if (token) {
-                                const payload = JSON.parse(atob(token.split('.')[1]));
-                                userData.role = payload.role?.toLowerCase();
-                            }
-                        } catch (error) {
-                        }
-                    }
-                    return {
-                        success: true,
-                        user: userData
-                    };
-                }
-                return {
-                    success: false,
-                    message: response.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_TOKEN
-                };
-            },
-            transformErrorResponse: (response) => {
-                removeToken();
-                return {
-                    success: false,
-                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_TOKEN
-                };
-            },
-            async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                try {
-                    const { data } = await queryFulfilled;
-                    if (data.success && data.user) {
-                        dispatch(setCredentials(data));
-                    } else {
-                        dispatch(logout());
-                    }
-                } catch (error) {
-                    dispatch(logout());
-                }
-            },
-        }),
-        logout: builder.mutation({
-            query: () => {
-                const request = {
-                    url: AUTH_CONSTANTS.API_ENDPOINTS.LOGOUT,
-                    method: 'POST'
-                };
-                return request;
-            },
-            transformResponse: (response) => {
-                removeToken();
-                return {
-                    success: true,
-                    message: response.message || AUTH_CONSTANTS.SUCCESS_MESSAGES.LOGOUT_SUCCESS
-                };
-            },
-            transformErrorResponse: (response) => {
-                return {
-                    success: false,
-                    message: response.data?.message || AUTH_CONSTANTS.ERROR_MESSAGES.NETWORK_ERROR
-                };
-            },
-            async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                try {
-                    await queryFulfilled;
-                    dispatch(logout());
-                } catch (error) {
-                }
-            },
-        }),
-    }),
-});
+export const logout = async () => {
+  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.LOGOUT);
+  removeToken();
+  return {
+    success: true,
+    message: res.data.message || AUTH_CONSTANTS.SUCCESS_MESSAGES.LOGOUT_SUCCESS,
+  };
+};
 
-export const {
-    useLoginMutation,
-    useVerifyTokenQuery,
-    useLogoutMutation,
-} = authApi; 
+export const register = async (userData) => {
+  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.REGISTER, userData);
+  if (res.data.success && res.data.data) {
+    return res.data.data;
+  }
+  return {
+    success: false,
+    message: res.data.message || 'Registration failed',
+  };
+};
+
+export const resetPassword = async (data) => {
+  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.RESET_PASSWORD, data);
+  if (res.data.success) {
+    return true;
+  }
+  return false;
+};
+
+export const updatePassword = async (data) => {
+  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.UPDATE_PASSWORD, data);
+  if (res.data.success) {
+    return true;
+  }
+  return false;
+}; 

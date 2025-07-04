@@ -2,7 +2,6 @@ import { jwtDecode } from 'jwt-decode';
 import { AUTH_CONSTANTS } from '@/config/constants';
 import { ROLES } from '@/config/app-config';
 
-const TOKEN_KEY = 'safe_auth_token';
 const isBrowser = typeof window !== 'undefined';
 
 const cleanupOldTokens = () => {
@@ -102,9 +101,5 @@ export const removeUserData = () => {
 };
 
 export const hasToken = () => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem(TOKEN_KEY);
-        return !!token;
-    }
-    return false;
+    return !!getToken();
 }; 

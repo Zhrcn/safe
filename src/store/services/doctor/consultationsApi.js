@@ -1,4 +1,5 @@
 import { api } from '../api';
+import axiosInstance from '../axiosInstance';
 
 export const consultationsApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -54,5 +55,25 @@ export const updateConsultation = async (id, consultationData) => {
 
 export const deleteConsultation = async (id) => {
   const res = await axiosInstance.delete(`/consultations/${id}`);
+  return res.data.data;
+};
+
+export const getDoctorConsultations = async () => {
+  const res = await axiosInstance.get('/consultations/doctor');
+  return res.data.data;
+};
+
+export const answerConsultation = async (consultationId, answer) => {
+  const res = await axiosInstance.put(`/consultations/${consultationId}`, { answer });
+  return res.data.data;
+};
+
+export const getConsultationMessages = async (consultationId) => {
+  const res = await axiosInstance.get(`/consultations/${consultationId}/messages`);
+  return res.data.data;
+};
+
+export const getPatientConsultations = async (patientId) => {
+  const res = await axiosInstance.get(`/consultations/patient/${patientId}`);
   return res.data.data;
 }; 

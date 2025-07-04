@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getMedications, addMedication, updateMedication, deleteMedication } from '@/store/services/patient/medicationApi';
+import { 
+    getMedications, 
+    createMedication, 
+    updateMedication, 
+    deleteMedication,
+    updateMedicationReminders,
+    requestMedicationRefill
+} from '@/store/services/patient/medicationApi';
 
 export const fetchMedications = createAsyncThunk(
     'medications/fetchMedications',
@@ -12,11 +19,11 @@ export const fetchMedications = createAsyncThunk(
     }
 );
 
-export const createMedication = createAsyncThunk(
-    'medications/createMedication',
+export const addMedication = createAsyncThunk(
+    'medications/addMedication',
     async (medicationData, { rejectWithValue }) => {
         try {
-            return await addMedication(medicationData);
+            return await createMedication(medicationData);
         } catch (err) {
             return rejectWithValue(err.response?.data || err.message);
         }
@@ -40,6 +47,28 @@ export const removeMedication = createAsyncThunk(
         try {
             await deleteMedication(id);
             return id;
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const updateReminders = createAsyncThunk(
+    'medications/updateReminders',
+    async ({ id, reminderData }, { rejectWithValue }) => {
+        try {
+            return await updateMedicationReminders(id, reminderData);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const requestRefill = createAsyncThunk(
+    'medications/requestRefill',
+    async (id, { rejectWithValue }) => {
+        try {
+            return await requestMedicationRefill(id);
         } catch (err) {
             return rejectWithValue(err.response?.data || err.message);
         }
@@ -70,15 +99,23 @@ const medicationsSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(createMedication.fulfilled, (state, action) => {
-                state.medications.push(action.payload);
+            .addCase(addMedication.fulfilled, (state, action) => {
+                state.medications.unshift(action.payload);
             })
             .addCase(editMedication.fulfilled, (state, action) => {
-                const idx = state.medications.findIndex(m => m.id === action.payload.id);
+                const idx = state.medications.findIndex(m => m._id === action.payload._id);
                 if (idx !== -1) state.medications[idx] = action.payload;
             })
             .addCase(removeMedication.fulfilled, (state, action) => {
-                state.medications = state.medications.filter(m => m.id !== action.payload);
+                state.medications = state.medications.filter(m => m._id !== action.payload);
+            })
+            .addCase(updateReminders.fulfilled, (state, action) => {
+                const idx = state.medications.findIndex(m => m._id === action.payload._id);
+                if (idx !== -1) state.medications[idx] = action.payload;
+            })
+            .addCase(requestRefill.fulfilled, (state, action) => {
+                const idx = state.medications.findIndex(m => m._id === action.payload._id);
+                if (idx !== -1) state.medications[idx] = action.payload;
             });
     },
 });

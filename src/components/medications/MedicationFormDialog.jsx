@@ -13,7 +13,6 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
     const [dosage, setDosage] = useState('');
     const [frequency, setFrequency] = useState('');
     const [refillDate, setRefillDate] = useState('');
-    const [prescribedBy, setPrescribedBy] = useState('');
     const [notes, setNotes] = useState('');
 
     useEffect(() => {
@@ -21,15 +20,13 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
             setName(medication.name || '');
             setDosage(medication.dosage || '');
             setFrequency(medication.frequency || '');
-            setRefillDate(medication.refillDate ? medication.refillDate.substring(0, 10) : '');
-            setPrescribedBy(medication.prescribedBy || '');
+            setRefillDate(medication.refillDate ? new Date(medication.refillDate).toISOString().split('T')[0] : '');
             setNotes(medication.notes || '');
         } else {
             setName('');
             setDosage('');
             setFrequency('');
             setRefillDate('');
-            setPrescribedBy('');
             setNotes('');
         }
     }, [mode, medication, open]);
@@ -51,9 +48,11 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
             name,
             dosage,
             frequency,
-            refillDate,
-            prescribedBy,
-            notes,
+            startDate: new Date().toISOString(),
+            refillDate: refillDate ? new Date(refillDate).toISOString() : null,
+            instructions: notes, // Map notes to instructions for backend
+            notes
+            // Don't send prescribedBy if it's just a name string - backend will use current user
         });
     };
 
@@ -93,19 +92,16 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
                         <Label>{t('patient.medications.refillDate', 'Refill Date')}</Label>
                         <Input type="date" value={refillDate} onChange={e => setRefillDate(e.target.value)} />
                     </div>
-                    <div>
-                        <Label>{t('patient.medications.prescribedBy', 'Prescribed By')}</Label>
-                        <Input value={prescribedBy} onChange={e => setPrescribedBy(e.target.value)} />
-                    </div>
+                    {/* Removed prescribedBy field - will use current user as default */}
                     <div>
                         <Label>{t('patient.medications.notes', 'Notes')}</Label>
                         <Textarea value={notes} onChange={e => setNotes(e.target.value)} />
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button type="button" variant="outline" className="border-primary text-primary " onClick={onClose}>
                             {t('common.cancel', 'Cancel')}
                         </Button>
-                        <Button type="submit">
+                        <Button variant="default" className="bg-primary text-foreground "  type="submit">
                             {t('common.save', 'Save')}
                         </Button>
                     </DialogFooter>

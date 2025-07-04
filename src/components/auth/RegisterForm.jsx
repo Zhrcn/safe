@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { ROLE_ROUTES } from '@/config/app-config';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import { useLoginMutation } from '@/store/services/user/authApi';
+import { login } from '@/store/services/user/authApi';
 import { setCredentials } from '@/store/slices/auth/authSlice';
 
 import { Button } from '@/components/ui/Button';
@@ -25,11 +25,10 @@ const registerSchema = z.object({
 const RegisterForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [login] = useLoginMutation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const {
     register,
@@ -41,12 +40,12 @@ const RegisterForm = () => {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    setError('');
+    setError(null);
     try {
       const result = await login({
         email: data.email,
         password: data.password
-      }).unwrap();
+      });
 
       if (result && result.success) {
         dispatch(setCredentials(result));
@@ -57,6 +56,19 @@ const RegisterForm = () => {
       }
     } catch (err) {
       setError(err?.data?.message || err?.message || 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async (credentials) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await login(credentials);
+      // handle success (e.g., redirect, set user in store, etc.)
+    } catch (err) {
+      setError(err.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
