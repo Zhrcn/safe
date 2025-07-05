@@ -162,6 +162,7 @@
   "doctor.patients.urgent_one": "عاجل",
   "doctor.patients.urgent_other": "عاجلون",
   "doctor.profile.description": "إدارة معلوماتك الشخصية والتعليمية والإنجازات المهنية.",
+  "doctor.profile.specialty": "التخصص",
   "doctor.profile.title": "ملف الطبيب",
   "doctors": "الأطباء",
   "doctorWithName": "د. {{name}}",
@@ -342,6 +343,16 @@
       "noMedicationsFound": "لم يتم العثور على أدوية",
       "tryAdjustingSearch": "حاول تعديل البحث أو الفلاتر للعثور على الأدوية.",
       "noMedicationsDefault": "ليس لديك أي أدوية هنا بعد. أضف أول دواء لك!"
+    },
+    "profile": {
+      "reaction": "رد الفعل",
+      "normalRange": "النطاق الطبيعي",
+      "unit": "الوحدة",
+      "noImages": "لا توجد صور متاحة",
+      "status": "الحالة",
+      "startDate": "البداية",
+      "endDate": "النهاية",
+      "prescribedBy": "وصف من قبل"
     }
   },
   "patient.appointments.description": "إدارة مواعيدك القادمة والسابقة.",
@@ -350,6 +361,7 @@
   "patient.appointments.noAppointmentsDefault": "ليس لديك مواعيد مجدولة.",
   "patient.appointments.noAppointmentsSearch": "لا توجد مواعيد مطابقة لبحثك.",
   "patient.appointments.scheduleNew": "جدولة موعد جديد",
+  "patient.appointments.scheduled": "مجدول",
   "patient.appointments.searchPlaceholder": "ابحث في المواعيد...",
   "patient.appointments.title": "المواعيد",
   "patient.breadcrumb": "مريض",
@@ -381,6 +393,8 @@
   "patient.dashboard.scheduleAppointmentTooltip": "جدولة موعد جديد",
   "patient.dashboard.temperature": "درجة الحرارة",
   "patient.dashboard.trend": "{{value}}% عن الشهر الماضي",
+  "patient.dashboard.type": "النوع",
+  "patient.dashboard.reason": "السبب",
   "patient.dashboard.upcomingAppointments": "المواعيد القادمة",
   "patient.dashboard.viewMedicalRecords": "عرض السجلات الطبية",
   "patient.dashboard.viewMedicalRecordsDesc": "الوصول إلى تاريخك الطبي ونتائج التحاليل.",

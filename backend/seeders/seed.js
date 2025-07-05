@@ -225,6 +225,11 @@ const seedDatabase = async () => {
             name: 'Penicillin',
             severity: 'moderate',
             reaction: 'Rash and hives'
+          },
+          {
+            name: 'Peanuts',
+            severity: 'severe',
+            reaction: 'Anaphylaxis'
           }
         ],
         chronicConditions: [
@@ -233,6 +238,12 @@ const seedDatabase = async () => {
             diagnosisDate: randomDate(new Date(2015, 0, 1), new Date()),
             status: 'active',
             notes: 'Regular monitoring required'
+          },
+          {
+            name: 'Asthma',
+            diagnosisDate: randomDate(new Date(2010, 0, 1), new Date()),
+            status: 'resolved',
+            notes: 'No attacks in last 2 years'
           }
         ],
         vitalSigns: [
@@ -245,6 +256,76 @@ const seedDatabase = async () => {
             height: 170 + i,
             bmi: 22.9 + i,
             oxygenSaturation: 98
+          },
+          {
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+            bloodPressure: '130/85',
+            heartRate: 80,
+            temperature: 36.8,
+            weight: 71 + i,
+            height: 170 + i,
+            bmi: 23.1 + i,
+            oxygenSaturation: 97
+          }
+        ],
+        labResults: [
+          {
+            testName: 'Complete Blood Count',
+            date: new Date(),
+            results: { WBC: 6.2, RBC: 4.8, HGB: 13.5 },
+            normalRange: 'WBC: 4.0-11.0, RBC: 4.2-5.9, HGB: 13.0-17.0',
+            unit: '',
+            labName: 'Safe Lab',
+            doctorId: null,
+            documents: []
+          },
+          {
+            testName: 'Lipid Panel',
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60),
+            results: { Cholesterol: 220, HDL: 45, LDL: 150 },
+            normalRange: 'Cholesterol: <200, HDL: >40, LDL: <100',
+            unit: 'mg/dL',
+            labName: 'Safe Lab',
+            doctorId: null,
+            documents: []
+          }
+        ],
+        imagingReports: [
+          {
+            date: new Date(),
+            type: 'Chest X-Ray',
+            result: 'Clear',
+            notes: 'No abnormalities detected',
+            images: ['/case1_008.dcm']
+          },
+          {
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90),
+            type: 'Abdominal Ultrasound',
+            result: 'Normal',
+            notes: 'No issues found',
+            images: [
+              '/case1/case1_008.dcm',
+              '/case1/case1_010.dcm',
+              '/case1/case1_0012.dcm',
+              '/case1/case1_0014.dcm',
+              '/case1/case1_0016.dcm',
+              '/case1/case1_0018.dcm',
+              '/case1/case1_00120.dcm',
+            ]
+          }
+        ],
+        documents: [
+          {
+            title: 'Discharge Summary',
+            date: new Date(),
+            type: 'PDF',
+            url: '/mock/path/to/discharge-summary.pdf'
+          },
+          {
+            title: 'Lab Report',
+            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
+            type: 'PDF',
+            url: '/mock/path/to/lab-report.pdf'
           }
         ],
         emergencyContact: {

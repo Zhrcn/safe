@@ -28,7 +28,7 @@ function formatDate(date, t) {
   return date.toLocaleDateString();
 }
 
-export default function ChatPage({ conversation, onSend, newMessage, onInputChange, isMobile, onBack, isTyping }) {
+export default function ChatPage({ conversation, onSend, newMessage, onInputChange, isMobile, onBack, isTyping, onDelete, currentUser }) {
   const { t } = useTranslation('common');
   const messagesEndRef = useRef(null);
   useEffect(() => {
@@ -74,8 +74,8 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             <Circle className="w-2 h-2 text-green-500" /> {t('patient.medications.messages.online', 'Online')}
           </p>
         </div>
-        <Button size="icon" variant="ghost" className="text-primary hover:bg-primary/10">
-          <MoreVertical className="w-5 h-5" />
+        <Button size="icon" variant="ghost" className="text-primary hover:bg-primary/10" onClick={() => onDelete && onDelete(conversation._id)} title="Delete Chat">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </Button>
       </div>
       <ScrollArea className="flex-1 px-4 py-6 bg-background">
@@ -92,7 +92,17 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             }
             return (
               <div key={item.key} className="transition-all duration-300 animate-fade-in">
-                <MessageBubble message={item.msg} isOwn={item.msg.sender === "You"} showAvatar={item.showAvatar} />
+                <MessageBubble 
+                  message={item.msg} 
+                  isOwn={
+                    item.msg.sender === "You" || 
+                    (currentUser && (
+                      item.msg.sender === currentUser._id || 
+                      (typeof item.msg.sender === 'object' && item.msg.sender._id === currentUser._id)
+                    ))
+                  } 
+                  showAvatar={item.showAvatar} 
+                />
               </div>
             );
           })}

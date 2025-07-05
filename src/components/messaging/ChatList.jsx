@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Search, Plus, MessageCircle, Dot } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
-export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts }) {
+export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
   const { t } = useTranslation('common');
   return (
     <div className="relative h-full flex flex-col bg-background rounded-2xl shadow-lg overflow-hidden">
@@ -36,7 +36,26 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
           if (conv.lastMessage) {
             if (conv.messages && conv.messages.length > 0) {
               const lastMsg = conv.messages[conv.messages.length - 1];
-              lastMsgPrefix = lastMsg.sender === "You" ? "You: " : `${lastMsg.sender?.split(" ")[0] || "User"}: `;
+              // Handle sender which might be a string or an object with user data
+              let senderName = "User";
+              if (lastMsg.sender === "You") {
+                senderName = "You";
+              } else if (typeof lastMsg.sender === "string") {
+                // Check if this is the current user's ID
+                if (currentUser && lastMsg.sender === currentUser._id) {
+                  senderName = "You";
+                } else {
+                  senderName = lastMsg.sender.split(" ")[0];
+                }
+              } else if (lastMsg.sender && typeof lastMsg.sender === "object") {
+                // Handle populated user object
+                if (currentUser && lastMsg.sender._id === currentUser._id) {
+                  senderName = "You";
+                } else {
+                  senderName = lastMsg.sender.firstName || lastMsg.sender.name || "User";
+                }
+              }
+              lastMsgPrefix = `${senderName}: `;
             }
           }
           const isSelected = selectedId === conversationId;
@@ -61,7 +80,10 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`truncate text-sm ${isUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
-                      <span className="text-xs text-muted-foreground">{lastMsgPrefix}</span>{conv.lastMessage || t('patient.medications.messages.no_messages')}
+                      <span className="text-xs text-muted-foreground">{lastMsgPrefix}</span>
+                      {typeof conv.lastMessage === 'string' 
+                        ? conv.lastMessage 
+                        : (conv.lastMessage?.content || t('patient.medications.messages.no_messages'))}
                     </span>
                     {isUnread && (
                       <span className="ml-2 min-w-[22px] h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center px-2 font-bold shadow">

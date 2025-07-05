@@ -23,7 +23,7 @@ export default function ErrorState({
                 {title}
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                {message}
+                {typeof message === 'string' ? message : message?.message || JSON.stringify(message)}
             </p>
             {retry && (
                 <Button
@@ -52,7 +52,7 @@ export function ErrorBoundaryFallback({
                 Something went wrong
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                {error?.message || 'An unexpected error occurred.'}
+                {typeof error?.message === 'string' ? error?.message : error?.message?.message || JSON.stringify(error?.message)}
             </p>
             {resetErrorBoundary && (
                 <Button

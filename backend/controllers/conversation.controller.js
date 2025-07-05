@@ -8,6 +8,11 @@ exports.getUserConversations = async (req, res) => {
       .populate('messages.sender', 'firstName lastName email')
       .sort({ updatedAt: -1 });
 
+    // Filter out conversations deleted for this user
+    conversations = conversations.filter(conv =>
+      !conv.deletedFor || !conv.deletedFor.map(id => id.toString()).includes(req.user.id.toString())
+    );
+
     conversations = conversations.map(conv => {
       let other = null;
       if (conv.participants && conv.participants.length > 1) {
@@ -133,7 +138,24 @@ exports.deleteConversation = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    await Conversation.findByIdAndDelete(req.params.id);
+    // If user already deleted, just return success
+    if (conversation.deletedFor && conversation.deletedFor.includes(req.user.id)) {
+      return res.status(200).json({ data: { id: req.params.id } });
+    }
+
+    // Add user to deletedFor
+    conversation.deletedFor = conversation.deletedFor || [];
+    conversation.deletedFor.push(req.user.id);
+    await conversation.save();
+
+    // If all participants have deleted, permanently delete
+    const allDeleted = conversation.participants.every(participantId =>
+      conversation.deletedFor.map(id => id.toString()).includes(participantId.toString())
+    );
+    if (allDeleted) {
+      await Conversation.findByIdAndDelete(req.params.id);
+    }
+
     res.status(200).json({ data: { id: req.params.id } });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

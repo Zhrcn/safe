@@ -14,7 +14,6 @@ export default function ProtectedLayout({ children }) {
     const { data, error, isLoading } = useGetCurrentUserQuery();
 
     useEffect(() => {
-        console.log('ProtectedLayout:', { isLoading, error, data });
         if (isLoading) return;
         if (error || !data?.success || !data?.data?.user) {
             console.log('Logging out due to error or missing user:', { error, data });

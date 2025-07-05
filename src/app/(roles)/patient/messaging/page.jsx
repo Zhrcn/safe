@@ -6,8 +6,11 @@ import {
   createConversation,
   sendMessage,
   addMessageToConversation,
+  addOptimisticMessage,
   setCurrentConversation,
   markConversationAsRead,
+  removeConversation,
+  setupMessageListener,
 } from '@/store/slices/patient/conversationsSlice';
 import {
   onReceiveMessage,
@@ -98,7 +101,7 @@ export default function PatientMessagingPage() {
   const [unreadCounts, setUnreadCounts] = useState({});
   const conversations = useSelector(state => state.conversations.conversations);
   const currentUser = useSelector(state => state.user?.user);
-  console.log('[MessagingPage] currentUser:', currentUser);
+
   const [doctors, setDoctors] = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [doctorsError, setDoctorsError] = useState(null);
@@ -108,12 +111,19 @@ export default function PatientMessagingPage() {
 
   useEffect(() => {
     dispatch(fetchConversations());
+    // Set up socket message listener
+    const unsubscribe = dispatch(setupMessageListener());
+    
     setDoctorsLoading(true);
     setDoctorsError(null);
     getDoctors()
       .then(data => setDoctors(data))
       .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
       .finally(() => setDoctorsLoading(false));
+      
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [dispatch]);
 
   useEffect(() => {
@@ -127,19 +137,28 @@ export default function PatientMessagingPage() {
   useEffect(() => {
     const off = onReceiveMessage(({ conversationId, message }) => {
       console.log('[onReceiveMessage] received', { conversationId, message });
+      
+      // Check if this is a message from the current user (to replace optimistic message)
+      const isFromCurrentUser = message.sender === currentUser._id || 
+                               (typeof message.sender === 'object' && message.sender._id === currentUser._id);
+      
       dispatch(addMessageToConversation({ conversationId, message }));
+      
       if (!selected || selected._id !== conversationId) {
-        toast('New message received!');
-        setUnreadCounts(prev => ({
-          ...prev,
-          [conversationId]: (prev[conversationId] || 0) + 1
-        }));
+        // Only show toast for messages from other users
+        if (!isFromCurrentUser) {
+          toast('New message received!');
+          setUnreadCounts(prev => ({
+            ...prev,
+            [conversationId]: (prev[conversationId] || 0) + 1
+          }));
+        }
       } else {
         setIsTyping(false);
       }
     });
     return off;
-  }, [dispatch, selected]);
+  }, [dispatch, selected, currentUser]);
 
   useEffect(() => {
     function handleResize() {
@@ -195,7 +214,7 @@ export default function PatientMessagingPage() {
   };
 
   const handleSend = async () => {
-    console.log('[handleSend] called', { newMessage, selected, currentUser });
+    console.log('[handleSend] Starting message send...');
     if (!newMessage.trim()) {
       console.warn('[handleSend] Tried to send empty message.');
       return;
@@ -210,20 +229,37 @@ export default function PatientMessagingPage() {
       toast.error('User not loaded. Please log in again.');
       return;
     }
-    await dispatch(sendMessage({
+    
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Clear input immediately
+    
+    console.log('[handleSend] Sending message with data:', {
       conversationId: selected._id,
-      content: newMessage,
+      content: messageContent,
       currentUserId: currentUser._id,
-    }))
-      .unwrap()
-      .then((result) => {
-        console.log('[handleSend] Message sent successfully:', result);
-      })
-      .catch(err => {
-        console.error('[handleSend] Send message error:', err);
-        toast.error('Failed to send message');
-      });
-    setNewMessage("");
+    });
+    
+    // Add optimistic message immediately
+    dispatch(addOptimisticMessage({
+      conversationId: selected._id,
+      content: messageContent,
+      currentUserId: currentUser._id,
+    }));
+    
+    try {
+      const result = await dispatch(sendMessage({
+        conversationId: selected._id,
+        content: messageContent,
+        currentUserId: currentUser._id,
+      })).unwrap();
+      
+      console.log('[handleSend] Message sent successfully:', result);
+    } catch (err) {
+      console.error('[handleSend] Send message error:', err);
+      toast.error('Failed to send message');
+      // Optionally revert the optimistic update on error
+      // For now, we'll let the socket update handle it
+    }
   };
 
   const handleCreateChat = async () => {
@@ -250,6 +286,11 @@ export default function PatientMessagingPage() {
     setShowNewChat(false);
     setSelectedUser(null);
     setSubject("");
+  };
+
+  const handleDeleteChat = async (conversationId) => {
+    await dispatch(removeConversation(conversationId));
+    setSelected(null);
   };
 
   if (!currentUser) {
@@ -296,9 +337,14 @@ export default function PatientMessagingPage() {
         </div>
         <ChatList
           conversations={filtered}
-          selected={selected}
+          selectedId={selected?._id}
           onSelect={handleSelect}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onNewChat={handleNewChat}
+          isTyping={isTyping}
           unreadCounts={unreadCounts}
+          currentUser={currentUser}
         />
       </div>
 
@@ -313,6 +359,8 @@ export default function PatientMessagingPage() {
             isMobile={mobileView}
             onBack={() => setSelected(null)}
             isTyping={isTyping}
+            onDelete={handleDeleteChat}
+            currentUser={currentUser}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">

@@ -195,6 +195,7 @@ export default function MedicalIconsBackground({ className }) {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof performance === 'undefined') return;
     let running = true;
     function animate() {
       const now = performance.now() / 1000;

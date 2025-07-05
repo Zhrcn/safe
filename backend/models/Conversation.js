@@ -52,6 +52,10 @@ const ConversationSchema = new mongoose.Schema({
     enum: ['active', 'archived', 'deleted'], 
     default: 'active'
   },
+  deletedFor: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true, 
   collection: 'Conversations'

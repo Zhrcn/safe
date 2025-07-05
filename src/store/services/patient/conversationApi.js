@@ -33,14 +33,33 @@ export const deleteConversation = async (id) => {
 
 export const sendMessage = ({ conversationId, message }) => {
   const socket = getSocket();
+  
+  if (!socket) {
+    return Promise.reject(new Error('Socket not available - please log in again'));
+  }
+  
+  console.log('Sending message via socket:', { conversationId, message });
+  console.log('Socket connected:', socket.connected);
+  
   return new Promise((resolve, reject) => {
-    console.log('[sendMessageSocket] emitting send_message', { conversationId, message });
+    if (!socket.connected) {
+      console.error('Socket not connected');
+      reject(new Error('Socket not connected'));
+      return;
+    }
+    
     socket.emit('send_message', { conversationId, message }, (response) => {
-      console.log('[sendMessageSocket] callback response:', response);
+      console.log('Socket response:', response);
+      
       if (response && response.error) {
-        reject(response.error);
-      } else {
+        console.error('Socket error:', response.error);
+        reject(new Error(response.error));
+      } else if (response && response.success && response.data) {
+        console.log('Message sent successfully:', response.data);
         resolve(response.data);
+      } else {
+        console.error('Invalid response format:', response);
+        reject(new Error('Invalid response from server'));
       }
     });
   });

@@ -39,7 +39,8 @@ import { ScrollArea, ScrollBar } from '@/components/ui/ScrollArea';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchMedicalRecords } from '@/store/slices/patient/medical-recordsSlice';
+import { fetchProfile } from '@/store/slices/patient/profileSlice';
+import DicomViewer from '@/components/medical/DicomViewer';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -86,10 +87,10 @@ const ProfilePage = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(fetchMedicalRecords());
+        dispatch(fetchProfile());
     }, [dispatch]);
 
-    const { medicalRecords, loading, error } = useSelector(state => state.medicalRecords);
+    const { profile, loading, error } = useSelector(state => state.profile);
 
     const apiError = null;
 
@@ -118,35 +119,57 @@ const ProfilePage = () => {
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.2);
+    const [dicomDialogOpen, setDicomDialogOpen] = useState(false);
+    const [selectedDicomImages, setSelectedDicomImages] = useState([]);
+    const [dicomImageIndex, setDicomImageIndex] = useState(0);
     
     useEffect(() => {
         if (!initializedProfileData.current) {
-            if (!loading && !error && medicalRecords) {
+            if (!loading && !error && profile) {
                 setFormData({
-                    firstName: medicalRecords.profile?.firstName || '',
-                    lastName: medicalRecords.profile?.lastName || '',
-                    email: medicalRecords.profile?.email || '',
-                    phone: medicalRecords.profile?.phone || '',
-                    address: medicalRecords.profile?.address || '',
-                    dateOfBirth: medicalRecords.profile?.dateOfBirth ? new Date(medicalRecords.profile.dateOfBirth) : null,
+                    firstName: profile.user?.firstName || '',
+                    lastName: profile.user?.lastName || '',
+                    email: profile.user?.email || '',
+                    phone: profile.user?.phoneNumber || '',
+                    address: profile.user?.address || '',
+                    dateOfBirth: profile.user?.dateOfBirth ? new Date(profile.user.dateOfBirth) : null,
                 });
-                setEmergencyContactData(medicalRecords.profile?.emergencyContact || {
-                    name: '',
-                    relationship: '',
-                    phone: '',
-                    email: '',
-                });
-                setInsuranceData(medicalRecords.profile?.insuranceDetails || {
+                setEmergencyContactData(
+                    Array.isArray(profile.emergencyContacts) && profile.emergencyContacts.length > 0
+                        ? {
+                            name: profile.emergencyContacts[0].name || '',
+                            relationship: profile.emergencyContacts[0].relationship || '',
+                            phone: profile.emergencyContacts[0].phoneNumber || '',
+                            email: profile.emergencyContacts[0].email || '',
+                        }
+                        : { name: '', relationship: '', phone: '', email: '' }
+                );
+                setInsuranceData(profile.insurance || {
                     provider: '',
                     policyNumber: '',
                     groupNumber: '',
                     expiryDate: null,
                 });
-                setMedicalRecordsData(medicalRecords.medicalRecords || {});
+                setMedicalRecordsData({
+                    ...profile.medicalFile,
+                    allergies: (profile.medicalFile?.allergies?.length ? profile.medicalFile.allergies : profile.allergies) || [],
+                    chronicConditions: (profile.medicalFile?.chronicConditions?.length ? profile.medicalFile.chronicConditions : profile.chronicConditions) || [],
+                    medications: (profile.medicalFile?.medications?.length ? profile.medicalFile.medications : profile.medications) || [],
+                    vitalSigns: profile.medicalFile?.vitalSigns || [],
+                    labResults: profile.medicalFile?.labResults || [],
+                    imagingReports: profile.medicalFile?.imagingReports || [],
+                    immunizations: profile.medicalFile?.immunizations || [],
+                    surgicalHistory: profile.medicalFile?.surgicalHistory || [],
+                    documents: profile.medicalFile?.attachedDocuments || [],
+                    diagnoses: profile.medicalFile?.diagnoses || [],
+                    familyHistory: profile.medicalFile?.familyMedicalHistory || [],
+                    generalHistory: profile.medicalFile?.generalMedicalHistory || [],
+                    socialHistory: profile.medicalFile?.socialHistory || [],
+                });
                 initializedProfileData.current = true;
             }
         }
-    }, [loading, error, medicalRecords]);
+    }, [loading, error, profile]);
 
     const handleRefresh = () => {
     };
@@ -256,16 +279,16 @@ const ProfilePage = () => {
         <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
             <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
                 <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}>
-                    <AvatarImage src={medicalRecords?.profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
+                    <AvatarImage src={profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
                     <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
-                        {medicalRecords?.profile?.firstName.charAt(0)}{medicalRecords?.profile?.lastName.charAt(0)}
+                        {(profile?.user?.firstName ? profile.user.firstName.charAt(0) : '')}{(profile?.user?.lastName ? profile.user.lastName.charAt(0) : '')}
                     </AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-left">
                     <h1 className="text-3xl font-bold text-foreground mb-1">
-                        {medicalRecords?.profile?.firstName} {medicalRecords?.profile?.lastName}
+                        {profile?.user?.firstName || ''} {profile?.user?.lastName || ''}
                     </h1>
-                    <p className="text-muted-foreground text-lg">{medicalRecords?.profile?.email}</p>
+                    <p className="text-muted-foreground text-lg">{profile?.user?.email || ''}</p>
                     <div className="flex gap-2 justify-center md:justify-start mt-2">
                         <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
                         <span className="flex items-center gap-1 text-success text-xs font-semibold">
@@ -386,7 +409,7 @@ const ProfilePage = () => {
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {formData.dateOfBirth ? format(formData.dateOfBirth, "PPP") : <span>{t('patient.profile.pickDate', 'Pick a date')}</span>}
+                                    {formData.dateOfBirth && !isNaN(new Date(formData.dateOfBirth).getTime()) ? format(new Date(formData.dateOfBirth), "PPP") : ''}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -525,7 +548,7 @@ const ProfilePage = () => {
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {insuranceData.expiryDate ? format(insuranceData.expiryDate, "PPP") : <span>{t('patient.profile.pickDate', 'Pick a date')}</span>}
+                                    {insuranceData.expiryDate && !isNaN(new Date(insuranceData.expiryDate).getTime()) ? format(new Date(insuranceData.expiryDate), "PPP") : ''}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -579,14 +602,22 @@ const ProfilePage = () => {
                         {medicalRecordsData.vitalSigns && medicalRecordsData.vitalSigns.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0 max-w-full">
                                 {medicalRecordsData.vitalSigns.map(vital => (
-                                    <Card key={vital.id} className="bg-muted/50 w-full min-w-0">
+                                    <Card key={vital._id || vital.id} className="bg-muted/50 w-full min-w-0">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <HeartPulse className="h-5 w-5 text-primary" />
-                                                <p className="font-medium text-foreground">{vital.type}</p>
+                                                <p className="font-medium text-foreground">{t('patient.profile.vitalSigns', 'Vital Signs')}</p>
                                             </div>
-                                            <p className="text-2xl font-bold text-primary mb-2">{vital.value} {vital.unit}</p>
-                                            <p className="text-sm text-muted-foreground">on {format(new Date(vital.date), 'PPP')}</p>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                                {vital.bloodPressure && <div><span className="font-semibold">BP:</span> {vital.bloodPressure}</div>}
+                                                {vital.heartRate && <div><span className="font-semibold">HR:</span> {vital.heartRate} bpm</div>}
+                                                {vital.temperature && <div><span className="font-semibold">Temp:</span> {vital.temperature}°C</div>}
+                                                {vital.weight && <div><span className="font-semibold">Weight:</span> {vital.weight} kg</div>}
+                                                {vital.height && <div><span className="font-semibold">Height:</span> {vital.height} cm</div>}
+                                                {vital.bmi && <div><span className="font-semibold">BMI:</span> {vital.bmi}</div>}
+                                                {vital.oxygenSaturation && <div><span className="font-semibold">O2 Sat:</span> {vital.oxygenSaturation}%</div>}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-2">{t('patient.profile.date', 'Date')}: {vital.date && !isNaN(new Date(vital.date).getTime()) ? format(new Date(vital.date), 'PPP') : ''}</p>
                                         </CardContent>
                                     </Card>
                                 ))}
@@ -602,22 +633,28 @@ const ProfilePage = () => {
                     <TabsContent value="allergies" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold">{t('patient.profile.myAllergies', 'My Allergies')}</h3>
-                            <Button size="sm" onClick={() => setAllergyDialogOpen(true)}>
+                            <Button size="sm" variant="default" className="bg-primary text-foreground" onClick={() => setAllergyDialogOpen(true)}>
                                 <Plus className="h-4 w-4 mr-2" /> {t('patient.profile.addAllergy', 'Add Allergy')}
                             </Button>
                         </div>
                         {medicalRecordsData.allergies && medicalRecordsData.allergies.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.allergies.map(allergy => (
-                                    <Card key={allergy.id} className="flex items-center justify-between p-4 bg-muted/50">
+                                    <Card key={allergy._id || allergy.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
                                         <div className="flex items-center gap-3">
                                             <DropletIcon className="h-5 w-5 text-destructive" />
                                             <div>
-                                                <p className="font-medium text-foreground">{allergy.name}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.severity', 'Severity')}: {allergy.severity}</p>
+                                                <p className="font-medium text-foreground flex items-center gap-2">
+                                                    {allergy.name}
+                                                    {allergy.severity && (
+                                                        <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-destructive text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
+                                                    )}
+                                                </p>
+                                                {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}
+                                                {allergy.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {allergy.notes}</p>}
                                             </div>
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('allergies', allergy.id)} className="text-muted-foreground hover:text-destructive">
+                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('allergies', allergy._id || allergy.id)} className="text-muted-foreground hover:text-destructive">
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </Card>
@@ -641,15 +678,21 @@ const ProfilePage = () => {
                         {medicalRecordsData.chronicConditions && medicalRecordsData.chronicConditions.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.chronicConditions.map(condition => (
-                                    <Card key={condition.id} className="flex items-center justify-between p-4 bg-muted/50">
+                                    <Card key={condition._id || condition.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
                                         <div className="flex items-center gap-3">
                                             <Stethoscope className="h-5 w-5 text-primary" />
                                             <div>
-                                                <p className="font-medium text-foreground">{condition.name}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {format(new Date(condition.diagnosedDate), 'PPP')}</p>
+                                                <p className="font-medium text-foreground flex items-center gap-2">
+                                                    {condition.name}
+                                                    {condition.status && (
+                                                        <Badge className={`ml-2 ${condition.status === 'active' ? 'bg-primary text-white' : condition.status === 'resolved' ? 'bg-green-200 text-green-900' : 'bg-muted text-muted-foreground'}`}>{condition.status}</Badge>
+                                                    )}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {condition.diagnosisDate && !isNaN(new Date(condition.diagnosisDate).getTime()) ? format(new Date(condition.diagnosisDate), 'PPP') : ''}</p>
+                                                {condition.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {condition.notes}</p>}
                                             </div>
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('chronicConditions', condition.id)} className="text-muted-foreground hover:text-destructive">
+                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('chronicConditions', condition._id || condition.id)} className="text-muted-foreground hover:text-destructive">
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </Card>
@@ -668,9 +711,9 @@ const ProfilePage = () => {
                         {medicalRecordsData.diagnoses && medicalRecordsData.diagnoses.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.diagnoses.map(diagnosis => (
-                                    <Card key={diagnosis.id} className="p-4 bg-muted/50">
+                                    <Card key={diagnosis._id || diagnosis.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{diagnosis.name}</p>
-                                        <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedBy', 'Diagnosed by')} {diagnosis.doctor} {t('patient.profile.on', 'on')} {format(new Date(diagnosis.date), 'PPP')}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedBy', 'Diagnosed by')} {diagnosis.doctor} {t('patient.profile.on', 'on')} {diagnosis.date && !isNaN(new Date(diagnosis.date).getTime()) ? format(new Date(diagnosis.date), 'PPP') : ''}</p>
                                         {diagnosis.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {diagnosis.notes}</p>}
                                     </Card>
                                 ))}
@@ -688,15 +731,42 @@ const ProfilePage = () => {
                         {medicalRecordsData.labResults && medicalRecordsData.labResults.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.labResults.map(result => (
-                                    <Card key={result.id} className="flex items-center justify-between p-4 bg-muted/50">
-                                        <div className="flex items-center gap-3">
-                                            <BarChart3 className="h-5 w-5 text-primary" />
-                                            <div>
-                                                <p className="font-medium text-foreground">{result.title}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(result.date), 'PPP')}</p>
+                                    <Card key={result._id || result.id} className="p-4 bg-muted/50">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <BarChart3 className="h-5 w-5 text-primary" />
+                                                <span className="font-medium text-foreground">{result.testName}</span>
+                                                {result.labName && <span className="ml-2 text-xs text-muted-foreground">{result.labName}</span>}
                                             </div>
+                                            <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {result.date && !isNaN(new Date(result.date).getTime()) ? format(new Date(result.date), 'PPP') : ''}</p>
+                                            {result.normalRange && <p className="text-xs text-muted-foreground">{t('patient.profile.normalRange', 'Normal Range')}: {result.normalRange}</p>}
+                                            {result.unit && <p className="text-xs text-muted-foreground">{t('patient.profile.unit', 'Unit')}: {result.unit}</p>}
+                                            {result.results && typeof result.results === 'object' && (
+                                                <div className="mt-2">
+                                                    <table className="min-w-[200px] text-xs border rounded">
+                                                        <thead><tr><th className="px-2 py-1">Test</th><th className="px-2 py-1">Value</th></tr></thead>
+                                                        <tbody>
+                                                            {Object.entries(result.results).map(([key, value]) => (
+                                                                <tr key={key}><td className="px-2 py-1 font-semibold">{key}</td><td className="px-2 py-1">{value}</td></tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                            {result.pdfUrl && (
+                                                <Button variant="outline" className="text-primary border-primary mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: result.pdfUrl, title: result.testName })}>
+                                                    <FileText className="h-4 w-4 mr-2" /> PDF
+                                                </Button>
+                                            )}
+                                            {result.documents && Array.isArray(result.documents) && result.documents.length > 0 && result.documents.map((doc, i) => (
+                                                doc.endsWith('.pdf') && (
+                                                    <Button key={i} variant="outline" className="text-primary border-primary mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: doc, title: result.testName })}>
+                                                        <FileText className="h-4 w-4 mr-2" /> PDF
+                                                    </Button>
+                                                )
+                                            ))}
                                         </div>
-                                        <Button variant="outline" size="sm" onClick={() => handlePdfOpen(result)}>
+                                        <Button variant="outline" className="text-primary border-primary mt-2" size="sm" onClick={() => handlePdfOpen(result)}>
                                             <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewReport', 'View Report')}
                                         </Button>
                                     </Card>
@@ -715,15 +785,27 @@ const ProfilePage = () => {
                         {medicalRecordsData.imagingReports && medicalRecordsData.imagingReports.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.imagingReports.map(report => (
-                                    <Card key={report.id} className="flex items-center justify-between p-4 bg-muted/50">
-                                        <div className="flex items-center gap-3">
-                                            <FileImage className="h-5 w-5 text-primary" />
-                                            <div>
-                                                <p className="font-medium text-foreground">{report.title}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(report.date), 'PPP')}</p>
+                                    <Card key={report._id || report.id} className="p-4 bg-muted/50">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <FileImage className="h-5 w-5 text-primary" />
+                                                <span className="font-medium text-foreground">{report.type}</span>
                                             </div>
+                                            <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {report.date && !isNaN(new Date(report.date).getTime()) ? format(new Date(report.date), 'PPP') : ''}</p>
+                                            {report.images && report.images.length > 0 ? (
+                                                <div className="flex flex-col gap-4 mt-2">
+                                                    <div className="w-full font-semibold text-xs mb-1">DICOM Viewer</div>
+                                                    <DicomViewer imageUrls={report.images.map(img => img.src || img)} />
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-muted-foreground mt-2">{t('patient.profile.noImages', 'No images available')}</div>
+                                            )}
                                         </div>
-                                        <Button variant="outline" size="sm" onClick={() => handlePdfOpen(report)}>
+                                        <Button variant="outline" size="sm" className="text-primary border-primary mt-2" onClick={() => {
+                                            setSelectedDicomImages((report.images || []).map(img => img.src || img));
+                                            setDicomImageIndex(0);
+                                            setDicomDialogOpen(true);
+                                        }}>
                                             <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewReport', 'View Report')}
                                         </Button>
                                     </Card>
@@ -740,22 +822,26 @@ const ProfilePage = () => {
                     <TabsContent value="medications" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold">{t('patient.profile.currentMedications', 'Current Medications')}</h3>
-                            <Button size="sm" onClick={() => setMedicationDialogOpen(true)}>
+                            <Button size="sm" className="text-primary border-primary" onClick={() => setMedicationDialogOpen(true)}>
                                 <Plus className="h-4 w-4 mr-2" /> {t('patient.profile.addMedication', 'Add Medication')}
                             </Button>
                         </div>
                         {medicalRecordsData.medications && medicalRecordsData.medications.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.medications.map(med => (
-                                    <Card key={med.id} className="flex items-center justify-between p-4 bg-muted/50">
+                                    <Card key={med._id || med.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
                                         <div className="flex items-center gap-3">
                                             <Pill className="h-5 w-5 text-primary" />
                                             <div>
-                                                <p className="font-medium text-foreground">{med.name} - {med.dosage}</p>
+                                                <p className="font-medium text-foreground flex items-center gap-2">{med.name} <span className="text-xs text-muted-foreground">{med.dosage}</span></p>
                                                 <p className="text-sm text-muted-foreground">{t('patient.profile.frequency', 'Frequency')}: {med.frequency}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.status', 'Status')}: {med.status}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.startDate', 'Start')}: {med.startDate && !isNaN(new Date(med.startDate).getTime()) ? format(new Date(med.startDate), 'PPP') : ''} | {t('patient.profile.endDate', 'End')}: {med.endDate && !isNaN(new Date(med.endDate).getTime()) ? format(new Date(med.endDate), 'PPP') : ''}</p>
+                                                {med.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {med.notes}</p>}
+                                                {med.prescribedBy && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.prescribedBy', 'Prescribed by')}: {med.prescribedBy}</p>}
                                             </div>
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('medications', med.id)} className="text-muted-foreground hover:text-destructive">
+                                        <Button variant="ghost" size="icon" onClick={() => handleMedicalRecordDelete('medications', med._id || med.id)} className="text-muted-foreground hover:text-destructive">
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </Card>
@@ -774,9 +860,9 @@ const ProfilePage = () => {
                         {medicalRecordsData.immunizations && medicalRecordsData.immunizations.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.immunizations.map(imm => (
-                                    <Card key={imm.id} className="p-4 bg-muted/50">
+                                    <Card key={imm._id || imm.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{imm.name}</p>
-                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(imm.date), 'PPP')} - {t('patient.profile.administeredBy', 'Administered by')} {imm.administeredBy}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {imm.date && !isNaN(new Date(imm.date).getTime()) ? format(new Date(imm.date), 'PPP') : ''} - {t('patient.profile.administeredBy', 'Administered by')} {imm.administeredBy}</p>
                                     </Card>
                                 ))}
                             </div>
@@ -793,9 +879,9 @@ const ProfilePage = () => {
                         {medicalRecordsData.surgicalHistory && medicalRecordsData.surgicalHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.surgicalHistory.map(surgery => (
-                                    <Card key={surgery.id} className="p-4 bg-muted/50">
+                                    <Card key={surgery._id || surgery.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{surgery.procedure}</p>
-                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {format(new Date(surgery.date), 'PPP')} - {t('patient.profile.hospital', 'Hospital')}: {surgery.hospital}</p>
+                                        <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {surgery.date && !isNaN(new Date(surgery.date).getTime()) ? format(new Date(surgery.date), 'PPP') : ''} - {t('patient.profile.hospital', 'Hospital')}: {surgery.hospital}</p>
                                         {surgery.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {surgery.notes}</p>}
                                     </Card>
                                 ))}
@@ -819,12 +905,12 @@ const ProfilePage = () => {
                         {medicalRecordsData.documents && medicalRecordsData.documents.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.documents.map(doc => (
-                                    <Card key={doc.id} className="flex items-center justify-between p-4 bg-muted/50">
+                                    <Card key={doc._id || doc.id} className="flex items-center justify-between p-4 bg-muted/50">
                                         <div className="flex items-center gap-3">
                                             <FileText className="h-5 w-5 text-primary" />
                                             <div>
                                                 <p className="font-medium text-foreground">{doc.title}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.type', 'Type')}: {doc.type} - {t('patient.profile.date', 'Date')}: {format(new Date(doc.date), 'PPP')}</p>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.type', 'Type')}: {doc.type} - {t('patient.profile.date', 'Date')}: {doc.date && !isNaN(new Date(doc.date).getTime()) ? format(new Date(doc.date), 'PPP') : ''}</p>
                                             </div>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => handlePdfOpen(doc)}>
@@ -846,7 +932,7 @@ const ProfilePage = () => {
                         {medicalRecordsData.familyHistory && medicalRecordsData.familyHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.familyHistory.map(item => (
-                                    <Card key={item.id} className="p-4 bg-muted/50">
+                                    <Card key={item._id || item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.condition}</p>
                                         <p className="text-sm text-muted-foreground">{t('patient.profile.relationship', 'Relationship')}: {item.relationship} - {t('patient.profile.notes', 'Notes')}: {item.notes}</p>
                                     </Card>
@@ -865,7 +951,7 @@ const ProfilePage = () => {
                         {medicalRecordsData.socialHistory && medicalRecordsData.socialHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.socialHistory.map(item => (
-                                    <Card key={item.id} className="p-4 bg-muted/50">
+                                    <Card key={item._id || item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.aspect}</p>
                                         <p className="text-sm text-muted-foreground">{t('patient.profile.details', 'Details')}: {item.details}</p>
                                     </Card>
@@ -884,7 +970,7 @@ const ProfilePage = () => {
                         {medicalRecordsData.generalHistory && medicalRecordsData.generalHistory.length > 0 ? (
                             <div className="grid gap-3">
                                 {medicalRecordsData.generalHistory.map(item => (
-                                    <Card key={item.id} className="p-4 bg-muted/50">
+                                    <Card key={item._id || item.id} className="p-4 bg-muted/50">
                                         <p className="font-medium text-foreground mb-1">{item.question}</p>
                                         <p className="text-sm text-muted-foreground">{t('patient.profile.answer', 'Answer')}: {item.answer}</p>
                                     </Card>
@@ -914,7 +1000,7 @@ const ProfilePage = () => {
         if (error) {
             return (
                 <div className="min-h-[400px] flex items-center justify-center">
-                    <ErrorState message={error} onRetry={handleRefresh} />
+                    <ErrorState message={typeof error === 'string' ? error : error?.message || 'An error occurred.'} onRetry={handleRefresh} />
                 </div>
             );
         }
@@ -937,16 +1023,16 @@ const ProfilePage = () => {
                     <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
                         <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
                             <Avatar className={`h-32 w-32 border-4 border-primary shadow-xl ${avatarHover}`}> 
-                                <AvatarImage src={medicalRecords?.profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
+                                <AvatarImage src={profile?.profilePicture || '/images/default-avatar.png'} alt="Profile Picture" />
                                 <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold">
-                                    {medicalRecords?.profile?.firstName.charAt(0)}{medicalRecords?.profile?.lastName.charAt(0)}
+                                    {(profile?.user?.firstName ? profile.user.firstName.charAt(0) : '')}{(profile?.user?.lastName ? profile.user.lastName.charAt(0) : '')}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="text-center md:text-left">
                                 <h1 className="text-3xl font-bold text-foreground mb-1">
-                                    {medicalRecords?.profile?.firstName} {medicalRecords?.profile?.lastName}
+                                    {profile?.user?.firstName || ''} {profile?.user?.lastName || ''}
                                 </h1>
-                                <p className="text-muted-foreground text-lg">{medicalRecords?.profile?.email}</p>
+                                <p className="text-muted-foreground text-lg">{profile?.user?.email || ''}</p>
                                 <div className="flex gap-2 justify-center md:justify-start mt-2">
                                     <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
                                     <span className="flex items-center gap-1 text-success text-xs font-semibold">
@@ -992,134 +1078,54 @@ const ProfilePage = () => {
                     <div className={`${glassCard} ${fadeIn} p-4 mb-8 w-full`}>
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className={`grid w-full grid-cols-4 gap-2 bg-blue-50 rounded-xl p-1 ${stickyTabs}`}> 
-                                <Tooltip content={t('patient.profile.tabs.personal', 'Personal Info')}>
-                                    <TabsTrigger
-                                        value="personal"
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
-                                    >
-                                        <User className="h-5 w-5" />
-                                        {t('patient.profile.tabs.personal', 'Personal Info')}
-                                    </TabsTrigger>
-                                </Tooltip>
-                                <Tooltip content={t('patient.profile.tabs.emergency', 'Emergency Contact')}>
-                                    <TabsTrigger
-                                        value="emergency"
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
-                                    >
-                                        <Bell className="h-5 w-5" />
-                                        {t('patient.profile.tabs.emergency', 'Emergency Contact')}
-                                    </TabsTrigger>
-                                </Tooltip>
-                                <Tooltip content={t('patient.profile.tabs.insurance', 'Insurance')}>
-                                    <TabsTrigger
-                                        value="insurance"
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
-                                    >
-                                        <CreditCard className="h-5 w-5" />
-                                        {t('patient.profile.tabs.insurance', 'Insurance')}
-                                    </TabsTrigger>
-                                </Tooltip>
-                                <Tooltip content={t('patient.profile.tabs.medical', 'Medical File')}>
-                                    <TabsTrigger
-                                        value="medical"
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground focus:ring-2 focus:ring-primary"
-                                    >
-                                        <FileText className="h-5 w-5" />
-                                        {t('patient.profile.tabs.medical', 'Medical File')}
-                                    </TabsTrigger>
-                                </Tooltip>
+                                <TabsTrigger value="personal">{t('patient.profile.tabs.personal', 'Personal Info')}</TabsTrigger>
+                                <TabsTrigger value="emergency">{t('patient.profile.tabs.emergency', 'Emergency Contact')}</TabsTrigger>
+                                <TabsTrigger value="insurance">{t('patient.profile.tabs.insurance', 'Insurance')}</TabsTrigger>
+                                <TabsTrigger value="medical">{t('patient.profile.tabs.medical', 'Medical File')}</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
-
                     <div className={`${glassCard} ${fadeIn} p-6 border border-border w-full`}>
                         {renderContent()}
                     </div>
                 </div>
             </div>
-
-            <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
-                <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col p-4">
-                    <DialogHeader className="pb-2">
-                        <DialogTitle className="text-xl font-bold">{selectedPdf?.title || t('patient.profile.document', 'Document')}</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex-1 flex flex-col items-center justify-center overflow-hidden bg-muted/20 rounded-md">
-                        {selectedPdf?.url ? (
-                            <ScrollArea className="w-full h-full p-4">
-                                <Document
-                                    file={selectedPdf.url}
-                                    onLoadSuccess={onDocumentLoadSuccess}
-                                    className="flex justify-center items-center"
-                                >
-                                    <Page pageNumber={pageNumber} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
-                                </Document>
-                            </ScrollArea>
-                        ) : (
-                            <Alert variant="destructive" className="w-fit">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>{t('patient.profile.documentUrlMissing', 'Document URL is missing.')}</AlertDescription>
-                            </Alert>
-                        )}
-                    </div>
-                    {numPages > 0 && (
-                        <div className="flex justify-center items-center gap-2 pt-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => changePage(-1)}
-                                disabled={pageNumber <= 1}
-                            >
-                                {t('patient.profile.previous', 'Previous')}
-                            </Button>
-                            <span className="text-sm text-muted-foreground">
-                                {t('patient.profile.page', 'Page')} {pageNumber} {t('patient.profile.of', 'of')} {numPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => changePage(1)}
-                                disabled={pageNumber >= numPages}
-                            >
-                                {t('patient.profile.next', 'Next')}
-                            </Button>
+            {pdfDialogOpen && selectedPdf && (
+                <Dialog open={pdfDialogOpen} onOpenChange={handlePdfClose}>
+                    <DialogContent className="max-w-3xl w-full">
+                        <DialogHeader>
+                            <DialogTitle>{selectedPdf.title || t('patient.profile.labResultPdf', 'Lab Result PDF')}</DialogTitle>
+                        </DialogHeader>
+                        <div className="w-full flex flex-col items-center">
+                            <Document file={selectedPdf.url} onLoadSuccess={onDocumentLoadSuccess} loading={<LoadingSpinner />}>
+                                <Page pageNumber={pageNumber} width={600} />
+                            </Document>
+                            {numPages > 1 && (
+                                <div className="flex gap-2 mt-2">
+                                    <Button onClick={previousPage} disabled={pageNumber <= 1}>Previous</Button>
+                                    <span>{pageNumber} / {numPages}</span>
+                                    <Button onClick={nextPage} disabled={pageNumber >= numPages}>Next</Button>
+                                </div>
+                            )}
                         </div>
-                    )}
-                    <DialogFooter className="mt-4">
-                        <Button variant="outline" onClick={handlePdfClose}>{t('patient.profile.close', 'Close')}</Button>
-                        {selectedPdf?.url && (
-                            <Button asChild>
-                                <a href={selectedPdf.url} download={selectedPdf.title || 'document.pdf'}>
-                                    <span className="flex items-center gap-2">
-                                        <Download className="h-4 w-4" /> {t('patient.profile.download', 'Download')}
-                                    </span>
-                                </a>
-                            </Button>
-                        )}
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <AddAllergyDialog
-                open={allergyDialogOpen}
-                onClose={() => setAllergyDialogOpen(false)}
-                onAdd={(newAllergy) => handleMedicalRecordAdd('allergies', newAllergy)}
-            />
-
-            <AddChronicConditionDialog
-                open={chronicConditionDialogOpen}
-                onClose={() => setChronicConditionDialogOpen(false)}
-                onAdd={(newCondition) => handleMedicalRecordAdd('chronicConditions', newCondition)}
-            />
-
-            <AddMedicationDialog
-                open={medicationDialogOpen}
-                onClose={() => setMedicationDialogOpen(false)}
-                onAdd={(newMedication) => handleMedicalRecordAdd('medications', newMedication)}
-            />
+                    </DialogContent>
+                </Dialog>
+            )}
+            {dicomDialogOpen && selectedDicomImages.length > 0 && (
+                <Dialog open={dicomDialogOpen} onOpenChange={setDicomDialogOpen}>
+                    <DialogContent className="max-w-3xl w-full">
+                        <DialogHeader>
+                            <DialogTitle>DICOM Viewer</DialogTitle>
+                        </DialogHeader>
+                        <div className="w-full flex flex-col items-center">
+                            <DicomViewer imageUrls={selectedDicomImages} />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
-};
+}
 
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-full">

@@ -18,6 +18,9 @@ export const createMedication = async (medicationData) => {
   return res.data.data;
 };
 
+// Alias for compatibility
+export const addMedication = createMedication;
+
 // Update a medication
 export const updateMedication = async (id, medicationData) => {
   const res = await axiosInstance.put(`/medications/${id}`, medicationData);

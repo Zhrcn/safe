@@ -22,10 +22,8 @@ import AppointmentForm from '@/components/appointments/AppointmentForm';
 import { createAppointment, fetchAppointments } from '@/store/slices/patient/appointmentsSlice';
 import {
     fetchDashboardSummary,
-    fetchUpcomingAppointments,
     fetchActiveMedications,
     fetchMedicalFile,
-    fetchRecentLabResults,
     fetchVitalSigns,
     fetchChronicConditions,
     fetchAllergies,
@@ -104,42 +102,92 @@ const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, toolti
   </motion.div>
 );
 
-const AppointmentCard = ({ appointment, t }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 24 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    whileHover={{ scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
-    className="focus-within:ring-2 focus-within:ring-primary outline-none"
-  >
-    <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none">
-      <CardContent className="p-6 rounded-2xl">
-        <div className="flex items-start justify-between">
-          <div className="flex gap-4">
-            <div className="p-3 rounded-xl bg-primary/10 shadow-md">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-card-foreground">{appointment.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('patient.dashboard.withDoctor', { doctor: appointment.doctor }, 'with Dr. {{doctor}}')}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {appointment.time}
-                </span>
+const AppointmentCard = ({ appointment, t }) => {
+  // Helper function to get doctor name with fallbacks
+  const getDoctorName = (appointment) => {
+    if (appointment.doctor?.user?.firstName && appointment.doctor?.user?.lastName) {
+      return `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`;
+    }
+    if (appointment.doctor?.firstName && appointment.doctor?.lastName) {
+      return `${appointment.doctor.firstName} ${appointment.doctor.lastName}`;
+    }
+    if (appointment.doctor?.name) {
+      return appointment.doctor.name;
+    }
+    if (appointment.doctorName) {
+      return appointment.doctorName;
+    }
+    return t('doctor.appointments.unknownDoctor', 'Unknown Doctor');
+  };
+
+  // Helper function to get doctor specialty
+  const getDoctorSpecialty = (appointment) => {
+    return appointment.doctor?.specialty || 
+           appointment.doctor?.specialization || 
+           appointment.specialty || 
+           t('doctor.profile.noSpecialty', 'No specialty specified');
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.03, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
+      className="focus-within:ring-2 focus-within:ring-primary outline-none"
+    >
+      <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none">
+        <CardContent className="p-6 rounded-2xl">
+          <div className="flex items-start justify-between">
+            <div className="flex gap-4">
+              <div className="p-3 rounded-xl bg-primary/10 shadow-md">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-card-foreground">
+                  {appointment.title || t('patient.appointments.appointment', 'Appointment')}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  with Dr. {getDoctorName(appointment)}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t('doctor.profile.specialty', 'Specialty')}: {getDoctorSpecialty(appointment)}
+                </p>
+                {appointment.reason && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('patient.dashboard.reason', 'Reason')}: {appointment.reason}
+                  </p>
+                )}
+                {appointment.type && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('patient.dashboard.type', 'Type')}: {appointment.type}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {appointment.time || t('patient.appointments.timeTBD', 'Time TBD')}
+                  </span>
+                  {appointment.date && (
+                    <>
+                      <span className="mx-2">|</span>
+                      <span className="text-sm text-muted-foreground">
+                        {appointment.date}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
+            <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'} className="capitalize rounded-2xl px-3 py-1 text-sm">
+              {t(`patient.appointments.${appointment.status}`)}
+            </Badge>
           </div>
-          <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'} className="capitalize rounded-2xl px-3 py-1 text-sm">
-            {t(`patient.appointments.${appointment.status}`)}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 const DashboardPage = () => {
     const { t, i18n } = useTranslation('common');
@@ -157,10 +205,8 @@ const DashboardPage = () => {
     // Dashboard slice state
     const {
         summary,
-        upcomingAppointments,
         activeMedications,
         medicalFile,
-        recentLabResults,
         vitalSigns,
         chronicConditions,
         allergies,
@@ -172,16 +218,14 @@ const DashboardPage = () => {
 
     useEffect(() => {
         dispatch(fetchDashboardSummary());
-        dispatch(fetchUpcomingAppointments());
         dispatch(fetchActiveMedications());
         dispatch(fetchMedicalFile());
-        dispatch(fetchRecentLabResults());
         dispatch(fetchVitalSigns());
         dispatch(fetchChronicConditions());
         dispatch(fetchAllergies());
         dispatch(fetchRecentMessages());
         dispatch(fetchRecentConsultations());
-        dispatch(fetchAppointments()); // keep this for legacy appointments slice if needed
+        dispatch(fetchAppointments()); // Use appointments slice for appointments data
     }, [dispatch]);
 
     const healthMetrics = [
@@ -257,10 +301,14 @@ const DashboardPage = () => {
         }
     ];
 
-    // Use dashboard's upcomingAppointments if available, fallback to legacy appointments slice
-    const upcoming = (upcomingAppointments && upcomingAppointments.length > 0)
-        ? upcomingAppointments
-        : (appointments || []).filter(a => a.status === 'scheduled' || a.status === 'upcoming');
+    // Use appointments from appointments slice, filter for upcoming appointments
+    const upcoming = (appointments || []).filter(a => 
+        a.status === 'scheduled' || 
+        a.status === 'upcoming' || 
+        a.status === 'confirmed'
+    );
+
+
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">

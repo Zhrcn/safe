@@ -6,7 +6,8 @@ import {
   updateConversation,
   deleteConversation,
   markAsRead,
-  sendMessage as sendMessageSocket
+  sendMessage as sendMessageSocket,
+  onReceiveMessage
 } from '@/store/services/patient/conversationApi';
 
 export const fetchConversations = createAsyncThunk(
@@ -80,17 +81,14 @@ export const sendMessage = createAsyncThunk(
   'conversations/sendMessage',
   async ({ conversationId, content, currentUserId }, { getState, rejectWithValue }) => {
     try {
-      console.log('[sendMessage thunk] called', { conversationId, content, currentUserId });
       // Get the conversation from state
       const state = getState();
       const conversation = state.conversations.conversations.find(c => c._id === conversationId);
-      console.log('[sendMessage thunk] found conversation:', conversation);
       if (!conversation) throw new Error('Conversation not found');
       // Determine receiver (always a user ID string)
       const receiver = conversation.participants
         .map(p => typeof p === 'string' ? p : p._id)
         .find(id => id !== currentUserId);
-      console.log('[sendMessage thunk] determined receiver:', receiver);
       if (!receiver) throw new Error('Could not determine receiver');
       // Construct the message object
       const message = {
@@ -100,11 +98,18 @@ export const sendMessage = createAsyncThunk(
         timestamp: new Date(),
         read: false,
       };
-      console.log('[sendMessage thunk] constructed message:', message);
       return await sendMessageSocket({ conversationId, message });
     } catch (err) {
       console.error('[sendMessage thunk] error:', err);
       return rejectWithValue(err.response?.data || err.message);
+    }
+  },
+  {
+    // Add optimistic update
+    condition: ({ conversationId, content, currentUserId }, { getState }) => {
+      const state = getState();
+      const conversation = state.conversations.conversations.find(c => c._id === conversationId);
+      return conversation && content.trim();
     }
   }
 );
@@ -136,6 +141,24 @@ const conversationsSlice = createSlice({
           conversation.lastMessage = message;
           conversation.updatedAt = new Date().toISOString();
         }
+      }
+    },
+    addOptimisticMessage(state, action) {
+      const { conversationId, content, currentUserId } = action.payload;
+      const conversation = state.conversations.find(c => c._id === conversationId);
+      if (conversation) {
+        if (!conversation.messages) conversation.messages = [];
+        const optimisticMessage = {
+          _id: `temp_${Date.now()}`,
+          content,
+          sender: currentUserId,
+          timestamp: new Date(),
+          read: false,
+          isOptimistic: true
+        };
+        conversation.messages.push(optimisticMessage);
+        conversation.lastMessage = optimisticMessage;
+        conversation.updatedAt = new Date().toISOString();
       }
     },
   },
@@ -181,6 +204,22 @@ export const {
   clearError,
   setCurrentConversation,
   addMessageToConversation,
+  addOptimisticMessage,
 } = conversationsSlice.actions;
+
+// Middleware to handle incoming socket messages
+export const setupMessageListener = () => (dispatch) => {
+  const unsubscribe = onReceiveMessage((data) => {
+    console.log('Received message via socket:', data);
+    if (data && data.conversationId && data.message) {
+      dispatch(addMessageToConversation({
+        conversationId: data.conversationId,
+        message: data.message
+      }));
+    }
+  });
+  
+  return unsubscribe;
+};
 
 export default conversationsSlice.reducer;

@@ -7,7 +7,11 @@ const ErrorResponse = require('../utils/errorResponse');
 const getProfile = asyncHandler(async (req, res) => {
     const patient = await Patient.findOne({ user: req.user._id })
         .select('-password')
-        .populate('medicalFile');
+        .populate('medicalFile')
+        .populate({
+            path: 'user',
+            select: 'firstName lastName email phoneNumber address dateOfBirth profileImage gender',
+        });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
@@ -55,23 +59,27 @@ const updateMedicalFile = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.medicalFile, 'Medical file updated successfully.'));
 });
 const getAppointments = asyncHandler(async (req, res) => {
-    const patient = await Patient.findOne({ user: req.user._id })
-        .populate({
-            path: 'appointments',
-            populate: {
-                path: 'doctor',
-                populate: {
-                    path: 'user',
-                    select: 'firstName lastName'
-                },
-                select: 'user specialty hospital'
-            }
-        });
+    const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
     }
-    res.status(200).json(new ApiResponse(200, patient.appointments, 'Appointments retrieved successfully.'));
+    
+    // Get appointments with proper population
+    const Appointment = require('../models/Appointment');
+    const appointments = await Appointment.find({ _id: { $in: patient.appointments } })
+        .populate('patient', 'firstName lastName email profilePictureUrl')
+        .populate({
+            path: 'doctor',
+            select: 'user specialty',
+            populate: {
+                path: 'user',
+                select: 'firstName lastName'
+            }
+        })
+        .sort({ date: -1, time: -1 });
+    
+    res.status(200).json(new ApiResponse(200, appointments, 'Appointments retrieved successfully.'));
 });
 const createAppointment = asyncHandler(async (req, res) => {
     const { doctorId, date, time, reason, type } = req.body;
