@@ -28,4 +28,7 @@ router.delete('/:id', protect, deleteConversation);
 // Mark conversation as read
 router.put('/:id/read', protect, markAsRead);
 
+// Delete a message from a conversation
+router.delete('/:id/messages/:messageId', protect, deleteMessage);
+
 module.exports = router;

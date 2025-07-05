@@ -9,6 +9,8 @@ import Head from 'next/head';
 import { appWithTranslation } from 'next-i18next';
 import { useTranslation } from 'react-i18next';
 import '../i18n';
+import GlobalMessageListener from '@/components/messaging/GlobalMessageListener';
+import SocketStatusIndicator from '@/components/messaging/SocketStatusIndicator';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,6 +43,8 @@ function RootLayout({ children }) {
         <Providers>
           <ErrorBoundary>
             <SessionWrapper>
+              <GlobalMessageListener />
+              <SocketStatusIndicator />
               {mounted ? children : null}
             </SessionWrapper>
           </ErrorBoundary>

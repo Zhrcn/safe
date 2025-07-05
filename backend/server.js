@@ -64,6 +64,7 @@ const server = app.listen(PORT, () => {
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const ChatHandler = require('./socketHandlers/chatHandler');
 
 const io = new Server(server, {
   cors: {
@@ -102,105 +103,8 @@ io.use(async (socket, next) => {
   }
 });
 
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id, 'User ID:', socket.userId);
-
-  socket.on('join_conversation', ({ conversationId }) => {
-    socket.join(conversationId);
-    console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
-  });
-
-  socket.on('leave_conversation', ({ conversationId }) => {
-    socket.leave(conversationId);
-    console.log(`Socket ${socket.id} left conversation ${conversationId}`);
-  });
-
-  socket.on('send_message', async ({ conversationId, message }, callback) => {
-    console.log('SocketIO send_message:', { conversationId, message });
-    try {
-      const Conversation = require('./models/Conversation');
-      const conversation = await Conversation.findById(conversationId);
-      
-      if (!conversation) {
-        console.error('SocketIO: Conversation not found', conversationId);
-        return callback({ error: 'Conversation not found' });
-      }
-
-      // Validate that the authenticated user is a participant
-      const participantIds = conversation.participants.map(id => id.toString());
-      if (!participantIds.includes(socket.userId)) {
-        console.error('SocketIO: User not a participant', { userId: socket.userId, participantIds });
-        return callback({ error: 'You are not a participant in this conversation' });
-      }
-
-      // Validate message structure
-      if (!message.content || !message.receiver) {
-        console.error('SocketIO: Invalid message structure', message);
-        return callback({ error: 'Message must have content and receiver' });
-      }
-
-      // Ensure receiver is a participant
-      const receiverId = message.receiver.toString();
-      if (!participantIds.includes(receiverId)) {
-        console.error('SocketIO: Receiver not a participant', { receiverId, participantIds });
-        return callback({ error: 'Receiver must be a participant in this conversation' });
-      }
-
-      // Create the message object
-      const newMessage = {
-        content: message.content,
-        sender: socket.userId,
-        receiver: receiverId,
-        timestamp: new Date(),
-        read: false
-      };
-
-      // Add message to conversation
-      conversation.messages.push(newMessage);
-      await conversation.save();
-
-      // Get the populated message
-      const savedMessage = conversation.messages[conversation.messages.length - 1];
-      
-      // Populate sender and receiver details
-      const populatedConversation = await Conversation.findById(conversationId)
-        .populate('messages.sender', 'firstName lastName email')
-        .populate('messages.receiver', 'firstName lastName email');
-      
-      const populatedMessage = populatedConversation.messages[populatedConversation.messages.length - 1];
-
-      console.log('SocketIO: Message saved successfully', { conversationId, messageId: savedMessage._id });
-      
-      // Emit to all participants in the conversation
-      io.to(conversationId).emit('receive_message', { 
-        conversationId, 
-        message: populatedMessage 
-      });
-      
-      // Send success response
-      callback({ 
-        success: true, 
-        data: { 
-          conversationId, 
-          message: populatedMessage 
-        } 
-      });
-      
-    } catch (err) {
-      console.error('SocketIO send_message error:', err);
-      callback({ error: err.message });
-    }
-  });
-
-  // Handle typing indicator
-  socket.on('typing', ({ conversationId, userId }) => {
-    socket.to(conversationId).emit('typing', { conversationId, userId });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+// Initialize chat handler
+new ChatHandler(io);
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled Rejection: ${err.message}`.red);

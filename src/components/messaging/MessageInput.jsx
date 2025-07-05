@@ -23,13 +23,13 @@ export default function MessageInput({ value, onChange = () => {}, onSend, disab
   return (
     <form
       onSubmit={e => { e.preventDefault(); onSend(); }}
-      className="flex items-end gap-2 p-4 border-t border-border bg-background sticky bottom-0 z-20 shadow-md"
+      className="flex items-end gap-2 p-4 border-t border-border bg-background shadow-md"
       aria-label="Message input area"
     >
-      <Button type="button" size="icon" variant="ghost" className="text-muted-foreground" aria-label={t('patient.medications.messages.attach_file', 'Attach file')}>
+      <Button type="button" size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground" aria-label={t('patient.medications.messages.attach_file', 'Attach file')}>
         <Paperclip className="w-5 h-5" />
       </Button>
-      <Button type="button" size="icon" variant="ghost" className="text-muted-foreground" aria-label={t('patient.medications.messages.emoji_picker', 'Emoji picker')}>
+      <Button type="button" size="icon" variant="ghost" className="text-muted-foreground hover:text-foreground" aria-label={t('patient.medications.messages.emoji_picker', 'Emoji picker')}>
         <Smile className="w-5 h-5" />
       </Button>
       <textarea
@@ -39,10 +39,10 @@ export default function MessageInput({ value, onChange = () => {}, onSend, disab
         value={value}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
-        className="flex-1 rounded-full border border-border focus:border-primary focus:ring-primary/20 resize-none bg-muted/60 px-5 py-2 text-base min-h-[44px] max-h-32 shadow-sm"
+        className="flex-1 rounded-full border border-border focus:border-primary focus:ring-primary/20 resize-none bg-muted/60 px-5 py-2 text-base min-h-[44px] max-h-32 shadow-sm focus:outline-none"
         aria-label="Type a message"
       />
-      <Button type="submit" size="icon" disabled={disabled} className="bg-primary text-primary-foreground rounded-full" aria-label="Send message">
+      <Button type="submit" size="icon" disabled={disabled} className="bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send message">
         <Send className="w-5 h-5" />
       </Button>
     </form>

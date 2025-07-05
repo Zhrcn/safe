@@ -7,9 +7,12 @@ import {
   deleteConversation,
   markAsRead,
   sendMessage as sendMessageSocket,
-  onReceiveMessage
+  deleteMessageSocket,
+  onReceiveMessage,
+  onMessageDeleted
 } from '@/store/services/patient/conversationApi';
 
+// Async thunks
 export const fetchConversations = createAsyncThunk(
   'conversations/fetchConversations',
   async (_, { rejectWithValue }) => {
@@ -81,16 +84,15 @@ export const sendMessage = createAsyncThunk(
   'conversations/sendMessage',
   async ({ conversationId, content, currentUserId }, { getState, rejectWithValue }) => {
     try {
-      // Get the conversation from state
       const state = getState();
       const conversation = state.conversations.conversations.find(c => c._id === conversationId);
       if (!conversation) throw new Error('Conversation not found');
-      // Determine receiver (always a user ID string)
+      
       const receiver = conversation.participants
         .map(p => typeof p === 'string' ? p : p._id)
         .find(id => id !== currentUserId);
       if (!receiver) throw new Error('Could not determine receiver');
-      // Construct the message object
+      
       const message = {
         content,
         sender: currentUserId,
@@ -105,11 +107,21 @@ export const sendMessage = createAsyncThunk(
     }
   },
   {
-    // Add optimistic update
     condition: ({ conversationId, content, currentUserId }, { getState }) => {
       const state = getState();
       const conversation = state.conversations.conversations.find(c => c._id === conversationId);
       return conversation && content.trim();
+    }
+  }
+);
+
+export const deleteMessage = createAsyncThunk(
+  'conversations/deleteMessage',
+  async ({ conversationId, messageId }, { rejectWithValue }) => {
+    try {
+      return await deleteMessageSocket({ conversationId, messageId });
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
@@ -161,6 +173,20 @@ const conversationsSlice = createSlice({
         conversation.updatedAt = new Date().toISOString();
       }
     },
+    removeMessageFromConversation(state, action) {
+      const { conversationId, messageId } = action.payload;
+      const conversation = state.conversations.find(c => c._id === conversationId);
+      if (conversation && conversation.messages) {
+        conversation.messages = conversation.messages.filter(m => m._id !== messageId);
+        // Update last message if needed
+        if (conversation.messages.length > 0) {
+          conversation.lastMessage = conversation.messages[conversation.messages.length - 1];
+        } else {
+          conversation.lastMessage = null;
+        }
+        conversation.updatedAt = new Date().toISOString();
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -196,6 +222,10 @@ const conversationsSlice = createSlice({
             conversation.updatedAt = new Date().toISOString();
           }
         }
+      })
+      .addCase(deleteMessage.fulfilled, (state, action) => {
+        // Message deletion is handled by socket events
+        console.log('Message deleted successfully:', action.payload);
       });
   },
 });
@@ -205,11 +235,12 @@ export const {
   setCurrentConversation,
   addMessageToConversation,
   addOptimisticMessage,
+  removeMessageFromConversation,
 } = conversationsSlice.actions;
 
 // Middleware to handle incoming socket messages
 export const setupMessageListener = () => (dispatch) => {
-  const unsubscribe = onReceiveMessage((data) => {
+  const unsubscribeReceive = onReceiveMessage((data) => {
     console.log('Received message via socket:', data);
     if (data && data.conversationId && data.message) {
       dispatch(addMessageToConversation({
@@ -218,8 +249,21 @@ export const setupMessageListener = () => (dispatch) => {
       }));
     }
   });
+
+  const unsubscribeDelete = onMessageDeleted((data) => {
+    console.log('Message deleted via socket:', data);
+    if (data && data.conversationId && data.messageId) {
+      dispatch(removeMessageFromConversation({
+        conversationId: data.conversationId,
+        messageId: data.messageId
+      }));
+    }
+  });
   
-  return unsubscribe;
+  return () => {
+    unsubscribeReceive();
+    unsubscribeDelete();
+  };
 };
 
 export default conversationsSlice.reducer;

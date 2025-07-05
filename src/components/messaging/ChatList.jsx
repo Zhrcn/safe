@@ -8,8 +8,8 @@ import { useTranslation } from 'react-i18next';
 export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
   const { t } = useTranslation('common');
   return (
-    <div className="relative h-full flex flex-col bg-background rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-4 pb-2 bg-background sticky top-0 z-10">
+    <div className="h-full flex flex-col">
+      <div className="p-4 pb-2 bg-background flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
@@ -20,8 +20,8 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
           />
         </div>
       </div>
-      <div className="h-1 w-full bg-gradient-to-r from-primary/10 to-secondary/10 my-1" />
-      <div className="flex-1 overflow-y-auto px-2 pb-4">
+      <div className="h-1 w-full bg-gradient-to-r from-primary/10 to-secondary/10 mx-4" />
+      <div className="flex-1 overflow-y-auto px-2 pb-4 chat-scroll">
         {conversations.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <MessageCircle className="w-10 h-10 mb-2" />

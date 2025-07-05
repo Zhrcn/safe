@@ -1,30 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  fetchConversations,
-  createConversation,
-  sendMessage,
-  addMessageToConversation,
-  addOptimisticMessage,
-  setCurrentConversation,
-  markConversationAsRead,
-  removeConversation,
-  setupMessageListener,
-} from '@/store/slices/patient/conversationsSlice';
-import {
-  onReceiveMessage,
-  joinConversation,
-  leaveConversation,
-  sendTyping
-} from '@/store/services/patient/conversationApi';
+import { useChat } from '@/hooks/useChat';
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
 import { MessageCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import { getSocket } from "@/utils/socket";
 import { getNonPatientUsers } from '@/store/services/user/userApi';
-import toast from 'react-hot-toast';
 import { getDoctors } from '@/store/services/doctor/doctorApi';
 
 function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelectedUser, subject, setSubject, loading, error }) {
@@ -88,19 +69,30 @@ function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelecte
 }
 
 export default function PatientMessagingPage() {
-  const dispatch = useDispatch();
   const { t } = useTranslation('common');
-  const [selected, setSelected] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [mobileView, setMobileView] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [subject, setSubject] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [unreadCounts, setUnreadCounts] = useState({});
-  const conversations = useSelector(state => state.conversations.conversations);
-  const currentUser = useSelector(state => state.user?.user);
+
+  // Use the chat hook
+  const {
+    conversations,
+    selectedConversation,
+    messages,
+    loadingMessages,
+    messagesError,
+    isTyping,
+    currentUser,
+    selectConversation,
+    sendMessage,
+    deleteMessage,
+    deleteConversation,
+    createConversation,
+    sendTyping
+  } = useChat();
 
   const [doctors, setDoctors] = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
@@ -110,55 +102,13 @@ export default function PatientMessagingPage() {
   const [usersError, setUsersError] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchConversations());
-    // Set up socket message listener
-    const unsubscribe = dispatch(setupMessageListener());
-    
     setDoctorsLoading(true);
     setDoctorsError(null);
     getDoctors()
       .then(data => setDoctors(data))
       .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
       .finally(() => setDoctorsLoading(false));
-      
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (selected) {
-      joinConversation(selected._id);
-      dispatch(setCurrentConversation(selected));
-      return () => leaveConversation(selected._id);
-    }
-  }, [selected, dispatch]);
-
-  useEffect(() => {
-    const off = onReceiveMessage(({ conversationId, message }) => {
-      console.log('[onReceiveMessage] received', { conversationId, message });
-      
-      // Check if this is a message from the current user (to replace optimistic message)
-      const isFromCurrentUser = message.sender === currentUser._id || 
-                               (typeof message.sender === 'object' && message.sender._id === currentUser._id);
-      
-      dispatch(addMessageToConversation({ conversationId, message }));
-      
-      if (!selected || selected._id !== conversationId) {
-        // Only show toast for messages from other users
-        if (!isFromCurrentUser) {
-          toast('New message received!');
-          setUnreadCounts(prev => ({
-            ...prev,
-            [conversationId]: (prev[conversationId] || 0) + 1
-          }));
-        }
-      } else {
-        setIsTyping(false);
-      }
-    });
-    return off;
-  }, [dispatch, selected, currentUser]);
+  }, []);
 
   useEffect(() => {
     function handleResize() {
@@ -170,26 +120,6 @@ export default function PatientMessagingPage() {
   }, []);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket || !selected) return;
-    const handleTyping = ({ conversationId, userId }) => {
-      if (selected && conversationId === selected._id && userId !== currentUser._id) {
-        setIsTyping(true);
-        setTimeout(() => setIsTyping(false), 2000);
-      }
-    };
-    socket.on('typing', handleTyping);
-    return () => socket.off('typing', handleTyping);
-  }, [selected, currentUser]);
-
-  useEffect(() => {
-    if (selected) {
-      setUnreadCounts(prev => ({ ...prev, [selected._id]: 0 }));
-      dispatch(markConversationAsRead(selected._id));
-    }
-  }, [selected, dispatch]);
-
-  useEffect(() => {
     setUsersLoading(true);
     setUsersError(null);
     getNonPatientUsers()
@@ -198,10 +128,12 @@ export default function PatientMessagingPage() {
       .finally(() => setUsersLoading(false));
   }, []);
 
-  const handleInputChange = (value) => {
+  const handleInputChange = (e) => {
+    // Handle both event objects and direct values
+    const value = e && e.target ? e.target.value : e;
     setNewMessage(value);
-    if (selected && currentUser && currentUser._id) {
-      sendTyping({ conversationId: selected._id, userId: currentUser._id });
+    if (selectedConversation && currentUser && currentUser._id) {
+      sendTyping(selectedConversation._id);
     }
   };
 
@@ -210,56 +142,16 @@ export default function PatientMessagingPage() {
   );
 
   const handleSelect = conv => {
-    setSelected(conv);
+    selectConversation(conv);
   };
 
   const handleSend = async () => {
-    console.log('[handleSend] Starting message send...');
-    if (!newMessage.trim()) {
-      console.warn('[handleSend] Tried to send empty message.');
-      return;
-    }
-    if (!selected) {
-      console.error('[handleSend] No conversation selected.');
-      toast.error('No conversation selected.');
-      return;
-    }
-    if (!currentUser || !currentUser._id) {
-      console.error('[handleSend] User not loaded.');
-      toast.error('User not loaded. Please log in again.');
-      return;
-    }
+    if (!newMessage.trim()) return;
     
     const messageContent = newMessage.trim();
     setNewMessage(""); // Clear input immediately
     
-    console.log('[handleSend] Sending message with data:', {
-      conversationId: selected._id,
-      content: messageContent,
-      currentUserId: currentUser._id,
-    });
-    
-    // Add optimistic message immediately
-    dispatch(addOptimisticMessage({
-      conversationId: selected._id,
-      content: messageContent,
-      currentUserId: currentUser._id,
-    }));
-    
-    try {
-      const result = await dispatch(sendMessage({
-        conversationId: selected._id,
-        content: messageContent,
-        currentUserId: currentUser._id,
-      })).unwrap();
-      
-      console.log('[handleSend] Message sent successfully:', result);
-    } catch (err) {
-      console.error('[handleSend] Send message error:', err);
-      toast.error('Failed to send message');
-      // Optionally revert the optimistic update on error
-      // For now, we'll let the socket update handle it
-    }
+    await sendMessage(messageContent);
   };
 
   const handleCreateChat = async () => {
@@ -269,9 +161,9 @@ export default function PatientMessagingPage() {
       return;
     }
     const participants = [selectedUser.id, currentUser._id];
-    const result = await dispatch(createConversation({ participants, subject }));
-    if (result.payload && result.payload._id) {
-      setSelected(result.payload);
+    const result = await createConversation(participants, subject);
+    if (result && result._id) {
+      selectConversation(result);
     }
     setShowNewChat(false);
     setSelectedUser(null);
@@ -289,8 +181,11 @@ export default function PatientMessagingPage() {
   };
 
   const handleDeleteChat = async (conversationId) => {
-    await dispatch(removeConversation(conversationId));
-    setSelected(null);
+    await deleteConversation(conversationId);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    await deleteMessage(messageId);
   };
 
   if (!currentUser) {
@@ -298,7 +193,7 @@ export default function PatientMessagingPage() {
   }
 
   return (
-    <div className="flex h-full w-full bg-gray-50">
+    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
       {/* New Chat Modal */}
       <NewChatModal
         open={showNewChat}
@@ -314,58 +209,61 @@ export default function PatientMessagingPage() {
       />
 
       {/* Sidebar: Chat List */}
-      <div className={`border-r bg-white h-full ${mobileView && selected ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className={`border-r bg-white h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <MessageCircle className="w-6 h-6" />
             {t('Messages')}
           </h1>
           <button
-            className="px-3 py-1 bg-blue-600 text-white rounded"
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             onClick={handleNewChat}
           >
             {t('New Chat')}
           </button>
         </div>
-        <div className="p-3">
+        <div className="p-3 flex-shrink-0">
           <input
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder={t('Search conversations')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
-        <ChatList
-          conversations={filtered}
-          selectedId={selected?._id}
-          onSelect={handleSelect}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          onNewChat={handleNewChat}
-          isTyping={isTyping}
-          unreadCounts={unreadCounts}
-          currentUser={currentUser}
-        />
+        <div className="flex-1 overflow-y-auto chat-scroll">
+          <ChatList
+            conversations={filtered}
+            selectedId={selectedConversation?._id}
+            onSelect={handleSelect}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            onNewChat={handleNewChat}
+            isTyping={isTyping}
+            currentUser={currentUser}
+          />
+        </div>
       </div>
 
       {/* Main: Chat Page */}
-      <div className={`flex-1 h-full ${mobileView && !selected ? "hidden" : "flex"} flex-col`}>
-        {selected ? (
+      <div className={`flex-1 h-full ${mobileView && !selectedConversation ? "hidden" : "block"}`}>
+        {selectedConversation ? (
           <ChatPage
-            conversation={selected}
+            conversation={{ ...selectedConversation, messages }}
             onSend={handleSend}
             newMessage={newMessage}
             onInputChange={handleInputChange}
             isMobile={mobileView}
-            onBack={() => setSelected(null)}
+            onBack={() => selectConversation(null)}
             isTyping={isTyping}
             onDelete={handleDeleteChat}
+            onDeleteMessage={handleDeleteMessage}
             currentUser={currentUser}
+            loading={loadingMessages}
+            error={messagesError}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <MessageCircle className="w-16 h-16 mb-4" />
-            <p className="text-lg">{t('Select a conversation or start a new chat')}</p>
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <span>{t('Select a conversation to start chatting')}</span>
           </div>
         )}
       </div>
