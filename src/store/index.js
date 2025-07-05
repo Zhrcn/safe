@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { api } from './services/api';
 import { authApi } from './api/authApi';
+import { medicineApi } from './services/doctor/medicineApi';
 import authReducer from './slices/auth/authSlice';
 import userReducer from './slices/user/userSlice';
 import doctorProfileReducer from './slices/doctor/doctorProfileSlice';
@@ -25,6 +26,7 @@ export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [medicineApi.reducerPath]: medicineApi.reducer,
     auth: authReducer,
     user: userReducer,
     doctorProfile: doctorProfileReducer,
@@ -48,7 +50,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
       immutableCheck: false,
-    }).concat(api.middleware, authApi.middleware),
+    }).concat(api.middleware, authApi.middleware, medicineApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

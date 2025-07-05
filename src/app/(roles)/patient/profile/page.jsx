@@ -27,9 +27,24 @@ import { useNotification } from '@/components/ui/Notification';
 import AddAllergyDialog from '@/components/patient/medical-file/AddAllergyDialog';
 import AddChronicConditionDialog from '@/components/patient/medical-file/AddChronicConditionDialog';
 import AddMedicationDialog from '@/components/patient/medical-file/AddMedicationDialog';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import dynamic from 'next/dynamic';
+
+// Dynamically import react-pdf to avoid SSR issues
+const { Document, Page } = dynamic(() => import('react-pdf'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center p-4">Loading PDF viewer...</div>
+});
+
+// Import pdfjs separately and configure it
+const pdfjs = dynamic(() => import('react-pdf').then(mod => mod.pdfjs), {
+  ssr: false
+});
+
+// Import CSS dynamically
+if (typeof window !== 'undefined') {
+  import('react-pdf/dist/esm/Page/AnnotationLayer.css');
+  import('react-pdf/dist/esm/Page/TextLayer.css');
+}
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
@@ -40,9 +55,16 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProfile } from '@/store/slices/patient/profileSlice';
-import DicomViewer from '@/components/medical/DicomViewer';
+// Dynamically import DicomViewer to avoid SSR issues
+const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center p-4">Loading DICOM viewer...</div>
+});
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure pdfjs worker when available
+if (typeof window !== 'undefined' && pdfjs) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+}
 
 const glassCard = "backdrop-blur-md bg-card/70 border border-border shadow-xl";
 const fadeIn = "animate-fade-in";

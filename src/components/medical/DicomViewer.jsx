@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import Hammer from 'hammerjs';
 
 import * as cornerstone from 'cornerstone-core';
@@ -6,6 +7,12 @@ import * as cornerstoneTools from 'cornerstone-tools';
 import * as cornerstoneMath from 'cornerstone-math';
 import * as cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader';
 import * as dicomParser from 'dicom-parser';
+
+// Dynamically import browser-specific libraries to avoid SSR issues
+const DicomViewerComponent = dynamic(() => import('./DicomViewerComponent'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center p-8">Loading DICOM viewer...</div>
+});
 
 // Attach Hammer to window for cornerstone-tools
 if (typeof window !== 'undefined') {
@@ -532,129 +539,7 @@ const ErrorMessage = React.memo(function ErrorMessage({ error }) {
 
 // Main DicomViewer Component
 function DicomViewer({ imageUrls = [] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeTool, setActiveTool] = useState('Wwwc');
-  const [loading, setLoading] = useState(false);
-  const [metadata, setMetadata] = useState(null);
-
-  const {
-    elementRef,
-    numImages,
-    error,
-    zoomLevel,
-    activateTool,
-    goToImage,
-    handleZoom,
-    handleResetZoom,
-  } = useCornerstone(imageUrls, currentIndex, activeTool);
-
-  const { fullView, fullScreenRef, handleFullScreenToggle } = useFullscreen();
-
-  // Navigation handlers
-  const handlePreviousImage = useCallback(() => {
-    const newIndex = Math.max(currentIndex - 1, 0);
-    setCurrentIndex(newIndex);
-    goToImage(newIndex);
-  }, [currentIndex, goToImage]);
-
-  const handleNextImage = useCallback(() => {
-    const newIndex = Math.min(currentIndex + 1, numImages - 1);
-    setCurrentIndex(newIndex);
-    goToImage(newIndex);
-  }, [currentIndex, numImages, goToImage]);
-
-  // Zoom handlers
-  const handleZoomIn = useCallback(() => handleZoom(ZOOM_FACTOR), [handleZoom]);
-  const handleZoomOut = useCallback(() => handleZoom(1 / ZOOM_FACTOR), [handleZoom]);
-
-  // Keyboard navigation
-  useKeyboardNavigation(currentIndex, numImages, goToImage, handleFullScreenToggle);
-
-  // Responsive container styles
-  const containerStyles = useMemo(() => ({
-    position: 'relative',
-    width: fullView ? '100vw' : 'min(98vw, 540px)',
-    height: fullView ? '100vh' : 'min(80vh, 580px)',
-    background: '#181818',
-    margin: '0 auto',
-    borderRadius: fullView ? 0 : 16,
-    boxShadow: fullView ? '0 0 0 9999px rgba(0,0,0,0.7)' : '0 2px 16px rgba(0,0,0,0.18)',
-    zIndex: fullView ? 1000 : 'auto',
-    transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    outline: fullView ? '2px solid #1976d2' : 'none',
-  }), [fullView]);
-
-  const dicomElementStyles = useMemo(() => ({
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'black',
-    outline: 'none',
-    borderRadius: fullView ? 0 : 12,
-    display: 'block',
-    boxShadow: fullView ? 'none' : '0 2px 8px rgba(0,0,0,0.10)',
-  }), [fullView]);
-
-  // Loading and metadata extraction
-  useEffect(() => {
-    if (!elementRef.current || !imageUrls.length) return;
-    setLoading(true);
-    setMetadata(null);
-    const imageIds = imageUrls.map((url) => url.startsWith('wadouri:') ? url : `wadouri:${url}`);
-    cornerstone
-      .loadImage(imageIds[currentIndex])
-      .then((image) => {
-        setLoading(false);
-        // Extract metadata
-        setMetadata({
-          rows: image.rows,
-          columns: image.columns,
-          windowWidth: image.windowWidth,
-          windowCenter: image.windowCenter,
-          modality: image.data && image.data.string('x00080060'),
-          slice: image.data && image.data.string('x00200013'),
-        });
-      })
-      .catch(() => setLoading(false));
-  }, [currentIndex, imageUrls, elementRef]);
-
-  // Tool activation handler
-  const handleToolActivate = useCallback((toolName) => {
-    setActiveTool(toolName);
-    activateTool(toolName);
-  }, [activateTool]);
-
-  return (
-    <div ref={fullScreenRef} style={containerStyles} aria-label="DICOM Viewer" tabIndex={0}>
-      <FloatingToolbar
-        fullView={fullView}
-        activeTool={activeTool}
-        currentIndex={currentIndex}
-        numImages={numImages}
-        onFullScreenToggle={handleFullScreenToggle}
-        onToolActivate={handleToolActivate}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onResetZoom={handleResetZoom}
-        onPreviousImage={handlePreviousImage}
-        onNextImage={handleNextImage}
-      />
-      <MetadataOverlay metadata={metadata} />
-      {loading && <Spinner />}
-      <div
-        ref={elementRef}
-        style={dicomElementStyles}
-        tabIndex={0}
-        aria-label="DICOM Image Display"
-      />
-      <InstructionsOverlay error={error} />
-      <ErrorMessage error={error} />
-    </div>
-  );
+  return <DicomViewerComponent imageUrls={imageUrls} />;
 }
 
 export default DicomViewer;
