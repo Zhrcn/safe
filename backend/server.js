@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const colors = require('colors');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/db');
 const mainRouter = require('./routes/index'); 
 const errorHandler = require('./middleware/error.middleware'); 
@@ -26,19 +27,22 @@ connectDB();
 
 const app = express();
 
-app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://192.168.1.100:3000',
-    'https://safe-5gxi.vercel.app',
-    'https://safe-webapp.vercel.app',
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-}));
+// CORS configuration for development
+if (process.env.NODE_ENV === 'development') {
+  app.use(cors({
+    origin: [
+      'http://localhost:3000', 
+      'http://192.168.1.100:3000',
+      'https://safe-5gxi.vercel.app',
+      'https://safe-webapp.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  }));
+}
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
@@ -47,17 +51,33 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// API routes
 app.use('/api/v1', mainRouter);
 
-app.get('/', (req, res) => {
-  res.send('Express Server for SAFE App is running!');
-});
+// Serve static files from Next.js build
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the Next.js build
+  app.use(express.static(path.join(__dirname, '../out')));
+  
+  // Handle all other routes by serving the index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../out/index.html'));
+  });
+} else {
+  // Development: just show API status
+  app.get('/', (req, res) => {
+    res.send('Express Server for SAFE App is running! (Development Mode)');
+  });
+}
 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001; 
 const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`.yellow.bold);
+  console.log(`Unified Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`.yellow.bold);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`Frontend and Backend served on: http://localhost:${PORT}`.green.bold);
+  }
 });
 
 // --- SOCKET.IO SETUP ---

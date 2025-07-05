@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "frontend": "next dev",
-    "backend": "cd ./backend && npm run start",
-    "dev": "concurrently \"npm run frontend\" \"npm run backend\"",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "i18n:extract": "i18next --config i18next-parser.config.cjs 'src/**/*.{js,jsx,ts,tsx}'"
+    "backend": "cd ./backend && npm run start",
+    "i18n:extract": "i18next --config i18next-parser.config.cjs 'src/**/*.{js,jsx,ts,tsx}'",
+    "build:unified": "set NODE_ENV=production && npm run build && npm run start:unified",
+    "start:unified": "cd ./backend && set NODE_ENV=production && npm run start",
+    "dev:unified": "concurrently \"npm run dev\" \"npm run backend\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

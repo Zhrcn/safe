@@ -7,10 +7,9 @@ const getBaseURL = () => {
   }
   
   if (process.env.NODE_ENV === 'production') {
-    // Use the same domain as frontend but with port 5001
+    // Use the same domain and port as the unified server
     const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://safe-webapp.vercel.app';
-    const baseUrl = currentOrigin.replace(/:\d+/, ''); // Remove any existing port
-    return `${baseUrl}:5001/api/v1`;
+    return `${currentOrigin}/api/v1`;
   }
   
   return 'http://localhost:5001/api/v1';
