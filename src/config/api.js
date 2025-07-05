@@ -3,7 +3,8 @@ const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
   }
   
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+  // Production: Use environment variable or default to your production backend URL
+  return process.env.NEXT_PUBLIC_API_URL || 'https://safe-backend.onrender.com';
 };
 
 export const API_BASE_URL = getApiUrl();

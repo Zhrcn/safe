@@ -1,10 +1,20 @@
 import axios from 'axios';
 import { getToken } from '@/utils/tokenUtils';
 
+const getBaseURL = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return `${process.env.NEXT_PUBLIC_API_URL}/api/v1`;
+  }
+  
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://safe-backend.onrender.com/api/v1';
+  }
+  
+  return 'http://localhost:5001/api/v1';
+};
+
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL
-    ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
-    : 'http://localhost:5001/api/v1',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
