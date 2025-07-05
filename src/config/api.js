@@ -3,8 +3,10 @@ const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
   }
   
-  // Production: Use environment variable or default to your production backend URL
-  return process.env.NEXT_PUBLIC_API_URL || 'https://safe-backend.onrender.com';
+  // Production: Use the same domain as frontend but with port 5001
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://safe-webapp.vercel.app';
+  const baseUrl = currentOrigin.replace(/:\d+/, ''); // Remove any existing port
+  return process.env.NEXT_PUBLIC_API_URL || `${baseUrl}:5001`;
 };
 
 export const API_BASE_URL = getApiUrl();

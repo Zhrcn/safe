@@ -1,4 +1,19 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://safe-backend.onrender.com' : 'http://localhost:5001');
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  if (process.env.NODE_ENV === 'production') {
+    // Use the same domain as frontend but with port 5001
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://safe-webapp.vercel.app';
+    const baseUrl = currentOrigin.replace(/:\d+/, ''); // Remove any existing port
+    return `${baseUrl}:5001`;
+  }
+  
+  return 'http://localhost:5001';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const config = {
   API_BASE_URL,
