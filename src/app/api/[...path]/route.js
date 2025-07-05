@@ -28,6 +28,8 @@ async function handleRequest(request, params, method) {
     const url = new URL(request.url);
     const backendUrl = `${BACKEND_URL}/api/v1/${path}${url.search}`;
     
+    console.log(`Proxying ${method} request to: ${backendUrl}`);
+    
     const headers = new Headers();
     request.headers.forEach((value, key) => {
       if (key.toLowerCase() !== 'host') {
@@ -55,6 +57,20 @@ async function handleRequest(request, params, method) {
     });
   } catch (error) {
     console.error('API proxy error:', error);
+    
+    // If backend is not available, return a helpful error message
+    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
+      return NextResponse.json(
+        { 
+          error: 'Backend service unavailable',
+          message: 'The backend server is not running or not accessible. Please check your BACKEND_URL environment variable.',
+          details: `Tried to connect to: ${BACKEND_URL}`,
+          solution: 'Deploy your backend to a hosting service like Render or Railway and set the BACKEND_URL environment variable in Vercel.'
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error', message: error.message },
       { status: 500 }
