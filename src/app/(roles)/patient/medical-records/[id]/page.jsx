@@ -1,50 +1,12 @@
-'use client';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import LabResultView from '@/components/medical/LabResultView';
-import ImagingView from '@/components/medical/ImagingView';
-import PrescriptionView from '@/components/medical/PrescriptionView';
-import ConsultationView from '@/components/medical/ConsultationView';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ErrorState from '@/components/patient/ErrorState';
-import { useSelector } from 'react-redux';
+import MedicalRecordFileClient from './MedicalRecordFileClient';
 
-export default function MedicalRecordFilePage() {
-  const { id } = useParams();
-  const medicalRecords = useSelector(state => state.medicalRecords.records || []);
-  const [record, setRecord] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// This function is required for static export with dynamic routes
+export async function generateStaticParams() {
+  // Return an empty array since we don't know the IDs at build time
+  // The page will be generated dynamically at runtime
+  return [];
+}
 
-  useEffect(() => {
-    if (!id || !medicalRecords.length) {
-      setError('No medical records found.');
-      setLoading(false);
-      return;
-    }
-    const found = medicalRecords.find(r => String(r.id) === String(id));
-    if (!found) {
-      setError('Medical record not found.');
-    } else {
-      setRecord(found);
-    }
-    setLoading(false);
-  }, [id, medicalRecords]);
-
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorState message={error} />;
-  if (!record) return <ErrorState message="Medical record not found." />;
-
-  switch (record.type) {
-    case 'lab_result':
-      return <LabResultView record={record} />;
-    case 'imaging':
-      return <ImagingView record={record} />;
-    case 'prescription':
-      return <PrescriptionView record={record} />;
-    case 'consultation':
-      return <ConsultationView record={record} />;
-    default:
-      return <ErrorState message="Unknown medical record type." />;
-  }
+export default function MedicalRecordFilePage({ params }) {
+  return <MedicalRecordFileClient id={params.id} />;
 } 
