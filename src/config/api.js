@@ -3,7 +3,7 @@ const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
   }
   
-  // Production: Use the same domain and port as the unified server
+  // Production: Use the same domain (Next.js API routes will proxy to backend)
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://safe-webapp.vercel.app';
   return process.env.NEXT_PUBLIC_API_URL || currentOrigin;
 };

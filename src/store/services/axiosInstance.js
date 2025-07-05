@@ -7,7 +7,7 @@ const getBaseURL = () => {
   }
   
   if (process.env.NODE_ENV === 'production') {
-    // Use the same domain and port as the unified server
+    // Use the same domain (Next.js API routes will proxy to backend)
     const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://safe-webapp.vercel.app';
     return `${currentOrigin}/api/v1`;
   }
