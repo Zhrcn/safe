@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { conversations as mockConversations } from "@/mockdata/conversations";
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
+import { useTranslation } from "next-i18next";
 
 function getUnreadCount(messages) {
   return messages.filter(m => !m.read && m.sender !== "You").length;
@@ -14,6 +15,7 @@ function sortConversations(convs) {
 }
 
 export default function PharmacistMessagingPage() {
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [selected, setSelected] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,7 +100,7 @@ export default function PharmacistMessagingPage() {
     setTimeout(() => {
       const reply = {
         id: Date.now() + 1,
-        content: "This is an automated reply!",
+        content: t('automatedReply'),
         timestamp: new Date(),
         sender: updatedConv.title,
         avatar: updatedConv.avatar,
@@ -125,8 +127,8 @@ export default function PharmacistMessagingPage() {
     const newId = Date.now();
     const newConv = {
       id: newId,
-      title: `New Contact ${newId % 1000}`,
-      subtitle: "New chat started",
+      title: `${t('newContact')} ${newId % 1000}`,
+      subtitle: t('newChatStarted'),
       avatar: undefined,
       lastMessage: "",
       lastMessageTime: new Date(),
@@ -142,8 +144,8 @@ export default function PharmacistMessagingPage() {
       return (
         <div className="min-h-screen bg-background flex flex-col">
           <div className="mb-4 px-4 pt-4">
-            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-            <p className="text-muted-foreground text-sm">Select a conversation to start chatting.</p>
+            <h1 className="text-2xl font-bold text-foreground">{t('Messages')}</h1>
+            <p className="text-muted-foreground text-sm">{t('Select a conversation to start chatting')}</p>
           </div>
           <div className="flex-1">
             <ChatList
@@ -202,7 +204,7 @@ export default function PharmacistMessagingPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-lg">
-              Select a conversation to start chatting.
+              {t('Select a conversation to start chatting')}
             </div>
           )}
         </div>

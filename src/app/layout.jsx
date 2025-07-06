@@ -10,7 +10,7 @@ import { appWithTranslation } from 'next-i18next';
 import { useTranslation } from 'react-i18next';
 import '../i18n';
 import GlobalMessageListener from '@/components/messaging/GlobalMessageListener';
-import SocketStatusIndicator from '@/components/messaging/SocketStatusIndicator';
+import '@/utils/consoleFilter'; // Import console filter to suppress source map warnings
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -38,13 +38,15 @@ function RootLayout({ children }) {
         <link rel="icon" href="/logo(1).png" />
         <link rel="shortcut icon" href="/logo(1).png" />
         <link rel="apple-touch-icon" href="/logo(1).png" />
+        {process.env.NODE_ENV === 'development' && (
+          <script src="/suppress-warnings.js" defer></script>
+        )}
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <Providers>
           <ErrorBoundary>
             <SessionWrapper>
               <GlobalMessageListener />
-              <SocketStatusIndicator />
               {mounted ? children : null}
             </SessionWrapper>
           </ErrorBoundary>

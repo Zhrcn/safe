@@ -1,0 +1,124 @@
+import axiosInstance from '../axiosInstance';
+
+// Create a doctor appointments API object
+export const doctorAppointmentsApi = {
+  // Get all appointments for the logged-in doctor
+  getDoctorAppointments: async () => {
+    try {
+      const res = await axiosInstance.get('/doctors/appointments');
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get appointment details
+  getAppointmentDetails: async (appointmentId) => {
+    try {
+      const res = await axiosInstance.get(`/doctors/appointments/${appointmentId}`);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Accept an appointment
+  acceptAppointment: async (appointmentId, appointmentData) => {
+    try {
+      console.log('API: Accepting appointment', appointmentId, appointmentData);
+      const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}/accept`, appointmentData);
+      console.log('API: Accept response', res);
+      return res;
+    } catch (error) {
+      console.error('API: Accept error', error);
+      throw error;
+    }
+  },
+
+  // Reject an appointment
+  rejectAppointment: async (appointmentId, doctorNotes) => {
+    try {
+      console.log('API: Rejecting appointment', appointmentId, doctorNotes);
+      const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}/reject`, { doctorNotes });
+      console.log('API: Reject response', res);
+      return res;
+    } catch (error) {
+      console.error('API: Reject error', error);
+      throw error;
+    }
+  },
+
+  // Update appointment details
+  updateAppointment: async (appointmentId, appointmentData) => {
+    try {
+      const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}`, appointmentData);
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+// Legacy functions for backward compatibility
+export const getDoctorAppointments = async () => {
+  console.log('getDoctorAppointments called - making API request to /appointments');
+  try {
+    const res = await axiosInstance.get('/appointments');
+    console.log('getDoctorAppointments response:', res);
+    return res.data.data || res.data;
+  } catch (error) {
+    console.error('getDoctorAppointments error:', error);
+    throw error;
+  }
+};
+
+export const getAppointmentById = async (id) => {
+  const res = await axiosInstance.get(`/appointments/${id}`);
+  return res.data.data;
+};
+
+export const createAppointment = async (appointmentData) => {
+  const res = await axiosInstance.post('/appointments', appointmentData);
+  return res.data.data;
+};
+
+export const updateAppointment = async (id, appointmentData) => {
+  const res = await axiosInstance.put(`/appointments/${id}`, appointmentData);
+  return res.data.data;
+};
+
+export const deleteAppointment = async (id) => {
+  const res = await axiosInstance.delete(`/appointments/${id}`);
+  return res.data.data;
+};
+
+export const cancelAppointment = async (appointmentId, reason) => {
+  const res = await axiosInstance.post(`/appointments/${appointmentId}/cancel`, { reason });
+  return res.data.data;
+};
+
+export const completeAppointment = async (appointmentId, notes) => {
+  const res = await axiosInstance.post(`/appointments/${appointmentId}/complete`, { notes });
+  return res.data.data;
+};
+
+export const rescheduleAppointment = async (appointmentId, newDate, newTime) => {
+  const res = await axiosInstance.post(`/appointments/${appointmentId}/reschedule`, { 
+    date: newDate, 
+    time: newTime 
+  });
+  return res.data.data;
+};
+
+export const handleRescheduleRequest = async (appointmentId, action, data = {}) => {
+  const res = await axiosInstance.post(`/doctors/appointments/${appointmentId}/reschedule-request`, {
+    action,
+    ...data
+  });
+  return res.data.data;
+};
+
+export const getAvailableTimeSlots = async (doctorId, date) => {
+  const res = await axiosInstance.get('/available-slots', { params: { doctorId, date } });
+  return res.data.data;
+}; 

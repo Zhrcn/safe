@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/Separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
-import { useLogoutMutation } from '@/store/services/user/authApi';
+import { logoutUser } from '@/store/slices/auth/authSlice';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
 import { Badge } from '@/components/ui/Badge';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 export default function PatientLayout({ children }) {
     const pathname = usePathname();
     const user = useSelector(selectCurrentUser);
-    const [logout] = useLogoutMutation();
+    const dispatch = useAppDispatch();
     const router = useRouter();
     const [expandedGroups, setExpandedGroups] = useState([]);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -115,7 +115,7 @@ export default function PatientLayout({ children }) {
 
     const handleLogout = async () => {
         try {
-            await logout().unwrap();
+            await dispatch(logoutUser()).unwrap();
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);

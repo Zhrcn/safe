@@ -2,8 +2,19 @@
 import RegisterForm from '@/components/auth/RegisterForm';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
+
 export default function RegisterPage() {
     const { t } = useTranslation();
+    const { isAuthenticated, isRedirecting, authChecked } = useAuthRedirect();
+    if (isAuthenticated || isRedirecting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+    
     return (
         <div className="container max-w-4xl mx-auto mt-10 px-4">
             <motion.div

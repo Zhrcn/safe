@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSocket } from '@/utils/socket';
 import { addMessageToConversation } from '@/store/slices/patient/conversationsSlice';
+import { updateOnlineStatus } from '@/store/slices/patient/onlineStatusSlice';
+import { onUserPresence } from '@/store/services/patient/conversationApi';
+import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import toast from 'react-hot-toast';
 
 // Store for managing unread counts across components
@@ -14,38 +17,38 @@ export const getTypingStates = () => typingStates;
 
 export default function GlobalMessageListener() {
   const dispatch = useDispatch();
-  const currentUser = useSelector(state => state.user?.user);
+  const currentUser = useSelector(selectCurrentUser);
   const currentRole = currentUser?.role;
 
   useEffect(() => {
     if (!currentUser?._id) {
-      console.log('[GlobalMessageListener] No user found, waiting...');
+              // No user found, waiting...
       return;
     }
 
-    console.log('[GlobalMessageListener] Setting up socket listeners for user:', currentUser._id);
+            // Setting up socket listeners for user
 
     const setupSocketListeners = () => {
       const socket = getSocket();
       if (!socket) {
-        console.log('[GlobalMessageListener] Socket not available, retrying in 2 seconds...');
+        // Socket not available, retrying in 2 seconds...
         setTimeout(setupSocketListeners, 2000);
         return;
       }
 
       if (!socket.connected) {
-        console.log('[GlobalMessageListener] Socket not connected, waiting for connection...');
+        // Socket not connected, waiting for connection...
         socket.once('connect', () => {
-          console.log('[GlobalMessageListener] Socket connected, setting up listeners...');
+          // Socket connected, setting up listeners...
           setupSocketListeners();
         });
         return;
       }
 
-      console.log('[GlobalMessageListener] Socket connected and ready, setting up listeners...');
+      // Socket connected and ready, setting up listeners...
 
       const handleReceiveMessage = ({ conversationId, message }) => {
-        console.log('[GlobalMessageListener] Received message:', { conversationId, message });
+        // Received message
         
         // Check if this is a message from the current user
         const isFromCurrentUser = message.sender === currentUser._id || 
@@ -84,7 +87,7 @@ export default function GlobalMessageListener() {
         // Handle typing indicators
         if (userId !== currentUser._id) {
           typingStates[conversationId] = true;
-          console.log('[GlobalMessageListener] Typing indicator:', { conversationId, userId });
+          // Typing indicator
           
           // Clear typing indicator after 2 seconds
           setTimeout(() => {
@@ -94,13 +97,18 @@ export default function GlobalMessageListener() {
       };
 
       const handleDisconnect = () => {
-        console.log('[GlobalMessageListener] Socket disconnected, will reconnect automatically...');
+        // Socket disconnected, will reconnect automatically...
       };
 
       const handleReconnect = () => {
-        console.log('[GlobalMessageListener] Socket reconnected, re-setting up listeners...');
+        // Socket reconnected, re-setting up listeners...
         // Re-setup listeners after reconnection
         setTimeout(setupSocketListeners, 1000);
+      };
+
+      // Handle user presence updates
+      const handleUserPresence = ({ userId, isOnline }) => {
+        dispatch(updateOnlineStatus({ userId, isOnline }));
       };
 
       // Listen for messages
@@ -108,14 +116,16 @@ export default function GlobalMessageListener() {
       socket.on('typing', handleTyping);
       socket.on('disconnect', handleDisconnect);
       socket.on('reconnect', handleReconnect);
+      socket.on('user_presence', handleUserPresence);
 
       // Cleanup function
       return () => {
-        console.log('[GlobalMessageListener] Cleaning up socket listeners...');
+        // Cleaning up socket listeners...
         socket.off('receive_message', handleReceiveMessage);
         socket.off('typing', handleTyping);
         socket.off('disconnect', handleDisconnect);
         socket.off('reconnect', handleReconnect);
+        socket.off('user_presence', handleUserPresence);
       };
     };
 

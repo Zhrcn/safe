@@ -17,7 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { useVerifyTokenQuery } from '@/store/services/user/authApi';
-import { selectIsAuthenticated, selectCurrentUser } from '@/store/slices/auth/authSlice';
+import { selectIsAuthenticated, selectCurrentUser, logoutUser } from '@/store/slices/auth/authSlice';
 import { ROLES, ROLE_ROUTES } from '@/config/app-config';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
@@ -80,6 +80,13 @@ const DashboardLayout = ({ children }) => {
     setMobileOpen(!mobileOpen);
   };
   const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      router.push('/login');
+    }
   };
   const activePath = router.pathname; 
   const sidebarContent = (

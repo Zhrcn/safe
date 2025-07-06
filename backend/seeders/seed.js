@@ -415,9 +415,10 @@ const seedDatabase = async () => {
         date: new Date(Date.now() + 86400000 * (i + 1)),
         time: '09:00',
         type: 'consultation',
-        status: 'scheduled',
+        status: 'pending',
         reason: 'Routine checkup',
-        notes: 'Bring previous reports'
+        notes: 'Bring previous reports',
+        location: 'TBD'
       });
       patient.appointments.push(appointment._id);
       await patient.save();

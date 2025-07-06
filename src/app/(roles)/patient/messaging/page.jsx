@@ -106,7 +106,7 @@ export default function PatientMessagingPage() {
     setDoctorsError(null);
     getDoctors()
       .then(data => setDoctors(data))
-      .catch(err => setDoctorsError(err.message || 'Failed to fetch doctors'))
+      .catch(err => setDoctorsError(err.message || t('failedToFetchDoctors')))
       .finally(() => setDoctorsLoading(false));
   }, []);
 
@@ -124,7 +124,7 @@ export default function PatientMessagingPage() {
     setUsersError(null);
     getNonPatientUsers()
       .then(data => setUsers(data))
-      .catch(err => setUsersError(err.message || 'Failed to fetch users'))
+      .catch(err => setUsersError(err.message || t('failedToFetchUsers')))
       .finally(() => setUsersLoading(false));
   }, []);
 
@@ -157,7 +157,7 @@ export default function PatientMessagingPage() {
   const handleCreateChat = async () => {
     if (!selectedUser) return;
     if (!currentUser || !currentUser._id) {
-      toast.error('User not loaded. Please log in again.');
+      toast.error(t('userNotLoaded'));
       return;
     }
     const participants = [selectedUser.id, currentUser._id];
@@ -189,7 +189,7 @@ export default function PatientMessagingPage() {
   };
 
   if (!currentUser) {
-    return <div>Loading user...</div>;
+    return <div>{t('loadingUser')}</div>;
   }
 
   return (

@@ -2,6 +2,9 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/apiResponse');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
+const Appointment = require('../models/Appointment');
+
 exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
   const doctorUser = await User.findById(req.user.id).select('-password');
   if (!doctorUser) {
@@ -35,6 +38,7 @@ exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
   };
   res.status(200).json(new ApiResponse(200, profile, 'Doctor profile fetched successfully.'));
 });
+
 exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const {
@@ -105,12 +109,14 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   };
   res.status(200).json(new ApiResponse(200, profile, 'Doctor profile updated successfully.'));
 });
+
 exports.getDoctors = asyncHandler(async (req, res) => {
     const doctors = await Doctor.find({})
         .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
         .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio');
     res.status(200).json(new ApiResponse(200, doctors, 'Doctors fetched successfully.'));
 });
+
 exports.getDoctor = asyncHandler(async (req, res) => {
     const doctor = await Doctor.findById(req.params.id)
         .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
@@ -119,4 +125,96 @@ exports.getDoctor = asyncHandler(async (req, res) => {
         return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
     }
     res.status(200).json(new ApiResponse(200, doctor, 'Doctor fetched successfully.'));
+});
+
+exports.getDoctorPatients = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  
+  // First, find the doctor record for this user
+  const doctor = await Doctor.findOne({ user: userId });
+  if (!doctor) {
+    return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+  }
+  
+  // Find all appointments for this doctor
+  const appointments = await Appointment.find({ doctor: doctor._id })
+    .populate({
+      path: 'patient',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email phoneNumber profilePictureUrl'
+      }
+    })
+    .sort({ date: -1 });
+
+  // Extract unique patients from appointments
+  const patientMap = new Map();
+  appointments.forEach(appointment => {
+    if (appointment.patient && !patientMap.has(appointment.patient._id.toString())) {
+      patientMap.set(appointment.patient._id.toString(), {
+        _id: appointment.patient._id,
+        user: appointment.patient.user,
+        medicalFile: appointment.patient.medicalFile,
+        lastAppointment: appointment.date,
+        appointmentCount: 1
+      });
+    } else if (appointment.patient) {
+      const existingPatient = patientMap.get(appointment.patient._id.toString());
+      existingPatient.appointmentCount += 1;
+      if (appointment.date > existingPatient.lastAppointment) {
+        existingPatient.lastAppointment = appointment.date;
+      }
+    }
+  });
+
+  const patients = Array.from(patientMap.values());
+  
+  res.status(200).json(new ApiResponse(200, patients, 'Doctor patients fetched successfully.'));
+});
+
+exports.getDoctorPatientById = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const patientId = req.params.id;
+  
+  // First, find the doctor record for this user
+  const doctor = await Doctor.findOne({ user: userId });
+  if (!doctor) {
+    return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+  }
+  
+  // Find the patient by ID
+  const patient = await Patient.findById(patientId)
+    .populate('user', 'firstName lastName email phoneNumber profilePictureUrl dateOfBirth gender address')
+    .populate('medicalFile');
+    
+  if (!patient) {
+    return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+  }
+  
+  // Check if this doctor has any appointments with this patient
+  const appointment = await Appointment.findOne({ 
+    doctor: doctor._id, 
+    patient: patientId 
+  });
+  
+  if (!appointment) {
+    return res.status(403).json(new ApiResponse(403, null, 'You can only view patients you have appointments with.'));
+  }
+  
+  // Get all appointments for this patient with this doctor
+  const appointments = await Appointment.find({ 
+    doctor: doctor._id, 
+    patient: patientId 
+  }).sort({ date: -1 });
+  
+  const patientData = {
+    _id: patient._id,
+    user: patient.user,
+    medicalFile: patient.medicalFile,
+    appointments: appointments,
+    lastAppointment: appointments.length > 0 ? appointments[0].date : null,
+    appointmentCount: appointments.length
+  };
+  
+  res.status(200).json(new ApiResponse(200, patientData, 'Patient details fetched successfully.'));
 });

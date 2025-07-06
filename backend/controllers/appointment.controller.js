@@ -42,7 +42,7 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
     return res.status(400).json(new ApiResponse(400, null, 'Appointment date and time must be in the future.'));
   }
   const conflictingAppointment = await Appointment.findOne({
-    doctor: doctorRecord.user._id, 
+    doctor: doctorRecord._id,
     date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
     time: time,         
     status: { $in: ['pending', 'confirmed'] } 
@@ -50,17 +50,34 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   if (conflictingAppointment) {
     return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the selected date and time. Please choose a different slot.'));
   }
+  // Find the patient record for this user
+  const patient = await require('../models/Patient').findOne({ user: patientId });
+  if (!patient) {
+    return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+  }
+
   const appointment = new Appointment({
-    patient: patientId,
-    doctor: doctorRecord.user._id, 
+    patient: patient._id,
+    doctor: doctorRecord._id,
     date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
     time,
     reason,
     type,
     status: 'pending', 
   });
-  const populatedAppointmentForNotif = await Appointment.findById(appointment._id).populate('patient', 'firstName lastName');
-  const patientName = populatedAppointmentForNotif.patient ? `${populatedAppointmentForNotif.patient.firstName} ${populatedAppointmentForNotif.patient.lastName}` : 'A patient';
+  
+  await appointment.save();
+  
+  const populatedAppointmentForNotif = await Appointment.findById(appointment._id)
+    .populate({
+      path: 'patient',
+      select: 'user',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
+  const patientName = populatedAppointmentForNotif.patient.user ? `${populatedAppointmentForNotif.patient.user.firstName} ${populatedAppointmentForNotif.patient.user.lastName}` : 'A patient';
   if (populatedAppointmentForNotif && doctorRecord && doctorRecord.user) {
     await createNotification(
       doctorRecord.user._id.toString(),
@@ -77,18 +94,37 @@ exports.getAppointments = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const userRole = req.user.role;
   let query = {};
+  
   if (userRole === 'patient') {
-    query.patient = userId;
+    // First, find the patient record for this user
+    const patient = await require('../models/Patient').findOne({ user: userId });
+    if (!patient) {
+      return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+    }
+    query.patient = patient._id; // Use the patient record ID, not the user ID
   } else if (userRole === 'doctor') {
-    query.doctor = userId;
+    // First, find the doctor record for this user
+    const doctor = await Doctor.findOne({ user: userId });
+    if (!doctor) {
+      return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+    }
+    query.doctor = doctor._id; // Use the doctor record ID, not the user ID
   } else {
     return res.status(403).json(new ApiResponse(403, null, 'User role not authorized to view appointments.'));
   }
+  
   if (req.query.status) {
     query.status = req.query.status;
   }
+  
   const appointments = await Appointment.find(query)
-    .populate('patient', 'firstName lastName email profilePictureUrl')
+    .populate({
+      path: 'patient',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email profilePictureUrl'
+      }
+    })
     .populate({
       path: 'doctor',
       select: 'user specialty',
@@ -98,6 +134,7 @@ exports.getAppointments = asyncHandler(async (req, res, next) => {
       }
     })
     .sort({ date: -1, time: -1 });
+  
   res.status(200).json(new ApiResponse(200, appointments, 'Appointments fetched successfully.'));
 });
 exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
@@ -108,12 +145,28 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
   if (!status) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide a status.'));
   }
-  const appointment = await Appointment.findById(appointmentId);
+  const appointment = await Appointment.findById(appointmentId)
+    .populate({
+      path: 'patient',
+      select: 'user',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    })
+    .populate({
+      path: 'doctor',
+      select: 'user',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
-  const isPatientOfAppointment = appointment.patient.toString() === userId;
-  const isDoctorOfAppointment = appointment.doctor.toString() === userId;
+  const isPatientOfAppointment = appointment.patient.user._id.toString() === userId;
+  const isDoctorOfAppointment = appointment.doctor.user._id.toString() === userId;
   if (!isPatientOfAppointment && !isDoctorOfAppointment) {
     return res.status(403).json(new ApiResponse(403, null, 'User not authorized to update this appointment.'));
   }
@@ -137,17 +190,14 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
   }
   appointment.status = status;
   await appointment.save();
-  const populatedAppointmentForNotif = await Appointment.findById(appointment._id)
-    .populate('patient', 'firstName lastName')
-    .populate('doctor', 'firstName lastName');
-  const patientName = populatedAppointmentForNotif.patient ? `${populatedAppointmentForNotif.patient.firstName} ${populatedAppointmentForNotif.patient.lastName}` : 'The patient';
-  const doctorName = populatedAppointmentForNotif.doctor ? `Dr. ${populatedAppointmentForNotif.doctor.firstName} ${populatedAppointmentForNotif.doctor.lastName}` : 'your doctor';
-  const appointmentDateTime = populatedAppointmentForNotif.appointmentDate && populatedAppointmentForNotif.appointmentTime ? `on ${new Date(populatedAppointmentForNotif.appointmentDate).toLocaleDateString()} at ${populatedAppointmentForNotif.appointmentTime}` : 'for the scheduled time';
+  const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'The patient';
+  const doctorName = appointment.doctor.user ? `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` : 'your doctor';
+      const appointmentDateTime = populatedAppointmentForNotif.date && populatedAppointmentForNotif.time ? `on ${new Date(populatedAppointmentForNotif.date).toLocaleDateString()} at ${populatedAppointmentForNotif.time}` : 'for the scheduled time';
   let notificationUserId = null;
   let notificationTitle = '';
   let notificationMessage = '';
-  if (userRole === 'doctor' && populatedAppointmentForNotif.patient) {
-    notificationUserId = populatedAppointmentForNotif.patient._id.toString();
+  if (userRole === 'doctor' && appointment.patient) {
+    notificationUserId = appointment.patient.user._id.toString();
     switch (status) {
       case 'confirmed':
         notificationTitle = 'Appointment Confirmed';
@@ -162,9 +212,9 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
         notificationMessage = `Your appointment with ${doctorName} ${appointmentDateTime} has been marked as completed.`;
         break;
     }
-  } else if (userRole === 'patient' && populatedAppointmentForNotif.doctor) {
+  } else if (userRole === 'patient' && appointment.doctor) {
     if (status === 'cancelled') {
-      notificationUserId = populatedAppointmentForNotif.doctor._id.toString();
+      notificationUserId = appointment.doctor.user._id.toString();
       notificationTitle = 'Appointment Cancelled by Patient';
       notificationMessage = `The appointment with ${patientName} ${appointmentDateTime} has been cancelled by the patient.`;
     }
@@ -185,7 +235,14 @@ exports.getAppointmentById = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.id;
   const userId = req.user.id;
   const appointment = await Appointment.findById(appointmentId)
-    .populate('patient', 'firstName lastName email profilePictureUrl')
+    .populate({
+      path: 'patient',
+      select: 'user firstName lastName email profilePictureUrl',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email profilePictureUrl'
+      }
+    })
     .populate({
       path: 'doctor',
       select: 'user specialty',
@@ -197,8 +254,8 @@ exports.getAppointmentById = asyncHandler(async (req, res, next) => {
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
-  const isPatientOfAppointment = appointment.patient._id.toString() === userId;
-  const isDoctorOfAppointment = appointment.doctor._id.toString() === userId;
+  const isPatientOfAppointment = appointment.patient.user._id.toString() === userId;
+  const isDoctorOfAppointment = appointment.doctor.user._id.toString() === userId;
   if (!isPatientOfAppointment && !isDoctorOfAppointment) {
     return res.status(403).json(new ApiResponse(403, null, 'User not authorized to view this appointment.'));
   }
@@ -207,23 +264,31 @@ exports.getAppointmentById = asyncHandler(async (req, res, next) => {
 exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.id;
   const userId = req.user.id;
-  const { appointmentDate, appointmentTime, reason, consultationType } = req.body;
-  const appointment = await Appointment.findById(appointmentId);
+  const { date, time, reason, consultationType } = req.body;
+  const appointment = await Appointment.findById(appointmentId)
+    .populate({
+      path: 'patient',
+      select: 'user',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
-  if (appointment.patient.toString() !== userId) {
+  if (appointment.patient.user._id.toString() !== userId) {
     return res.status(403).json(new ApiResponse(403, null, 'User not authorized to update this appointment\'s details.'));
   }
   if (!['pending', 'confirmed'].includes(appointment.status)) {
     return res.status(400).json(new ApiResponse(400, null, `Appointment cannot be updated as its status is '${appointment.status}'.`));
   }
-  if (!appointmentDate && !appointmentTime && !reason && !consultationType) {
+  if (!date && !time && !reason && !consultationType) {
     return res.status(400).json(new ApiResponse(400, null, 'No details provided for update.'));
   }
-  if (appointmentDate || appointmentTime) {
-    const newDateStr = appointmentDate || appointment.appointmentDate.toISOString().split('T')[0];
-    const newTimeStr = appointmentTime || appointment.appointmentTime;
+  if (date || time) {
+    const newDateStr = date || appointment.date.toISOString().split('T')[0];
+    const newTimeStr = time || appointment.time;
     const [hours, minutes] = newTimeStr.split(':').map(Number);
     let newDateObject = new Date(newDateStr);
     if (isNaN(newDateObject.getTime())) {
@@ -244,15 +309,15 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
     const conflictingAppointment = await Appointment.findOne({
       _id: { $ne: appointmentId }, 
       doctor: appointment.doctor,   
-      appointmentDate: new Date(newDateObject.getFullYear(), newDateObject.getMonth(), newDateObject.getDate()),
-      appointmentTime: newTimeStr,
+      date: new Date(newDateObject.getFullYear(), newDateObject.getMonth(), newDateObject.getDate()),
+      time: newTimeStr,
       status: { $in: ['pending', 'confirmed'] }
     });
     if (conflictingAppointment) {
       return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the newly selected date and time. Please choose a different slot.'));
     }
-    appointment.appointmentDate = new Date(newDateObject.getFullYear(), newDateObject.getMonth(), newDateObject.getDate());
-    appointment.appointmentTime = newTimeStr;
+    appointment.date = new Date(newDateObject.getFullYear(), newDateObject.getMonth(), newDateObject.getDate());
+    appointment.time = newTimeStr;
     if (appointment.status === 'confirmed') {
       appointment.status = 'pending'; 
     }
@@ -262,15 +327,12 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
   const originalReason = appointment.reason;
   const originalConsultationType = appointment.consultationType;
   const updatedAppointment = await appointment.save();
-  const populatedAppointmentForNotif = await Appointment.findById(updatedAppointment._id)
-    .populate('patient', 'firstName lastName')
-    .populate('doctor', 'firstName lastName');
-  const patientName = populatedAppointmentForNotif.patient ? `${populatedAppointmentForNotif.patient.firstName} ${populatedAppointmentForNotif.patient.lastName}` : 'The patient';
-  const newDateTime = populatedAppointmentForNotif.appointmentDate && populatedAppointmentForNotif.appointmentTime ? `on ${new Date(populatedAppointmentForNotif.appointmentDate).toLocaleDateString()} at ${populatedAppointmentForNotif.appointmentTime}` : 'at the new time';
-  if (populatedAppointmentForNotif.doctor) {
+  const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'The patient';
+  const newDateTime = appointment.date && appointment.time ? `on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}` : 'at the new time';
+  if (appointment.doctor) {
     let changeSummary = [];
-    if ((req.body.appointmentDate && new Date(req.body.appointmentDate).toISOString() !== new Date(appointment.appointmentDate).toISOString()) || 
-        (req.body.appointmentTime && req.body.appointmentTime !== appointment.appointmentTime)) {
+    if ((req.body.date && new Date(req.body.date).toISOString() !== new Date(appointment.date).toISOString()) || 
+        (req.body.time && req.body.time !== appointment.time)) {
       changeSummary.push(`rescheduled to ${newDateTime}`);
     }
     if (req.body.reason && req.body.reason !== originalReason) { 
@@ -281,7 +343,7 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
     }
     if (changeSummary.length > 0) {
       await createNotification(
-        populatedAppointmentForNotif.doctor._id.toString(),
+        appointment.doctor._id.toString(),
         'Appointment Details Updated by Patient',
         `${patientName} has updated their appointment. Details: ${changeSummary.join(', ')}. Please review. `,
         'appointment',
@@ -291,4 +353,114 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
     }
   }
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment details updated successfully.'));
+});
+
+// Request appointment reschedule
+exports.requestReschedule = asyncHandler(async (req, res, next) => {
+  const appointmentId = req.params.id;
+  const userId = req.user.id;
+  const { requestedDate, requestedTime, preferredTimes, reason, notes } = req.body;
+
+  // Validate required fields
+  if (!requestedDate || !requestedTime || !reason) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide requested date, time, and reason for reschedule.'));
+  }
+
+  // Find the appointment
+  const appointment = await Appointment.findById(appointmentId)
+    .populate({
+      path: 'patient',
+      select: 'user firstName lastName',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    })
+    .populate({
+      path: 'doctor',
+      select: 'user specialty',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
+
+  if (!appointment) {
+    return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
+  }
+
+  // Check if user is the patient of this appointment
+  if (appointment.patient.user._id.toString() !== userId) {
+    return res.status(403).json(new ApiResponse(403, null, 'You are not authorized to request reschedule for this appointment.'));
+  }
+
+  // Check if appointment status allows reschedule request
+  const allowedStatuses = ['accepted', 'scheduled', 'rescheduled'];
+  if (!allowedStatuses.includes(appointment.status)) {
+    return res.status(400).json(new ApiResponse(400, null, `Cannot request reschedule for appointment with status '${appointment.status}'.`));
+  }
+
+  // Check if appointment can be modified (24 hours before)
+  if (!appointment.canBeModified()) {
+    return res.status(400).json(new ApiResponse(400, null, 'Cannot request reschedule within 24 hours of the appointment.'));
+  }
+
+  // Validate requested date and time
+  const [hours, minutes] = requestedTime.split(':').map(Number);
+  let requestedDateObject = new Date(requestedDate);
+  if (isNaN(requestedDateObject.getTime())) {
+    return res.status(400).json(new ApiResponse(400, null, 'Invalid requested date format. Please use YYYY-MM-DD.'));
+  }
+
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return res.status(400).json(new ApiResponse(400, null, 'Invalid requested time format. Please use HH:MM.'));
+  }
+
+  const requestedDateTime = new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate(), hours, minutes);
+  const now = new Date();
+  now.setSeconds(0, 0);
+  if (requestedDateTime < now) {
+    return res.status(400).json(new ApiResponse(400, null, 'Requested date and time must be in the future.'));
+  }
+
+  // Check for conflicts with other appointments
+  const conflictingAppointment = await Appointment.findOne({
+    doctor: appointment.doctor._id,
+    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
+    time: requestedTime,
+    status: { $in: ['pending', 'confirmed', 'accepted', 'scheduled', 'rescheduled'] },
+    _id: { $ne: appointmentId }
+  });
+
+  if (conflictingAppointment) {
+    return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the requested date and time. Please choose a different slot.'));
+  }
+
+  // Update appointment with reschedule request
+  appointment.status = 'reschedule_requested';
+  appointment.rescheduleRequest = {
+    requestedDate: requestedDateObject,
+    requestedTime,
+    preferredTimes: preferredTimes || [],
+    reason,
+    notes,
+    requestedAt: new Date()
+  };
+
+  await appointment.save();
+
+  // Create notification for doctor
+  const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'A patient';
+  const doctorUserId = appointment.doctor.user._id;
+  
+  await createNotification(
+    doctorUserId.toString(),
+    'Reschedule Request',
+    `${patientName} has requested to reschedule their appointment from ${appointment.date.toLocaleDateString()} at ${appointment.time} to ${requestedDateObject.toLocaleDateString()} at ${requestedTime}. Reason: ${reason}.`,
+    'appointment',
+    appointment._id.toString(),
+    'Appointment'
+  );
+
+  res.status(200).json(new ApiResponse(200, appointment, 'Reschedule request submitted successfully. Awaiting doctor approval.'));
 });

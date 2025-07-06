@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { Search, UserPlus, UserRound, Filter } from 'lucide-react';
-import { patients as mockPatients } from '@/mockdata/patients';
 import AddPatientForm from '@/components/doctor/AddPatientForm';
 import PatientCard from '@/components/doctor/PatientCard';
 import { Button } from '@/components/ui/Button';
@@ -12,40 +11,67 @@ import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchPatients } from '@/store/slices/doctor/doctorPatientsSlice';
+
 export default function PatientsPage() {
   const { t } = useTranslation();
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const dispatch = useAppDispatch();
+  
+  // Redux state
+  const { patients, loading, error } = useAppSelector(
+    (state) => state.doctorPatients
+  );
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Fetch patients on component mount
+  useEffect(() => {
+    dispatch(fetchPatients());
+  }, [dispatch]);
+
   const filteredPatients = useMemo(() => {
     let filtered = Array.isArray(patients) ? patients : [];
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(patient => 
-        `${patient.user?.firstName || ''} ${patient.user?.lastName || ''}`.trim().toLowerCase().includes(lowercaseSearch) || 
-        patient.condition.toLowerCase().includes(lowercaseSearch) ||
-        patient.medicalId?.toLowerCase().includes(lowercaseSearch)
+        `${patient.user?.firstName || patient.firstName || ''} ${patient.user?.lastName || patient.lastName || ''}`.trim().toLowerCase().includes(lowercaseSearch) || 
+        (patient.condition || '').toLowerCase().includes(lowercaseSearch) ||
+        (patient.medicalId || '').toLowerCase().includes(lowercaseSearch)
       );
     }
     if (activeTab !== 'all') {
-      filtered = filtered.filter(patient => (patient.user?.isActive ? 'active' : 'inactive').toLowerCase() === activeTab);
+      filtered = filtered.filter(patient => {
+        const isActive = patient.user?.isActive ?? patient.isActive ?? true;
+        return (isActive ? 'active' : 'inactive').toLowerCase() === activeTab;
+      });
     }
     return filtered;
   }, [searchTerm, activeTab, patients]);
+
   const statusCounts = useMemo(() => {
     if (!Array.isArray(patients)) {
       return { all: 0, active: 0, urgent: 0, inactive: 0 };
     }
     return {
       all: patients.length,
-      active: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'active').length,
-      urgent: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'urgent').length,
-      inactive: patients.filter(p => (p.user?.isActive ? 'active' : 'inactive').toLowerCase() === 'inactive').length
+      active: patients.filter(p => {
+        const isActive = p.user?.isActive ?? p.isActive ?? true;
+        return isActive;
+      }).length,
+      urgent: patients.filter(p => {
+        const isUrgent = p.user?.isUrgent ?? p.isUrgent ?? false;
+        return isUrgent;
+      }).length,
+      inactive: patients.filter(p => {
+        const isActive = p.user?.isActive ?? p.isActive ?? true;
+        return !isActive;
+      }).length
     };
   }, [patients]);
+
   const tabLabels = useMemo(() => {
     return {
       all: t('doctor.patients.all', { count: statusCounts.all }, `All Patients (${statusCounts.all})`),
@@ -54,37 +80,28 @@ export default function PatientsPage() {
       inactive: t('doctor.patients.inactive', { count: statusCounts.inactive }, `Inactive (${statusCounts.inactive})`)
     };
   }, [statusCounts, t]);
-  useEffect(() => {
-    const loadPatients = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const data = mockPatients;
-        setPatients(data);
-      } catch (err) {
-        setError(t('doctor.patients.loadError', 'Failed to load patients'));
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadPatients();
-  }, [t]);
+
   const handleTabChange = (value) => {
     setActiveTab(value);
   };
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
+
   const handleOpenAddDialog = () => {
     setAddDialogOpen(true);
   };
+
   const handleCloseAddDialog = () => {
     setAddDialogOpen(false);
   };
+
   const handlePatientAdded = (newPatient) => {
-    setPatients(prevPatients => [...prevPatients, newPatient]);
+    // Refresh the patients list after adding a new patient
+    dispatch(fetchPatients());
   };
+
   return (
     <div className="p-6 bg-background min-h-screen text-foreground">
       <Card className="mb-6 rounded-xl shadow-lg bg-card border border-border">
@@ -96,11 +113,13 @@ export default function PatientsPage() {
           </Button>
         </CardContent>
       </Card>
+      
       {error && (
         <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/10 border border-destructive text-destructive-foreground">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      
       <Card className="p-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -156,7 +175,7 @@ export default function PatientsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
               {filteredPatients.map((patient) => (
-                <PatientCard key={patient.id} patient={patient} />
+                <PatientCard key={patient._id || patient.id} patient={patient} />
               ))}
             </div>
           )}

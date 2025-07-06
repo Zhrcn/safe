@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/store/hooks';
 import { useLogoutMutation } from '@/store/services/user/authApi';
-import { logout } from '@/store/slices/auth/authSlice';
+import { logoutUser } from '@/store/slices/auth/authSlice';
 import { Loader2 } from 'lucide-react';
 export default function LogoutPage() {
     const dispatch = useAppDispatch();
@@ -16,7 +16,7 @@ export default function LogoutPage() {
             } catch (error) {
                 console.error('Logout error:', error);
             } finally {
-                dispatch(logout());
+                dispatch(logoutUser());
                 router.push('/');
             }
         };

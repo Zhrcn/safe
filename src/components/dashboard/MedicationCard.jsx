@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 export default function MedicationCard({ medications = [] }) {
     const medsArray = Array.isArray(medications) ? medications : (medications?.data && Array.isArray(medications.data) ? medications.data : []);
-    console.log('MedicationCard received medications:', medsArray);
+    // MedicationCard received medications
     if (!medsArray?.length) {
         return (
             <Card className="p-6 text-center text-muted-foreground">

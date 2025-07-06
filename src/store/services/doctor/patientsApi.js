@@ -1,13 +1,27 @@
 import axiosInstance from '../axiosInstance';
 
 export const getPatients = async () => {
-  const res = await axiosInstance.get('/patients');
-  return res.data.data;
+  console.log('getPatients called - making API request to /doctors/patients');
+  console.log('Axios instance baseURL:', axiosInstance.defaults.baseURL);
+  try {
+    const res = await axiosInstance.get('/doctors/patients');
+    console.log('getPatients response:', res);
+    return res.data.data;
+  } catch (error) {
+    console.error('getPatients error:', error);
+    throw error;
+  }
 };
 
 export const getPatientById = async (id) => {
-  const res = await axiosInstance.get(`/patients/${id}`);
-  return res.data.data;
+  console.log('getPatientById called with ID:', id);
+  try {
+    const res = await axiosInstance.get(`/doctors/patients/${id}`);
+    return res.data.data;
+  } catch (error) {
+    console.error('getPatientById error:', error);
+    throw error;
+  }
 };
 
 export const createPatient = async (patientData) => {

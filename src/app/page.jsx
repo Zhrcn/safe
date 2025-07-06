@@ -11,6 +11,7 @@ import anime from 'animejs';
 import Section from '@/components/common/Section';
 import { useTranslation } from 'react-i18next';
 import MedicalIconsBackground from '@/components/MedicalIconsBackground';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 const HeartSVG = forwardRef(({ style, className }, ref) => (
   <svg ref={ref} width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
@@ -217,6 +218,7 @@ function generateMedicalPattern(count = 48) {
 
 export default function Home() {
   const { t, ready } = useTranslation();
+      const { isAuthenticated, isRedirecting, authChecked } = useAuthRedirect();
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
   const aboutRef = useRef(null);
@@ -270,7 +272,13 @@ export default function Home() {
     });
   });
 
-  if (!ready) return null;
+  if (!ready || isAuthenticated || isRedirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground relative overflow-x-hidden transition-colors duration-700">

@@ -2,9 +2,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logout, selectIsAuthenticated } from '@/store/slices/auth/authSlice';
+import { logoutUser, selectIsAuthenticated } from '@/store/slices/auth/authSlice';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
 
 export default function LogoutPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function LogoutPage() {
   const { t } = useTranslation();
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(logout());
+      dispatch(logoutUser());
     } else {
       router.push('/');
     }

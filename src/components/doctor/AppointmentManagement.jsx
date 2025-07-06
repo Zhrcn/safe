@@ -33,6 +33,17 @@ import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { useNotification } from '@/components/ui/Notification';
 import { appointments as mockAppointments } from '@/mockdata/appointments';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    acceptAppointment,
+    rejectAppointment,
+    updateAppointment,
+    getAppointmentDetails,
+    clearError,
+    clearSuccess
+} from '../../store/slices/doctor/doctorAppointmentsSlice';
+import { Textarea } from '../ui/Textarea';
+
 const appointmentTypes = [
     'Annual Physical',
     'Follow-up',
@@ -43,6 +54,7 @@ const appointmentTypes = [
     'Urgent Care',
     'Prescription Renewal'
 ];
+
 function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
     const appointmentDate = appointment.date ? new Date(`${appointment.date}T${appointment.time || '00:00'}`) : null;
     const now = new Date();
@@ -175,6 +187,7 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
         </Card>
     );
 }
+
 export default function AppointmentManagement() {
     const { showNotification } = useNotification();
     const [appointments, setAppointments] = useState([]);
@@ -192,6 +205,32 @@ export default function AppointmentManagement() {
         patientId: '',
         duration: 30
     });
+    const dispatch = useDispatch();
+    const { loading: reduxLoading, error, success } = useSelector((state) => state.doctorAppointments);
+    const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+    const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+    
+    // Form states
+    const [acceptForm, setAcceptForm] = useState({
+        date: '',
+        time: '',
+        location: '',
+        doctorNotes: ''
+    });
+    const [rejectForm, setRejectForm] = useState({
+        doctorNotes: ''
+    });
+    const [updateForm, setUpdateForm] = useState({
+        date: '',
+        time: '',
+        location: '',
+        doctorNotes: '',
+        patientNotes: '',
+        reason: '',
+        type: ''
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setAppointments(mockAppointments);
@@ -199,6 +238,29 @@ export default function AppointmentManagement() {
         }, 1000);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        if (selectedAppointment) {
+            setUpdateForm({
+                date: selectedAppointment.date ? new Date(selectedAppointment.date).toISOString().split('T')[0] : '',
+                time: selectedAppointment.time || '',
+                location: selectedAppointment.location || '',
+                doctorNotes: selectedAppointment.doctorNotes || '',
+                patientNotes: selectedAppointment.patientNotes || '',
+                reason: selectedAppointment.reason || '',
+                type: selectedAppointment.type || ''
+            });
+        }
+    }, [selectedAppointment]);
+
+    useEffect(() => {
+        if (success) {
+            setTimeout(() => {
+                dispatch(clearSuccess());
+            }, 3000);
+        }
+    }, [success, dispatch]);
+
     const handleTabChange = (value) => {
         setActiveTab(value);
     };
@@ -278,27 +340,37 @@ export default function AppointmentManagement() {
             showNotification(error.message || 'Failed to save appointment', 'error');
         }
     };
-    const handleAccept = async (appointment) => {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setAppointments(prev => prev.map(apt => 
-                apt.id === appointment.id ? { ...apt, status: 'confirmed' } : apt
-            ));
-            showNotification('Appointment accepted', 'success');
-        } catch (error) {
-            showNotification(error.message || 'Failed to accept appointment', 'error');
-        }
+    const handleAccept = async () => {
+        const appointmentData = {};
+        if (acceptForm.date) appointmentData.date = acceptForm.date;
+        if (acceptForm.time) appointmentData.time = acceptForm.time;
+        if (acceptForm.location) appointmentData.location = acceptForm.location;
+        if (acceptForm.doctorNotes) appointmentData.doctorNotes = acceptForm.doctorNotes;
+
+        await dispatch(acceptAppointment({ appointmentId: selectedAppointment._id, appointmentData }));
+        setIsAcceptDialogOpen(false);
+        setAcceptForm({ date: '', time: '', location: '', doctorNotes: '' });
     };
-    const handleReject = async (appointment) => {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setAppointments(prev => prev.map(apt => 
-                apt.id === appointment.id ? { ...apt, status: 'rejected' } : apt
-            ));
-            showNotification('Appointment rejected', 'success');
-        } catch (error) {
-            showNotification(error.message || 'Failed to reject appointment', 'error');
-        }
+    const handleReject = async () => {
+        await dispatch(rejectAppointment({ 
+            appointmentId: selectedAppointment._id, 
+            doctorNotes: rejectForm.doctorNotes 
+        }));
+        setIsRejectDialogOpen(false);
+        setRejectForm({ doctorNotes: '' });
+    };
+    const handleUpdate = async () => {
+        const appointmentData = {};
+        if (updateForm.date) appointmentData.date = updateForm.date;
+        if (updateForm.time) appointmentData.time = updateForm.time;
+        if (updateForm.location) appointmentData.location = updateForm.location;
+        if (updateForm.doctorNotes !== undefined) appointmentData.doctorNotes = updateForm.doctorNotes;
+        if (updateForm.patientNotes !== undefined) appointmentData.patientNotes = updateForm.patientNotes;
+        if (updateForm.reason) appointmentData.reason = updateForm.reason;
+        if (updateForm.type) appointmentData.type = updateForm.type;
+
+        await dispatch(updateAppointment({ appointmentId: selectedAppointment._id, appointmentData }));
+        setIsUpdateDialogOpen(false);
     };
     const filteredAppointments = appointments.filter(appointment => {
         const matchesSearch = appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -422,6 +494,215 @@ export default function AppointmentManagement() {
                     </form>
                 </DialogContent>
             </Dialog>
+            {error && (
+                <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+            
+            {success && (
+                <Alert>
+                    <AlertDescription>{success}</AlertDescription>
+                </Alert>
+            )}
+
+            {selectedAppointment?.status === 'pending' && (
+                <>
+                    <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="default" disabled={reduxLoading || !selectedAppointment?.canBeModified}>
+                                Accept Appointment
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Accept Appointment</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="accept-date">Date</Label>
+                                    <Input
+                                        id="accept-date"
+                                        type="date"
+                                        value={acceptForm.date}
+                                        onChange={(e) => setAcceptForm({ ...acceptForm, date: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="accept-time">Time</Label>
+                                    <Input
+                                        id="accept-time"
+                                        type="time"
+                                        value={acceptForm.time}
+                                        onChange={(e) => setAcceptForm({ ...acceptForm, time: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="accept-location">Location</Label>
+                                    <Input
+                                        id="accept-location"
+                                        value={acceptForm.location}
+                                        onChange={(e) => setAcceptForm({ ...acceptForm, location: e.target.value })}
+                                        placeholder="Enter location"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="accept-notes">Doctor Notes</Label>
+                                    <Textarea
+                                        id="accept-notes"
+                                        value={acceptForm.doctorNotes}
+                                        onChange={(e) => setAcceptForm({ ...acceptForm, doctorNotes: e.target.value })}
+                                        placeholder="Add notes for the patient"
+                                    />
+                                </div>
+                                <div className="flex justify-end space-x-2">
+                                    <Button variant="outline" onClick={() => setIsAcceptDialogOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handleAccept} disabled={reduxLoading}>
+                                        Accept
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="destructive" disabled={reduxLoading || !selectedAppointment?.canBeModified}>
+                                Reject Appointment
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Reject Appointment</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="reject-notes">Reason for Rejection</Label>
+                                    <Textarea
+                                        id="reject-notes"
+                                        value={rejectForm.doctorNotes}
+                                        onChange={(e) => setRejectForm({ doctorNotes: e.target.value })}
+                                        placeholder="Provide a reason for rejecting this appointment"
+                                    />
+                                </div>
+                                <div className="flex justify-end space-x-2">
+                                    <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button variant="destructive" onClick={handleReject} disabled={reduxLoading}>
+                                        Reject
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </>
+            )}
+
+            {selectedAppointment?.status !== 'rejected' && selectedAppointment?.status !== 'completed' && (
+                <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" disabled={reduxLoading || !selectedAppointment?.canBeModified}>
+                            Update Appointment
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Update Appointment</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="update-date">Date</Label>
+                                    <Input
+                                        id="update-date"
+                                        type="date"
+                                        value={updateForm.date}
+                                        onChange={(e) => setUpdateForm({ ...updateForm, date: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="update-time">Time</Label>
+                                    <Input
+                                        id="update-time"
+                                        type="time"
+                                        value={updateForm.time}
+                                        onChange={(e) => setUpdateForm({ ...updateForm, time: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label htmlFor="update-location">Location</Label>
+                                <Input
+                                    id="update-location"
+                                    value={updateForm.location}
+                                    onChange={(e) => setUpdateForm({ ...updateForm, location: e.target.value })}
+                                    placeholder="Enter location"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="update-type">Type</Label>
+                                    <Select value={updateForm.type} onValueChange={(value) => setUpdateForm({ ...updateForm, type: value })}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="checkup">Checkup</SelectItem>
+                                            <SelectItem value="consultation">Consultation</SelectItem>
+                                            <SelectItem value="follow-up">Follow-up</SelectItem>
+                                            <SelectItem value="emergency">Emergency</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="update-reason">Reason</Label>
+                                    <Input
+                                        id="update-reason"
+                                        value={updateForm.reason}
+                                        onChange={(e) => setUpdateForm({ ...updateForm, reason: e.target.value })}
+                                        placeholder="Enter reason"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label htmlFor="update-doctor-notes">Doctor Notes</Label>
+                                <Textarea
+                                    id="update-doctor-notes"
+                                    value={updateForm.doctorNotes}
+                                    onChange={(e) => setUpdateForm({ ...updateForm, doctorNotes: e.target.value })}
+                                    placeholder="Add notes for the patient"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="update-patient-notes">Patient Notes</Label>
+                                <Textarea
+                                    id="update-patient-notes"
+                                    value={updateForm.patientNotes}
+                                    onChange={(e) => setUpdateForm({ ...updateForm, patientNotes: e.target.value })}
+                                    placeholder="Add notes for the patient"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                                <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleUpdate} disabled={reduxLoading}>
+                                    Update
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {!selectedAppointment?.canBeModified && (
+                <div className="text-sm text-red-600">
+                    Cannot modify appointment within 24 hours of scheduled time
+                </div>
+            )}
         </div>
     );
 } 

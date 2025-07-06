@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import {
   fetchConversations,
   createConversation,
@@ -37,7 +38,7 @@ export const useChat = () => {
 
   // Redux state
   const conversations = useSelector(state => state.conversations.conversations);
-  const currentUser = useSelector(state => state.user?.user);
+  const currentUser = useSelector(selectCurrentUser);
   const currentConversation = useSelector(state => state.conversations.currentConversation);
 
   // Load conversations on mount

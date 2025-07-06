@@ -9,7 +9,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/components/ThemeProviderWrapper';
 import { APP_NAME } from '@/config/app-config';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logout, selectCurrentUser } from '@/store/slices/auth/authSlice';
+import { logoutUser, selectCurrentUser } from '@/store/slices/auth/authSlice';
 import ProtectedLayout from '.';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { useLogoutMutation } from '@/store/services/user/authApi';
@@ -155,7 +155,7 @@ export default function AppLayout({
 
     const handleLogout = async () => {
         try {
-            await logout().unwrap();
+            await dispatch(logoutUser()).unwrap();
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);

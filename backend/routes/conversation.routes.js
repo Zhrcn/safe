@@ -6,7 +6,8 @@ const {
   createConversation,
   updateConversation,
   deleteConversation,
-  markAsRead
+  markAsRead,
+  deleteMessage
 } = require('../controllers/conversation.controller');
 const { protect } = require('../middleware/auth.middleware');
 

@@ -1,23 +1,114 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { conversations as mockConversations } from "@/mockdata/conversations";
+import { useChat } from '@/hooks/useChat';
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
-import { Card, CardContent } from '@/components/ui/Card';
+import { MessageCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { getPatients } from '@/store/services/doctor/patientsApi';
+import { getNonDoctorUsers } from '@/store/services/user/userApi';
+import toast from 'react-hot-toast';
+
+function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelectedUser, subject, setSubject, loading, error }) {
+  const { t } = useTranslation('common');
+  if (!open) return null;
+
+  const allUsers = [
+    ...users.map(user => ({
+      ...user,
+      id: user._id,
+      type: user.role,
+      displayName: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+    })),
+  ].filter(u => u.displayName && u.id);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-4">{t('Start New Chat')}</h2>
+        <label className="block mb-2 text-sm font-medium">{t('Select User')}</label>
+        <select
+          className="w-full border rounded px-2 py-1 mb-4"
+          value={selectedUser ? selectedUser.id : ""}
+          onChange={e => {
+            const user = allUsers.find(u => u.id === e.target.value);
+            setSelectedUser(user || null);
+          }}
+        >
+          <option value="">{t('Choose a user')}</option>
+          {allUsers.map(user => (
+            <option key={user.id} value={user.id}>
+              {user.displayName} {user.type === 'patient' ? t('(Patient)') : user.type === 'pharmacist' ? t('(Pharmacist)') : user.type === 'admin' ? t('(Admin)') : ''}
+            </option>
+          ))}
+        </select>
+        <label className="block mb-2 text-sm font-medium">{t('Subject')}</label>
+        <input
+          className="w-full border rounded px-2 py-1 mb-4"
+          value={subject}
+          onChange={e => setSubject(e.target.value)}
+          placeholder={t('Enter subject')}
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-4 py-2 bg-gray-200 rounded"
+            onClick={onClose}
+          >
+            {t('Cancel')}
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+            onClick={onCreate}
+            disabled={!selectedUser}
+          >
+            {t('Create')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DoctorMessagingPage() {
-  const { t } = useTranslation();
-  const [conversations, setConversations] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [mobileView, setMobileView] = useState(false);
-  const router = useRouter();
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [subject, setSubject] = useState("");
+
+  // Use the chat hook
+  const {
+    conversations,
+    selectedConversation,
+    messages,
+    loadingMessages,
+    messagesError,
+    isTyping,
+    currentUser,
+    selectConversation,
+    sendMessage,
+    deleteMessage,
+    deleteConversation,
+    createConversation,
+    sendTyping
+  } = useChat();
+
+  const [patients, setPatients] = useState([]);
+  const [patientsLoading, setPatientsLoading] = useState(true);
+  const [patientsError, setPatientsError] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState(null);
 
   useEffect(() => {
-    setConversations(mockConversations);
+    setPatientsLoading(true);
+    setPatientsError(null);
+    getPatients()
+      .then(data => setPatients(data))
+      .catch(err => setPatientsError(err.message || t('failedToFetchPatients')))
+      .finally(() => setPatientsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -29,107 +120,153 @@ export default function DoctorMessagingPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    setUsersLoading(true);
+    setUsersError(null);
+    getNonDoctorUsers()
+      .then(data => setUsers(data))
+      .catch(err => setUsersError(err.message || t('failedToFetchUsers')))
+      .finally(() => setUsersLoading(false));
+  }, []);
+
+  const handleInputChange = (e) => {
+    // Handle both event objects and direct values
+    const value = e && e.target ? e.target.value : e;
+    setNewMessage(value);
+    if (selectedConversation && currentUser && currentUser._id) {
+      sendTyping(selectedConversation._id);
+    }
+  };
+
   const filtered = conversations.filter(conv =>
-    conv.title.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.title || "Untitled Conversation").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = conv => {
-    setSelected(conv);
+    selectConversation(conv);
   };
 
-  const handleSend = () => {
-    if (!newMessage.trim() || !selected) return;
-    const updated = {
-      ...selected,
-      messages: [
-        ...selected.messages,
-        {
-          id: Date.now(),
-          content: newMessage,
-          timestamp: new Date(),
-          sender: "You",
-          read: false,
-        },
-      ],
-      lastMessage: newMessage,
-      lastMessageTime: new Date(),
-    };
-    setSelected(updated);
-    setConversations(conversations.map(c => (c.id === updated.id ? updated : c)));
-    setNewMessage("");
+  const handleSend = async () => {
+    if (!newMessage.trim()) return;
+    
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Clear input immediately
+    
+    await sendMessage(messageContent);
+  };
+
+  const handleCreateChat = async () => {
+    if (!selectedUser) return;
+    if (!currentUser || !currentUser._id) {
+      toast.error(t('userNotLoaded'));
+      return;
+    }
+    const participants = [selectedUser.id, currentUser._id];
+    const result = await createConversation(participants, subject);
+    if (result && result._id) {
+      selectConversation(result);
+    }
+    setShowNewChat(false);
+    setSelectedUser(null);
+    setSubject("");
   };
 
   const handleNewChat = () => {
-    alert(t('doctor.messaging.startNewChat', 'Start a new chat (not implemented)'));
+    setShowNewChat(true);
   };
 
-  if (mobileView) {
-    if (!selected) {
-      return (
-        <div className="min-h-screen bg-background flex flex-col">
-          <div className="mb-4 px-4 pt-4">
-            <h1 className="text-2xl font-bold text-foreground">{t('doctor.messaging.title', 'Messages')}</h1>
-            <p className="text-muted-foreground text-sm">{t('doctor.messaging.selectConversation', 'Select a conversation to start chatting.')}</p>
-          </div>
-          <div className="flex-1">
-            <ChatList
-              conversations={filtered}
-              selectedId={selected?.id}
-              onSelect={handleSelect}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              onNewChat={handleNewChat}
-            />
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="min-h-screen bg-background flex flex-col">
-          <div className="flex-1">
-            <ChatPage
-              conversation={selected}
-              onSend={handleSend}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              isMobile={true}
-              onBack={() => setSelected(null)}
-            />
-          </div>
-        </div>
-      );
-    }
+  const handleCloseNewChat = () => {
+    setShowNewChat(false);
+    setSelectedUser(null);
+    setSubject("");
+  };
+
+  const handleDeleteChat = async (conversationId) => {
+    await deleteConversation(conversationId);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    await deleteMessage(messageId);
+  };
+
+  if (!currentUser) {
+    return <div>{t('loadingUser')}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="max-w-6xl mx-auto flex flex-1 gap-4 h-[calc(100vh-40px)] p-4">
-        <div className="hidden md:flex flex-col w-full max-w-xs h-full rounded-2xl bg-muted/40 shadow-lg">
+    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+      {/* New Chat Modal */}
+      <NewChatModal
+        open={showNewChat}
+        onClose={handleCloseNewChat}
+        onCreate={handleCreateChat}
+        users={users}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        subject={subject}
+        setSubject={setSubject}
+        loading={usersLoading}
+        error={usersError}
+      />
+
+      {/* Sidebar: Chat List */}
+      <div className={`border-r bg-white h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <MessageCircle className="w-6 h-6" />
+            {t('Messages')}
+          </h1>
+          <button
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            onClick={handleNewChat}
+          >
+            {t('New Chat')}
+          </button>
+        </div>
+        <div className="p-3 flex-shrink-0">
+          <input
+            className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={t('Search conversations')}
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto chat-scroll">
           <ChatList
             conversations={filtered}
-            selectedId={selected?.id}
+            selectedId={selectedConversation?._id}
             onSelect={handleSelect}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             onNewChat={handleNewChat}
+            isTyping={isTyping}
+            currentUser={currentUser}
           />
         </div>
-        <div className="flex-1 flex flex-col h-full rounded-2xl bg-background shadow-lg">
-          {selected ? (
-            <ChatPage
-              conversation={selected}
-              onSend={handleSend}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              isMobile={false}
-              onBack={() => setSelected(null)}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-lg">
-              {t('doctor.messaging.selectConversation', 'Select a conversation to start chatting.')}
-            </div>
-          )}
-        </div>
+      </div>
+
+      {/* Main: Chat Page */}
+      <div className={`flex-1 h-full ${mobileView && !selectedConversation ? "hidden" : "block"}`}>
+        {selectedConversation ? (
+          <ChatPage
+            conversation={{ ...selectedConversation, messages }}
+            onSend={handleSend}
+            newMessage={newMessage}
+            onInputChange={handleInputChange}
+            isMobile={mobileView}
+            onBack={() => selectConversation(null)}
+            isTyping={isTyping}
+            onDelete={handleDeleteChat}
+            onDeleteMessage={handleDeleteMessage}
+            currentUser={currentUser}
+            loading={loadingMessages}
+            error={messagesError}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <span>{t('Select a conversation to start chatting')}</span>
+          </div>
+        )}
       </div>
     </div>
   );

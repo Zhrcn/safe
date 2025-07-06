@@ -1,4 +1,45 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import * as patientsApi from '../../services/doctor/patientsApi';
+
+// Async thunks
+export const fetchPatients = createAsyncThunk(
+  'doctorPatients/fetchPatients',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Fetching patients from API...');
+      const data = await patientsApi.getPatients();
+      console.log('Patients fetched successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      return rejectWithValue(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to fetch patients'
+      );
+    }
+  }
+);
+
+export const fetchPatientById = createAsyncThunk(
+  'doctorPatients/fetchPatientById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const data = await patientsApi.getPatientById(id);
+      return data;
+    } catch (error) {
+      console.error('Error fetching patient by ID:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to fetch patient'
+      );
+    }
+  }
+);
+
 const initialState = {
     patients: [],
     selectedPatient: null,
@@ -6,6 +47,7 @@ const initialState = {
     loading: false,
     error: null
 };
+
 const doctorPatientsSlice = createSlice({
     name: 'doctorPatients',
     initialState,
@@ -23,13 +65,53 @@ const doctorPatientsSlice = createSlice({
         },
         clearSelectedPatient: (state) => {
             state.selectedPatient = null;
+        },
+        clearError: (state) => {
+            state.error = null;
         }
+    },
+    extraReducers: (builder) => {
+        builder
+            // fetchPatients
+            .addCase(fetchPatients.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                console.log('Fetching patients - loading started');
+            })
+            .addCase(fetchPatients.fulfilled, (state, action) => {
+                state.loading = false;
+                state.patients = action.payload;
+                state.error = null;
+                console.log('Fetching patients - success:', action.payload);
+            })
+            .addCase(fetchPatients.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                console.log('Fetching patients - failed:', action.payload);
+            })
+            // fetchPatientById
+            .addCase(fetchPatientById.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchPatientById.fulfilled, (state, action) => {
+                state.loading = false;
+                state.selectedPatient = action.payload;
+                state.error = null;
+            })
+            .addCase(fetchPatientById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            });
     }
 });
+
 export const {
     setSelectedPatient,
     addPatientToFavorites,
     removePatientFromFavorites,
-    clearSelectedPatient
+    clearSelectedPatient,
+    clearError
 } = doctorPatientsSlice.actions;
+
 export default doctorPatientsSlice.reducer; 

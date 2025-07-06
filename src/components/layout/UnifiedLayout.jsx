@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/components/ThemeProviderWrapper';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { logout } from '@/store/slices/auth/authSlice';
+import { logoutUser } from '@/store/slices/auth/authSlice';
 import { useNotification } from '@/components/ui/Notification';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
@@ -95,7 +95,7 @@ const SidebarToggle = ({ collapsed, onToggle, isRtl, t }) => (
       color: "var(--color-foreground)",
       background: "var(--color-navbar)",
       transition: "all 0.3s ease-in-out",
-      [isRtl ? 'marginLeft' : 'marginRight']: '-1px',
+      [isRtl ? 'marginRight' : 'marginLeft']: '-1px',
     }}
     aria-label={
       collapsed
@@ -162,11 +162,11 @@ const NavigationMenu = ({ items, pathname, collapsed, t, onNavigate }) => (
           href={item.path}
           onClick={onNavigate}
           className={cn(
-            'flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 rounded-full font-medium transition-colors duration-200',
+            'flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 font-medium transition-colors duration-200',
             collapsed ? 'justify-center px-0 w-10 sm:w-12 mx-auto' : 'px-2 sm:px-4',
             isActive
-              ? 'active-sidebar-link'
-              : 'hover:bg-muted hover:text-primary',
+              ? 'rounded-xl active-sidebar-link'
+              : 'rounded-xl hover:bg-muted hover:text-primary',
             'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-sm sm:text-base'
           )}
           style={
@@ -229,7 +229,10 @@ const MobileSidebarDrawer = ({
       {/* Drawer */}
       <aside
         className={cn(
-          "fixed top-0 h-full bg-[var(--color-navbar)] border-r border-border flex flex-col transition-transform duration-300 shadow-2xl",
+          "fixed top-0 h-full bg-[var(--color-navbar)] flex flex-col transition-transform duration-300 shadow-2xl",
+          isRtl
+            ? "border-l border-border"
+            : "border-r border-border",
           isRtl
             ? open
               ? "right-0 translate-x-0"
@@ -308,8 +311,7 @@ const UnifiedLayout = ({ children }) => {
   const isRtl = i18n.language === 'ar';
   const [mounted, setMounted] = useState(false);
 
-  const userFromUserSlice = useSelector((state) => state.user?.user);
-  const user = useSelector((state) => state.auth.user) || userFromUserSlice;
+      const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const menuItems = useMemo(() => {
@@ -325,7 +327,7 @@ const UnifiedLayout = ({ children }) => {
 
   const handleLogout = useCallback(async () => {
     try {
-      await dispatch(logout()).unwrap();
+      await dispatch(logoutUser()).unwrap();
       showNotification(t('notification.logoutSuccess', 'Logged out successfully'), 'success');
       router.push('/auth/login');
     } catch (error) {
@@ -349,13 +351,14 @@ const UnifiedLayout = ({ children }) => {
   if (!mounted) return null;
 
   return (
-    <div className={cn("flex min-h-screen bg-background", 'flex-row')}>
+    <div className={cn("flex h-screen bg-background overflow-hidden", 'flex-row')}>
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside
           className={cn(
-            'relative z-30 top-0',
-            'h-screen border-r border-border flex flex-col transition-all duration-300',
+            'fixed z-30 top-0',
+            'h-screen flex flex-col transition-all duration-300',
+            isRtl ? 'right-0 border-l border-border' : 'left-0 border-r border-border',
             sidebarCollapsed ? 'w-12 sm:w-16' : 'w-[60px] sm:w-[270px]'
           )}
           style={{
@@ -367,11 +370,20 @@ const UnifiedLayout = ({ children }) => {
           <div
             className={cn(
               'hidden md:block',
-              'absolute z-40',
-              'top-1/2 -translate-y-1/2',
-              isRtl ? '-left-5' : '-right-5'
+              'fixed z-40',
+              'top-1/2 -translate-y-1/2'
             )}
-            style={isRtl ? { left: '-28px', right: 'auto' } : { right: '-28px', left: 'auto' }}
+            style={
+              isRtl 
+                ? { 
+                    right: sidebarCollapsed ? '3rem' : '16.875rem',
+                    left: 'auto'
+                  }
+                : { 
+                    left: sidebarCollapsed ? '3rem' : '16.875rem',
+                    right: 'auto'
+                  }
+            }
           >
             <SidebarToggle
               collapsed={sidebarCollapsed}
@@ -381,7 +393,7 @@ const UnifiedLayout = ({ children }) => {
             />
           </div>
           <UserProfile user={user} collapsed={sidebarCollapsed} t={t} />
-          <div className="flex-1 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col justify-between h-[calc(100vh-8rem)]">
             <NavigationMenu items={menuItems} pathname={pathname} collapsed={sidebarCollapsed} t={t} />
             <div className="flex flex-col gap-1.5 sm:gap-2 pb-4 sm:pb-6 px-1">
               <Link
@@ -426,10 +438,15 @@ const UnifiedLayout = ({ children }) => {
       )}
 
       <div className={cn(
-        'flex-1 flex flex-col min-h-screen transition-all duration-300'
+        'flex-1 flex flex-col min-h-screen transition-all duration-300',
+        !isMobile && (
+          isRtl 
+            ? (sidebarCollapsed ? 'mr-12 sm:mr-16' : 'mr-[60px] sm:mr-[270px]')
+            : (sidebarCollapsed ? 'ml-12 sm:ml-16' : 'ml-[60px] sm:ml-[270px]')
+        )
       )}>
         <header
-          className="sticky top-0 z-20 w-full h-14 sm:h-20 flex items-center px-2 sm:px-4 md:px-8 backdrop-blur-xl shadow-xl border-b border-border transition-colors"
+          className="sticky top-0 z-20 w-full h-14 sm:h-20 flex items-center px-2 sm:px-4 md:px-8 backdrop-blur-xl shadow-xl border-b border-border transition-colors flex-shrink-0"
           style={{ background: 'var(--color-primary)', color: '#fff' }}
         >
           {/* Mobile menu button */}

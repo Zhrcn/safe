@@ -181,15 +181,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
 const Appointments = ({ patient }) => {
     const [appointments, setAppointments] = useState(patient.appointments || []);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const handleChat = (appointment) => {
-        console.log('Chat with:', appointment.doctor);
-    };
-    const handleCall = (appointment) => {
-        console.log('Call:', appointment.doctor);
-    };
-    const handleVideo = (appointment) => {
-        console.log('Video call:', appointment.doctor);
-    };
+ 
     const handleNewAppointment = (formData) => {
         const newAppointment = {
             id: Date.now(),
@@ -202,6 +194,23 @@ const Appointments = ({ patient }) => {
         };
         setAppointments([...appointments, newAppointment]);
     };
+
+    // Add missing handler functions
+    const handleChat = (appointment) => {
+        console.log('Chat with appointment:', appointment);
+        // TODO: Implement chat functionality
+    };
+
+    const handleCall = (appointment) => {
+        console.log('Call appointment:', appointment);
+        // TODO: Implement call functionality
+    };
+
+    const handleVideo = (appointment) => {
+        console.log('Video call appointment:', appointment);
+        // TODO: Implement video call functionality
+    };
+
     return (
         <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">

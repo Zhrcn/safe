@@ -180,6 +180,33 @@ class ConversationService {
     const socket = getSocket();
     socket.emit('typing', { conversationId, userId });
   }
+
+  // Online Status Methods
+  static getOnlineStatus(userIds) {
+    const socket = getSocket();
+    
+    if (!socket) {
+      return Promise.reject(new Error('Socket not available - please log in again'));
+    }
+    
+    return new Promise((resolve, reject) => {
+      socket.emit('get_online_status', { userIds }, (response) => {
+        if (response && response.error) {
+          reject(new Error(response.error));
+        } else if (response && response.success) {
+          resolve(response.onlineStatus);
+        } else {
+          reject(new Error('Invalid response from server'));
+        }
+      });
+    });
+  }
+
+  static onUserPresence(handler) {
+    const socket = getSocket();
+    socket.on('user_presence', handler);
+    return () => socket.off('user_presence', handler);
+  }
 }
 
 // Export methods for backward compatibility
@@ -199,5 +226,7 @@ export const {
   onTyping,
   joinConversation,
   leaveConversation,
-  sendTyping
+  sendTyping,
+  getOnlineStatus,
+  onUserPresence
 } = ConversationService;

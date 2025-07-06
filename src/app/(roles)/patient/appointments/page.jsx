@@ -5,7 +5,7 @@ import { format, differenceInCalendarDays, parseISO } from 'date-fns';
 import { 
     Calendar, Clock, MapPin, Video, Phone, 
     User, ChevronRight, Plus, Search, Filter,
-    Calendar as CalendarIcon, List, Grid, Info
+    Calendar as CalendarIcon, List, Grid, Info, CalendarDays
 } from 'lucide-react';
 import PageHeader from '@/components/patient/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -19,11 +19,13 @@ import Link from 'next/link';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/Dialog';
 import { DialogTitle, DialogDescription } from '@radix-ui/react-dialog';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
+import RescheduleRequestForm from '@/components/appointments/RescheduleRequestForm';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAppointments, createAppointment, removeAppointment, editAppointment } from '@/store/slices/patient/appointmentsSlice';
+import { requestReschedule } from '@/store/services/patient/appointmentApi';
 
-const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
+const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestReschedule }) => {
     // Map status to color classes and label
     const getStatusProps = (status) => {
         switch (status?.toLowerCase()) {
@@ -47,10 +49,20 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
                     label: 'Pending', 
                     className: 'bg-yellow-100 text-yellow-800 border-yellow-200' 
                 };
+            case 'accepted':
+                return { 
+                    label: 'Accepted', 
+                    className: 'bg-green-100 text-green-800 border-green-200' 
+                };
             case 'rescheduled':
                 return { 
                     label: 'Rescheduled', 
                     className: 'bg-purple-100 text-purple-800 border-purple-200' 
+                };
+            case 'reschedule_requested':
+                return { 
+                    label: 'Reschedule Requested', 
+                    className: 'bg-orange-100 text-orange-800 border-orange-200' 
                 };
             default:
                 return { 
@@ -62,7 +74,26 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
     const now = new Date();
     const appointmentDate = appointment.date ? new Date(appointment.date) : null;
     const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
-    const canReschedule = appointmentDate && hoursDiff >= 72;
+    const canReschedule = appointmentDate && hoursDiff >= 24; // 24 hours minimum notice
+    
+    // Check if appointment is eligible for reschedule request
+    const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && canReschedule;
+    
+    // Temporarily remove time restriction for testing
+    const canRequestRescheduleTest = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status);
+    
+    // Debug logging
+    console.log('Appointment debug:', {
+      id: appointment._id || appointment.id,
+      status: appointment.status,
+      date: appointment.date,
+      appointmentDate,
+      hoursDiff,
+      canReschedule,
+      canRequestReschedule,
+      canRequestRescheduleTest,
+      statusIncluded: ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status)
+    });
     // Doctor name for title only
     let doctorName = '';
     if (appointment.doctor && appointment.doctor.user) {
@@ -134,7 +165,7 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
               </div>
             )}
           </div>
-          <div className="flex  items-end gap-3">
+          <div className="flex items-end gap-3">
             {appointment.status === "pending" && (
               <Button
                 variant="default"
@@ -155,6 +186,17 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel }) => {
                 Cancel
               </Button>
             )}
+            {canRequestRescheduleTest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRequestReschedule(appointment)}
+                className="mt-2 border-primary text-primary hover:bg-orange-50"
+              >
+                <CalendarDays className="h-4 w-4 mr-1" />
+                Request Reschedule
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -168,6 +210,8 @@ const AppointmentsPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState('new');
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [rescheduleLoading, setRescheduleLoading] = useState(false);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -198,6 +242,33 @@ const AppointmentsPage = () => {
     const handleCloseModal = () => {
         setShowModal(false);
         setSelectedAppointment(null);
+    };
+
+    const handleRequestReschedule = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowRescheduleModal(true);
+    };
+
+    const handleCloseRescheduleModal = () => {
+        setShowRescheduleModal(false);
+        setSelectedAppointment(null);
+    };
+
+    const handleSubmitRescheduleRequest = async (rescheduleData) => {
+        if (!selectedAppointment) return;
+        
+        setRescheduleLoading(true);
+        try {
+            await requestReschedule(selectedAppointment._id || selectedAppointment.id, rescheduleData);
+            setShowRescheduleModal(false);
+            setSelectedAppointment(null);
+            dispatch(fetchAppointments()); // Refresh appointments
+        } catch (error) {
+            console.error('Error submitting reschedule request:', error);
+            // You might want to show a notification here
+        } finally {
+            setRescheduleLoading(false);
+        }
     };
 
     const timeSlotToTime = {
@@ -322,6 +393,7 @@ const AppointmentsPage = () => {
                 appointment={appointment}
                 onReschedule={handleReschedule}
                 onCancel={handleCancel}
+                onRequestReschedule={handleRequestReschedule}
               />
             ))
           ) : (
@@ -346,8 +418,18 @@ const AppointmentsPage = () => {
           )}
         </div>
         )}
+
+        {/* Reschedule Request Modal */}
+        {showRescheduleModal && selectedAppointment && (
+          <RescheduleRequestForm
+            appointment={selectedAppointment}
+            onSubmit={handleSubmitRescheduleRequest}
+            onCancel={handleCloseRescheduleModal}
+            isLoading={rescheduleLoading}
+          />
+        )}
       </div>
     );
-};
+  };
 
 export default AppointmentsPage;

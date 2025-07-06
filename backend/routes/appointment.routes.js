@@ -5,7 +5,8 @@ const {
   getAppointments,
   updateAppointmentStatus,
   getAppointmentById,
-  updateAppointmentDetails 
+  updateAppointmentDetails,
+  requestReschedule
 } = require('../controllers/appointment.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 router.post(
@@ -37,5 +38,11 @@ router.patch(
   protect,
   authorize('patient'), 
   updateAppointmentDetails
+);
+router.post(
+  '/:id/reschedule-request',
+  protect,
+  authorize('patient'),
+  requestReschedule
 );
 module.exports = router;

@@ -29,10 +29,8 @@ import {
 import { useNotification, NotificationProvider } from '@/components/ui/Notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { patients } from '@/mockdata/patients';
-import { doctors } from '@/mockdata/doctors';
-import { prescriptions } from '@/mockdata/prescriptions';
-import { medicalFiles } from '@/mockdata/medicalFiles';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchPatientById } from '@/store/slices/doctor/doctorPatientsSlice';
 import PersonalInfo from '@/components/patient/sections/PersonalInfo';
 import MedicalHistory from '@/components/doctor/patient/MedicalHistory';
 import Medications from '@/components/patient/sections/Medications';
@@ -259,76 +257,18 @@ const PatientPageContent = () => {
     const params = useParams();
     const router = useRouter();
     const { showNotification } = useNotification();
-    const [patient, setPatient] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const dispatch = useAppDispatch();
+    const { selectedPatient, loading, error } = useAppSelector((state) => state.doctorPatients);
     const [activeTab, setActiveTab] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
     const [answerInputs, setAnswerInputs] = useState({});
+    
     useEffect(() => {
-        const loadPatient = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const foundPatient = patients.find(p => p.id === params.id);
-                if (!foundPatient) {
-                    throw new Error('Patient not found');
-                }
-                const medicalFile = medicalFiles.find(file => file.patientId === foundPatient.user.id);
-                console.log('Found Patient:', foundPatient); 
-                console.log('Found Medical File:', medicalFile); 
-                const combinedPatientData = {
-                    ...foundPatient,
-                    medicalHistory: medicalFile ? {
-                        allergies: medicalFile.allergies || [],
-                        chronicConditions: medicalFile.chronicConditions || [],
-                        labResults: medicalFile.labResults || [],
-                        imagingReports: medicalFile.imagingReports || [],
-                        vitalSigns: medicalFile.vitalSigns || [],
-                        medicationHistory: medicalFile.medicationHistory || [],
-                        immunizations: medicalFile.immunizations || [],
-                        surgicalHistory: medicalFile.surgicalHistory || [],
-                        diagnoses: medicalFile.diagnoses || [],
-                        socialHistory: medicalFile.socialHistory || {},
-                        familyMedicalHistory: medicalFile.familyMedicalHistory || [],
-                        generalMedicalHistory: medicalFile.generalMedicalHistory || [],
-                        emergencyContact: medicalFile.emergencyContact || {},
-                        insuranceDetails: medicalFile.insuranceDetails || {},
-                        bloodType: medicalFile.bloodType,
-                        status: medicalFile.status,
-                        attachedDocuments: medicalFile.attachedDocuments || []
-                    } : {
-                        allergies: [],
-                        chronicConditions: [],
-                        labResults: [],
-                        imagingReports: [],
-                        vitalSigns: [],
-                        medicationHistory: [],
-                        immunizations: [],
-                        surgicalHistory: [],
-                        diagnoses: [],
-                        socialHistory: {},
-                        familyMedicalHistory: [],
-                        generalMedicalHistory: [],
-                        emergencyContact: {},
-                        insuranceDetails: {},
-                        bloodType: '',
-                        status: '',
-                        attachedDocuments: []
-                    }
-                };
-                console.log('Combined Patient Data:', combinedPatientData); 
-                setPatient(combinedPatientData);
-            } catch (error) {
-                console.error('Error loading patient:', error);
-                setError(error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadPatient();
-    }, [params.id]);
+        if (params.id) {
+            dispatch(fetchPatientById(params.id));
+        }
+    }, [dispatch, params.id]);
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
@@ -342,32 +282,20 @@ const PatientPageContent = () => {
     const handleCreatePrescription = (prescriptionData) => {
         console.log('Creating prescription:', prescriptionData);
         showNotification('Prescription created successfully', 'success');
-        setPatient(prev => ({
-            ...prev,
-            medications: [
-                ...prev.medications,
-                {
-                    id: Date.now().toString(),
-                    ...prescriptionData,
-                    status: 'active',
-                    prescribedBy: 'Dr. John Doe', 
-                    prescribedAt: new Date().toISOString()
-                }
-            ]
-        }));
+        // Note: In a real app, you would dispatch an action to update the patient's prescriptions
     };
     const handleSendMessage = () => {
-        router.push(`/chat/${patient.id}`);
+        router.push(`/chat/${selectedPatient?.id || selectedPatient?._id}`);
     };
     const [patientConsultations, setPatientConsultations] = useState([]);
     const [consultationsLoading, setConsultationsLoading] = useState(false);
 
     useEffect(() => {
         const loadConsultations = async () => {
-            if (patient?.id) {
+            if (selectedPatient?.id || selectedPatient?._id) {
                 setConsultationsLoading(true);
                 try {
-                    const consultations = await getPatientConsultations(patient.id);
+                    const consultations = await getPatientConsultations(selectedPatient.id || selectedPatient._id);
                     setPatientConsultations(consultations);
                 } catch (error) {
                     console.error('Failed to load consultations:', error);
@@ -378,7 +306,7 @@ const PatientPageContent = () => {
             }
         };
         loadConsultations();
-    }, [patient?.id]);
+    }, [selectedPatient?.id, selectedPatient?._id]);
 
     const handleAnswerChange = (consultationId, value) => {
         setAnswerInputs(prev => ({ ...prev, [consultationId]: value }));
@@ -393,7 +321,7 @@ const PatientPageContent = () => {
             showNotification('Answer submitted successfully!', 'success');
             setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
             // Reload consultations to get updated data
-            const consultations = await getPatientConsultations(patient.id);
+            const consultations = await getPatientConsultations(selectedPatient.id || selectedPatient._id);
             setPatientConsultations(consultations);
         } catch (error) {
             console.error('Failed to submit answer:', error);
@@ -417,10 +345,21 @@ const PatientPageContent = () => {
             </div>
         );
     }
-    if (!patient) {
+    if (!selectedPatient) {
         return (
-            <div className="p-4 bg-muted border border-border rounded-md">
-                <p className="text-muted-foreground">Patient not found</p>
+            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <div className="bg-muted border border-border rounded-md p-8 max-w-md text-center">
+                    <h2 className="text-xl font-semibold mb-2">Patient Not Found</h2>
+                    <p className="text-muted-foreground mb-4">
+                        The patient with ID "{params.id}" could not be found. They may have been removed or the ID is incorrect.
+                    </p>
+                    <Button 
+                        onClick={() => router.push('/doctor/patients')}
+                        className="bg-primary text-primary-foreground hover:opacity-90"
+                    >
+                        Back to Patients List
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -432,15 +371,17 @@ const PatientPageContent = () => {
                         <div className="flex items-center space-x-4">
                             <div className="relative">
                                 <img
-                                    src={patient.user?.profilePicture || '/default-avatar.png'}
-                                    alt={patient.user?.name}
+                                    src={selectedPatient.user?.profilePicture || selectedPatient.profileImage || '/default-avatar.png'}
+                                    alt={selectedPatient.user?.name || selectedPatient.firstName}
                                     className="w-16 h-16 rounded-full object-cover border-2 border-border"
                                 />
                                 <span className="absolute bottom-0 right-0 w-4 h-4 bg-success border-2 border-background rounded-full"></span>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-foreground">{patient.user?.name}</h1>
-                                <p className="text-muted-foreground">Patient ID: {patient.id}</p>
+                                <h1 className="text-2xl font-bold text-foreground">
+                                    {selectedPatient.user?.name || `${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}`.trim()}
+                                </h1>
+                                <p className="text-muted-foreground">Patient ID: {selectedPatient.id || selectedPatient._id}</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -488,12 +429,12 @@ const PatientPageContent = () => {
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {activeTab === 0 && <PersonalInfo patient={patient} />}
-                            {activeTab === 1 && <MedicalHistory patient={patient} />}
-                            {activeTab === 2 && <Medications patient={patient} />}
-                            {activeTab === 3 && <Appointments patient={patient} />}
-                            {activeTab === 4 && <Insurance patient={patient} />}
-                            {activeTab === 5 && <EmergencyContact patient={patient} />}
+                            {activeTab === 0 && <PersonalInfo patient={selectedPatient} />}
+                            {activeTab === 1 && <MedicalHistory patient={selectedPatient} />}
+                            {activeTab === 2 && <Medications patient={selectedPatient} />}
+                            {activeTab === 3 && <Appointments patient={selectedPatient} />}
+                            {activeTab === 4 && <Insurance patient={selectedPatient} />}
+                            {activeTab === 5 && <EmergencyContact patient={selectedPatient} />}
                             {activeTab === 6 && (
                                 <div>
                                     <h2 className="text-xl font-bold mb-4">Consultations</h2>
@@ -595,12 +536,12 @@ const PatientPageContent = () => {
                     </AnimatePresence>
                 </div>
             </div>
-            {console.log('Patient medicalHistory being passed to MedicalHistory:', patient?.medicalHistory)}
+            {console.log('Patient medicalHistory being passed to MedicalHistory:', selectedPatient?.medicalHistory)}
             <PrescriptionForm
                 open={isPrescriptionModalOpen}
                 onClose={() => setIsPrescriptionModalOpen(false)}
                 onSubmit={handleCreatePrescription}
-                patient={patient}
+                patient={selectedPatient}
             />
         </div>
     );

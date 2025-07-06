@@ -4,12 +4,19 @@ const { createNotification } = require('../utils/notification.utils');
 class ChatHandler {
   constructor(io) {
     this.io = io;
+    this.onlineUsers = new Map(); // Track online users: userId -> socketId
     this.setupEventHandlers();
   }
 
   setupEventHandlers() {
     this.io.on('connection', (socket) => {
       console.log('A user connected:', socket.id, 'User ID:', socket.userId);
+
+      // Track user as online
+      if (socket.userId) {
+        this.onlineUsers.set(socket.userId, socket.id);
+        this.broadcastUserPresence(socket.userId, true);
+      }
 
       // Join conversation room
       socket.on('join_conversation', ({ conversationId }) => {
@@ -39,6 +46,11 @@ class ChatHandler {
       // Delete message
       socket.on('delete_message', async ({ conversationId, messageId }, callback) => {
         await this.handleDeleteMessage(socket, conversationId, messageId, callback);
+      });
+
+      // Get online status
+      socket.on('get_online_status', ({ userIds }, callback) => {
+        this.handleGetOnlineStatus(socket, userIds, callback);
       });
 
       // Disconnect
@@ -228,7 +240,28 @@ class ChatHandler {
   }
 
   handleDisconnect(socket) {
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected:', socket.id, 'User ID:', socket.userId);
+    
+    // Remove user from online users and broadcast offline status
+    if (socket.userId) {
+      this.onlineUsers.delete(socket.userId);
+      this.broadcastUserPresence(socket.userId, false);
+    }
+  }
+
+  handleGetOnlineStatus(socket, userIds, callback) {
+    const onlineStatus = {};
+    userIds.forEach(userId => {
+      const isOnline = this.onlineUsers.has(userId);
+      onlineStatus[userId] = isOnline;
+    });
+    
+    callback({ success: true, onlineStatus });
+  }
+
+  broadcastUserPresence(userId, isOnline) {
+    // Broadcast to all connected clients
+    this.io.emit('user_presence', { userId, isOnline });
   }
 
   async createMessageNotification(sender, messageContent, receiverId, conversationId) {

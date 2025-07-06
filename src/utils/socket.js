@@ -9,7 +9,10 @@ export const getSocket = () => {
   const token = getToken();
   
   if (!token) {
-    console.error('No authentication token found');
+    // Only log this in development to avoid console spam
+    if (process.env.NODE_ENV === 'development') {
+      console.log('No authentication token found - socket connection will be established after login');
+    }
     return null;
   }
 
@@ -31,6 +34,7 @@ export const getSocket = () => {
     
     socket.on('connect', () => {
       console.log('Socket connected successfully:', socket.id);
+      console.log('Socket auth token:', token ? 'Present' : 'Missing');
     });
     
     socket.on('connect_error', (error) => {

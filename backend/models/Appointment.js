@@ -24,6 +24,10 @@ const appointmentSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid time!`
     }
   },
+  location: {
+    type: String,
+    default: 'TBD'
+  },
   type: {
     type: String,
     enum: ['checkup', 'consultation', 'follow-up', 'emergency'],
@@ -31,8 +35,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled','pending' ,'completed', 'cancelled', 'rescheduled'],
-    default: 'scheduled'
+    enum: ['pending', 'accepted', 'rejected', 'scheduled', 'completed', 'cancelled', 'rescheduled', 'reschedule_requested'],
+    default: 'pending'
   },
   reason: {
     type: String,
@@ -40,6 +44,33 @@ const appointmentSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  doctorNotes: {
+    type: String
+  },
+  patientNotes: {
+    type: String
+  },
+  rescheduleRequest: {
+    requestedDate: {
+      type: Date
+    },
+    requestedTime: {
+      type: String
+    },
+    preferredTimes: [{
+      type: String
+    }],
+    reason: {
+      type: String
+    },
+    notes: {
+      type: String
+    },
+    requestedAt: {
+      type: Date,
+      default: Date.now
+    }
   },
   createdAt: {
     type: Date,
@@ -52,6 +83,17 @@ const appointmentSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Add a method to check if appointment can be modified (24 hours before)
+appointmentSchema.methods.canBeModified = function() {
+  const appointmentDateTime = new Date(this.date);
+  appointmentDateTime.setHours(parseInt(this.time.split(':')[0]), parseInt(this.time.split(':')[1]), 0, 0);
+  const now = new Date();
+  const timeDifference = appointmentDateTime.getTime() - now.getTime();
+  const hoursDifference = timeDifference / (1000 * 60 * 60);
+  return hoursDifference > 24;
+};
+
 appointmentSchema.index({ patient: 1, date: 1 });
 appointmentSchema.index({ doctor: 1, date: 1 });
 module.exports = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);

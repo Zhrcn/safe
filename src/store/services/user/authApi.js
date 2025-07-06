@@ -3,22 +3,31 @@ import { setToken, getToken, removeToken } from '@/utils/tokenUtils';
 import { AUTH_CONSTANTS } from '@/config/constants';
 
 export const login = async (credentials) => {
-  const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.LOGIN, {
-    ...credentials,
-    role: credentials.role?.toLowerCase(),
-  });
-  if (res.data.success && res.data.data) {
-    setToken(res.data.data.token);
+  try {
+    const res = await axiosInstance.post(AUTH_CONSTANTS.API_ENDPOINTS.LOGIN, {
+      ...credentials,
+      role: credentials.role?.toLowerCase(),
+    });
+    
+    if (res.data.success && res.data.data) {
+      setToken(res.data.data.token);
+      return {
+        success: true,
+        user: { ...res.data.data.user, role: res.data.data.user.role?.toLowerCase() },
+        token: res.data.data.token,
+      };
+    }
     return {
-      success: true,
-      user: { ...res.data.data.user, role: res.data.data.user.role?.toLowerCase() },
-      token: res.data.data.token,
+      success: false,
+      message: res.data.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS,
+    };
+  } catch (error) {
+    console.error('Login API error:', error);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || AUTH_CONSTANTS.ERROR_MESSAGES.NETWORK_ERROR,
     };
   }
-  return {
-    success: false,
-    message: res.data.message || AUTH_CONSTANTS.ERROR_MESSAGES.INVALID_CREDENTIALS,
-  };
 };
 
 export const verifyToken = async () => {

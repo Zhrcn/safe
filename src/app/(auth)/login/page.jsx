@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser, selectUserLoading, selectUserError } from '@/store/slices/user/userSlice';
+import { setCredentials, setLoginError, setAuthLoading, clearAuth, clearCache, selectAuthLoading, selectAuthError } from '@/store/slices/auth/authSlice';
+import { login } from '@/store/services/user/authApi';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
@@ -52,6 +53,7 @@ function getMedicalPattern(primary, accent, warning, error, background) {
 }
 
 import { useEffect, useState as useReactState } from 'react';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 function getCssVar(name, fallback) {
     if (typeof window === 'undefined') return fallback;
@@ -63,8 +65,9 @@ const LoginPage = () => {
     const { t, ready } = useTranslation();
     const router = useRouter();
     const dispatch = useDispatch();
-    const isLoading = useSelector(selectUserLoading);
-    const error = useSelector(selectUserError);
+    const isLoading = useSelector(selectAuthLoading);
+    const error = useSelector(selectAuthError);
+    const { isAuthenticated, isRedirecting, authChecked } = useAuthRedirect();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -82,33 +85,64 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const resultAction = await dispatch(loginUser({ email, password }));
-        console.log('Login resultAction:', resultAction);
-        if (loginUser.fulfilled.match(resultAction)) {
-            const { user } = resultAction.payload || {};
-            console.log('Logged in user:', user);
-            if (!user || !user.role) {
-                alert('Login succeeded but user or user role is missing.');
-                return;
-            }
-            if (user.role === 'patient') {
-                console.log('Redirecting to /patient/dashboard');
-                router.push('/patient/dashboard');
-            } else if (user.role === 'doctor') {
-                console.log('Redirecting to /doctor/dashboard');
-                router.push('/doctor/dashboard');
-            } else if (user.role === 'admin') {
-                console.log('Redirecting to /admin/dashboard');
-                router.push('/admin/dashboard');
+        dispatch(setAuthLoading(true));
+        
+        // Clear any existing authentication state and cache before login
+        dispatch(clearAuth());
+        dispatch(clearCache());
+        
+        try {
+            const result = await login({ email, password });
+            console.log('Login result:', result);
+            
+            if (result.success && result.user && result.token) {
+                console.log('Logged in user:', result.user);
+                
+                // Dispatch to auth slice
+                dispatch(setCredentials({
+                    user: result.user,
+                    token: result.token
+                }));
+                
+                if (!result.user.role) {
+                    alert('Login succeeded but user role is missing.');
+                    return;
+                }
+                
+                if (result.user.role === 'patient') {
+                    console.log('Redirecting to /patient/dashboard');
+                    router.push('/patient/dashboard');
+                } else if (result.user.role === 'doctor') {
+                    console.log('Redirecting to /doctor/dashboard');
+                    router.push('/doctor/dashboard');
+                } else if (result.user.role === 'admin') {
+                    console.log('Redirecting to /admin/dashboard');
+                    router.push('/admin/dashboard');
+                } else if (result.user.role === 'pharmacist') {
+                    console.log('Redirecting to /pharmacist/dashboard');
+                    router.push('/pharmacist/dashboard');
+                } else {
+                    alert('Unknown user role: ' + result.user.role);
+                }
             } else {
-                alert('Unknown user role: ' + user.role);
+                console.error('Login failed:', result.message);
+                dispatch(setLoginError(result.message));
             }
-        } else {
-            // error is handled by Redux state
+        } catch (error) {
+            console.error('Login error:', error);
+            dispatch(setLoginError(error.message || 'An error occurred during login'));
+        } finally {
+            dispatch(setAuthLoading(false));
         }
     };
 
-    if (!ready) return null;
+    if (!ready || isAuthenticated || isRedirecting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div

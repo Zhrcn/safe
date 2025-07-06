@@ -25,7 +25,6 @@ const Calendar = dynamic(() => import('react-calendar'), { ssr: false });
 import 'react-calendar/dist/Calendar.css';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
-import { patients } from '@/mockdata/patients';
 import { appointments } from '@/mockdata/appointments';
 import { doctors } from '@/mockdata/doctors';
 import { useTheme } from '@/components/ThemeProviderWrapper';
@@ -36,6 +35,8 @@ import {
   CardContent,
 } from '@/components/ui/Card';
 import { useTranslation } from 'react-i18next';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchPatients } from '@/store/slices/doctor/doctorPatientsSlice';
 
 ChartJS.register(
   CategoryScale,
@@ -132,12 +133,23 @@ function getChartColors(mode) {
 export default function DoctorDashboard() {
   const { t } = useTranslation();
   const { mode } = useTheme();
+  const dispatch = useAppDispatch();
+  
+  // Redux state
+  const { patients, loading: patientsLoading, error: patientsError } = useAppSelector(
+    (state) => state.doctorPatients
+  );
 
   const [chartColors, setChartColors] = useState(getChartColors(mode));
 
   useEffect(() => {
     setChartColors(getChartColors(mode));
   }, [mode]);
+
+  // Fetch patients on component mount
+  useEffect(() => {
+    dispatch(fetchPatients());
+  }, [dispatch]);
 
   const [chartData, setChartData] = useState({
     appointments: { labels: [], datasets: [] },
@@ -263,28 +275,26 @@ export default function DoctorDashboard() {
     setChartKey(Date.now());
   }, [mode, t, chartColors]);
 
+  // Get recent patients from Redux store
   const recentPatients = patients.slice(0, 3).map((patient) => ({
-    _id: patient.id,
-    firstName: patient.user.firstName,
-    lastName: patient.user.lastName,
-    lastVisit: patient.updatedAt,
+    _id: patient._id,
+    firstName: patient.user?.firstName || patient.firstName,
+    lastName: patient.user?.lastName || patient.lastName,
+    lastVisit: patient.updatedAt || patient.lastVisit,
   }));
 
   const doctorName = doctors[0].user.firstName;
-
-  const overallLoading = false;
-  const overallError = false;
 
   const appointmentsForSelectedDate = appointments.filter((app) => {
     const d = new Date(app.date);
     return d.toDateString() === selectedDate.toDateString();
   });
 
-  if (overallLoading) {
+  if (patientsLoading) {
     return <LoadingSpinner />;
   }
 
-  if (overallError) {
+  if (patientsError) {
     return <ErrorMessage message={t('doctor.dashboard.loadError', 'Failed to load dashboard data.')} />;
   }
 

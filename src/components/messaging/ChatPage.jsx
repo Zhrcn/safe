@@ -6,6 +6,8 @@ import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { useTranslation } from 'react-i18next';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTheme } from '@/context/ThemeContext';
 
 function formatDate(date, t) {
   const today = new Date();
@@ -30,13 +32,14 @@ function formatDate(date, t) {
 
 export default function ChatPage({ conversation, onSend, newMessage, onInputChange, isMobile, onBack, isTyping, onDelete, onDeleteMessage, currentUser, loading, error }) {
   const { t } = useTranslation('common');
+  const { theme } = useTheme();
   const messagesEndRef = useRef(null);
   
+  // Get online status for the conversation
+  const { isOtherParticipantOnline } = useOnlineStatus(conversation, currentUser?._id);
+  
   // Debug logging
-  console.log('[ChatPage] conversation:', conversation);
-  console.log('[ChatPage] messages:', conversation?.messages);
-  console.log('[ChatPage] loading:', loading);
-  console.log('[ChatPage] error:', error);
+      // ChatPage debug info
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -144,12 +147,20 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
           <AvatarFallback className="bg-primary/10 text-primary font-bold">
             {conversation?.title?.[0] || "U"}
           </AvatarFallback>
-          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+          <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
+            isOtherParticipantOnline ? 'bg-green-500' : 'bg-gray-400'
+          }`} />
         </Avatar>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg text-foreground truncate">{conversation?.title || "Unknown"}</h3>
           <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-            <Circle className="w-2 h-2 text-green-500" /> {t('patient.medications.messages.online', 'Online')}
+            <Circle className={`w-2 h-2 ${
+              isOtherParticipantOnline ? 'text-green-500' : 'text-gray-400'
+            }`} /> 
+            {isOtherParticipantOnline 
+              ? t('patient.medications.messages.online', 'Online') 
+              : t('patient.medications.messages.offline', 'Offline')
+            }
           </p>
         </div>
         <Button 
@@ -157,14 +168,8 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
           variant="ghost" 
           className="text-destructive hover:bg-destructive/10" 
           onClick={() => {
-            alert('Delete button clicked!'); // Test if button is clickable
-            console.log('[ChatPage] Delete button clicked');
-            console.log('[ChatPage] onDelete function:', onDelete);
-            console.log('[ChatPage] conversation._id:', conversation._id);
             if (onDelete) {
               onDelete(conversation._id);
-            } else {
-              console.error('[ChatPage] onDelete function is not provided');
             }
           }} 
           title="Delete Chat"
