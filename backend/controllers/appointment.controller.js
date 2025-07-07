@@ -4,6 +4,8 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User'); 
 const Doctor = require('../models/Doctor'); 
 const { createNotification } = require('../utils/notification.utils'); 
+const { io } = require('../server');
+
 exports.createAppointment = asyncHandler(async (req, res, next) => {
   const patientId = req.user.id; 
   const {
@@ -86,6 +88,15 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
       appointment._id.toString(),
       'Appointment'
     );
+    // Emit socket event to the other party for real-time notification
+    io.to(doctorRecord.user._id.toString()).emit('appointment:update', {
+      id: appointment._id.toString(),
+      title: 'New Appointment Request',
+      message: `${patientName} has requested an appointment with you on ${date} at ${time}. Reason: ${reason}.`,
+      appointmentId: appointment._id.toString(),
+      type: 'appointment',
+      time: new Date().toISOString(),
+    });
   }
   res.status(201).json(new ApiResponse(201, appointment, 'Appointment requested successfully. Awaiting confirmation.'));
 });
@@ -225,6 +236,15 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
       appointment._id.toString(),
       'Appointment'
     );
+    // Emit socket event to the other party for real-time notification
+    io.to(notificationUserId).emit('appointment:update', {
+      id: appointment._id.toString(),
+      title: notificationTitle,
+      message: notificationMessage,
+      appointmentId: appointment._id.toString(),
+      type: 'appointment',
+      time: new Date().toISOString(),
+    });
   }
   res.status(200).json(new ApiResponse(200, appointment, `Appointment status updated to '${status}'.`));
 });
@@ -347,6 +367,15 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
         updatedAppointment._id.toString(),
         'Appointment'
       );
+      // Emit socket event to the other party for real-time notification
+      io.to(appointment.doctor._id.toString()).emit('appointment:update', {
+        id: updatedAppointment._id.toString(),
+        title: 'Appointment Details Updated by Patient',
+        message: `${patientName} has updated their appointment. Details: ${changeSummary.join(', ')}. Please review.`,
+        appointmentId: updatedAppointment._id.toString(),
+        type: 'appointment',
+        time: new Date().toISOString(),
+      });
     }
   }
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment details updated successfully.'));
@@ -483,6 +512,15 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
     appointment._id.toString(),
     'Appointment'
   );
+  // Emit socket event to the other party for real-time notification
+  io.to(doctorUserId.toString()).emit('appointment:update', {
+    id: appointment._id.toString(),
+    title: 'Reschedule Request',
+    message: notificationMessage,
+    appointmentId: appointment._id.toString(),
+    type: 'appointment',
+    time: new Date().toISOString(),
+  });
 
   res.status(200).json(new ApiResponse(200, appointment, 'Reschedule request submitted successfully. Awaiting doctor approval.'));
 });

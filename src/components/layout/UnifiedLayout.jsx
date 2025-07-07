@@ -22,6 +22,9 @@ import {
   Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight, Menu as MenuIcon, X as CloseIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getSocket } from '@/utils/socket';
+import NotificationDialog from '@/components/patient/NotificationDialog';
+import axios from 'axios';
 
 const NAVIGATION_CONFIG = {
   doctor: [
@@ -331,6 +334,79 @@ const UnifiedLayout = ({ children }) => {
     }
   }, [dispatch, router, showNotification, t]);
 
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    axios.get('/api/notifications?limit=20')
+      .then(res => {
+        const notifs = res.data.notifications || [];
+        setNotifications(notifs.map(n => ({
+          id: n._id || n.id,
+          title: n.title,
+          message: n.message,
+          time: new Date(n.createdAt).toLocaleTimeString(),
+          read: n.isRead,
+        })));
+        setUnreadCount(notifs.filter(n => !n.isRead).length);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const socket = getSocket();
+    if (!socket) return;
+    socket.emit('join', { userId: user.id, role: user.role });
+    socket.on('appointment:update', (data) => {
+      setNotifications(prev => [
+        {
+          id: data.id || Date.now(),
+          title: 'Appointment Update',
+          message: data.message,
+          time: new Date().toLocaleTimeString(),
+          read: false,
+        },
+        ...prev,
+      ]);
+      setUnreadCount(count => count + 1);
+    });
+    socket.on('message:new', (data) => {
+      setNotifications(prev => [
+        {
+          id: data.id || Date.now(),
+          title: 'New Message',
+          message: `${data.senderName}: ${data.text}`,
+          time: new Date().toLocaleTimeString(),
+          read: false,
+        },
+        ...prev,
+      ]);
+      setUnreadCount(count => count + 1);
+    });
+    return () => {
+      socket.off('appointment:update');
+      socket.off('message:new');
+    };
+  }, [user]);
+
+  const handleNotifOpen = () => {
+    setNotifOpen(true);
+    setUnreadCount(0);
+    axios.patch('/api/notifications/read-all');
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+  const handleNotifClose = () => setNotifOpen(false);
+  const handleMarkAsRead = (id) => {
+    axios.patch(`/api/notifications/${id}/read`);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+  const handleClearAll = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
@@ -466,9 +542,13 @@ const UnifiedLayout = ({ children }) => {
             <ThemeButton />
             <LanguageSwitcher />
             <div className="relative">
-              <Button variant="ghost" size="icon" title={t('notifications', 'Notifications')}>
+              <Button variant="ghost" size="icon" title={t('notifications', 'Notifications')} onClick={handleNotifOpen} className="relative">
                 <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-bold shadow-md">3</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-bold shadow-md">
+                    {unreadCount}
+                  </span>
+                )}
               </Button>
             </div>
             <DropdownMenu>
@@ -512,6 +592,13 @@ const UnifiedLayout = ({ children }) => {
           {children}
         </main>
       </div>
+      <NotificationDialog
+        open={notifOpen}
+        onClose={handleNotifClose}
+        notifications={notifications}
+        onMarkAsRead={handleMarkAsRead}
+        onClearAll={handleClearAll}
+      />
     </div>
   );
 };
