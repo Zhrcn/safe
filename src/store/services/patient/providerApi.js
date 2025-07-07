@@ -1,7 +1,7 @@
 import axiosInstance from '../axiosInstance';
 
 export const getDoctors = async () => {
-  const res = await axiosInstance.get('/doctors');
+  const res = await axiosInstance.get('/patients/doctors');
   return res.data.data;
 };
 
@@ -26,7 +26,7 @@ export const getProviderReviews = async (id, type) => {
 };
 
 export const getProviders = async () => {
-  const res = await axiosInstance.get('/providers');
+  const res = await axiosInstance.get('/patients/providers');
   return res.data.data;
 };
 

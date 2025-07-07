@@ -1078,10 +1078,10 @@ const ProfilePage = () => {
                     <div className={`${glassCard} ${fadeIn} p-4 mb-8 w-full`}>
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className={`grid w-full grid-cols-4 gap-2 bg-blue-50 rounded-xl p-1 ${stickyTabs}`}> 
-                                <TabsTrigger value="personal">{t('patient.profile.tabs.personal', 'Personal Info')}</TabsTrigger>
-                                <TabsTrigger value="emergency">{t('patient.profile.tabs.emergency', 'Emergency Contact')}</TabsTrigger>
-                                <TabsTrigger value="insurance">{t('patient.profile.tabs.insurance', 'Insurance')}</TabsTrigger>
-                                <TabsTrigger value="medical">{t('patient.profile.tabs.medical', 'Medical File')}</TabsTrigger>
+                                <TabsTrigger value="personal"><span>{t('patient.profile.tabs.personal', 'Personal Info')}</span></TabsTrigger>
+                                <TabsTrigger value="emergency"><span>{t('patient.profile.tabs.emergency', 'Emergency Contact')}</span></TabsTrigger>
+                                <TabsTrigger value="insurance"><span>{t('patient.profile.tabs.insurance', 'Insurance')}</span></TabsTrigger>
+                                <TabsTrigger value="medical"><span>{t('patient.profile.tabs.medical', 'Medical File')}</span></TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>

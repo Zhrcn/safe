@@ -12,7 +12,6 @@ export default function AuthProvider({ children }) {
         }
     }, [dispatch, authChecked]);
 
-    // Don't render children until auth state has been checked
     if (!authChecked) {
         return (
             <div className="flex justify-center items-center min-h-screen">

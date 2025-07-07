@@ -30,7 +30,6 @@ export default function PatientCard({ patient }) {
     const [activeDialog, setActiveDialog] = useState(null);
     const menuRef = useRef(null);
 
-    // Helper functions to safely access patient data
     const getPatientId = () => patient._id || patient.id;
     const getPatientName = () => {
         const firstName = patient.user?.firstName || patient.firstName || '';

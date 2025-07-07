@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as patientsApi from '../../services/doctor/patientsApi';
 
-// Async thunks
 export const fetchPatients = createAsyncThunk(
   'doctorPatients/fetchPatients',
   async (_, { rejectWithValue }) => {
@@ -72,7 +71,6 @@ const doctorPatientsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // fetchPatients
             .addCase(fetchPatients.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -89,7 +87,6 @@ const doctorPatientsSlice = createSlice({
                 state.error = action.payload;
                 console.log('Fetching patients - failed:', action.payload);
             })
-            // fetchPatientById
             .addCase(fetchPatientById.pending, (state) => {
                 state.loading = true;
                 state.error = null;

@@ -1,7 +1,6 @@
 import axiosInstance from '../axiosInstance';
 import { getSocket } from '@/utils/socket';
 
-// REST for CRUD
 export const getConversations = async () => {
   const res = await axiosInstance.get('/conversations');
   return res.data.data;
@@ -32,7 +31,6 @@ export const deleteConversation = async (id) => {
   return res.data.data;
 };
 
-// --- Socket.IO for sending messages ---
 export const sendMessage = ({ conversationId, message }) => {
   const socket = getSocket();
   return new Promise((resolve, reject) => {

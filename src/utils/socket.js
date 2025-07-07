@@ -9,7 +9,6 @@ export const getSocket = () => {
   const token = getToken();
   
   if (!token) {
-    // Only log this in development to avoid console spam
     if (process.env.NODE_ENV === 'development') {
       console.log('No authentication token found - socket connection will be established after login');
     }
@@ -24,7 +23,7 @@ export const getSocket = () => {
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: Infinity, // Keep trying to reconnect indefinitely
+      reconnectionAttempts: Infinity, 
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,
@@ -42,7 +41,6 @@ export const getSocket = () => {
       if (error.message.includes('Authentication error')) {
         console.error('Authentication failed - please log in again');
       }
-      // Try to reconnect after a delay
       setTimeout(() => {
         if (socket && !socket.connected) {
           console.log('Attempting to reconnect after error...');
@@ -53,7 +51,6 @@ export const getSocket = () => {
     
     socket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', reason);
-      // Auto-reconnect on any disconnect
       if (reason === 'io server disconnect' || reason === 'transport close') {
         setTimeout(() => {
           if (socket && !socket.connected) {
@@ -78,7 +75,6 @@ export const getSocket = () => {
 
     socket.on('reconnect_failed', () => {
       console.error('Socket reconnection failed - will keep trying');
-      // Even after reconnection fails, keep trying
       setTimeout(() => {
         if (socket && !socket.connected) {
           console.log('Retrying connection after failure...');
@@ -87,12 +83,10 @@ export const getSocket = () => {
       }, 5000);
     });
 
-    // Ensure connection is established
     if (!socket.connected) {
       socket.connect();
     }
   } else if (!socket.connected) {
-    // Reconnect if disconnected
     console.log('Socket exists but not connected, reconnecting...');
     socket.connect();
   }

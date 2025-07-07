@@ -32,7 +32,7 @@ const buttonVariants = cva(
 );
 
 const Button = React.forwardRef(
-  ({ className, variant, size, asChild = false, logo = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, logo = false, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
@@ -43,7 +43,9 @@ const Button = React.forwardRef(
         ref={ref}
         {...props}
       >
-        {!asChild && logo && (
+        {asChild ? children : (
+          <>
+            {logo && (
           <Image
             src="/logo(1).png"
             alt="Logo"
@@ -53,7 +55,9 @@ const Button = React.forwardRef(
             style={{ filter: 'grayscale(1) brightness(0) invert(0)' }}
           />
         )}
-        {!asChild && props.children}
+        {children}
+          </>
+        )}
       </Comp>
     );
   }

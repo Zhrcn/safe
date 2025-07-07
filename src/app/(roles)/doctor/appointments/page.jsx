@@ -31,6 +31,8 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
                 return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'rescheduled':
                 return 'bg-purple-100 text-purple-800 border-purple-200';
+            case 'reschedule_requested':
+                return 'bg-orange-100 text-orange-800 border-orange-200';
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-200';
         }
@@ -63,7 +65,6 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
         }
     };
 
-    // Handle different data structures from API
     const appointmentDate = appointment.date || appointment.appointmentDate;
     const appointmentTime = appointment.time || appointment.appointmentTime;
     const { date, time } = formatDateTime(appointmentDate, appointmentTime);
@@ -82,7 +83,7 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h3 className="text-lg font-semibold mb-2">
-                            {appointment.type || appointment.consultationType || t('doctor.appointments.consultation', 'Consultation')}
+                            {patientName}
                         </h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="w-4 h-4" />
@@ -121,6 +122,32 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
                                 </Button>
                             </>
                         )}
+                        {appointment.status === 'reschedule_requested' && (
+                            <>
+                                <Button
+                                    size="sm"
+                                    variant="default"
+                                    className="bg-green-600 text-white"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAction(appointment, 'approve_reschedule');
+                                    }}
+                                >
+                                    {t('doctor.appointments.approveReschedule', 'Approve')}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="bg-red-600 text-white"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAction(appointment, 'reject_reschedule');
+                                    }}
+                                >
+                                    {t('doctor.appointments.rejectReschedule', 'Reject')}
+                                </Button>
+                            </>
+                        )}
                         {['accepted', 'confirmed', 'scheduled'].includes(appointment.status) && (
                             <Button
                                 size="sm"
@@ -135,13 +162,14 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
                             </Button>
                         )}
                         <Button
-                            variant="ghost"
+                            variant="outline"
+                            
                             size="sm"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onSelect(appointment);
                             }}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 border-primary text-primary"
                         >
                             <Settings className="h-4 w-4" />
                         </Button>
@@ -162,6 +190,21 @@ const AppointmentCard = ({ appointment, onSelect, onAction }) => {
                         <strong>Notes:</strong> {appointment.notes}
                     </div>
                 )}
+                {appointment.status === 'reschedule_requested' && appointment.rescheduleRequest && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                        <div className="text-sm font-medium text-orange-800 mb-2">
+                            {t('doctor.appointments.rescheduleRequest', 'Reschedule Request')}
+                        </div>
+                        <div className="text-sm text-orange-700">
+                            <strong>{t('doctor.appointments.preferredTimes', 'Preferred Times:')}</strong> {appointment.rescheduleRequest?.preferredTimes || 'Not specified'}
+                        </div>
+                        {appointment.rescheduleRequest?.reason && (
+                            <div className="text-sm text-orange-700 mt-1">
+                                <strong>{t('doctor.appointments.reason', 'Reason:')}</strong> {appointment.rescheduleRequest.reason}
+                            </div>
+                        )}
+                    </div>
+                )}
                 {appointment.location && appointment.location !== 'TBD' && (
                     <div className="text-sm text-muted-foreground mb-2">
                         <strong>Location:</strong> {appointment.location}
@@ -180,12 +223,10 @@ const AppointmentsPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
     
-    // Redux state
     const { appointments, loading, error } = useAppSelector(
         (state) => state.doctorAppointments
     );
     
-    // Get doctor info from auth state
     const { user } = useAppSelector((state) => state.auth);
     const doctorName = user ? `${user.firstName} ${user.lastName}` : 'Doctor';
     
@@ -196,7 +237,6 @@ const AppointmentsPage = () => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [dialogMode, setDialogMode] = useState(null);
 
-    // Fetch appointments on component mount
     useEffect(() => {
         dispatch(fetchDoctorAppointments());
     }, [dispatch]);
@@ -279,6 +319,7 @@ const AppointmentsPage = () => {
                                     <SelectItem value="completed">{t('doctor.appointments.completed', 'Completed')}</SelectItem>
                                     <SelectItem value="cancelled">{t('doctor.appointments.cancelled', 'Cancelled')}</SelectItem>
                                     <SelectItem value="rescheduled">{t('doctor.appointments.rescheduled', 'Rescheduled')}</SelectItem>
+                                    <SelectItem value="reschedule_requested">{t('doctor.appointments.rescheduleRequested', 'Reschedule Requested')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

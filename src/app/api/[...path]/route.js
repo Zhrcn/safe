@@ -58,7 +58,6 @@ async function handleRequest(request, params, method) {
   } catch (error) {
     console.error('API proxy error:', error);
     
-    // If backend is not available, return a helpful error message
     if (error.code === 'ECONNREFUSED' || error.message.includes('fetch')) {
       return NextResponse.json(
         { 

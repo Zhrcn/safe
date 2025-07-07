@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { AUTH_CONSTANTS, ROLES } from '@/config/constants';
 import { logout as logoutApi } from '@/store/services/user/authApi';
 import { authApi } from '@/store/api/authApi';
+
 const getStoredToken = () => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY);
@@ -15,13 +16,10 @@ export const logoutUser = createAsyncThunk(
         try {
             await logoutApi();
             removeToken();
-            // Clear RTK Query cache
             dispatch(authApi.util.resetApiState());
             return null;
         } catch (error) {
-            // Even if the API call fails, we should still clear local state
             removeToken();
-            // Clear RTK Query cache even on error
             dispatch(authApi.util.resetApiState());
             return rejectWithValue(error.message || 'Logout failed');
         }
@@ -62,14 +60,12 @@ const authSlice = createSlice({
     reducers: {
         setCredentials: (state, { payload }) => {
             if (payload?.user && payload?.token) {
-                // Clear any existing state first
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;
                 state.role = null;
                 state.permissions = [];
                 
-                // Set new credentials
                 state.user = payload.user;
                 state.token = payload.token;
                 state.isAuthenticated = true;
@@ -80,25 +76,21 @@ const authSlice = createSlice({
                 state.error = null;
                 
                 if (typeof window !== 'undefined') {
-                    // Clear old data first
                     localStorage.removeItem(AUTH_CONSTANTS.TOKEN_KEY);
                     localStorage.removeItem('user');
                     localStorage.removeItem('role');
                     
-                    // Set new data
                     localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, payload.token);
                     localStorage.setItem('user', JSON.stringify(payload.user));
                     localStorage.setItem('role', state.role);
                 }
             } else if (payload?.user) {
-                // Clear any existing state first
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;
                 state.role = null;
                 state.permissions = [];
                 
-                // Set new user data
                 state.user = payload.user;
                 state.isAuthenticated = true;
                 state.role = payload.user.role?.toLowerCase() || ROLES.PATIENT;
@@ -197,7 +189,6 @@ const authSlice = createSlice({
             }
         },
         clearCache: () => {
-            // This action will be handled by middleware to clear RTK Query cache
         },
         restoreAuth: (state) => {
             const storedUser = getStoredUser();
@@ -237,7 +228,6 @@ const authSlice = createSlice({
                 }
             })
             .addCase(logoutUser.rejected, (state, action) => {
-                // Even if logout fails, clear the state
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;
@@ -268,4 +258,4 @@ export const selectAuthChecked = (state) => state.auth.authChecked;
 export const selectLastActivity = (state) => state.auth.lastActivity;
 export const selectUserRole = (state) => state.auth.role;
 export const selectUserPermissions = (state) => state.auth.permissions;
-export const selectSessionTimeout = (state) => state.auth.sessionTimeout; 
+export const selectSessionTimeout = (state) => state.auth.sessionTimeout;

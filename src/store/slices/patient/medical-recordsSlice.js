@@ -64,7 +64,7 @@ const medicalRecordsSlice = createSlice({
       })
       .addCase(fetchMedicalRecords.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicalRecords = action.payload;
+        state.medicalRecords = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMedicalRecords.rejected, (state, action) => {
         state.loading = false;

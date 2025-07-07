@@ -47,7 +47,6 @@ const MedicationsPage = () => {
     const { medications, loading: isLoading, error } = useSelector(state => state.medications);
     const medsArray = Array.isArray(medications) ? medications : [];
 
-    // CSS Variables
     const primary = 'var(--color-primary)';
     const border = 'var(--color-border)';
     const cardBg = 'var(--color-card)';
@@ -55,7 +54,6 @@ const MedicationsPage = () => {
     const muted = 'var(--color-muted-foreground)';
     const errorColor = 'var(--color-error)';
 
-    // Event handlers
     const handleAddMedication = () => {
         setSelectedMedication(null);
         setMedicationDialogOpen(true);
@@ -125,7 +123,6 @@ const MedicationsPage = () => {
         router.push('/patient/prescriptions');
     };
 
-    // Helper functions
     const safeToLower = (val) => (typeof val === 'string' ? val.toLowerCase() : '');
 
     const filteredMedications = medsArray.filter(med => {
@@ -146,7 +143,6 @@ const MedicationsPage = () => {
         return matchesSearch && matchesStatus && matchesTab;
     });
 
-    // Dialog state
     const [dialog, setDialog] = useState({ open: false, mode: 'add', medication: null });
     const openAddDialog = () => setDialog({ open: true, mode: 'add', medication: null });
     const openEditDialog = (medication) => setDialog({ open: true, mode: 'edit', medication });
@@ -167,7 +163,6 @@ const MedicationsPage = () => {
         closeDialog();
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <div className="flex flex-col space-y-6">
@@ -187,7 +182,6 @@ const MedicationsPage = () => {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="flex flex-col space-y-6">
@@ -335,7 +329,7 @@ const MedicationsPage = () => {
                             background: activeTab === 'active' ? primary : 'transparent'
                         }}
                     >
-                        {t('patient.medications.status.active', 'Active')}
+                        <span>{t('patient.medications.status.active', 'Active')}</span>
                     </TabsTrigger>
                     <TabsTrigger 
                         value="completed" 
@@ -344,7 +338,7 @@ const MedicationsPage = () => {
                             background: activeTab === 'completed' ? primary : 'transparent'
                         }}
                     >
-                        {t('patient.medications.status.completed', 'Completed')}
+                        <span>{t('patient.medications.status.completed', 'Completed')}</span>
                     </TabsTrigger>
                     <TabsTrigger 
                         value="expired" 
@@ -353,7 +347,7 @@ const MedicationsPage = () => {
                             background: activeTab === 'expired' ? primary : 'transparent'
                         }}
                     >
-                        {t('patient.medications.status.expired', 'Expired')}
+                        <span>{t('patient.medications.status.expired', 'Expired')}</span>
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">

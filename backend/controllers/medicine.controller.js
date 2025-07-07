@@ -1,6 +1,5 @@
 const Medicine = require('../models/Medicine');
 
-// Get all medicines
 exports.getAllMedicines = async (req, res) => {
   try {
     const medicines = await Medicine.find();
@@ -10,7 +9,6 @@ exports.getAllMedicines = async (req, res) => {
   }
 };
 
-// Add a new medicine
 exports.createMedicine = async (req, res) => {
   try {
     const medicine = new Medicine(req.body);

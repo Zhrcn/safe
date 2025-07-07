@@ -2,18 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/patient/PageHeader';
 import {
-    Clock,
     Plus,
-    Check,
-    X,
-    Trash2,
-    Edit,
     Calendar,
     MapPin,
     User,
     Search,
     AlertCircle,
-    Video,
     MessageSquare,
     Send,
     Pill,
@@ -26,21 +20,12 @@ import {
     Star,
     ChevronRight,
     Heart,
-    Phone,
-    Mail,
-    Globe,
     Award,
-    Clock4,
     Shield,
-    Zap,
-    TrendingUp,
-    Eye,
-    BookOpen,
-    Users,
     Building2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -48,18 +33,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { Separator } from '@/components/ui/Separator';
-import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { NotificationProvider, useNotification } from '@/components/ui/Notification';
-import { 
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/Select';
+
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchProviders } from '@/store/slices/patient/providersSlice';
+import { fetchProviders as fetchDoctors } from '@/store/slices/patient/providersSlice';
+import { fetchPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
+import { selectPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
+
+// Example: How to get pharmacist data for the pharmacies tab using Redux selector
+//
+// import { useSelector } from 'react-redux';
+// import { selectPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
+//
+// const pharmacies = useSelector(selectPharmacies);
+//
+// Now `pharmacies` contains the list of pharmacist/pharmacy data for the pharmacies tab.
+//
+// You can use this in any React component to access the pharmacy data.
 
 const ProviderCardSkeleton = () => (
     <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-0 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 animate-pulse">
@@ -116,6 +110,7 @@ const pepImages = [
 
 const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
     const isDoctor = type === 'doctor';
+    const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -344,7 +339,7 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                                     variant="outline"
                                     size="icon"
                                     className="flex-shrink-0 border border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 w-8"
-                                    onClick={() => onOpenDialog(provider, 'message')}
+                                    onClick={() => router.push(`/patient/messaging?user=${provider.user?._id || ''}`)}
                                 >
                                     <MessageSquare className="h-3 w-3" />
                                 </Button>
@@ -362,7 +357,7 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                                     variant="outline"
                                     size="icon"
                                     className="flex-shrink-0 border border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 w-8"
-                                    onClick={() => onOpenDialog(provider, 'message')}
+                                    onClick={() => router.push(`/patient/messaging?user=${provider.user?._id || ''}`)}
                                 >
                                     <MessageSquare className="h-3 w-3" />
                                 </Button>
@@ -396,98 +391,34 @@ const ProvidersPageContent = () => {
     const [messageContent, setMessageContent] = useState('');
 
     const dispatch = useDispatch();
+    const { providers: doctors, loading: loadingDoctors, error: errorDoctors } = useSelector(state => state.providers);
+    const pharmacies = useSelector(selectPharmacies);
+    const { loading: loadingPharmacies, error: errorPharmacies } = useSelector(state => state.patientPharmacist || { pharmacies: [], loading: false, error: null });
+
     useEffect(() => {
-        dispatch(fetchProviders());
-    }, [dispatch]);
-    const { providers, loading, error } = useSelector(state => state.providers);
+        if (activeTab === 'doctors') {
+            dispatch(fetchDoctors());
+        } else if (activeTab === 'pharmacies') {
+            dispatch(fetchPharmacies());
+        }
+    }, [dispatch, activeTab]);
 
-    const allDoctors = [
-        {
-            id: 'doc1',
-            name: 'Dr. Sarah Johnson',
-            specialization: 'Cardiologist',
-            hospital: 'City General Hospital',
-            rating: 4.9,
-            yearsExperience: 15,
-            education: [{ degree: 'MD', institution: 'Harvard Medical School' }],
-            languages: ['English', 'Spanish'],
-            profileImage: 'https://randomuser.me/api/portraits/women/1.jpg'
-        },
-        {
-            id: 'doc2',
-            name: 'Dr. Michael Chen',
-            specialization: 'Pediatrician',
-            hospital: "Children's Health Center",
-            rating: 4.7,
-            yearsExperience: 10,
-            education: [{ degree: 'MD', institution: 'Stanford University' }],
-            languages: ['English', 'Mandarin'],
-            profileImage: 'https://randomuser.me/api/portraits/men/2.jpg'
-        },
-        {
-            id: 'doc3',
-            name: 'Dr. Emily White',
-            specialization: 'Dermatologist',
-            hospital: 'Dermacare Clinic',
-            rating: 4.5,
-            yearsExperience: 8,
-            education: [{ degree: 'MD', institution: 'Yale School of Medicine' }],
-            languages: ['English'],
-            profileImage: 'https://randomuser.me/api/portraits/women/3.jpg'
-        },
-        {
-            id: 'doc4',
-            name: 'Dr. David Lee',
-            specialization: 'Orthopedic Surgeon',
-            hospital: 'Sports Injury Clinic',
-            rating: 4.8,
-            yearsExperience: 12,
-            education: [{ degree: 'MD', institution: 'Johns Hopkins University' }],
-            languages: ['English', 'Korean'],
-            profileImage: 'https://randomuser.me/api/portraits/men/4.jpg'
-        },
-        {
-            id: 'doc5',
-            name: 'Dr. Olivia Smith',
-            specialization: 'Family Medicine',
-            hospital: 'Community Health Clinic',
-            rating: 4.6,
-            yearsExperience: 7,
-            education: [{ degree: 'MD', institution: 'University of California, San Francisco' }],
-            languages: ['English', 'French'],
-            profileImage: 'https://randomuser.me/api/portraits/women/5.jpg'
-        },
-    ];
+    const safeDoctors = (doctors || []).map(doc => ({
+        ...doc,
+        name: doc.name || (doc.user ? `${doc.user.firstName || ''} ${doc.user.lastName || ''}`.trim() : ''),
+    }));
 
-    const allPharmacies = [
-        {
-            id: 'pharm1',
-            name: 'City Central Pharmacy',
-            pharmacyName: 'City Central Pharmacy',
-            address: '123 Main St, Anytown',
-            rating: 4.8,
-            specialties: ['Prescription Refills', 'Vaccinations', 'Compounding'],
-            availability: { Mon: ['9AM', '6PM'], Tue: ['9AM', '6PM'], Wed: ['9AM', '6PM'], Thu: ['9AM', '6PM'], Fri: ['9AM', '6PM'] },
-        },
-        {
-            id: 'pharm2',
-            name: 'Health & Wellness Pharmacy',
-            pharmacyName: 'Health & Wellness Pharmacy',
-            address: '456 Oak Ave, Anytown',
-            rating: 4.5,
-            specialties: ['Medication Therapy Management', 'Diabetic Supplies'],
-            availability: { Mon: ['8AM', '5PM'], Tue: ['8AM', '5PM'], Wed: ['8AM', '5PM'], Thu: ['8AM', '5PM'], Fri: ['8AM', '5PM'] },
-        },
-    ];
+    const safePharmacies = (pharmacies || []).map(pharm => ({
+        ...pharm,
+        name: pharm.name || pharm.pharmacyName || (pharm.user ? `${pharm.user.firstName || ''} ${pharm.user.lastName || ''}`.trim() : ''),
+    }));
 
-    const uniqueSpecialties = Array.from(new Set(allDoctors.map(doc => doc.specialization)))
-        .sort();
-    const uniqueLocations = Array.from(new Set(allDoctors.map(doc => doc.hospital)))
-        .sort();
+    const uniqueSpecialties = Array.from(new Set((safeDoctors || []).map(doc => doc.specialization))).sort();
+    const uniqueLocations = Array.from(new Set((safeDoctors || []).map(doc => doc.hospital))).sort();
 
     const searchSuggestions = [
-        ...allDoctors.map(doc => ({ type: 'doctor', name: doc.name, specialization: doc.specialization })),
-        ...allPharmacies.map(pharm => ({ type: 'pharmacy', name: pharm.name, specialization: pharm.pharmacyName }))
+        ...(safeDoctors || []).map(doc => ({ type: 'doctor', name: doc.name, specialization: doc.specialization })),
+        ...(safePharmacies || []).map(pharm => ({ type: 'pharmacy', name: pharm.name, specialization: pharm.pharmacyName }))
     ].filter(item => 
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.specialization.toLowerCase().includes(searchQuery.toLowerCase())
@@ -554,7 +485,7 @@ const ProvidersPageContent = () => {
                         <Link href="/patient/appointments/new">
                             <span className="flex items-center gap-3">
                                 <Plus className="h-6 w-6" />
-                                <span>{t('bookNewAppointment')}</span>
+                                {t('bookNewAppointment')}
                             </span>
                         </Link>
                     </Button>
@@ -566,7 +497,8 @@ const ProvidersPageContent = () => {
     const isDoctor = (provider) => activeTab === 'doctors';
 
     const renderContent = () => {
-        let filteredProviders = activeTab === 'doctors' ? allDoctors : allPharmacies;
+        let filteredProviders = activeTab === 'doctors' ? (safeDoctors || []) : (safePharmacies || []);
+        const isLoading = activeTab === 'doctors' ? loadingDoctors : loadingPharmacies;
 
         if (searchQuery) {
             filteredProviders = filteredProviders.filter(provider => 
@@ -696,9 +628,11 @@ const ProvidersPageContent = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px] border border-primary bg-background hover:bg-primary/5 text-primary">
-                                            <Filter className="h-4 w-4 mr-2 text-primary" />
-                                            {specialtyFilter === 'all' ? t('allSpecialties') : specialtyFilter}
-                                            <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                            <div className="flex items-center">
+                                                <Filter className="h-4 w-4 mr-2 text-primary" />
+                                                {specialtyFilter === 'all' ? t('allSpecialties') : specialtyFilter}
+                                                <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                            </div>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-[180px] bg-background border border-border">
@@ -718,9 +652,11 @@ const ProvidersPageContent = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px] border border-primary bg-background hover:bg-primary/5 text-primary">
-                                            <Building2 className="h-4 w-4 mr-2 text-primary" />
-                                            {locationFilter === 'all' ? t('allLocations') : locationFilter}
-                                            <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                            <div className="flex items-center">
+                                                <Building2 className="h-4 w-4 mr-2 text-primary" />
+                                                {locationFilter === 'all' ? t('allLocations') : locationFilter}
+                                                <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                            </div>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-[180px] bg-background border border-border">
@@ -739,16 +675,18 @@ const ProvidersPageContent = () => {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10 px-4 justify-between min-w-[160px] border border-primary bg-background hover:bg-primary/5 text-primary">
-                                        <ArrowUpDown className="h-4 w-4 mr-2 text-primary" />
-                                        {(() => {
-                                            switch (sortBy) {
-                                                case 'rating': return t('rating');
-                                                case 'name': return t('name');
-                                                case 'experience': return t('experience');
-                                                default: return t('sortBy');
-                                            }
-                                        })()}
-                                        <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                        <div className="flex items-center">
+                                            <ArrowUpDown className="h-4 w-4 mr-2 text-primary" />
+                                            {(() => {
+                                                switch (sortBy) {
+                                                    case 'rating': return t('rating');
+                                                    case 'name': return t('name');
+                                                    case 'experience': return t('experience');
+                                                    default: return t('sortBy');
+                                                }
+                                            })()}
+                                            <ChevronRight className="h-4 w-4 ml-2 text-primary" />
+                                        </div>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-[160px] bg-background border border-primary">
@@ -790,15 +728,19 @@ const ProvidersPageContent = () => {
                                 value="doctors" 
                                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-300"
                             >
-                                <Stethoscope className="h-4 w-4 mr-2" />
-                                {t('doctors')}
+                                <span className="flex items-center">
+                                    <Stethoscope className="h-4 w-4 mr-2" />
+                                    {t('doctors')}
+                                </span>
                             </TabsTrigger>
                             <TabsTrigger 
                                 value="pharmacies"
                                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-300"
                             >
-                                <Pill className="h-4 w-4 mr-2" />
-                                {t('pharmacies')}
+                                <span className="flex items-center">
+                                    <Pill className="h-4 w-4 mr-2" />
+                                    {t('pharmacies')}
+                                </span>
                             </TabsTrigger>
                         </TabsList>
                         
@@ -914,4 +856,20 @@ export default function ProvidersPage() {
             <ProvidersPageContent />
         </NotificationProvider>
     );
-} 
+}
+
+export function PharmaciesListExample() {
+  const pharmacies = useSelector(selectPharmacies);
+  if (!pharmacies || pharmacies.length === 0) return <div>No pharmacies found.</div>;
+  return (
+    <div>
+      <h3>Pharmacies (from Redux):</h3>
+      <ul>
+        {pharmacies.map((pharmacy) => (
+          <li key={pharmacy._id || pharmacy.id}>{pharmacy.name || pharmacy.pharmacyName}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+// --- End example --- 

@@ -15,10 +15,12 @@ import { Input } from '@/components/ui/Input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import { Separator } from '@/components/ui/Separator';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchMedicalRecords } from '@/store/slices/patient/medical-recordsSlice';
+import { fetchMedicalRecords as fetchMedicalRecordsList } from '@/store/slices/patient/medical-recordsSlice';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useTranslation } from 'react-i18next';
+import MedicalFileTabs from '@/components/patient/MedicalFileTabs';
+import { fetchMedicalRecords } from '@/store/slices/patient/medicalRecordSlice';
 
 const RecordCard = ({ record, onView, onDownload }) => {
     const { t } = useTranslation('common');
@@ -115,14 +117,18 @@ const MedicalRecordsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('all');
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('vitalSigns');
     const { t, i18n } = useTranslation('common');
     const isRtl = i18n.language === 'ar';
     const dispatch = useDispatch();
     useEffect(() => {
+        dispatch(fetchMedicalRecordsList());
         dispatch(fetchMedicalRecords());
     }, [dispatch]);
     const { medicalRecords, loading: isLoading, error } = useSelector(state => state.medicalRecords);
+    const { medicalRecords: patientMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError } = useSelector(state => state.medicalRecord);
+    // Defensive: always use an array
+    const safeMedicalRecords = Array.isArray(medicalRecords) ? medicalRecords : [];
 
     const handleViewRecord = (record) => {
         router.push(`/patient/medical-records/${record.id}`);
@@ -132,7 +138,7 @@ const MedicalRecordsPage = () => {
         console.log('Downloading record:', record);
     };
 
-    const filteredRecords = medicalRecords.filter(record => {
+    const filteredRecords = safeMedicalRecords.filter(record => {
         const matchesSearch = record.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             record.provider.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesType = typeFilter === 'all' || record.type.toLowerCase() === typeFilter.toLowerCase();
@@ -165,7 +171,7 @@ const MedicalRecordsPage = () => {
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
-                            <Button variant="outline" className="w-[180px] justify-between">
+                            <Button variant="outline" className="w-[180px] justify-between border-primary text-primary">
                                 <span>
                                     {(() => {
                                         switch (typeFilter) {
@@ -189,7 +195,7 @@ const MedicalRecordsPage = () => {
                     </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
-                            <Button variant="outline" className="w-[180px] justify-between">
+                            <Button variant="outline" className="w-[180px] justify-between border-primary text-primary">
                                 <span>
                                     {dateFilter === 'all' ? t('patient.medicalRecords.allTime') : dateFilter}
                                 </span>
@@ -215,46 +221,17 @@ const MedicalRecordsPage = () => {
 
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="all">{t('patient.medicalRecords.allRecords', 'All Records')}</TabsTrigger>
-                    <TabsTrigger value="lab result">{t('patient.medicalRecords.labResults', 'Lab Results')}</TabsTrigger>
-                    <TabsTrigger value="prescription">{t('patient.medicalRecords.prescriptions', 'Prescriptions')}</TabsTrigger>
-                    <TabsTrigger value="imaging">{t('patient.medicalRecords.imaging', 'Imaging')}</TabsTrigger>
-                    <TabsTrigger value="note">{t('patient.medicalRecords.notes', 'Notes')}</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-7">
+                    <TabsTrigger value="vitalSigns"><span>{t('patient.profile.vitalSigns', 'Vital Signs')}</span></TabsTrigger>
+                    <TabsTrigger value="allergies"><span>{t('patient.profile.allergies', 'Allergies')}</span></TabsTrigger>
+                    <TabsTrigger value="chronicConditions"><span>{t('patient.profile.chronicConditions', 'Chronic Conditions')}</span></TabsTrigger>
+                    <TabsTrigger value="diagnoses"><span>{t('patient.profile.diagnoses', 'Diagnoses')}</span></TabsTrigger>
+                    <TabsTrigger value="labResults"><span>{t('patient.profile.labResults', 'Lab Results')}</span></TabsTrigger>
+                    <TabsTrigger value="imagingReports"><span>{t('patient.profile.imagingReports', 'Imaging')}</span></TabsTrigger>
+                    <TabsTrigger value="medications"><span>{t('patient.profile.medications', 'Medications')}</span></TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
-                    <div>
-                        <div className="grid gap-4">
-                            {filteredRecords.length > 0 ? (
-                                filteredRecords.map((record) => (
-                                    <RecordCard
-                                        key={record.id}
-                                        record={record}
-                                        onView={handleViewRecord}
-                                        onDownload={handleDownloadRecord}
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-12 bg-card rounded-2xl shadow-sm">
-                                    <FileText className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
-                                    <h3 className="text-xl font-semibold mb-3 text-foreground">{t('patient.medicalRecords.noRecordsFound', 'No Medical Records Found')}</h3>
-                                    <p className="text-muted-foreground mb-6">
-                                        {searchQuery || typeFilter !== 'all' || dateFilter !== 'all'
-                                            ? t('patient.medicalRecords.tryAdjusting', 'Try adjusting your search or filters to find records.')
-                                            : t('patient.medicalRecords.noRecordsYet', "You don't have any medical records here yet. Upload your first document!")}
-                                    </p>
-                                    <Button >
-                                        <Link href="/patient/medical-records/upload">
-                                            <span className="flex items-center gap-2">
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                {t('patient.medicalRecords.upload', 'Upload New Record')}
-                                            </span>
-                                        </Link>
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <MedicalFileTabs medicalFile={patientMedicalRecords} loading={medicalRecordLoading} error={medicalRecordError} activeTab={activeTab} />
                 </TabsContent>
             </Tabs>
         </div>

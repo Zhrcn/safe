@@ -8,7 +8,6 @@ import {
 import { Button } from '@/components/ui/Button';
 
 const Medications = ({ patient }) => {
-    // Defensive: ensure medications is always an array
     const medsArray = Array.isArray(patient.medications) ? patient.medications : (patient.medications?.data && Array.isArray(patient.medications.data) ? patient.medications.data : []);
     function handleRefill() {
         alert('Refill requested!');

@@ -1,8 +1,6 @@
 import axiosInstance from '../axiosInstance';
 
-// Create a doctor appointments API object
 export const doctorAppointmentsApi = {
-  // Get all appointments for the logged-in doctor
   getDoctorAppointments: async () => {
     try {
       const res = await axiosInstance.get('/doctors/appointments');
@@ -12,7 +10,6 @@ export const doctorAppointmentsApi = {
     }
   },
 
-  // Get appointment details
   getAppointmentDetails: async (appointmentId) => {
     try {
       const res = await axiosInstance.get(`/doctors/appointments/${appointmentId}`);
@@ -22,7 +19,6 @@ export const doctorAppointmentsApi = {
     }
   },
 
-  // Accept an appointment
   acceptAppointment: async (appointmentId, appointmentData) => {
     try {
       console.log('API: Accepting appointment', appointmentId, appointmentData);
@@ -35,7 +31,6 @@ export const doctorAppointmentsApi = {
     }
   },
 
-  // Reject an appointment
   rejectAppointment: async (appointmentId, doctorNotes) => {
     try {
       console.log('API: Rejecting appointment', appointmentId, doctorNotes);
@@ -48,7 +43,6 @@ export const doctorAppointmentsApi = {
     }
   },
 
-  // Update appointment details
   updateAppointment: async (appointmentId, appointmentData) => {
     try {
       const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}`, appointmentData);
@@ -59,7 +53,6 @@ export const doctorAppointmentsApi = {
   }
 };
 
-// Legacy functions for backward compatibility
 export const getDoctorAppointments = async () => {
   console.log('getDoctorAppointments called - making API request to /appointments');
   try {

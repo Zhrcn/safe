@@ -12,7 +12,6 @@ import {
   onMessageDeleted
 } from '@/store/services/patient/conversationApi';
 
-// Async thunks
 export const fetchConversations = createAsyncThunk(
   'conversations/fetchConversations',
   async (_, { rejectWithValue }) => {
@@ -178,7 +177,6 @@ const conversationsSlice = createSlice({
       const conversation = state.conversations.find(c => c._id === conversationId);
       if (conversation && conversation.messages) {
         conversation.messages = conversation.messages.filter(m => m._id !== messageId);
-        // Update last message if needed
         if (conversation.messages.length > 0) {
           conversation.lastMessage = conversation.messages[conversation.messages.length - 1];
         } else {
@@ -224,7 +222,6 @@ const conversationsSlice = createSlice({
         }
       })
       .addCase(deleteMessage.fulfilled, (state, action) => {
-        // Message deletion is handled by socket events
         console.log('Message deleted successfully:', action.payload);
       });
   },
@@ -238,7 +235,6 @@ export const {
   removeMessageFromConversation,
 } = conversationsSlice.actions;
 
-// Middleware to handle incoming socket messages
 export const setupMessageListener = () => (dispatch) => {
   const unsubscribeReceive = onReceiveMessage((data) => {
     console.log('Received message via socket:', data);

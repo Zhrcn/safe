@@ -282,7 +282,6 @@ const PatientPageContent = () => {
     const handleCreatePrescription = (prescriptionData) => {
         console.log('Creating prescription:', prescriptionData);
         showNotification('Prescription created successfully', 'success');
-        // Note: In a real app, you would dispatch an action to update the patient's prescriptions
     };
     const handleSendMessage = () => {
         router.push(`/chat/${selectedPatient?.id || selectedPatient?._id}`);
@@ -320,7 +319,6 @@ const PatientPageContent = () => {
             await answerConsultation(consultationId, answer);
             showNotification('Answer submitted successfully!', 'success');
             setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
-            // Reload consultations to get updated data
             const consultations = await getPatientConsultations(selectedPatient.id || selectedPatient._id);
             setPatientConsultations(consultations);
         } catch (error) {

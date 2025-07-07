@@ -211,7 +211,6 @@ export default function AppointmentManagement() {
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
     
-    // Form states
     const [acceptForm, setAcceptForm] = useState({
         date: '',
         time: '',
@@ -389,10 +388,10 @@ export default function AppointmentManagement() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <Tabs value={activeTab} onValueChange={handleTabChange}>
                     <TabsList>
-                        <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                        <TabsTrigger value="pending">Pending</TabsTrigger>
-                        <TabsTrigger value="completed">Completed</TabsTrigger>
-                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="upcoming"><span>Upcoming</span></TabsTrigger>
+                        <TabsTrigger value="pending"><span>Pending</span></TabsTrigger>
+                        <TabsTrigger value="completed"><span>Completed</span></TabsTrigger>
+                        <TabsTrigger value="all"><span>All</span></TabsTrigger>
                     </TabsList>
                 </Tabs>
                 <div className="flex gap-2 w-full sm:w-auto">

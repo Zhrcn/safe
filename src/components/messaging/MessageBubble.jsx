@@ -7,7 +7,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -33,7 +32,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
         </Avatar>
       )}
       <div className={`max-w-[75%] px-2 flex flex-col ${isOwn ? "items-end" : "items-start"} relative group`}>
-        <div className={`px-5 py-2 ${isOwn ? "rounded-3xl rounded-br-md bg-primary text-primary-foreground shadow-lg" : "rounded-2xl rounded-bl-md bg-muted/70 text-foreground border border-border"} animate-fade-in relative`}>
+        <div className={`px-5 py-2 ${isOwn ? "rounded-3xl rounded-br-md bg-primary text-primary-foreground shadow-lg" : "rounded-2xl rounded-bl-md bg-muted text-foreground border border-border shadow-sm"} animate-fade-in relative`}>
           <span className="text-sm break-words whitespace-pre-line leading-relaxed">{message.content}</span>
           
           {/* Message menu for own messages */}
@@ -42,7 +41,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
                 onClick={() => setShowMenu(!showMenu)}
               >
                 <MoreVertical className="w-3 h-3" />

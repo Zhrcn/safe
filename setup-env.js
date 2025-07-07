@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Environment variables for frontend
 const envContent = `# Frontend Environment Variables
 NEXT_PUBLIC_API_URL=http://localhost:5001
 NEXT_PUBLIC_SOCKET_URL=http://localhost:5001
@@ -15,7 +14,6 @@ NEXT_PUBLIC_TOKEN_NAME=safe_auth_token
 NODE_ENV=development
 `;
 
-// Write to .env.local
 const envPath = path.join(__dirname, '.env.local');
 fs.writeFileSync(envPath, envContent);
 

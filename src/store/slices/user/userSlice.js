@@ -35,7 +35,6 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await register(userData);
-      // If register returns a token and user, set them
       const { token, user } = response;
       setToken(token);
       return { token, user };

@@ -65,7 +65,6 @@ const getAppointments = asyncHandler(async (req, res) => {
         throw new Error('Patient not found');
     }
     
-    // Get appointments with proper population
     const Appointment = require('../models/Appointment');
     const appointments = await Appointment.find({ _id: { $in: patient.appointments } })
         .populate('patient', 'firstName lastName email profilePictureUrl')
@@ -110,13 +109,16 @@ const updateAppointment = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('Appointment not found');
     }
-    // Only allow editing if status is pending
-    if (appointment.status !== 'pending') {
+    if (!['pending', 'confirmed'].includes(appointment.status)) {
         res.status(400);
-        throw new Error('Only pending appointments can be edited');
+        throw new Error(`Appointment cannot be edited as its status is '${appointment.status}'.`);
     }
-    // Only allow the patient who owns the appointment to edit
-    if (appointment.patient.toString() !== req.user._id.toString()) {
+    const patient = await Patient.findOne({ user: req.user._id });
+    if (!patient) {
+        res.status(404);
+        throw new Error('Patient not found');
+    }
+    if (appointment.patient.toString() !== patient._id.toString()) {
         res.status(403);
         throw new Error('Not authorized to edit this appointment');
     }
@@ -140,12 +142,10 @@ const deleteAppointment = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('Appointment not found');
     }
-    // Remove the appointment ObjectId from the patient's appointments array
     patient.appointments = patient.appointments.filter(
         appId => appId.toString() !== req.params.id
     );
     await patient.save();
-    // Delete the appointment document itself
     await appointment.deleteOne();
     res.status(200).json(new ApiResponse(200, null, 'Appointment deleted successfully.'));
 });
@@ -356,18 +356,15 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
 const getLatestVitals = asyncHandler(async (req, res) => {
     const Patient = require('../models/Patient');
     const MedicalFile = require('../models/MedicalFile');
-    // Find the patient by user ID
     const patient = await Patient.findOne({ user: req.user._id });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
     }
-    // Populate the medical file
     const medicalFile = await MedicalFile.findById(patient.medicalFile);
     if (!medicalFile || !medicalFile.vitalSigns || medicalFile.vitalSigns.length === 0) {
         return res.status(404).json(new ApiResponse(404, null, 'No vital signs found.'));
     }
-    // Get the latest vital signs (last entry)
     const latestVitals = medicalFile.vitalSigns[medicalFile.vitalSigns.length - 1];
     res.status(200).json(new ApiResponse(200, latestVitals, 'Latest vital signs retrieved successfully.'));
 });

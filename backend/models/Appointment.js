@@ -84,10 +84,27 @@ const appointmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Add a method to check if appointment can be modified (24 hours before)
 appointmentSchema.methods.canBeModified = function() {
+  if (!this.time || this.time === 'TBD' || !this.time.includes(':')) {
+    const appointmentDate = new Date(this.date);
+    const now = new Date();
+    const timeDifference = appointmentDate.getTime() - now.getTime();
+    const hoursDifference = timeDifference / (1000 * 60 * 60);
+    return hoursDifference > 24;
+  }
+  
   const appointmentDateTime = new Date(this.date);
-  appointmentDateTime.setHours(parseInt(this.time.split(':')[0]), parseInt(this.time.split(':')[1]), 0, 0);
+  const [hours, minutes] = this.time.split(':').map(Number);
+  
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    const appointmentDate = new Date(this.date);
+    const now = new Date();
+    const timeDifference = appointmentDate.getTime() - now.getTime();
+    const hoursDifference = timeDifference / (1000 * 60 * 60);
+    return hoursDifference > 24;
+  }
+  
+  appointmentDateTime.setHours(hours, minutes, 0, 0);
   const now = new Date();
   const timeDifference = appointmentDateTime.getTime() - now.getTime();
   const hoursDifference = timeDifference / (1000 * 60 * 60);

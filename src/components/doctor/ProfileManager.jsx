@@ -120,10 +120,8 @@ function PersonalInfoForm({ profile, onSave }) {
         }
     };
     const handleAddEducation = (education) => {
-        // New education added
     };
     const handleAddAchievement = (achievement) => {
-        // New achievement added
     };
     return (
         <div className="max-w-3xl mx-auto space-y-6">

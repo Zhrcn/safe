@@ -19,29 +19,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
-// Remove NotificationProvider and useNotification import
-// import { NotificationProvider, useNotification } from '@/components/ui/Notification';
 import { Textarea } from '@/components/ui/Textarea';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConsultations, addConsultation, deleteConsultation, sendFollowUpQuestion } from '@/store/slices/patient/consultationsSlice';
 import { getDoctors } from '@/store/services/doctor/doctorApi';
 
-// Use Alert from @/components/ui/Alert.jsx
 import { Alert } from '@/components/ui/Alert';
 
 const getDoctorNameFromConsultation = (consultation, doctorsList) => {
-  // Case 1: Populated doctor object
   if (consultation.doctor && typeof consultation.doctor === 'object') {
     const firstName = consultation.doctor.firstName || consultation.doctor.user?.firstName || '';
     const lastName = consultation.doctor.lastName || consultation.doctor.user?.lastName || '';
     if (firstName || lastName) return `${firstName} ${lastName}`.trim();
   }
-  // Case 2: doctorName field
   if (consultation.doctorName) return consultation.doctorName;
-  // Case 3: doctor is an ID, look up in doctorsList
   if (consultation.doctor && Array.isArray(doctorsList)) {
-    // Try matching _id, id, or user._id
     const doc = doctorsList.find(
       d => d._id === consultation.doctor || d.id === consultation.doctor || d.user?._id === consultation.doctor
     );
@@ -171,13 +164,10 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
 const ConsultationsPageContent = () => {
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
-  // Remove useNotification
-  // const { showNotification } = useNotification();
   const [newConsultationDialogOpen, setNewConsultationDialogOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedDoctorName, setSelectedDoctorName] = useState('');
-  // Local state for alert
   const [alert, setAlert] = useState(null);
   const dispatch = useDispatch();
   const [doctorsData, setDoctorsData] = useState([]);
@@ -251,11 +241,9 @@ const ConsultationsPageContent = () => {
 
   const handleChat = (consultation) => {
     if (consultation.status === 'pending') {
-      // For pending consultations, show the continue chat dialog
       setContinueChatConsultation(consultation);
       setContinueChatDialogOpen(true);
     } else {
-      // For completed consultations, show the details modal
       setSelectedConsultation(consultation);
     }
   };
@@ -289,25 +277,21 @@ const ConsultationsPageContent = () => {
       setContinueChatDialogOpen(false);
       setNewQuestion('');
       setContinueChatConsultation(null);
-      // Refresh consultations to get updated data
       dispatch(fetchConsultations());
     } catch (e) {
       setAlert({ message: e?.message || 'Failed to send question', severity: 'error' });
     }
   };
 
-  // Helper to get full name, fallback to empty string if missing
   const getDoctorFullName = (doc) => {
     const firstName = doc.firstName || doc.user?.firstName || '';
     const lastName = doc.lastName || doc.user?.lastName || '';
     if (firstName && lastName) {
       return `${firstName} ${lastName}`;
     }
-    // If either is missing, fallback to empty string (so not shown in list)
     return '';
   };
 
-  // Handle both array and object-with-data cases
   const filteredDoctors = Array.isArray(doctorsData)
     ? doctorsData.filter(
         (doc) => {
@@ -678,7 +662,6 @@ export default function ConsultationsPage() {
   const { i18n } = useTranslation('common');
   const isRtl = i18n.language === 'ar';
   return (
-    // Remove NotificationProvider
     <main className={isRtl ? 'rtl' : 'ltr'} style={{ width: '100%' }}>
       <ConsultationsPageContent />
     </main>

@@ -50,7 +50,6 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   if (conflictingAppointment) {
     return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the selected date and time. Please choose a different slot.'));
   }
-  // Find the patient record for this user
   const patient = await require('../models/Patient').findOne({ user: patientId });
   if (!patient) {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
@@ -96,19 +95,17 @@ exports.getAppointments = asyncHandler(async (req, res, next) => {
   let query = {};
   
   if (userRole === 'patient') {
-    // First, find the patient record for this user
     const patient = await require('../models/Patient').findOne({ user: userId });
     if (!patient) {
       return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
     }
-    query.patient = patient._id; // Use the patient record ID, not the user ID
+    query.patient = patient._id; 
   } else if (userRole === 'doctor') {
-    // First, find the doctor record for this user
     const doctor = await Doctor.findOne({ user: userId });
     if (!doctor) {
       return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
     }
-    query.doctor = doctor._id; // Use the doctor record ID, not the user ID
+    query.doctor = doctor._id; 
   } else {
     return res.status(403).json(new ApiResponse(403, null, 'User role not authorized to view appointments.'));
   }
@@ -355,18 +352,26 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment details updated successfully.'));
 });
 
-// Request appointment reschedule
 exports.requestReschedule = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.id;
   const userId = req.user.id;
   const { requestedDate, requestedTime, preferredTimes, reason, notes } = req.body;
+  
+  console.log('Received reschedule request:', {
+    appointmentId,
+    userId,
+    requestedDate,
+    requestedTime,
+    preferredTimes,
+    reason,
+    notes,
+    body: req.body
+  });
 
-  // Validate required fields
-  if (!requestedDate || !requestedTime || !reason) {
-    return res.status(400).json(new ApiResponse(400, null, 'Please provide requested date, time, and reason for reschedule.'));
+  if (!reason) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide reason for reschedule.'));
   }
 
-  // Find the appointment
   const appointment = await Appointment.findById(appointmentId)
     .populate({
       path: 'patient',
@@ -389,74 +394,91 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // Check if user is the patient of this appointment
   if (appointment.patient.user._id.toString() !== userId) {
     return res.status(403).json(new ApiResponse(403, null, 'You are not authorized to request reschedule for this appointment.'));
   }
 
-  // Check if appointment status allows reschedule request
   const allowedStatuses = ['accepted', 'scheduled', 'rescheduled'];
+  console.log('Checking appointment status:', {
+    appointmentStatus: appointment.status,
+    allowedStatuses,
+    isAllowed: allowedStatuses.includes(appointment.status)
+  });
   if (!allowedStatuses.includes(appointment.status)) {
     return res.status(400).json(new ApiResponse(400, null, `Cannot request reschedule for appointment with status '${appointment.status}'.`));
   }
 
-  // Check if appointment can be modified (24 hours before)
-  if (!appointment.canBeModified()) {
-    return res.status(400).json(new ApiResponse(400, null, 'Cannot request reschedule within 24 hours of the appointment.'));
+   console.log('Skipping 24-hour restriction check for reschedule request');
+
+  let requestedDateObject = null;
+  if (requestedDate && requestedTime) {
+    const [hours, minutes] = requestedTime.split(':').map(Number);
+    requestedDateObject = new Date(requestedDate);
+    if (isNaN(requestedDateObject.getTime())) {
+      return res.status(400).json(new ApiResponse(400, null, 'Invalid requested date format. Please use YYYY-MM-DD.'));
+    }
+
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return res.status(400).json(new ApiResponse(400, null, 'Invalid requested time format. Please use HH:MM.'));
+    }
+
+    const requestedDateTime = new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate(), hours, minutes);
+    const now = new Date();
+    now.setSeconds(0, 0);
+    if (requestedDateTime < now) {
+      return res.status(400).json(new ApiResponse(400, null, 'Requested date and time must be in the future.'));
+    }
+
+    const conflictingAppointment = await Appointment.findOne({
+      doctor: appointment.doctor._id,
+      date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
+      time: requestedTime,
+      status: { $in: ['pending', 'confirmed', 'accepted', 'scheduled', 'rescheduled'] },
+      _id: { $ne: appointmentId }
+    });
+
+    if (conflictingAppointment) {
+      return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the requested date and time. Please choose a different slot.'));
+    }
   }
 
-  // Validate requested date and time
-  const [hours, minutes] = requestedTime.split(':').map(Number);
-  let requestedDateObject = new Date(requestedDate);
-  if (isNaN(requestedDateObject.getTime())) {
-    return res.status(400).json(new ApiResponse(400, null, 'Invalid requested date format. Please use YYYY-MM-DD.'));
-  }
-
-  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    return res.status(400).json(new ApiResponse(400, null, 'Invalid requested time format. Please use HH:MM.'));
-  }
-
-  const requestedDateTime = new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate(), hours, minutes);
-  const now = new Date();
-  now.setSeconds(0, 0);
-  if (requestedDateTime < now) {
-    return res.status(400).json(new ApiResponse(400, null, 'Requested date and time must be in the future.'));
-  }
-
-  // Check for conflicts with other appointments
-  const conflictingAppointment = await Appointment.findOne({
-    doctor: appointment.doctor._id,
-    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
-    time: requestedTime,
-    status: { $in: ['pending', 'confirmed', 'accepted', 'scheduled', 'rescheduled'] },
-    _id: { $ne: appointmentId }
-  });
-
-  if (conflictingAppointment) {
-    return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the requested date and time. Please choose a different slot.'));
-  }
-
-  // Update appointment with reschedule request
+ 
   appointment.status = 'reschedule_requested';
   appointment.rescheduleRequest = {
-    requestedDate: requestedDateObject,
-    requestedTime,
+    requestedDate: requestedDateObject || null,
+    requestedTime: requestedTime || null,
     preferredTimes: preferredTimes || [],
     reason,
     notes,
     requestedAt: new Date()
   };
+  
+  console.log('Updating reschedule request data:', {
+    appointmentId: appointment._id,
+    currentDate: appointment.date,
+    currentTime: appointment.time,
+    rescheduleRequest: appointment.rescheduleRequest
+  });
 
   await appointment.save();
 
-  // Create notification for doctor
   const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'A patient';
   const doctorUserId = appointment.doctor.user._id;
+  
+  let notificationMessage = `${patientName} has requested to reschedule their appointment currently scheduled for ${appointment.date.toLocaleDateString()} at ${appointment.time}.`;
+  
+  if (requestedDateObject && requestedTime) {
+    notificationMessage += ` They prefer ${requestedDateObject.toLocaleDateString()} at ${requestedTime}.`;
+  } else {
+    notificationMessage += ` They have provided preferred times in the notes.`;
+  }
+  
+  notificationMessage += ` Reason: ${reason}.`;
   
   await createNotification(
     doctorUserId.toString(),
     'Reschedule Request',
-    `${patientName} has requested to reschedule their appointment from ${appointment.date.toLocaleDateString()} at ${appointment.time} to ${requestedDateObject.toLocaleDateString()} at ${requestedTime}. Reason: ${reason}.`,
+    notificationMessage,
     'appointment',
     appointment._id.toString(),
     'Appointment'

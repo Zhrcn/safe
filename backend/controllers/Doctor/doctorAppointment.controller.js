@@ -2,18 +2,16 @@ const asyncHandler = require('../../utils/asyncHandler');
 const ApiResponse = require('../../utils/apiResponse');
 const Appointment = require('../../models/Appointment');
 const Doctor = require('../../models/Doctor');
+const { createNotification } = require('../../utils/notification.utils');
 
-// Get all appointments for the logged-in doctor
 exports.getDoctorAppointments = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   console.log('DEBUG: req.user.id:', userId);
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   console.log('DEBUG: Found doctor:', doctor);
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
-  // Find all appointments for this doctor
   const query = { doctor: doctor._id };
   if (req.query.status) {
     query.status = req.query.status;
@@ -40,7 +38,6 @@ exports.getDoctorAppointments = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, appointments, 'Doctor appointments fetched successfully.'));
 });
 
-// Accept an appointment
 exports.acceptAppointment = asyncHandler(async (req, res) => {
   console.log('Backend: Accept appointment called');
   console.log('Backend: req.user.id:', req.user.id);
@@ -51,14 +48,12 @@ exports.acceptAppointment = asyncHandler(async (req, res) => {
   const { appointmentId } = req.params;
   const { date, time, location, doctorNotes } = req.body;
 
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   console.log('Backend: Found doctor:', doctor);
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the appointment and verify it belongs to this doctor
   const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id });
   console.log('Backend: Found appointment:', appointment);
   console.log('Backend: Appointment status:', appointment?.status);
@@ -68,15 +63,13 @@ exports.acceptAppointment = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // For accepting appointments, we don't need the 24-hour restriction
-  // Only check if the appointment is still pending
+
   console.log('Backend: Checking if appointment status is pending:', appointment.status === 'pending');
   if (appointment.status !== 'pending') {
     console.log('Backend: Appointment status is not pending, returning 400 error');
     return res.status(400).json(new ApiResponse(400, null, `Only pending appointments can be accepted. Current status: ${appointment.status}`));
   }
 
-  // Update appointment
   const updateData = {
     status: 'accepted',
     doctorNotes: doctorNotes || appointment.doctorNotes
@@ -112,7 +105,6 @@ exports.acceptAppointment = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment accepted successfully.'));
 });
 
-// Reject an appointment
 exports.rejectAppointment = asyncHandler(async (req, res) => {
   console.log('Backend: Reject appointment called');
   console.log('Backend: req.user.id:', req.user.id);
@@ -123,27 +115,22 @@ exports.rejectAppointment = asyncHandler(async (req, res) => {
   const { appointmentId } = req.params;
   const { doctorNotes } = req.body;
 
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   console.log('Backend: Found doctor:', doctor);
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the appointment and verify it belongs to this doctor
   const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id });
   console.log('Backend: Found appointment:', appointment);
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // For rejecting appointments, we don't need the 24-hour restriction
-  // Only check if the appointment is still pending
   if (appointment.status !== 'pending') {
     return res.status(400).json(new ApiResponse(400, null, 'Only pending appointments can be rejected.'));
   }
 
-  // Update appointment status to rejected
   const updatedAppointment = await Appointment.findByIdAndUpdate(
     appointmentId,
     {
@@ -171,30 +158,25 @@ exports.rejectAppointment = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment rejected successfully.'));
 });
 
-// Update appointment details
 exports.updateAppointment = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { appointmentId } = req.params;
   const { date, time, location, doctorNotes, patientNotes, reason, type } = req.body;
 
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the appointment and verify it belongs to this doctor
   const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id });
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // Check if appointment can be modified
   if (!appointment.canBeModified()) {
     return res.status(400).json(new ApiResponse(400, null, 'Appointment cannot be modified within 24 hours of the scheduled time.'));
   }
 
-  // Build update data
   const updateData = {};
   if (date) updateData.date = new Date(date);
   if (time) updateData.time = time;
@@ -204,7 +186,6 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
   if (reason) updateData.reason = reason;
   if (type) updateData.type = type;
 
-  // If date or time changed, update status to rescheduled
   if (date || time) {
     updateData.status = 'rescheduled';
   }
@@ -231,7 +212,6 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment updated successfully.'));
 });
 
-// Handle reschedule request (approve/reject)
 exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { appointmentId } = req.params;
@@ -241,13 +221,11 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, 'Action must be either "approve" or "reject".'));
   }
 
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the appointment and verify it belongs to this doctor
   const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id });
   if (!appointment) {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
@@ -299,17 +277,14 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
     // Clear reschedule request
     appointment.rescheduleRequest = undefined;
   } else {
-    // Reject the reschedule request
     appointment.status = appointment.rescheduleRequest.requestedDate ? 'scheduled' : 'accepted';
     appointment.doctorNotes = doctorNotes || appointment.doctorNotes;
     
-    // Clear reschedule request
     appointment.rescheduleRequest = undefined;
   }
 
   const updatedAppointment = await appointment.save();
 
-  // Create notification for patient
   const patientName = appointment.patient ? `${appointment.patient.firstName} ${appointment.patient.lastName}` : 'The patient';
   const notificationMessage = action === 'approve' 
     ? `Your reschedule request has been approved. New appointment time: ${updatedAppointment.date.toLocaleDateString()} at ${updatedAppointment.time}.`
@@ -327,18 +302,15 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, updatedAppointment, `Reschedule request ${action}d successfully.`));
 });
 
-// Get appointment details
 exports.getAppointmentDetails = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { appointmentId } = req.params;
 
-  // Find the Doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the appointment and verify it belongs to this doctor
   const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id })
     .populate({
       path: 'patient',
@@ -360,7 +332,6 @@ exports.getAppointmentDetails = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // Add canBeModified flag
   const appointmentData = appointment.toObject();
   appointmentData.canBeModified = appointment.canBeModified();
 

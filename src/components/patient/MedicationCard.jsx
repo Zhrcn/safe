@@ -26,7 +26,6 @@ const MedicationCard = ({
 }) => {
     const { t } = useTranslation();
 
-    // CSS Variables
     const primary = 'var(--color-primary)';
     const success = 'var(--color-success)';
     const secondary = 'var(--color-secondary)';
@@ -38,7 +37,6 @@ const MedicationCard = ({
     const text = 'var(--color-foreground)';
     const muted = 'var(--color-muted-foreground)';
 
-    // Days of week for reminders
     const DAYS_OF_WEEK = [
         { value: 'monday', label: t('patient.medications.days.mon', 'Mon') },
         { value: 'tuesday', label: t('patient.medications.days.tue', 'Tue') },
@@ -49,7 +47,6 @@ const MedicationCard = ({
         { value: 'sunday', label: t('patient.medications.days.sun', 'Sun') },
     ];
 
-    // Helper functions
     const getStatusColor = (status) => {
         switch (status.toLowerCase()) {
             case 'active':

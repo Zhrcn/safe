@@ -7,6 +7,7 @@ import { MessageCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { getNonPatientUsers } from '@/store/services/user/userApi';
 import { getDoctors } from '@/store/services/doctor/doctorApi';
+import { useSearchParams } from 'next/navigation';
 
 function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelectedUser, subject, setSubject, loading, error }) {
   const { t } = useTranslation('common');
@@ -23,11 +24,11 @@ function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelecte
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{t('Start New Chat')}</h2>
-        <label className="block mb-2 text-sm font-medium">{t('Select User')}</label>
+      <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-md border border-border">
+        <h2 className="text-lg font-semibold mb-4 text-foreground">{t('Start New Chat')}</h2>
+        <label className="block mb-2 text-sm font-medium text-foreground">{t('Select User')}</label>
         <select
-          className="w-full border rounded px-2 py-1 mb-4"
+          className="w-full border border-border rounded-lg px-3 py-2 mb-4 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={selectedUser ? selectedUser.id : ""}
           onChange={e => {
             const user = allUsers.find(u => u.id === e.target.value);
@@ -41,22 +42,22 @@ function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelecte
             </option>
           ))}
         </select>
-        <label className="block mb-2 text-sm font-medium">{t('Subject')}</label>
+        <label className="block mb-2 text-sm font-medium text-foreground">{t('Subject')}</label>
         <input
-          className="w-full border rounded px-2 py-1 mb-4"
+          className="w-full border border-border rounded-lg px-3 py-2 mb-4 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={subject}
           onChange={e => setSubject(e.target.value)}
           placeholder={t('Enter subject')}
         />
         <div className="flex justify-end gap-2">
           <button
-            className="px-4 py-2 bg-gray-200 rounded"
+            className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
             onClick={onClose}
           >
             {t('Cancel')}
           </button>
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             onClick={onCreate}
             disabled={!selectedUser}
           >
@@ -77,7 +78,6 @@ export default function PatientMessagingPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [subject, setSubject] = useState("");
 
-  // Use the chat hook
   const {
     conversations,
     selectedConversation,
@@ -100,6 +100,8 @@ export default function PatientMessagingPage() {
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState(null);
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setDoctorsLoading(true);
@@ -128,8 +130,23 @@ export default function PatientMessagingPage() {
       .finally(() => setUsersLoading(false));
   }, []);
 
+  useEffect(() => {
+    // Auto-select conversation if ?user= param is present
+    const userId = searchParams.get('user');
+    if (userId && conversations.length > 0) {
+      // Find a conversation with this user as a participant (other than currentUser)
+      const found = conversations.find(conv =>
+        conv.participants && conv.participants.some(
+          p => p._id === userId
+        )
+      );
+      if (found && (!selectedConversation || selectedConversation._id !== found._id)) {
+        selectConversation(found);
+      }
+    }
+  }, [searchParams, conversations, selectedConversation, selectConversation]);
+
   const handleInputChange = (e) => {
-    // Handle both event objects and direct values
     const value = e && e.target ? e.target.value : e;
     setNewMessage(value);
     if (selectedConversation && currentUser && currentUser._id) {
@@ -149,7 +166,7 @@ export default function PatientMessagingPage() {
     if (!newMessage.trim()) return;
     
     const messageContent = newMessage.trim();
-    setNewMessage(""); // Clear input immediately
+    setNewMessage(""); 
     
     await sendMessage(messageContent);
   };
@@ -193,7 +210,7 @@ export default function PatientMessagingPage() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* New Chat Modal */}
       <NewChatModal
         open={showNewChat}
@@ -209,14 +226,14 @@ export default function PatientMessagingPage() {
       />
 
       {/* Sidebar: Chat List */}
-      <div className={`border-r bg-white h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <MessageCircle className="w-6 h-6" />
+      <div className={`border-r border-border bg-card h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card flex-shrink-0">
+          <h1 className="text-xl font-bold flex items-center gap-2 text-foreground">
+            <MessageCircle className="w-6 h-6 text-primary" />
             {t('Messages')}
           </h1>
           <button
-            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-3 py-1 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             onClick={handleNewChat}
           >
             {t('New Chat')}
@@ -224,7 +241,7 @@ export default function PatientMessagingPage() {
         </div>
         <div className="p-3 flex-shrink-0">
           <input
-            className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground placeholder:text-muted-foreground"
             placeholder={t('Search conversations')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -245,7 +262,7 @@ export default function PatientMessagingPage() {
       </div>
 
       {/* Main: Chat Page */}
-      <div className={`flex-1 h-full ${mobileView && !selectedConversation ? "hidden" : "block"}`}>
+      <div className={`flex-1 h-full bg-background ${mobileView && !selectedConversation ? "hidden" : "block"}`}>
         {selectedConversation ? (
           <ChatPage
             conversation={{ ...selectedConversation, messages }}

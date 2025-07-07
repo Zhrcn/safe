@@ -1,15 +1,11 @@
-// Browser script to suppress source map warnings
 (function() {
   'use strict';
   
-  // Only run in development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     
-    // Store original console methods
     const originalError = console.error;
     const originalWarn = console.warn;
     
-    // Function to check if message should be suppressed
     function shouldSuppress(message) {
       if (typeof message === 'string') {
         return message.includes('Source map error') ||
@@ -26,7 +22,6 @@
       return false;
     }
     
-    // Function to check if any argument should be suppressed
     function shouldSuppressArgs(args) {
       return args.some(arg => {
         if (typeof arg === 'string') {
@@ -36,21 +31,18 @@
       });
     }
     
-    // Override console.error
     console.error = function(...args) {
       if (!shouldSuppressArgs(args)) {
         originalError.apply(console, args);
       }
     };
     
-    // Override console.warn
     console.warn = function(...args) {
       if (!shouldSuppressArgs(args)) {
         originalWarn.apply(console, args);
       }
     };
     
-    // Also filter out specific error messages from the console
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.type === 'childList') {
@@ -69,7 +61,6 @@
       });
     });
     
-    // Start observing when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function() {
         observer.observe(document.body, { childList: true, subtree: true });

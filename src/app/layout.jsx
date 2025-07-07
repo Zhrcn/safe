@@ -10,7 +10,7 @@ import { appWithTranslation } from 'next-i18next';
 import { useTranslation } from 'react-i18next';
 import '../i18n';
 import GlobalMessageListener from '@/components/messaging/GlobalMessageListener';
-import '@/utils/consoleFilter'; // Import console filter to suppress source map warnings
+import '@/utils/consoleFilter';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,7 +20,7 @@ function SessionWrapper({ children }) {
 }
 
 function RootLayout({ children }) {
-  const { i18n } = useTranslation();
+  const { i18n, ready } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
@@ -29,6 +29,8 @@ function RootLayout({ children }) {
     document.documentElement.dir = dir;
     document.documentElement.lang = i18n.language;
   }, [i18n.language, dir]);
+
+  if (!ready) return null;
 
   return (
     <html lang={i18n.language} dir={dir} suppressHydrationWarning>

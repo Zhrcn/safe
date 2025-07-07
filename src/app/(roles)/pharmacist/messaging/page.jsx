@@ -181,7 +181,7 @@ export default function PharmacistMessagingPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="max-w-6xl mx-auto flex flex-1 gap-4 h-[calc(100vh-40px)] p-4">
-        <div className="hidden md:flex flex-col w-full max-w-xs h-full rounded-2xl bg-muted/40 shadow-lg">
+        <div className="hidden md:flex flex-col w-full max-w-xs h-full rounded-2xl bg-card shadow-lg border border-border">
           <ChatList
             conversations={filtered}
             selectedId={selected?.id}
@@ -191,7 +191,7 @@ export default function PharmacistMessagingPage() {
             onNewChat={handleNewChat}
           />
         </div>
-        <div className="flex-1 flex flex-col h-full rounded-2xl bg-background shadow-lg">
+        <div className="flex-1 flex flex-col h-full rounded-2xl bg-card shadow-lg border border-border">
           {selected ? (
             <ChatPage
               conversation={selected}

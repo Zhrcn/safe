@@ -135,7 +135,6 @@ export default function DoctorDashboard() {
   const { mode } = useTheme();
   const dispatch = useAppDispatch();
   
-  // Redux state
   const { patients, loading: patientsLoading, error: patientsError } = useAppSelector(
     (state) => state.doctorPatients
   );
@@ -146,7 +145,6 @@ export default function DoctorDashboard() {
     setChartColors(getChartColors(mode));
   }, [mode]);
 
-  // Fetch patients on component mount
   useEffect(() => {
     dispatch(fetchPatients());
   }, [dispatch]);
@@ -275,7 +273,6 @@ export default function DoctorDashboard() {
     setChartKey(Date.now());
   }, [mode, t, chartColors]);
 
-  // Get recent patients from Redux store
   const recentPatients = patients.slice(0, 3).map((patient) => ({
     _id: patient._id,
     firstName: patient.user?.firstName || patient.firstName,

@@ -87,7 +87,6 @@ const LoginPage = () => {
         e.preventDefault();
         dispatch(setAuthLoading(true));
         
-        // Clear any existing authentication state and cache before login
         dispatch(clearAuth());
         dispatch(clearCache());
         
@@ -98,7 +97,6 @@ const LoginPage = () => {
             if (result.success && result.user && result.token) {
                 console.log('Logged in user:', result.user);
                 
-                // Dispatch to auth slice
                 dispatch(setCredentials({
                     user: result.user,
                     token: result.token

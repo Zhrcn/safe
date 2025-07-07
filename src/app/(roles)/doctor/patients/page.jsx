@@ -18,7 +18,6 @@ export default function PatientsPage() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   
-  // Redux state
   const { patients, loading, error } = useAppSelector(
     (state) => state.doctorPatients
   );
@@ -27,7 +26,6 @@ export default function PatientsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Fetch patients on component mount
   useEffect(() => {
     dispatch(fetchPatients());
   }, [dispatch]);
@@ -98,7 +96,6 @@ export default function PatientsPage() {
   };
 
   const handlePatientAdded = (newPatient) => {
-    // Refresh the patients list after adding a new patient
     dispatch(fetchPatients());
   };
 
@@ -141,10 +138,10 @@ export default function PatientsPage() {
             </Button>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
             <TabsList className="bg-muted rounded-2xl p-1">
-              <TabsTrigger value="all" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.all}</TabsTrigger>
-              <TabsTrigger value="active" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{tabLabels.active}</TabsTrigger>
-              <TabsTrigger value="urgent" className="rounded-2xl data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">{tabLabels.urgent}</TabsTrigger>
-              <TabsTrigger value="inactive" className="rounded-2xl data-[state=active]:bg-muted-foreground/10 data-[state=active]:text-foreground">{tabLabels.inactive}</TabsTrigger>
+              <TabsTrigger value="all" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><span>{tabLabels.all}</span></TabsTrigger>
+              <TabsTrigger value="active" className="rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><span>{tabLabels.active}</span></TabsTrigger>
+              <TabsTrigger value="urgent" className="rounded-2xl data-[state=active]:bg-warning data-[state=active]:text-warning-foreground"><span>{tabLabels.urgent}</span></TabsTrigger>
+              <TabsTrigger value="inactive" className="rounded-2xl data-[state=active]:bg-muted-foreground/10 data-[state=active]:text-foreground"><span>{tabLabels.inactive}</span></TabsTrigger>
             </TabsList>
           </Tabs>
           </div>  

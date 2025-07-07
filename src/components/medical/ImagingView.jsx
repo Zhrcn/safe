@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/Button';
 
 export default function ImagingView({ record }) {
   const [showImage, setShowImage] = useState(false);
-  // Assume the image URL is in record.image or record.img or record.attachment(s)
-  // Adjust as needed based on your data structure
   const imageUrl = record.image || record.img || (record.attachments && record.attachments[0]?.url);
 
   return (

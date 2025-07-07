@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getProviders, addProvider, updateProvider, deleteProvider } from '@/store/services/patient/providerApi';
+import { getDoctors, addProvider, updateProvider, deleteProvider } from '@/store/services/patient/providerApi';
 
 export const fetchProviders = createAsyncThunk(
     'providers/fetchProviders',
     async (_, { rejectWithValue }) => {
         try {
-            return await getProviders();
+            return await getDoctors();
         } catch (err) {
             return rejectWithValue(err.response?.data || err.message);
         }

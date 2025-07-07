@@ -225,7 +225,6 @@ export default function Home() {
   const rolesRef = useRef(null);
   const testimonialsRef = useRef(null);
 
-  // Section fade-in animations
   useSectionInView(heroRef, node => {
     anime({
       targets: node,

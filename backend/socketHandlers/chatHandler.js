@@ -4,7 +4,7 @@ const { createNotification } = require('../utils/notification.utils');
 class ChatHandler {
   constructor(io) {
     this.io = io;
-    this.onlineUsers = new Map(); // Track online users: userId -> socketId
+    this.onlineUsers = new Map(); 
     this.setupEventHandlers();
   }
 
@@ -12,48 +12,39 @@ class ChatHandler {
     this.io.on('connection', (socket) => {
       console.log('A user connected:', socket.id, 'User ID:', socket.userId);
 
-      // Track user as online
       if (socket.userId) {
         this.onlineUsers.set(socket.userId, socket.id);
         this.broadcastUserPresence(socket.userId, true);
       }
 
-      // Join conversation room
       socket.on('join_conversation', ({ conversationId }) => {
         this.handleJoinConversation(socket, conversationId);
       });
 
-      // Leave conversation room
       socket.on('leave_conversation', ({ conversationId }) => {
         this.handleLeaveConversation(socket, conversationId);
       });
 
-      // Send message
       socket.on('send_message', async ({ conversationId, message }, callback) => {
         await this.handleSendMessage(socket, conversationId, message, callback);
       });
 
-      // Get messages
       socket.on('get_messages', async ({ conversationId }, callback) => {
         await this.handleGetMessages(socket, conversationId, callback);
       });
 
-      // Typing indicator
       socket.on('typing', ({ conversationId, userId }) => {
         this.handleTyping(socket, conversationId, userId);
       });
 
-      // Delete message
       socket.on('delete_message', async ({ conversationId, messageId }, callback) => {
         await this.handleDeleteMessage(socket, conversationId, messageId, callback);
       });
 
-      // Get online status
       socket.on('get_online_status', ({ userIds }, callback) => {
         this.handleGetOnlineStatus(socket, userIds, callback);
       });
 
-      // Disconnect
       socket.on('disconnect', () => {
         this.handleDisconnect(socket);
       });
@@ -81,27 +72,23 @@ class ChatHandler {
         return callback({ error: 'Conversation not found' });
       }
 
-      // Validate participant
       const participantIds = conversation.participants.map(id => id.toString());
       if (!participantIds.includes(socket.userId)) {
         console.error('ChatHandler: User not a participant', { userId: socket.userId, participantIds });
         return callback({ error: 'You are not a participant in this conversation' });
       }
 
-      // Validate message structure
       if (!message.content || !message.receiver) {
         console.error('ChatHandler: Invalid message structure', message);
         return callback({ error: 'Message must have content and receiver' });
       }
 
-      // Ensure receiver is a participant
       const receiverId = message.receiver.toString();
       if (!participantIds.includes(receiverId)) {
         console.error('ChatHandler: Receiver not a participant', { receiverId, participantIds });
         return callback({ error: 'Receiver must be a participant in this conversation' });
       }
 
-      // Create the message object
       const newMessage = {
         content: message.content,
         sender: socket.userId,
@@ -110,11 +97,9 @@ class ChatHandler {
         read: false
       };
 
-      // Add message to conversation
       conversation.messages.push(newMessage);
       await conversation.save();
 
-      // Get the populated message
       const populatedConversation = await Conversation.findById(conversationId)
         .populate('messages.sender', 'firstName lastName email')
         .populate('messages.receiver', 'firstName lastName email');
@@ -123,18 +108,15 @@ class ChatHandler {
 
       console.log('ChatHandler: Message saved successfully', { conversationId, messageId: populatedMessage._id });
       
-      // Create notification for the receiver if they are not the sender
       if (receiverId !== socket.userId) {
         await this.createMessageNotification(socket.user, message.content, receiverId, conversationId);
       }
       
-      // Emit to all participants in the conversation
       this.io.to(conversationId).emit('receive_message', { 
         conversationId, 
         message: populatedMessage 
       });
       
-      // Send success response
       callback({ 
         success: true, 
         data: { 
@@ -162,7 +144,6 @@ class ChatHandler {
         return callback({ error: 'Conversation not found' });
       }
       
-      // Check if user is a participant
       const participantIds = conversation.participants.map(id => id.toString());
       if (!participantIds.includes(socket.userId)) {
         console.error('[ChatHandler] User not a participant:', { userId: socket.userId, participantIds });
@@ -187,13 +168,11 @@ class ChatHandler {
         return callback({ error: 'Conversation not found' });
       }
 
-      // Check if user is a participant
       const participantIds = conversation.participants.map(id => id.toString());
       if (!participantIds.includes(socket.userId)) {
         return callback({ error: 'You are not a participant in this conversation' });
       }
 
-      // Find the message
       const messageIndex = conversation.messages.findIndex(
         msg => msg._id.toString() === messageId
       );
@@ -204,16 +183,13 @@ class ChatHandler {
 
       const message = conversation.messages[messageIndex];
 
-      // Only allow users to delete their own messages
       if (message.sender.toString() !== socket.userId) {
         return callback({ error: 'You can only delete your own messages' });
       }
 
-      // Remove the message
       conversation.messages.splice(messageIndex, 1);
       await conversation.save();
 
-      // Update lastMessageTimestamp
       if (conversation.messages.length > 0) {
         const lastMessage = conversation.messages[conversation.messages.length - 1];
         conversation.lastMessageTimestamp = lastMessage.timestamp;
@@ -222,7 +198,6 @@ class ChatHandler {
       }
       await conversation.save();
 
-      // Emit message deleted event to all participants
       this.io.to(conversationId).emit('message_deleted', { 
         conversationId, 
         messageId 
@@ -242,7 +217,6 @@ class ChatHandler {
   handleDisconnect(socket) {
     console.log('User disconnected:', socket.id, 'User ID:', socket.userId);
     
-    // Remove user from online users and broadcast offline status
     if (socket.userId) {
       this.onlineUsers.delete(socket.userId);
       this.broadcastUserPresence(socket.userId, false);
@@ -260,7 +234,6 @@ class ChatHandler {
   }
 
   broadcastUserPresence(userId, isOnline) {
-    // Broadcast to all connected clients
     this.io.emit('user_presence', { userId, isOnline });
   }
 

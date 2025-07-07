@@ -1,9 +1,7 @@
-// Console filter to suppress source map warnings in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   const originalConsoleError = console.error;
   const originalConsoleWarn = console.warn;
 
-  // Filter out source map related warnings
   const shouldSuppress = (message) => {
     if (typeof message === 'string') {
       return message.includes('Source map error') ||
@@ -18,7 +16,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
              message.includes('map is undefined');
     }
     
-    // Also check if any of the arguments contain these strings
     if (Array.isArray(message)) {
       return message.some(arg => 
         typeof arg === 'string' && (
@@ -39,14 +36,12 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     return false;
   };
 
-  // Override console.error
   console.error = (...args) => {
     if (!shouldSuppress(args)) {
       originalConsoleError.apply(console, args);
     }
   };
 
-  // Override console.warn
   console.warn = (...args) => {
     if (!shouldSuppress(args)) {
       originalConsoleWarn.apply(console, args);

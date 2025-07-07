@@ -7,18 +7,15 @@ import * as cornerstoneMath from 'cornerstone-math';
 import * as cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader';
 import * as dicomParser from 'dicom-parser';
 
-// Attach Hammer to window for cornerstone-tools
 if (typeof window !== 'undefined') {
   window.Hammer = Hammer;
 }
 
-// Set external dependencies for cornerstone tools and wado image loader
 cornerstoneTools.external.cornerstone = cornerstone;
 cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
 cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
 cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
 
-// Initialize web worker for cornerstone-wado-image-loader
 cornerstoneWADOImageLoader.webWorkerManager.initialize({
   webWorkerPath: '/cornerstoneWADOImageLoaderWebWorker.js',
   taskConfiguration: {
@@ -28,7 +25,6 @@ cornerstoneWADOImageLoader.webWorkerManager.initialize({
   },
 });
 
-// Constants
 const TOOL_LIST = [
   { name: 'Wwwc', label: 'Window/Level', icon: '🌗' },
   { name: 'Pan', label: 'Pan', icon: '✋' },
@@ -40,19 +36,16 @@ const ZOOM_FACTOR = 1.2;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
 
-// Custom hook for cornerstone initialization and management
 function useCornerstone(imageUrls, currentIndex, activeTool) {
   const elementRef = useRef(null);
   const [numImages, setNumImages] = useState(0);
   const [error, setError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Helper to get imageIds in wadouri format
   const getImageIds = useCallback(() => (
     imageUrls.map((url) => (url.startsWith('wadouri:') ? url : `wadouri:${url}`))
   ), [imageUrls]);
 
-  // Handle tool activation
   const activateTool = useCallback(
     (toolName) => {
       if (!elementRef.current) return;

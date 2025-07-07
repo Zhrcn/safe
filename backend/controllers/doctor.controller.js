@@ -130,13 +130,11 @@ exports.getDoctor = asyncHandler(async (req, res) => {
 exports.getDoctorPatients = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   
-  // First, find the doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
   
-  // Find all appointments for this doctor
   const appointments = await Appointment.find({ doctor: doctor._id })
     .populate({
       path: 'patient',
@@ -147,7 +145,6 @@ exports.getDoctorPatients = asyncHandler(async (req, res) => {
     })
     .sort({ date: -1 });
 
-  // Extract unique patients from appointments
   const patientMap = new Map();
   appointments.forEach(appointment => {
     if (appointment.patient && !patientMap.has(appointment.patient._id.toString())) {
@@ -176,13 +173,11 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const patientId = req.params.id;
   
-  // First, find the doctor record for this user
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
   
-  // Find the patient by ID
   const patient = await Patient.findById(patientId)
     .populate('user', 'firstName lastName email phoneNumber profilePictureUrl dateOfBirth gender address')
     .populate('medicalFile');
@@ -191,7 +186,6 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
   }
   
-  // Check if this doctor has any appointments with this patient
   const appointment = await Appointment.findOne({ 
     doctor: doctor._id, 
     patient: patientId 
@@ -201,7 +195,6 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, 'You can only view patients you have appointments with.'));
   }
   
-  // Get all appointments for this patient with this doctor
   const appointments = await Appointment.find({ 
     doctor: doctor._id, 
     patient: patientId 

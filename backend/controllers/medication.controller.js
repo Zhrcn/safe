@@ -1,7 +1,6 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const Medication = require('../models/medication');
 
-// Get all medications for the authenticated patient
 const getPatientMedications = asyncHandler(async (req, res) => {
   const medications = await Medication.find({ patient: req.user.id })
     .populate('prescribedBy', 'firstName lastName')
@@ -13,7 +12,6 @@ const getPatientMedications = asyncHandler(async (req, res) => {
   });
 });
 
-// Get a single medication by ID
 const getMedication = asyncHandler(async (req, res) => {
   const medication = await Medication.findById(req.params.id)
     .populate('prescribedBy', 'firstName lastName');
@@ -23,7 +21,6 @@ const getMedication = asyncHandler(async (req, res) => {
     throw new Error('Medication not found');
   }
 
-  // Check if the medication belongs to the authenticated patient
   if (medication.patient.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to access this medication');
@@ -35,7 +32,6 @@ const getMedication = asyncHandler(async (req, res) => {
   });
 });
 
-// Create a new medication
 const createMedication = asyncHandler(async (req, res) => {
   const {
     name,
@@ -53,8 +49,7 @@ const createMedication = asyncHandler(async (req, res) => {
     prescribedBy
   } = req.body;
 
-  // Handle prescribedBy field - if it's not a valid ObjectId, use current user
-  let doctorId = req.user.id; // Default to current user
+  let doctorId = req.user.id; 
   
   if (prescribedBy && require('mongoose').Types.ObjectId.isValid(prescribedBy)) {
     doctorId = prescribedBy;
@@ -85,7 +80,6 @@ const createMedication = asyncHandler(async (req, res) => {
   });
 });
 
-// Update a medication
 const updateMedication = asyncHandler(async (req, res) => {
   const medication = await Medication.findById(req.params.id);
 
@@ -94,16 +88,14 @@ const updateMedication = asyncHandler(async (req, res) => {
     throw new Error('Medication not found');
   }
 
-  // Check if the medication belongs to the authenticated patient
   if (medication.patient.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to update this medication');
   }
 
-  // Handle prescribedBy field in updates as well
   let updateData = { ...req.body };
   if (updateData.prescribedBy && !require('mongoose').Types.ObjectId.isValid(updateData.prescribedBy)) {
-    delete updateData.prescribedBy; // Remove invalid ObjectId
+    delete updateData.prescribedBy; 
   }
 
   const updatedMedication = await Medication.findByIdAndUpdate(
@@ -118,7 +110,6 @@ const updateMedication = asyncHandler(async (req, res) => {
   });
 });
 
-// Delete a medication
 const deleteMedication = asyncHandler(async (req, res) => {
   const medication = await Medication.findById(req.params.id);
 
@@ -127,7 +118,6 @@ const deleteMedication = asyncHandler(async (req, res) => {
     throw new Error('Medication not found');
   }
 
-  // Check if the medication belongs to the authenticated patient
   if (medication.patient.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to delete this medication');
@@ -141,7 +131,6 @@ const deleteMedication = asyncHandler(async (req, res) => {
   });
 });
 
-// Update medication reminders
 const updateReminders = asyncHandler(async (req, res) => {
   const { remindersEnabled, reminderTimes, reminderDays } = req.body;
 
@@ -152,7 +141,6 @@ const updateReminders = asyncHandler(async (req, res) => {
     throw new Error('Medication not found');
   }
 
-  // Check if the medication belongs to the authenticated patient
   if (medication.patient.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to update this medication');
@@ -174,7 +162,6 @@ const updateReminders = asyncHandler(async (req, res) => {
   });
 });
 
-// Request medication refill
 const requestRefill = asyncHandler(async (req, res) => {
   const medication = await Medication.findById(req.params.id);
 
@@ -183,13 +170,11 @@ const requestRefill = asyncHandler(async (req, res) => {
     throw new Error('Medication not found');
   }
 
-  // Check if the medication belongs to the authenticated patient
   if (medication.patient.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to request refill for this medication');
   }
 
-  // Update refill date to current date + 7 days
   const newRefillDate = new Date();
   newRefillDate.setDate(newRefillDate.getDate() + 7);
 

@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
 const MedicalFile = require('../models/MedicalFile');
+const MedicalRecord = require('../models/MedicalRecord');
 const Appointment = require('../models/Appointment');
 const Consultation = require('../models/Consultation');
 const Prescription = require('../models/Prescription');
@@ -100,6 +101,7 @@ const seedDatabase = async () => {
       Doctor.deleteMany({}),
       Patient.deleteMany({}),
       MedicalFile.deleteMany({}),
+      MedicalRecord.deleteMany({}),
       Appointment.deleteMany({}),
       Consultation.deleteMany({}),
       Prescription.deleteMany({}),
@@ -427,7 +429,7 @@ const seedDatabase = async () => {
           patientId: patient.user,
           doctorId: doctor.user,
           issueDate: new Date(),
-          expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days from now
+          expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), 
           medications: [
             {
               name: 'Amlodipine',
@@ -453,8 +455,8 @@ const seedDatabase = async () => {
         {
           patientId: patient.user,
           doctorId: doctor.user,
-          issueDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60), // 60 days ago
-          expiryDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
+          issueDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60),
+          expiryDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), 
           medications: [
             {
               name: 'Metformin',

@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { doctorAppointmentsApi } from '../../services/doctor/appointmentsApi';
 
-// Async thunks
 export const fetchDoctorAppointments = createAsyncThunk(
   'doctorAppointments/fetchAppointments',
   async (_, { rejectWithValue }) => {
@@ -50,6 +49,30 @@ export const updateAppointment = createAsyncThunk(
   }
 );
 
+export const approveRescheduleRequest = createAsyncThunk(
+  'doctorAppointments/approveRescheduleRequest',
+  async ({ appointmentId, rescheduleData }, { rejectWithValue }) => {
+    try {
+      const response = await doctorAppointmentsApi.handleRescheduleRequest(appointmentId, 'approve', rescheduleData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to approve reschedule request');
+    }
+  }
+);
+
+export const rejectRescheduleRequest = createAsyncThunk(
+  'doctorAppointments/rejectRescheduleRequest',
+  async ({ appointmentId, doctorNotes }, { rejectWithValue }) => {
+    try {
+      const response = await doctorAppointmentsApi.handleRescheduleRequest(appointmentId, 'reject', { doctorNotes });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to reject reschedule request');
+    }
+  }
+);
+
 export const getAppointmentDetails = createAsyncThunk(
   'doctorAppointments/getAppointmentDetails',
   async (appointmentId, { rejectWithValue }) => {
@@ -86,7 +109,6 @@ const doctorAppointmentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch appointments
       .addCase(fetchDoctorAppointments.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -99,7 +121,6 @@ const doctorAppointmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Accept appointment
       .addCase(acceptAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -107,7 +128,6 @@ const doctorAppointmentsSlice = createSlice({
       .addCase(acceptAppointment.fulfilled, (state, action) => {
         state.loading = false;
         state.success = 'Appointment accepted successfully';
-        // Update the appointment in the list
         const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
         if (index !== -1) {
           state.appointments[index] = action.payload.data;
@@ -117,7 +137,6 @@ const doctorAppointmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Reject appointment
       .addCase(rejectAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -125,7 +144,6 @@ const doctorAppointmentsSlice = createSlice({
       .addCase(rejectAppointment.fulfilled, (state, action) => {
         state.loading = false;
         state.success = 'Appointment rejected successfully';
-        // Update the appointment in the list
         const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
         if (index !== -1) {
           state.appointments[index] = action.payload.data;
@@ -135,7 +153,6 @@ const doctorAppointmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Update appointment
       .addCase(updateAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,12 +160,10 @@ const doctorAppointmentsSlice = createSlice({
       .addCase(updateAppointment.fulfilled, (state, action) => {
         state.loading = false;
         state.success = 'Appointment updated successfully';
-        // Update the appointment in the list
         const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
         if (index !== -1) {
           state.appointments[index] = action.payload.data;
         }
-        // Update selected appointment if it's the same one
         if (state.selectedAppointment && state.selectedAppointment._id === action.payload.data._id) {
           state.selectedAppointment = action.payload.data;
         }
@@ -157,7 +172,6 @@ const doctorAppointmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Get appointment details
       .addCase(getAppointmentDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -169,9 +183,41 @@ const doctorAppointmentsSlice = createSlice({
       .addCase(getAppointmentDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(approveRescheduleRequest.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(approveRescheduleRequest.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Reschedule request approved successfully';
+        const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
+        if (index !== -1) {
+          state.appointments[index] = action.payload.data;
+        }
+      })
+      .addCase(approveRescheduleRequest.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(rejectRescheduleRequest.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(rejectRescheduleRequest.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Reschedule request rejected successfully';
+        const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
+        if (index !== -1) {
+          state.appointments[index] = action.payload.data;
+        }
+      })
+      .addCase(rejectRescheduleRequest.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });
 
 export const { clearError, clearSuccess, clearSelectedAppointment } = doctorAppointmentsSlice.actions;
-export default doctorAppointmentsSlice.reducer; 
+export default doctorAppointmentsSlice.reducer;

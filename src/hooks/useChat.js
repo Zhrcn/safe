@@ -28,7 +28,6 @@ export const useChat = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation('common');
   
-  // State
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -36,21 +35,17 @@ export const useChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState({});
 
-  // Redux state
   const conversations = useSelector(state => state.conversations.conversations);
   const currentUser = useSelector(selectCurrentUser);
   const currentConversation = useSelector(state => state.conversations.currentConversation);
 
-  // Load conversations on mount
   useEffect(() => {
     dispatch(fetchConversations());
   }, [dispatch]);
 
-  // Socket event listeners
   useEffect(() => {
     const unsubscribeReceive = onReceiveMessage((data) => {
       if (data && data.conversationId && data.message) {
-        // Update messages if this conversation is selected
         if (selectedConversation && selectedConversation._id === data.conversationId) {
           setMessages(prev => [...prev, data.message]);
         }
@@ -59,11 +54,9 @@ export const useChat = () => {
 
     const unsubscribeDelete = onMessageDeleted((data) => {
       if (data && data.conversationId && data.messageId) {
-        // Remove message from local state
         if (selectedConversation && selectedConversation._id === data.conversationId) {
           setMessages(prev => prev.filter(m => m._id !== data.messageId));
         }
-        // Update Redux state
         dispatch(removeMessageFromConversation({
           conversationId: data.conversationId,
           messageId: data.messageId
@@ -78,7 +71,6 @@ export const useChat = () => {
           [data.conversationId]: data.userId
         }));
         
-        // Clear typing indicator after 3 seconds
         setTimeout(() => {
           setTypingUsers(prev => {
             const newState = { ...prev };
@@ -96,7 +88,6 @@ export const useChat = () => {
     };
   }, [selectedConversation, dispatch]);
 
-  // Select conversation
   const selectConversation = useCallback(async (conversation) => {
     if (!conversation) {
       setSelectedConversation(null);
@@ -107,10 +98,8 @@ export const useChat = () => {
     setSelectedConversation(conversation);
     dispatch(setCurrentConversation(conversation));
     
-    // Join conversation room
     joinConversation(conversation._id);
     
-    // Load messages
     setLoadingMessages(true);
     setMessagesError(null);
     
@@ -125,11 +114,9 @@ export const useChat = () => {
       setLoadingMessages(false);
     }
 
-    // Mark as read
     dispatch(markConversationAsRead(conversation._id));
   }, [dispatch]);
 
-  // Send message
   const sendMessageHandler = useCallback(async (content) => {
     if (!selectedConversation || !currentUser) {
       toast.error('No conversation selected or user not loaded');
@@ -139,7 +126,6 @@ export const useChat = () => {
     const messageContent = content.trim();
     if (!messageContent) return;
 
-    // Add optimistic message
     dispatch(addOptimisticMessage({
       conversationId: selectedConversation._id,
       content: messageContent,
@@ -158,7 +144,6 @@ export const useChat = () => {
     }
   }, [selectedConversation, currentUser, dispatch]);
 
-  // Delete message
   const deleteMessageHandler = useCallback(async (messageId) => {
     if (!selectedConversation) return;
 
@@ -174,7 +159,6 @@ export const useChat = () => {
     }
   }, [selectedConversation, dispatch]);
 
-  // Delete conversation
   const deleteConversationHandler = useCallback(async (conversationId) => {
     if (window.confirm(t('Are you sure you want to delete this conversation? This action cannot be undone.'))) {
       try {
@@ -191,7 +175,6 @@ export const useChat = () => {
     }
   }, [selectedConversation, dispatch, t]);
 
-  // Create conversation
   const createConversationHandler = useCallback(async (participants, subject) => {
     try {
       const result = await dispatch(createConversation({ participants, subject })).unwrap();
@@ -206,14 +189,12 @@ export const useChat = () => {
     return null;
   }, [dispatch]);
 
-  // Send typing indicator
   const sendTypingHandler = useCallback((conversationId) => {
     if (currentUser && conversationId) {
       sendTyping({ conversationId, userId: currentUser._id });
     }
   }, [currentUser]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (selectedConversation) {
@@ -223,7 +204,6 @@ export const useChat = () => {
   }, [selectedConversation]);
 
   return {
-    // State
     conversations,
     selectedConversation,
     messages,
@@ -233,7 +213,6 @@ export const useChat = () => {
     currentUser,
     currentConversation,
     
-    // Actions
     selectConversation,
     sendMessage: sendMessageHandler,
     deleteMessage: deleteMessageHandler,
@@ -241,7 +220,6 @@ export const useChat = () => {
     createConversation: createConversationHandler,
     sendTyping: sendTypingHandler,
     
-    // Utilities
     refreshMessages: () => selectConversation(selectedConversation)
   };
-}; 
+};

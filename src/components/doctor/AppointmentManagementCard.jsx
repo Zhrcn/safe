@@ -5,6 +5,8 @@ import {
   acceptAppointment,
   rejectAppointment,
   updateAppointment,
+  approveRescheduleRequest,
+  rejectRescheduleRequest,
   clearError,
   clearSuccess
 } from '../../store/slices/doctor/doctorAppointmentsSlice';
@@ -31,8 +33,9 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isApproveRescheduleDialogOpen, setIsApproveRescheduleDialogOpen] = useState(false);
+  const [isRejectRescheduleDialogOpen, setIsRejectRescheduleDialogOpen] = useState(false);
   
-  // Form states
   const [acceptForm, setAcceptForm] = useState({
     date: '',
     time: '',
@@ -50,6 +53,14 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     patientNotes: '',
     reason: '',
     type: ''
+  });
+  const [approveRescheduleForm, setApproveRescheduleForm] = useState({
+    newDate: '',
+    newTime: '',
+    doctorNotes: ''
+  });
+  const [rejectRescheduleForm, setRejectRescheduleForm] = useState({
+    doctorNotes: ''
   });
 
   useEffect(() => {
@@ -74,20 +85,37 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     }
   }, [success, dispatch]);
 
-  // Handle dialog opening based on dialogMode
   useEffect(() => {
     if (dialogMode === 'accept') {
       setIsAcceptDialogOpen(true);
       setIsRejectDialogOpen(false);
       setIsUpdateDialogOpen(false);
+      setIsApproveRescheduleDialogOpen(false);
+      setIsRejectRescheduleDialogOpen(false);
     } else if (dialogMode === 'reject') {
       setIsRejectDialogOpen(true);
       setIsAcceptDialogOpen(false);
       setIsUpdateDialogOpen(false);
+      setIsApproveRescheduleDialogOpen(false);
+      setIsRejectRescheduleDialogOpen(false);
     } else if (dialogMode === 'reschedule') {
       setIsUpdateDialogOpen(true);
       setIsAcceptDialogOpen(false);
       setIsRejectDialogOpen(false);
+      setIsApproveRescheduleDialogOpen(false);
+      setIsRejectRescheduleDialogOpen(false);
+    } else if (dialogMode === 'approve_reschedule') {
+      setIsApproveRescheduleDialogOpen(true);
+      setIsAcceptDialogOpen(false);
+      setIsRejectDialogOpen(false);
+      setIsUpdateDialogOpen(false);
+      setIsRejectRescheduleDialogOpen(false);
+    } else if (dialogMode === 'reject_reschedule') {
+      setIsRejectRescheduleDialogOpen(true);
+      setIsAcceptDialogOpen(false);
+      setIsRejectDialogOpen(false);
+      setIsUpdateDialogOpen(false);
+      setIsApproveRescheduleDialogOpen(false);
     }
   }, [dialogMode, appointment]);
 
@@ -135,6 +163,28 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     if (onActionComplete) onActionComplete();
   };
 
+  const handleApproveReschedule = async () => {
+    const rescheduleData = {};
+    if (approveRescheduleForm.newDate) rescheduleData.newDate = approveRescheduleForm.newDate;
+    if (approveRescheduleForm.newTime) rescheduleData.newTime = approveRescheduleForm.newTime;
+    if (approveRescheduleForm.doctorNotes) rescheduleData.doctorNotes = approveRescheduleForm.doctorNotes;
+
+    await dispatch(approveRescheduleRequest({ appointmentId: appointment._id, rescheduleData }));
+    setIsApproveRescheduleDialogOpen(false);
+    setApproveRescheduleForm({ newDate: '', newTime: '', doctorNotes: '' });
+    if (onActionComplete) onActionComplete();
+  };
+
+  const handleRejectReschedule = async () => {
+    await dispatch(rejectRescheduleRequest({ 
+      appointmentId: appointment._id, 
+      doctorNotes: rejectRescheduleForm.doctorNotes 
+    }));
+    setIsRejectRescheduleDialogOpen(false);
+    setRejectRescheduleForm({ doctorNotes: '' });
+    if (onActionComplete) onActionComplete();
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -144,6 +194,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       case 'completed': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       case 'rescheduled': return 'bg-purple-100 text-purple-800';
+      case 'reschedule_requested': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -162,7 +213,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Appointment Management</span>
+          <span>{appointment?.patient?.user?.firstName} {appointment?.patient?.user?.lastName}</span>
           <Badge className={getStatusColor(appointment?.status)}>
             {appointment?.status?.toUpperCase()}
           </Badge>
@@ -220,6 +271,21 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
               <div className="space-y-1">
                 <span className="font-medium">Notes:</span>
                 <p className="text-sm text-gray-600">{appointment.notes}</p>
+              </div>
+            )}
+            {appointment?.status === 'reschedule_requested' && appointment?.rescheduleRequest && (
+              <div className="space-y-1">
+                <span className="font-medium text-orange-700">Reschedule Request:</span>
+                <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                  <p className="text-sm text-orange-800">
+                    <strong>Preferred Times:</strong> {appointment.rescheduleRequest?.preferredTimes || 'Not specified'}
+                  </p>
+                  {appointment.rescheduleRequest?.reason && (
+                    <p className="text-sm text-orange-800 mt-1">
+                      <strong>Reason:</strong> {appointment.rescheduleRequest.reason}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -322,7 +388,93 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
             </>
           )}
 
-          {appointment?.status !== 'rejected' && appointment?.status !== 'completed' && (
+          {appointment?.status === 'reschedule_requested' && (
+            <>
+              <Dialog open={isApproveRescheduleDialogOpen} onOpenChange={setIsApproveRescheduleDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" disabled={loading} className="bg-green-600 hover:bg-green-700">
+                    {t('doctor.appointments.approveReschedule', 'Approve Reschedule')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('doctor.appointments.approveReschedule', 'Approve Reschedule Request')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="approve-new-date">New Date</Label>
+                      <Input
+                        id="approve-new-date"
+                        type="date"
+                        value={approveRescheduleForm.newDate}
+                        onChange={(e) => setApproveRescheduleForm({ ...approveRescheduleForm, newDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="approve-new-time">New Time</Label>
+                      <Input
+                        id="approve-new-time"
+                        type="time"
+                        value={approveRescheduleForm.newTime}
+                        onChange={(e) => setApproveRescheduleForm({ ...approveRescheduleForm, newTime: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="approve-notes">Doctor Notes</Label>
+                      <Textarea
+                        id="approve-notes"
+                        value={approveRescheduleForm.doctorNotes}
+                        onChange={(e) => setApproveRescheduleForm({ ...approveRescheduleForm, doctorNotes: e.target.value })}
+                        placeholder="Add notes for the patient"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsApproveRescheduleDialogOpen(false)}>
+                        {t('common.cancel', 'Cancel')}
+                      </Button>
+                      <Button onClick={handleApproveReschedule} disabled={loading}>
+                        {t('doctor.appointments.approveReschedule', 'Approve')}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isRejectRescheduleDialogOpen} onOpenChange={setIsRejectRescheduleDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" className="bg-red-500 text-foreground" disabled={loading}>
+                    {t('doctor.appointments.rejectReschedule', 'Reject Reschedule')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('doctor.appointments.rejectReschedule', 'Reject Reschedule Request')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="reject-reschedule-notes">Reason for Rejection</Label>
+                      <Textarea
+                        id="reject-reschedule-notes"
+                        value={rejectRescheduleForm.doctorNotes}
+                        onChange={(e) => setRejectRescheduleForm({ doctorNotes: e.target.value })}
+                        placeholder="Provide a reason for rejecting this reschedule request"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2 gap-3">
+                      <Button className="border-primary text-primary" variant="outline" onClick={() => setIsRejectRescheduleDialogOpen(false)}>
+                        {t('common.cancel', 'Cancel')}
+                      </Button>
+                      <Button variant="default" className="bg-red-500  text-foreground" onClick={handleRejectReschedule} disabled={loading}>
+                        {t('doctor.appointments.rejectReschedule', 'Reject')}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
+
+          {appointment?.status !== 'rejected' && appointment?.status !== 'completed' && appointment?.status !== 'reschedule_requested' && (
             <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" disabled={loading || !canModify}>

@@ -9,10 +9,8 @@ const nextConfig = {
     localeDetection: false,
   },
   
-  // Suppress source map warnings in development
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
-      // Suppress source map warnings for React DevTools and other development tools
       config.ignoreWarnings = [
         /Failed to parse source map/,
         /Can't resolve .*\.map/,
@@ -27,7 +25,6 @@ const nextConfig = {
         /Source Map URL:/
       ];
       
-      // Also suppress console warnings for source maps
       config.infrastructureLogging = {
         level: 'error',
         debug: false

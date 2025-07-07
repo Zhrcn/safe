@@ -103,7 +103,7 @@ const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, toolti
 );
 
 const AppointmentCard = ({ appointment, t }) => {
-  // Helper function to get doctor name with fallbacks
+  
   const getDoctorName = (appointment) => {
     if (appointment.doctor?.user?.firstName && appointment.doctor?.user?.lastName) {
       return `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`;
@@ -120,7 +120,6 @@ const AppointmentCard = ({ appointment, t }) => {
     return t('doctor.appointments.unknownDoctor', 'Unknown Doctor');
   };
 
-  // Helper function to get doctor specialty
   const getDoctorSpecialty = (appointment) => {
     return appointment.doctor?.specialty || 
            appointment.doctor?.specialization || 
@@ -202,7 +201,6 @@ const DashboardPage = () => {
     const { appointments, loading: isLoadingAppointments, error: appointmentsError } = useSelector(state => state.appointments);
     const isRtl = i18n.language === 'ar';
 
-    // Dashboard slice state
     const {
         summary,
         activeMedications,
@@ -225,7 +223,7 @@ const DashboardPage = () => {
         dispatch(fetchAllergies());
         dispatch(fetchRecentMessages());
         dispatch(fetchRecentConsultations());
-        dispatch(fetchAppointments()); // Use appointments slice for appointments data
+        dispatch(fetchAppointments());
     }, [dispatch]);
 
     const healthMetrics = [
@@ -301,7 +299,6 @@ const DashboardPage = () => {
         }
     ];
 
-    // Use appointments from appointments slice, filter for upcoming appointments
     const upcoming = (appointments || []).filter(a => 
         a.status === 'scheduled' || 
         a.status === 'upcoming' || 
@@ -349,8 +346,8 @@ const DashboardPage = () => {
                 <div className="lg:col-span-2 space-y-8">
                     <Tabs defaultValue="appointments" className="w-full rounded-2xl">
                         <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted">
-                            <TabsTrigger value="appointments" className="rounded-xl">{t('patient.dashboard.upcomingAppointments')}</TabsTrigger>
-                            <TabsTrigger value="activity" className="rounded-xl">{t('patient.dashboard.recentActivity')}</TabsTrigger>
+                            <TabsTrigger value="appointments" className="rounded-xl"><span>{t('patient.dashboard.upcomingAppointments')}</span></TabsTrigger>
+                            <TabsTrigger value="activity" className="rounded-xl"><span>{t('patient.dashboard.recentActivity')}</span></TabsTrigger>
                         </TabsList>
                         <TabsContent value="appointments">
                             <div className="space-y-4">

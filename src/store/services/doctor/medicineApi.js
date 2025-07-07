@@ -1,7 +1,6 @@
 import axiosInstance from '../axiosInstance';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// Base API for medicine requests
 export const medicineApi = createApi({
   reducerPath: 'medicineApi',
   baseQuery: fetchBaseQuery({
@@ -33,7 +32,6 @@ export const medicineApi = createApi({
 
 export const { useGetRequestsQuery, useCreateRequestMutation } = medicineApi;
 
-// Legacy functions for backward compatibility
 export const getMedicines = async () => {
   const res = await axiosInstance.get('/doctor/medicine');
   return res.data.data;

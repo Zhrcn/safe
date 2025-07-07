@@ -7,7 +7,7 @@ import MessageInput from "./MessageInput";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { useTranslation } from 'react-i18next';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useTheme } from '@/context/ThemeContext';
+import TypingIndicator from './TypingIndicator';
 
 function formatDate(date, t) {
   const today = new Date();
@@ -32,24 +32,18 @@ function formatDate(date, t) {
 
 export default function ChatPage({ conversation, onSend, newMessage, onInputChange, isMobile, onBack, isTyping, onDelete, onDeleteMessage, currentUser, loading, error }) {
   const { t } = useTranslation('common');
-  const { theme } = useTheme();
   const messagesEndRef = useRef(null);
   
-  // Get online status for the conversation
   const { isOtherParticipantOnline } = useOnlineStatus(conversation, currentUser?._id);
   
-  // Debug logging
-      // ChatPage debug info
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
-  // Show loading state
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-background rounded-2xl shadow-lg overflow-hidden border border-border">
-        {/* Fixed Header */}
+      <div className="flex flex-col h-full bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10 shadow-sm flex-shrink-0">
           {isMobile && (
             <Button size="icon" variant="ghost" onClick={onBack} className="mr-2">
@@ -67,8 +61,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             <p className="text-xs text-muted-foreground truncate">Loading messages...</p>
           </div>
         </div>
-        {/* Scrollable Content Area */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 flex items-center justify-center overflow-hidden bg-background">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
             <p className="text-muted-foreground">Loading messages...</p>
@@ -78,11 +71,9 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="flex flex-col h-full bg-background rounded-2xl shadow-lg overflow-hidden border border-border">
-        {/* Fixed Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10 shadow-sm flex-shrink-0">
           {isMobile && (
             <Button size="icon" variant="ghost" onClick={onBack} className="mr-2">
@@ -100,7 +91,6 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             <p className="text-xs text-red-500 truncate">Error loading messages</p>
           </div>
         </div>
-        {/* Scrollable Content Area */}
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div className="text-center">
             <p className="text-red-500 mb-2">Failed to load messages</p>
@@ -115,7 +105,6 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
   let lastSender = null;
   let lastDate = null;
   
-  // Check if messages exist and is an array
   if (conversation?.messages && Array.isArray(conversation.messages)) {
     conversation.messages.forEach((msg, idx) => {
       const msgDate = new Date(msg.timestamp);
@@ -134,7 +123,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
   }
 
   return (
-    <div className="flex flex-col h-full bg-background rounded-2xl shadow-lg overflow-hidden border border-border">
+    <div className="flex flex-col h-full bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
       {/* Fixed Header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10 shadow-sm flex-shrink-0 z-10">
         {isMobile && (
@@ -148,14 +137,14 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             {conversation?.title?.[0] || "U"}
           </AvatarFallback>
           <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
-            isOtherParticipantOnline ? 'bg-green-500' : 'bg-gray-400'
+            isOtherParticipantOnline ? 'bg-green-500' : 'bg-muted-foreground'
           }`} />
         </Avatar>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg text-foreground truncate">{conversation?.title || "Unknown"}</h3>
           <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
             <Circle className={`w-2 h-2 ${
-              isOtherParticipantOnline ? 'text-green-500' : 'text-gray-400'
+              isOtherParticipantOnline ? 'text-green-500' : 'text-muted-foreground'
             }`} /> 
             {isOtherParticipantOnline 
               ? t('patient.medications.messages.online', 'Online') 
@@ -179,7 +168,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
       </div>
 
       {/* Scrollable Messages Area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden chat-scroll">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden chat-scroll bg-background">
         <div className="px-4 py-6">
           <div className="flex flex-col gap-2">
             {grouped.length === 0 ? (
@@ -217,9 +206,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
             )}
             <div ref={messagesEndRef} />
           </div>
-          {isTyping && (
-            <div className="text-xs text-muted-foreground px-4 pb-2">Someone is typing...</div>
-          )}
+          {isTyping && <TypingIndicator />}
         </div>
       </div>
 

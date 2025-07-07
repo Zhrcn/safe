@@ -50,9 +50,8 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
             frequency,
             startDate: new Date().toISOString(),
             refillDate: refillDate ? new Date(refillDate).toISOString() : null,
-            instructions: notes, // Map notes to instructions for backend
+            instructions: notes, 
             notes
-            // Don't send prescribedBy if it's just a name string - backend will use current user
         });
     };
 

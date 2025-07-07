@@ -28,6 +28,7 @@ export const scheduleAppointment = async (appointmentData) => {
 };
 
 export const requestReschedule = async (appointmentId, rescheduleData) => {
+  console.log('Sending reschedule request:', { appointmentId, rescheduleData });
   const res = await axiosInstance.post(`/appointments/${appointmentId}/reschedule-request`, rescheduleData);
   return res.data.data;
 };

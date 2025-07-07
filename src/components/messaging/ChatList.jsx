@@ -8,15 +8,15 @@ import { useTranslation } from 'react-i18next';
 export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
   const { t } = useTranslation('common');
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 pb-2 bg-background flex-shrink-0">
+    <div className="h-full flex flex-col bg-card">
+      <div className="p-4 pb-2 bg-card flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder={t('patient.medications.messages.search_placeholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="pl-12 pr-4 py-2 rounded-full bg-muted/70 border border-border focus:ring-2 focus:ring-primary text-base shadow-sm"
+            className="pl-12 pr-4 py-2 rounded-full bg-background border border-border focus:ring-2 focus:ring-primary text-base shadow-sm"
           />
         </div>
       </div>
@@ -36,19 +36,16 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
           if (conv.lastMessage) {
             if (conv.messages && conv.messages.length > 0) {
               const lastMsg = conv.messages[conv.messages.length - 1];
-              // Handle sender which might be a string or an object with user data
               let senderName = "User";
               if (lastMsg.sender === "You") {
                 senderName = "You";
               } else if (typeof lastMsg.sender === "string") {
-                // Check if this is the current user's ID
                 if (currentUser && lastMsg.sender === currentUser._id) {
                   senderName = "You";
                 } else {
                   senderName = lastMsg.sender.split(" ")[0];
                 }
               } else if (lastMsg.sender && typeof lastMsg.sender === "object") {
-                // Handle populated user object
                 if (currentUser && lastMsg.sender._id === currentUser._id) {
                   senderName = "You";
                 } else {

@@ -195,7 +195,6 @@ const Appointments = ({ patient }) => {
         setAppointments([...appointments, newAppointment]);
     };
 
-    // Add missing handler functions
     const handleChat = (appointment) => {
         console.log('Chat with appointment:', appointment);
         // TODO: Implement chat functionality

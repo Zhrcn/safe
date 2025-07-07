@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Calendar, Clock, FileText, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,19 +9,10 @@ import { useTranslation } from 'react-i18next';
 const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) => {
   const { t } = useTranslation('common');
   const [formData, setFormData] = useState({
-    requestedDate: '',
-    requestedTime: '',
-    preferredTimes: [],
     reason: '',
     notes: ''
   });
   const [errors, setErrors] = useState({});
-
-  const timeSlots = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
-    '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
-  ];
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -31,7 +20,6 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
       [field]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -40,38 +28,11 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
     }
   };
 
-  const handlePreferredTimeChange = (time, isChecked) => {
-    setFormData(prev => ({
-      ...prev,
-      preferredTimes: isChecked 
-        ? [...prev.preferredTimes, time]
-        : prev.preferredTimes.filter(t => t !== time)
-    }));
-  };
-
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.requestedDate) {
-      newErrors.requestedDate = 'Requested date is required';
-    }
-    
-    if (!formData.requestedTime) {
-      newErrors.requestedTime = 'Requested time is required';
-    }
-    
     if (!formData.reason) {
       newErrors.reason = 'Reason for reschedule is required';
-    }
-
-    // Validate date is in the future
-    if (formData.requestedDate) {
-      const requestedDate = new Date(formData.requestedDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      if (requestedDate < now) {
-        newErrors.requestedDate = 'Requested date must be in the future';
-      }
     }
 
     setErrors(newErrors);
@@ -82,20 +43,15 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      const submitData = {
+        requestedDate: '',
+        requestedTime: '',
+        preferredTimes: [],
+        reason: formData.reason,
+        notes: formData.notes
+      };
+      onSubmit(submitData);
     }
-  };
-
-  const getMinDate = () => {
-    const today = new Date();
-    today.setDate(today.getDate() + 1); // Minimum 1 day from today
-    return today.toISOString().split('T')[0];
-  };
-
-  const getMaxDate = () => {
-    const maxDate = new Date();
-    maxDate.setMonth(maxDate.getMonth() + 3); // Maximum 3 months from today
-    return maxDate.toISOString().split('T')[0];
   };
 
   return (
@@ -104,7 +60,10 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            {t('patient.appointments.requestReschedule', 'Request Appointment Reschedule')}
+            {t(
+              "patient.appointments.requestReschedule",
+              "Request Appointment Reschedule"
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,23 +71,29 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
             {/* Current Appointment Info */}
             <div className="bg-muted/50 p-4 rounded-lg">
               <h3 className="font-semibold mb-2 text-foreground">
-                {t('patient.appointments.currentAppointment', 'Current Appointment')}
+                {t(
+                  "patient.appointments.currentAppointment",
+                  "Current Appointment"
+                )}
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Date:</span>
                   <p className="font-medium">
-                    {appointment.date ? new Date(appointment.date).toLocaleDateString() : 'TBD'}
+                    {appointment.date
+                      ? new Date(appointment.date).toLocaleDateString()
+                      : "TBD"}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Time:</span>
-                  <p className="font-medium">{appointment.time || 'TBD'}</p>
+                  <p className="font-medium">{appointment.time || "TBD"}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Doctor:</span>
                   <p className="font-medium">
-                    {appointment.doctor?.user?.firstName} {appointment.doctor?.user?.lastName}
+                    {appointment.doctor?.user?.firstName}{" "}
+                    {appointment.doctor?.user?.lastName}
                   </p>
                 </div>
                 <div>
@@ -138,96 +103,26 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               </div>
             </div>
 
-            {/* Requested Date and Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="requestedDate" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {t('patient.appointments.requestedDate', 'Requested Date')} *
-                </Label>
-                <Input
-                  id="requestedDate"
-                  type="date"
-                  value={formData.requestedDate}
-                  onChange={(e) => handleChange('requestedDate', e.target.value)}
-                  min={getMinDate()}
-                  max={getMaxDate()}
-                  className={errors.requestedDate ? 'border-destructive' : ''}
-                />
-                {errors.requestedDate && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.requestedDate}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="requestedTime" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {t('patient.appointments.requestedTime', 'Requested Time')} *
-                </Label>
-                <Select
-                  value={formData.requestedTime}
-                  onValueChange={(value) => handleChange('requestedTime', value)}
-                >
-                  <SelectTrigger className={errors.requestedTime ? 'border-destructive' : ''}>
-                    <SelectValue placeholder={t('patient.appointments.selectTime', 'Select time')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.requestedTime && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.requestedTime}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Preferred Times */}
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {t('patient.appointments.preferredTimes', 'Preferred Alternative Times')}
-              </Label>
-              <div className="grid grid-cols-3 gap-2">
-                {timeSlots.map((time) => (
-                  <label key={time} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.preferredTimes.includes(time)}
-                      onChange={(e) => handlePreferredTimeChange(time, e.target.checked)}
-                      className="rounded border-border"
-                    />
-                    <span className="text-sm">{time}</span>
-                  </label>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t('patient.appointments.preferredTimesHelp', 'Select alternative times if your preferred time is not available')}
-              </p>
-            </div>
-
             {/* Reason */}
             <div className="space-y-2">
               <Label htmlFor="reason" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                {t('patient.appointments.rescheduleReason', 'Reason for Reschedule')} *
+                {t(
+                  "patient.appointments.rescheduleReason",
+                  "Reason for Reschedule"
+                )}{" "}
+                *
               </Label>
               <Textarea
                 id="reason"
-                placeholder={t('patient.appointments.rescheduleReasonPlaceholder', 'Please explain why you need to reschedule this appointment...')}
+                placeholder={t(
+                  "patient.appointments.rescheduleReasonPlaceholder",
+                  "Please explain why you need to reschedule this appointment..."
+                )}
                 value={formData.reason}
-                onChange={(e) => handleChange('reason', e.target.value)}
+                onChange={(e) => handleChange("reason", e.target.value)}
                 rows={3}
-                className={errors.reason ? 'border-destructive' : ''}
+                className={errors.reason ? "border-destructive" : ""}
               />
               {errors.reason && (
                 <p className="text-sm text-destructive flex items-center gap-1">
@@ -237,18 +132,31 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               )}
             </div>
 
-            {/* Additional Notes */}
+            {/* Preferred Times and Additional Notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes">
-                {t('patient.appointments.additionalNotes', 'Additional Notes (Optional)')}
+              <Label htmlFor="notes" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                {t(
+                  "patient.appointments.preferredTimes",
+                  "Preferred Times & Additional Notes"
+                )}
               </Label>
               <Textarea
                 id="notes"
-                placeholder={t('patient.appointments.additionalNotesPlaceholder', 'Any additional information for the doctor...')}
+                placeholder={t(
+                  "patient.appointments.preferredTimesPlaceholder",
+                  'Please specify your preferred dates and times for rescheduling. For example: "I prefer mornings between 9 AM - 12 PM on weekdays" or "Any afternoon slot next week would work for me"...'
+                )}
                 value={formData.notes}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                rows={3}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                rows={4}
               />
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "patient.appointments.preferredTimesHelp",
+                  "Be as specific as possible about your preferred dates and times to help the doctor accommodate your request."
+                )}
+              </p>
             </div>
 
             {/* Action Buttons */}
@@ -256,20 +164,23 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               <Button
                 type="button"
                 variant="outline"
+                className="border border-primary hover:bg-primary/90 text-primary"
                 onClick={onCancel}
                 disabled={isLoading}
               >
-                {t('common.cancel', 'Cancel')}
+                {t("common.cancel", "Cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {isLoading 
-                  ? t('patient.appointments.submittingRequest', 'Submitting Request...')
-                  : t('patient.appointments.submitRequest', 'Submit Request')
-                }
+                {isLoading
+                  ? t(
+                      "patient.appointments.submittingRequest",
+                      "Submitting Request..."
+                    )
+                  : t("patient.appointments.submitRequest", "Submit Request")}
               </Button>
             </div>
           </form>

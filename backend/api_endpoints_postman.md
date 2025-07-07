@@ -16,7 +16,7 @@
   "lastName": "Doe",
   "email": "john@example.com",
   "password": "yourPassword123",
-  "role": "patient" // or "doctor", "pharmacist"
+  "role": "patient" 
 }
 ```
 
@@ -153,7 +153,7 @@
 {
   "doctorId": "doctorIdHere",
   "date": "2024-07-01T10:00:00Z",
-  "type": "in-person", // or "video", "phone"
+  "type": "in-person", 
   "reason": "Annual checkup"
 }
 ```
@@ -270,7 +270,7 @@
 - **Status Update Body:**
 ```json
 {
-  "status": "completed" // or "cancelled", "pending"
+  "status": "completed" 
 }
 ```
 

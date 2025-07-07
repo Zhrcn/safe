@@ -26,7 +26,6 @@ import { fetchAppointments, createAppointment, removeAppointment, editAppointmen
 import { requestReschedule } from '@/store/services/patient/appointmentApi';
 
 const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestReschedule }) => {
-    // Map status to color classes and label
     const getStatusProps = (status) => {
         switch (status?.toLowerCase()) {
             case 'scheduled':
@@ -74,21 +73,25 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
     const now = new Date();
     const appointmentDate = appointment.date ? new Date(appointment.date) : null;
     const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
-    const canReschedule = appointmentDate && hoursDiff >= 24; // 24 hours minimum notice
+    
+    // Check if appointment has a valid date (not the placeholder date)
+    const hasValidDate = appointmentDate && appointment.date !== "1111-01-01T00:00:00.000Z";
+    const canReschedule = hasValidDate && hoursDiff >= 24; // 24 hours minimum notice
     
     // Check if appointment is eligible for reschedule request
     const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && canReschedule;
     
-    // Temporarily remove time restriction for testing
+    // For now, allow reschedule requests for all eligible statuses regardless of time
     const canRequestRescheduleTest = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status);
     
-    // Debug logging
+    // Debug logging to see what's happening
     console.log('Appointment debug:', {
       id: appointment._id || appointment.id,
       status: appointment.status,
       date: appointment.date,
       appointmentDate,
       hoursDiff,
+      hasValidDate,
       canReschedule,
       canRequestReschedule,
       canRequestRescheduleTest,

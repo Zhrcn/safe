@@ -1,7 +1,6 @@
 const Conversation = require('../models/Conversation');
 
 class ConversationController {
-  // Get all conversations for the current user
   static async getUserConversations(req, res) {
     try {
       let conversations = await Conversation.find({ participants: req.user.id })
@@ -9,7 +8,6 @@ class ConversationController {
         .populate('messages.sender', 'firstName lastName email')
         .sort({ updatedAt: -1 });
 
-      // Filter out conversations deleted for this user
       conversations = conversations.filter(conv =>
         !conv.deletedFor || !conv.deletedFor.map(id => id.toString()).includes(req.user.id.toString())
       );
@@ -35,7 +33,6 @@ class ConversationController {
     }
   }
 
-  // Get a single conversation by ID
   static async getConversationById(req, res) {
     try {
       const conversation = await Conversation.findById(req.params.id)
@@ -67,17 +64,14 @@ class ConversationController {
     }
   }
 
-  // Create a new conversation
   static async createConversation(req, res) {
     try {
       const { participants, subject } = req.body;
 
-      // Ensure the current user is a participant
       if (!participants.includes(req.user.id)) {
         participants.push(req.user.id);
       }
 
-      // Prevent duplicate conversations
       const existingConversation = await Conversation.findOne({
         participants: { $all: participants, $size: participants.length }
       });
@@ -104,7 +98,6 @@ class ConversationController {
     }
   }
 
-  // Update a conversation (e.g., subject)
   static async updateConversation(req, res) {
     try {
       const conversation = await Conversation.findById(req.params.id);
@@ -130,7 +123,6 @@ class ConversationController {
     }
   }
 
-  // Delete a conversation
   static async deleteConversation(req, res) {
     try {
       const conversation = await Conversation.findById(req.params.id);
@@ -143,17 +135,14 @@ class ConversationController {
         return res.status(403).json({ error: 'Access denied' });
       }
 
-      // If user already deleted, just return success
       if (conversation.deletedFor && conversation.deletedFor.includes(req.user.id)) {
         return res.status(200).json({ data: { id: req.params.id } });
       }
 
-      // Add user to deletedFor
       conversation.deletedFor = conversation.deletedFor || [];
       conversation.deletedFor.push(req.user.id);
       await conversation.save();
 
-      // If all participants have deleted, permanently delete
       const allDeleted = conversation.participants.every(participantId =>
         conversation.deletedFor.map(id => id.toString()).includes(participantId.toString())
       );
@@ -168,7 +157,6 @@ class ConversationController {
     }
   }
 
-  // Mark all messages as read for the current user in a conversation
   static async markAsRead(req, res) {
     try {
       const conversation = await Conversation.findById(req.params.id);
@@ -200,7 +188,6 @@ class ConversationController {
     }
   }
 
-  // Delete a message from a conversation
   static async deleteMessage(req, res) {
     try {
       const { id: conversationId, messageId } = req.params;
@@ -215,7 +202,6 @@ class ConversationController {
         return res.status(403).json({ error: 'Access denied' });
       }
 
-      // Find the message
       const messageIndex = conversation.messages.findIndex(
         msg => msg._id.toString() === messageId
       );
@@ -226,16 +212,13 @@ class ConversationController {
 
       const message = conversation.messages[messageIndex];
 
-      // Only allow users to delete their own messages
       if (message.sender.toString() !== req.user.id) {
         return res.status(403).json({ error: 'You can only delete your own messages' });
       }
 
-      // Remove the message
       conversation.messages.splice(messageIndex, 1);
       await conversation.save();
 
-      // Update lastMessageTimestamp if this was the last message
       if (conversation.messages.length > 0) {
         const lastMessage = conversation.messages[conversation.messages.length - 1];
         conversation.lastMessageTimestamp = lastMessage.timestamp;
@@ -259,7 +242,6 @@ class ConversationController {
   }
 }
 
-// Export static methods
 module.exports = {
   getUserConversations: ConversationController.getUserConversations,
   getConversationById: ConversationController.getConversationById,

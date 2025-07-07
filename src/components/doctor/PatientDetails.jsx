@@ -121,20 +121,28 @@ const PatientDetails = () => {
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid grid-cols-4">
                         <TabsTrigger value="medical-history">
-                            <ActivityIcon className="w-4 h-4 mr-2" />
-                            Medical History
+                            <span className="flex items-center">
+                                <ActivityIcon className="w-4 h-4 mr-2" />
+                                Medical History
+                            </span>
                         </TabsTrigger>
                         <TabsTrigger value="consultations">
-                            <ConsultationsIcon className="w-4 h-4 mr-2" />
-                            Consultations
+                            <span className="flex items-center">
+                                <ConsultationsIcon className="w-4 h-4 mr-2" />
+                                Consultations
+                            </span>
                         </TabsTrigger>
                         <TabsTrigger value="prescriptions">
-                            <PrescriptionsIcon className="w-4 h-4 mr-2" />
-                            Prescriptions
+                            <span className="flex items-center">
+                                <PrescriptionsIcon className="w-4 h-4 mr-2" />
+                                Prescriptions
+                            </span>
                         </TabsTrigger>
                         <TabsTrigger value="appointments">
-                            <AppointmentsIcon className="w-4 h-4 mr-2" />
-                            Appointments
+                            <span className="flex items-center">
+                                <AppointmentsIcon className="w-4 h-4 mr-2" />
+                                Appointments
+                            </span>
                         </TabsTrigger>
                     </TabsList>
                     <TabsContent value="medical-history" className="p-6">

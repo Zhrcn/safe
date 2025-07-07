@@ -75,7 +75,7 @@ const Prescriptions = ({ patientId }) => {
         handleCloseDialog();
     };
     const handlePrint = (prescription) => {
-        // Printing prescription
+         
     };
     const formatDate = (dateString) => {
         const options = {

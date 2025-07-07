@@ -188,15 +188,13 @@ export default function PatientLayout({ children }) {
                                                     <a href={item.link}>
                                                         <span className="flex items-center gap-2 w-full">
                                                             <Icon className="h-4 w-4" />
-                                                            <span>{item.name}</span>
-                                                            {item.badge && (
-                                                                <Badge className="ml-auto bg-primary/20 text-primary">
-                                                                    {item.badge}
-                                                                </Badge>
-                                                            )}
-                                                            {item.subItems && (
+                                                            {item.name}
+                                                            {item.badge ? (
+                                                                <Badge className="ml-auto bg-primary/20 text-primary">{item.badge}</Badge>
+                                                            ) : null}
+                                                            {item.subItems ? (
                                                                 <ChevronRight className="ml-auto h-4 w-4" />
-                                                            )}
+                                                            ) : null}
                                                         </span>
                                                     </a>
                                                 </Button>

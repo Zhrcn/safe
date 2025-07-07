@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getOnlineStatus, onUserPresence } from '@/store/services/patient/conversationApi';
 
-// Debounce function to prevent rapid status changes
 const debounce = (func, wait) => {
   let timeout;
   return function executedFunction(...args) {
@@ -14,7 +13,6 @@ const debounce = (func, wait) => {
   };
 };
 
-// Async thunk to get online status for multiple users
 export const fetchOnlineStatus = createAsyncThunk(
   'onlineStatus/fetchOnlineStatus',
   async (userIds, { rejectWithValue }) => {
@@ -28,7 +26,7 @@ export const fetchOnlineStatus = createAsyncThunk(
 );
 
 const initialState = {
-  onlineUsers: {}, // userId -> boolean
+  onlineUsers: {}, 
   loading: false,
   error: null
 };
@@ -47,7 +45,6 @@ const onlineStatusSlice = createSlice({
     },
     updateOnlineStatus: (state, action) => {
       const { userId, isOnline } = action.payload;
-      // Only update if the status is actually different to prevent flickering
       if (state.onlineUsers[userId] !== isOnline) {
         state.onlineUsers[userId] = isOnline;
       }
@@ -80,7 +77,6 @@ export const {
   clearOnlineStatus 
 } = onlineStatusSlice.actions;
 
-// Selectors
 export const selectOnlineUsers = (state) => state.onlineStatus.onlineUsers;
 export const selectIsUserOnline = (state, userId) => state.onlineStatus.onlineUsers[userId] || false;
 export const selectOnlineStatusLoading = (state) => state.onlineStatus.loading;

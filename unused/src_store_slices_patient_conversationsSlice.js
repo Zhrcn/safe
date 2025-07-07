@@ -9,9 +9,6 @@ import {
   sendMessage as sendMessageApi
 } from '@/store/services/patient/conversationApi';
 
-// If you use async thunks, import them here
-// import { fetchConversations, createConversation, editConversation, removeConversation } from '../actions/conversationThunks';
-
 const initialState = {
   conversations: [],
   loading: false,
@@ -19,7 +16,6 @@ const initialState = {
   currentConversation: null,
 };
 
-// Async thunks
 export const fetchConversations = createAsyncThunk(
   'conversations/fetchConversations',
   async (_, { rejectWithValue }) => {
@@ -87,7 +83,6 @@ export const markConversationAsRead = createAsyncThunk(
   }
 );
 
-// Only uses socket-based sendMessage
 export const sendMessage = createAsyncThunk(
   'conversations/sendMessage',
   async ({ conversationId, message }, { rejectWithValue }) => {
@@ -116,7 +111,6 @@ const conversationsSlice = createSlice({
         if (!conversation.messages) {
           conversation.messages = [];
         }
-        // Deduplicate by _id if needed
         if (!conversation.messages.some(m => m._id === message._id)) {
           conversation.messages.push(message);
           conversation.lastMessage = message;
@@ -142,7 +136,6 @@ const conversationsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch conversations
       .addCase(fetchConversations.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -155,16 +148,13 @@ const conversationsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch single conversation
       .addCase(fetchConversationById.fulfilled, (state, action) => {
         state.currentConversation = action.payload;
       })
-      // Create conversation
       .addCase(createConversation.fulfilled, (state, action) => {
         state.conversations.unshift(action.payload);
         state.currentConversation = action.payload;
       })
-      // Update conversation
       .addCase(updateConversation.fulfilled, (state, action) => {
         const idx = state.conversations.findIndex(c => c._id === action.payload._id);
         if (idx !== -1) {
@@ -174,14 +164,12 @@ const conversationsSlice = createSlice({
           state.currentConversation = action.payload;
         }
       })
-      // Delete conversation
       .addCase(removeConversation.fulfilled, (state, action) => {
         state.conversations = state.conversations.filter(c => c._id !== action.payload);
         if (state.currentConversation?._id === action.payload) {
           state.currentConversation = null;
         }
       })
-      // Mark as read
       .addCase(markConversationAsRead.fulfilled, (state, action) => {
         const conversation = state.conversations.find(c => c._id === action.payload._id);
         if (conversation) {
@@ -189,7 +177,6 @@ const conversationsSlice = createSlice({
           conversation.messages = action.payload.messages;
         }
       })
-      // Send message
       .addCase(sendMessage.fulfilled, (state, action) => {
         const conversation = state.conversations.find(c => c._id === action.payload.conversationId);
         if (conversation) {
@@ -202,32 +189,7 @@ const conversationsSlice = createSlice({
         }
       });
   },
-  // If you use async thunks, you can add extraReducers here
-  // extraReducers: (builder) => {
-  //   builder
-  //     .addCase(fetchConversations.pending, (state) => {
-  //       state.loading = true;
-  //       state.error = null;
-  //     })
-  //     .addCase(fetchConversations.fulfilled, (state, action) => {
-  //       state.loading = false;
-  //       state.conversations = action.payload;
-  //     })
-  //     .addCase(fetchConversations.rejected, (state, action) => {
-  //       state.loading = false;
-  //       state.error = action.payload;
-  //     })
-  //     .addCase(createConversation.fulfilled, (state, action) => {
-  //       state.conversations.push(action.payload);
-  //     })
-  //     .addCase(editConversation.fulfilled, (state, action) => {
-  //       const idx = state.conversations.findIndex(c => c.id === action.payload.id);
-  //       if (idx !== -1) state.conversations[idx] = action.payload;
-  //     })
-  //     .addCase(removeConversation.fulfilled, (state, action) => {
-  //       state.conversations = state.conversations.filter(c => c.id !== action.payload);
-  //     });
-  // },
+
 });
 
 export const {

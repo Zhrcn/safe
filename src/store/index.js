@@ -16,9 +16,11 @@ import medicationsReducer from './slices/patient/medicationsSlice';
 import consultationsReducer from './slices/patient/consultationsSlice';
 import prescriptionsReducer from './slices/patient/prescriptionsSlice';
 import medicalRecordsReducer from './slices/patient/medical-recordsSlice';
+import medicalRecordReducer from './slices/patient/medicalRecordSlice';
 import conversationsReducer from './slices/patient/conversationsSlice';
 import onlineStatusReducer from './slices/patient/onlineStatusSlice';
 import providersReducer from './slices/patient/providersSlice';
+import patientPharmacistReducer from './slices/patient/patientPharmacistSlice';
 import profileReducer from './slices/patient/profileSlice';
 import medicineUiReducer from './slices/doctor/medicineUiSlice';
 
@@ -40,9 +42,11 @@ export const store = configureStore({
     consultations: consultationsReducer,
     prescriptions: prescriptionsReducer,
     medicalRecords: medicalRecordsReducer,
+    medicalRecord: medicalRecordReducer,
     conversations: conversationsReducer,
     onlineStatus: onlineStatusReducer,
     providers: providersReducer,
+    patientPharmacist: patientPharmacistReducer,
     profile: profileReducer,
     medicineUi: medicineUiReducer,
   },
@@ -53,7 +57,6 @@ export const store = configureStore({
     }).concat(api.middleware, authApi.middleware, medicineApi.middleware).concat(
       (store) => (next) => (action) => {
         if (action.type === clearCache.type) {
-          // Clear all RTK Query caches
           store.dispatch(api.util.resetApiState());
           store.dispatch(authApi.util.resetApiState());
           store.dispatch(medicineApi.util.resetApiState());

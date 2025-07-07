@@ -68,7 +68,6 @@ const getNavigationIcon = (IconComponent) => <IconComponent className="h-5 w-5" 
 const useSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Use 640px (tailwind 'sm') for xs support
   const isMobile = useMediaQuery('(max-width: 640px)');
 
   const toggleMobile = useCallback(() => setMobileOpen(prev => !prev), []);
@@ -83,12 +82,10 @@ const SidebarToggle = ({ collapsed, onToggle, isRtl, t }) => (
   <Button
     onClick={onToggle}
     className={cn(
-      // Half-circle style, visually part of sidebar
       "flex items-center justify-center h-12 w-6 sm:h-14 sm:w-7 p-0 bg-[var(--color-navbar)] shadow-lg hover:shadow-xl transition-colors duration-200",
       isRtl
         ? "rounded-l-full rounded-r-none"
         : "rounded-r-full rounded-l-none"
-      // No border, no outline, no focus ring
     )}
     style={{
       boxShadow: "0 8px 25px -8px rgba(0,0,0,0.15)",
@@ -196,7 +193,6 @@ const MobileSidebarDrawer = ({
   pathname,
   handleNavigation,
 }) => {
-  // Prevent scrolling when drawer is open
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -305,13 +301,13 @@ const UnifiedLayout = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const { t, i18n } = useTranslation();
+  const { t, i18n, ready } = useTranslation();
   const { showNotification } = useNotification();
   const { mobileOpen, sidebarCollapsed, isMobile, toggleMobile, toggleCollapse, setMobileOpen } = useSidebar();
   const isRtl = i18n.language === 'ar';
   const [mounted, setMounted] = useState(false);
 
-      const user = useSelector((state) => state.auth.user);
+  const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const menuItems = useMemo(() => {
@@ -348,7 +344,7 @@ const UnifiedLayout = ({ children }) => {
     }
   }, [mounted, isAuthenticated, user?.role, pathname, handleNavigation]);
 
-  if (!mounted) return null;
+  if (!ready || !mounted) return null;
 
   return (
     <div className={cn("flex h-screen bg-background overflow-hidden", 'flex-row')}>

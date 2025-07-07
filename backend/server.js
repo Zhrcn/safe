@@ -17,6 +17,7 @@ require('./models/Prescription');
 require('./models/Conversation');
 require('./models/Consultation');
 require('./models/MedicalFile');
+require('./models/MedicalRecord');
 require('./models/Notification');
 require('./models/Patient');
 require('./models/medication');
@@ -60,7 +61,6 @@ const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`.yellow.bold);
 });
 
-// --- SOCKET.IO SETUP ---
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
@@ -79,7 +79,6 @@ const io = new Server(server, {
   }
 });
 
-// Socket authentication middleware
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
@@ -103,7 +102,6 @@ io.use(async (socket, next) => {
   }
 });
 
-// Initialize chat handler
 new ChatHandler(io);
 
 process.on('unhandledRejection', (err, promise) => {

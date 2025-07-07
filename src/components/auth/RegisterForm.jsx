@@ -66,7 +66,6 @@ const RegisterForm = () => {
     setError(null);
     try {
       const result = await login(credentials);
-      // handle success (e.g., redirect, set user in store, etc.)
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

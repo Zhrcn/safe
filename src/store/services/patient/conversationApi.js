@@ -2,7 +2,6 @@ import axiosInstance from '../axiosInstance';
 import { getSocket } from '@/utils/socket';
 
 class ConversationService {
-  // HTTP API Methods
   static async getConversations() {
     const res = await axiosInstance.get('/conversations');
     return res.data.data;
@@ -38,7 +37,6 @@ class ConversationService {
     return res.data.data;
   }
 
-  // Socket Methods
   static sendMessage({ conversationId, message }) {
     const socket = getSocket();
     
@@ -146,7 +144,6 @@ class ConversationService {
     }
   }
 
-  // Socket Event Listeners
   static onReceiveMessage(handler) {
     const socket = getSocket();
     socket.on('receive_message', handler);
@@ -165,7 +162,6 @@ class ConversationService {
     return () => socket.off('typing', handler);
   }
 
-  // Room Management
   static joinConversation(conversationId) {
     const socket = getSocket();
     socket.emit('join_conversation', { conversationId });
@@ -181,7 +177,6 @@ class ConversationService {
     socket.emit('typing', { conversationId, userId });
   }
 
-  // Online Status Methods
   static getOnlineStatus(userIds) {
     const socket = getSocket();
     
@@ -209,7 +204,6 @@ class ConversationService {
   }
 }
 
-// Export methods for backward compatibility
 export const {
   getConversations,
   getConversationById,

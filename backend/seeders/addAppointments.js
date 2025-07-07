@@ -19,7 +19,6 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const addAppointments = async () => {
   try {
-    // Get all doctors and patients
     const doctors = await Doctor.find({}).populate('user');
     const patients = await Patient.find({}).populate('user');
     
@@ -30,22 +29,20 @@ const addAppointments = async () => {
       process.exit(1);
     }
 
-    // Create appointments for each doctor
     for (let i = 0; i < doctors.length; i++) {
       const doctor = doctors[i];
       console.log(`Creating appointments for Dr. ${doctor.user.firstName} ${doctor.user.lastName}`);
       
-      // Create 2-3 appointments for each doctor
       for (let j = 0; j < 3; j++) {
         const patient = patients[j % patients.length];
         const appointmentDate = new Date();
-        appointmentDate.setDate(appointmentDate.getDate() + j + 1); // Next few days
+        appointmentDate.setDate(appointmentDate.getDate() + j + 1); 
         
         const appointment = await Appointment.create({
           patient: patient._id,
-          doctor: doctor._id, // This is the Doctor model ID
+          doctor: doctor._id, 
           date: appointmentDate,
-          time: `${9 + j}:00`, // 9:00, 10:00, 11:00
+          time: `${9 + j}:00`, 
           type: ['consultation', 'checkup', 'follow-up'][j % 3],
           status: ['pending', 'confirmed', 'scheduled'][j % 3],
           reason: `Appointment ${j + 1} with Dr. ${doctor.user.firstName}`,
@@ -56,11 +53,9 @@ const addAppointments = async () => {
       }
     }
 
-    // Verify appointments were created
     const totalAppointments = await Appointment.countDocuments();
     console.log(`Total appointments in database: ${totalAppointments}`);
     
-    // Show appointments for each doctor
     for (const doctor of doctors) {
       const doctorAppointments = await Appointment.find({ doctor: doctor._id })
         .populate('patient', 'user')

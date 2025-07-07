@@ -5,10 +5,9 @@ const Doctor = require('../models/Doctor');
 exports.getPrescriptions = async (req, res) => {
   try {
     const prescriptions = await Prescription.find()
-      .populate('doctorId', 'firstName lastName photo') // populate doctor info
-      .populate('medications.medicineId', 'name'); // populate medicine name if needed
+      .populate('doctorId', 'firstName lastName photo') 
+      .populate('medications.medicineId', 'name'); 
 
-    // Fetch all doctor specialties in one go
     const doctorIds = prescriptions.map(p => p.doctorId?._id).filter(Boolean);
     const doctorSpecialties = await Doctor.find({ user: { $in: doctorIds } }).select('user specialty');
     const specialtyMap = {};
@@ -16,7 +15,7 @@ exports.getPrescriptions = async (req, res) => {
       specialtyMap[doc.user.toString()] = doc.specialty;
     });
 
-    // Map to frontend-friendly format
+
     const data = prescriptions.map(p => ({
       id: p._id,
       doctorName: p.doctorId ? `${p.doctorId.firstName} ${p.doctorId.lastName}` : null,
