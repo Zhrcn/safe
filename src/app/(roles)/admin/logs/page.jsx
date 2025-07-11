@@ -14,7 +14,16 @@ export default function AdminLogsPage() {
       setLoading(true);
       try {
         const data = await getSystemLogs();
-        setLogs(data);
+        // Map backend log fields to expected frontend fields
+        const mappedLogs = (data || []).map(log => ({
+          id: log._id || log.id,
+          timestamp: log.timestamp || log.createdAt,
+          user: (log.meta && (log.meta.user || log.meta.username || log.meta.email)) || '-',
+          action: log.message || log.action || '-',
+          details: (log.meta && (log.meta.details || log.meta.info || log.meta.actionDetails)) || '-',
+          ip: (log.meta && (log.meta.ip || log.meta.ipAddress)) || '-',
+        }));
+        setLogs(mappedLogs);
       } catch (error) {
         setLogs([]);
       } finally {
@@ -25,8 +34,8 @@ export default function AdminLogsPage() {
   }, []);
 
   const filteredLogs = logs.filter(log =>
-    log.user.toLowerCase().includes(search.toLowerCase()) ||
-    log.action.toLowerCase().includes(search.toLowerCase()) ||
+    (log.user || '').toLowerCase().includes(search.toLowerCase()) ||
+    (log.action || '').toLowerCase().includes(search.toLowerCase()) ||
     (log.details || '').toLowerCase().includes(search.toLowerCase()) ||
     (log.ip || '').toLowerCase().includes(search.toLowerCase())
   );

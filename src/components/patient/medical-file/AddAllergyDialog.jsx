@@ -121,7 +121,7 @@ const AddAllergyDialog = ({ open, onClose }) => {
               onValueChange={handleSelectChange('severity')}
             >
               <SelectTrigger className={cn({ 'border-destructive': errors.severity })}>
-                <SelectValue placeholder="Select severity" />
+                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="mild">Mild</SelectItem>

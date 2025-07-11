@@ -462,7 +462,9 @@ export default function AppointmentManagement() {
                                 onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
+                                    <span>
+                                        {/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}
+                                    </span>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="in-person">In Person</SelectItem>
@@ -646,7 +648,9 @@ export default function AppointmentManagement() {
                                     <Label htmlFor="update-type">Type</Label>
                                     <Select value={updateForm.type} onValueChange={(value) => setUpdateForm({ ...updateForm, type: value })}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select type" />
+                                            <span>
+                                                {/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}
+                                            </span>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="checkup">Checkup</SelectItem>

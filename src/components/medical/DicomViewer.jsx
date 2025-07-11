@@ -113,6 +113,8 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
     const element = elementRef.current;
     if (!element || !imageUrls.length) return;
 
+    if (typeof cornerstone === 'undefined' || typeof cornerstoneTools === 'undefined') return;
+
     cornerstone.enable(element);
 
     const imageIds = getImageIds();
@@ -198,6 +200,7 @@ function useFullscreen() {
   const fullScreenRef = useRef(null);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
     const exitHandler = () => {
       if (!document.fullscreenElement) {
         setFullView(false);
@@ -208,6 +211,7 @@ function useFullscreen() {
   }, []);
 
   const handleFullScreenToggle = useCallback(() => {
+    if (typeof document === 'undefined') return;
     if (!fullView) {
       const el = fullScreenRef.current;
       if (el && el.requestFullscreen) {
@@ -230,6 +234,7 @@ function useFullscreen() {
 // Custom hook for keyboard navigation
 function useKeyboardNavigation(currentIndex, numImages, goToImage, toggleFullView) {
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const handleKeyDown = (e) => {
       if (!numImages) return;
       switch (e.key) {

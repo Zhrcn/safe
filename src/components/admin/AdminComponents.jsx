@@ -3,6 +3,7 @@
 import React from 'react';
 import Button from '@/components/ui/Button';
 import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 
 
@@ -38,6 +39,7 @@ export function AdminCard({ title, subtitle, actions, children, className = '' }
 }
 
 export function StatCard({ title, value, trend = null, icon, description, className = '', onClick }) {
+  const { t } = useTranslation();
   const getTrendIcon = () => {
     if (trend === 'up') return <TrendingUp size={16} className="text-success" />;
     if (trend === 'down') return <TrendingDown size={16} className="text-error" />;
@@ -56,7 +58,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-xl font-bold text-foreground">{value}</h3>
-          <p className="text-sm text-muted-foreground mt-1">{title}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t(title)}</p>
           {description && (
             <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           )}
@@ -72,7 +74,7 @@ export function StatCard({ title, value, trend = null, icon, description, classN
                     : 'text-warning'
                 }`}
               >
-                {trend === 'up' ? 'Increase' : trend === 'down' ? 'Decrease' : 'No change'}
+                {trend === 'up' ? t('admin.stats.increase') : trend === 'down' ? t('admin.stats.decrease') : t('admin.stats.noChange')}
               </span>
             </div>
           )}
@@ -165,6 +167,7 @@ export function ActivityLogItem({ user, action, timestamp, details, category }) 
 }
 
 export function NotificationItem({ title, message, timestamp, severity, isRead, onMarkAsRead }) {
+  const { t } = useTranslation();
   const getNotificationClasses = () => {
     let baseClass = 'p-3 border-b border-border last:border-0 transition-colors duration-200';
     if (!isRead) baseClass += ' bg-primary/5';
@@ -194,7 +197,7 @@ export function NotificationItem({ title, message, timestamp, severity, isRead, 
           onClick={onMarkAsRead}
           className="text-primary text-sm flex items-center hover:underline"
         >
-          Mark as read
+          {t('admin.notifications.markAsRead')}
           <ArrowRight size={16} className="ml-1" />
         </Button>
       )}

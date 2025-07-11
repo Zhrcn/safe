@@ -49,22 +49,19 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
     email,
     password,
     role, 
-    dateOfBirth,
+    age,
     gender,
     phoneNumber,
     address,
-    specialization, 
-    qualifications, 
+    specialty,
     licenseNumber,
     yearsOfExperience,
     pharmacyName,
-    professionalBio,
-    workingHours
   } = req.body;
   if (!firstName || !lastName || !email || !password || !role) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide firstName, lastName, email, password, and role.'));
   }
-  if (!['patient', 'doctor', 'pharmacist'].includes(role)) {
+  if (!['patient', 'doctor', 'pharmacist', 'admin'].includes(role)) {
     return res.status(400).json(new ApiResponse(400, null, 'Invalid role specified.'));
   }
   try {
@@ -87,7 +84,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
     email,
     password,
     role,
-    dateOfBirth,
+    age,
     gender,
     phoneNumber,
     address,
@@ -99,32 +96,26 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
       const medicalFile = await MedicalFile.create({ patientId: user._id });
       await Patient.create({ user: user._id, medicalFile: medicalFile._id });
     } else if (role === 'doctor') {
-      if (!specialization || !licenseNumber || !qualifications) {
+      if (!specialty || !licenseNumber) {
         await User.findByIdAndDelete(user._id);
-        return res.status(400).json(new ApiResponse(400, null, 'Doctor role requires specialization, licenseNumber, and qualifications.'));
+        return res.status(400).json(new ApiResponse(400, null, 'Doctor role requires specialty and licenseNumber.'));
       }
       await Doctor.create({ 
         user: user._id, 
-        specialization, 
-        licenseNumber,
-        qualifications,
-        yearsOfExperience,
-        professionalBio,
-        workingHours
+        specialty, 
+        medicalLicenseNumber: licenseNumber,
+        experienceYears: yearsOfExperience,
       });
     } else if (role === 'pharmacist') {
-      if (!licenseNumber || !pharmacyName || !qualifications) {
+      if (!licenseNumber || !pharmacyName) {
         await User.findByIdAndDelete(user._id);
-        return res.status(400).json(new ApiResponse(400, null, 'Pharmacist role requires licenseNumber, pharmacyName, and qualifications.'));
+        return res.status(400).json(new ApiResponse(400, null, 'Pharmacist role requires licenseNumber and pharmacyName.'));
       }
       await Pharmacist.create({ 
         user: user._id, 
         licenseNumber, 
         pharmacyName,
-        qualifications,
         yearsOfExperience,
-        professionalBio,
-        workingHours
       });
     }
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;

@@ -37,7 +37,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-10">
           <div>
             <div className="mb-8">
-              <h2 className="text-2xl font-extrabold text-primary mb-4 tracking-tight">
+              <h2 className="project-title text-2xl font-extrabold text-primary mb-4 tracking-tight">
                 {t('appName', 'SAFE')}
               </h2>
               <p className="text-muted-foreground mb-6 text-base">
@@ -146,7 +146,7 @@ export default function Footer() {
         <div className="border-t border-border my-8" />
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-muted-foreground text-sm">
           <span>
-            &copy; {currentYear} {t('appName', 'SAFE')}. {t('footer.rights', 'All rights reserved.')}
+            &copy; {currentYear} <span className="project-title">{t('appName', 'SAFE')}</span>. {t('footer.rights', 'All rights reserved.')}
           </span>
           <span className="flex items-center gap-1">
             {t('footer.designedWith', 'Designed with')} <span className="text-destructive">❤️</span> {t('footer.forHealthcare', 'for healthcare.')}

@@ -19,7 +19,8 @@ import { fetchMedicalRecords as fetchMedicalRecordsList } from '@/store/slices/p
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useTranslation } from 'react-i18next';
-import MedicalFileTabs from '@/components/patient/MedicalFileTabs';
+import dynamic from 'next/dynamic';
+const MedicalFileTabs = dynamic(() => import('@/components/patient/MedicalFileTabs'), { ssr: false });
 import { fetchMedicalRecords } from '@/store/slices/patient/medicalRecordSlice';
 
 const RecordCard = ({ record, onView, onDownload }) => {

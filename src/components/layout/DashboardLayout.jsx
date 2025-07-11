@@ -92,7 +92,7 @@ const DashboardLayout = ({ children }) => {
   const sidebarContent = (
     <div className="flex h-full flex-col overflow-y-auto bg-card shadow-sm rounded-2xl">
       <div className="flex h-16 items-center px-4">
-        <h1 className="text-xl font-semibold text-foreground">SAFE Health</h1>
+        <h1 className="project-title text-xl font-semibold text-foreground">SAFE Health</h1>
       </div>
       <Separator className="my-2" />
       <nav className="flex-1 px-2 py-4">

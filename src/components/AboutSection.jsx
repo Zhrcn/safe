@@ -47,7 +47,7 @@ export default function AboutSection() {
           <div className="col-span-1 lg:col-span-6 flex flex-col justify-center pr-0 lg:pr-16 py-10 lg:py-0">
             <div className="relative mb-10">
               <div className="absolute -left-8 top-2 h-16 w-2 rounded-full bg-primary/80 hidden lg:block" />
-              <p className="text-primary font-extrabold tracking-widest mb-4 text-base sm:text-lg uppercase letter-spacing-[0.2em]">{t('about.title', 'About SAFE')}</p>
+              <p className="project-title text-primary font-extrabold tracking-widest mb-4 text-base sm:text-lg uppercase letter-spacing-[0.2em]">{t('about.title', 'About SAFE')}</p>
               <h2 className="font-extrabold mb-10 text-5xl sm:text-6xl md:text-7xl leading-tight text-foreground drop-shadow-xl">
                 {t('about.subtitle1', 'Empowering Healthcare')}<br className="hidden md:block" /> {t('about.subtitle2', 'For Everyone')}
               </h2>

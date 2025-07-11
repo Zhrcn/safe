@@ -9,9 +9,7 @@ export const getSocket = () => {
   const token = getToken();
   
   if (!token) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('No authentication token found - socket connection will be established after login');
-    }
+    console.error('[Socket] No authentication token found. Socket connection will NOT be established. Please log in.');
     return null;
   }
 
@@ -32,29 +30,31 @@ export const getSocket = () => {
     });
     
     socket.on('connect', () => {
-      console.log('Socket connected successfully:', socket.id);
-      console.log('Socket auth token:', token ? 'Present' : 'Missing');
+      console.log('[Socket] Connected successfully:', socket.id);
+      console.log('[Socket] Auth token:', token ? 'Present' : 'Missing');
     });
     
     socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
+      console.error('[Socket] Connection error:', error.message);
       if (error.message.includes('Authentication error')) {
-        console.error('Authentication failed - please log in again');
+        console.error('[Socket] Authentication failed - please log in again.');
+      } else if (error.message.includes('xhr poll error') || error.message.includes('timeout')) {
+        console.warn('[Socket] Backend unreachable at', SOCKET_URL, '- is the server running?');
       }
       setTimeout(() => {
         if (socket && !socket.connected) {
-          console.log('Attempting to reconnect after error...');
+          console.log('[Socket] Attempting to reconnect after error...');
           socket.connect();
         }
       }, 3000);
     });
     
     socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      console.warn('[Socket] Disconnected:', reason);
       if (reason === 'io server disconnect' || reason === 'transport close') {
         setTimeout(() => {
           if (socket && !socket.connected) {
-            console.log('Attempting to reconnect after disconnect...');
+            console.log('[Socket] Attempting to reconnect after disconnect...');
             socket.connect();
           }
         }, 1000);
@@ -62,22 +62,22 @@ export const getSocket = () => {
     });
 
     socket.on('error', (error) => {
-      console.error('Socket error:', error);
+      console.error('[Socket] General error:', error);
     });
 
     socket.on('reconnect', (attemptNumber) => {
-      console.log('Socket reconnected after', attemptNumber, 'attempts');
+      console.log('[Socket] Reconnected after', attemptNumber, 'attempts');
     });
 
     socket.on('reconnect_error', (error) => {
-      console.error('Socket reconnection error:', error);
+      console.error('[Socket] Reconnection error:', error);
     });
 
     socket.on('reconnect_failed', () => {
-      console.error('Socket reconnection failed - will keep trying');
+      console.error('[Socket] Reconnection failed - will keep trying');
       setTimeout(() => {
         if (socket && !socket.connected) {
-          console.log('Retrying connection after failure...');
+          console.log('[Socket] Retrying connection after failure...');
           socket.connect();
         }
       }, 5000);
@@ -87,7 +87,7 @@ export const getSocket = () => {
       socket.connect();
     }
   } else if (!socket.connected) {
-    console.log('Socket exists but not connected, reconnecting...');
+    console.log('[Socket] Socket exists but not connected, reconnecting...');
     socket.connect();
   }
   

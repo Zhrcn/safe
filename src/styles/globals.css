@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap&subset=arabic,latin');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +12,7 @@
     html, body {
         background: var(--color-background);
         color: var(--color-foreground);
-        font-family: 'Inter', sans-serif;
+        font-family: 'Cairo', Arial, 'Helvetica Neue', sans-serif;
         margin: 0;
         padding: 0;
         min-height: 100vh;
@@ -211,4 +212,17 @@
 .group:hover .safe-logo-svg {
   filter: drop-shadow(0 0 8px var(--color-primary, #0077CC));
   transform: scale(1.07);
+}
+
+@font-face {
+  font-family: 'Safety';
+  src: url('/fonts/SafetyMedium.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.project-title {
+  font-family: 'Safety', 'Cairo', Arial, 'Helvetica Neue', sans-serif;
+  letter-spacing: 0.05em;
+  font-weight: normal;
 }

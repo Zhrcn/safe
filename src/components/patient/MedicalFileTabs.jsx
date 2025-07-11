@@ -6,8 +6,10 @@ import { format } from 'date-fns';
 import { 
     HeartPulse, DropletIcon, Stethoscope, BarChart3, FileImage, Pill, Info
 } from 'lucide-react';
-import DicomViewer from '@/components/medical/DicomViewer';
+import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
+
+const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { ssr: false });
 
 const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
     const { t } = useTranslation('common');

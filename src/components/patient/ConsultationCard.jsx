@@ -12,7 +12,7 @@ const ConsultationCard = ({ consultation, onDelete, onContinueChat }) => {
   const [showMessages, setShowMessages] = useState(false);
 
   const handleDelete = async () => {
-    if (window.confirm(t('Are you sure you want to delete this consultation?'))) {
+    if (typeof window !== 'undefined' && window.confirm(t('Are you sure you want to delete this consultation?'))) {
       setIsDeleting(true);
       try {
         await dispatch(deleteConsultation(consultation._id)).unwrap();

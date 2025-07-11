@@ -1,13 +1,15 @@
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export function NotificationList({ notifications = [], onMarkAsRead }) {
+  const { t } = useTranslation();
   return (
     <Card className="p-6 mt-6">
-      <h3 className="text-lg font-semibold mb-4">Notifications</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('admin.notifications.title')}</h3>
       {notifications.length === 0 ? (
-        <div className="text-muted-foreground text-center">No notifications found.</div>
+        <div className="text-muted-foreground text-center">{t('admin.notifications.noNotifications')}</div>
       ) : (
         <ul className="space-y-4">
           {notifications.map((notif) => (
@@ -19,7 +21,7 @@ export function NotificationList({ notifications = [], onMarkAsRead }) {
               </div>
               {!notif.read && onMarkAsRead && (
                 <Button size="sm" className="mt-2 md:mt-0" onClick={() => onMarkAsRead(notif.id)}>
-                  Mark as Read
+                  {t('admin.notifications.markAsRead')}
                 </Button>
               )}
             </li>

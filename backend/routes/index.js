@@ -13,6 +13,7 @@ const prescriptionRoutes = require('../routes/prescription.routes');
 const medicineRoutes = require('../routes/medicine.routes');
 const medicationRoutes = require('../routes/medication.routes');
 const conversationRoutes = require('../routes/conversation.routes');
+const logRoutes = require('../routes/log.routes');
 
 router.use('/auth', authRoutes);
 router.use('/patients', patientRoutes);
@@ -27,6 +28,7 @@ router.use('/prescriptions', prescriptionRoutes);
 router.use('/doctor/medicine', medicineRoutes);
 router.use('/medications', medicationRoutes);
 router.use('/conversations', conversationRoutes);
+router.use('/logs', logRoutes);
 router.use('/users', require('../routes/user.routes'));
 
 router.get('/', (req, res) => {

@@ -17,7 +17,6 @@ axiosInstance.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log('Axios Request:', config.url, 'Authorization:', config.headers.Authorization);
   return config;
 });
 

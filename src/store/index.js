@@ -23,6 +23,8 @@ import providersReducer from './slices/patient/providersSlice';
 import patientPharmacistReducer from './slices/patient/patientPharmacistSlice';
 import profileReducer from './slices/patient/profileSlice';
 import medicineUiReducer from './slices/doctor/medicineUiSlice';
+import adminUsersReducer from './slices/user/adminUsersSlice';
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +51,8 @@ export const store = configureStore({
     patientPharmacist: patientPharmacistReducer,
     profile: profileReducer,
     medicineUi: medicineUiReducer,
+    adminUsers: adminUsersReducer,
+    ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

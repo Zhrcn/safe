@@ -1,5 +1,7 @@
 const Consultation = require('../models/Consultation');
 const asyncHandler = require('express-async-handler');
+const { createNotification } = require('../utils/notification.utils');
+const { io } = require('../server');
 
 const getConsultations = asyncHandler(async (req, res) => {
   const filter = {
@@ -40,6 +42,22 @@ const requestConsultation = asyncHandler(async (req, res) => {
   });
   await consultation.populate('doctor', 'firstName lastName specialization');
   await consultation.populate('patient', 'firstName lastName');
+  // Notify doctor
+  await createNotification(
+    doctorId,
+    'New Consultation Request',
+    `You have a new consultation request from a patient.`,
+    'consultation',
+    consultation._id,
+    'Consultation'
+  );
+  io.to(doctorId).emit('notification', {
+    id: consultation._id,
+    title: 'New Consultation Request',
+    message: `You have a new consultation request from a patient.`,
+    type: 'consultation',
+    time: new Date().toISOString(),
+  });
   res.status(201).json({
     success: true,
     data: consultation
@@ -66,6 +84,22 @@ const answerConsultation = asyncHandler(async (req, res) => {
   await consultation.save();
   await consultation.populate('doctor', 'firstName lastName email');
   await consultation.populate('patient', 'firstName lastName');
+  // Notify patient
+  await createNotification(
+    consultation.patient,
+    'Consultation Answered',
+    `Your consultation has been answered by the doctor.`,
+    'consultation',
+    consultation._id,
+    'Consultation'
+  );
+  io.to(consultation.patient.toString()).emit('notification', {
+    id: consultation._id,
+    title: 'Consultation Answered',
+    message: `Your consultation has been answered by the doctor.`,
+    type: 'consultation',
+    time: new Date().toISOString(),
+  });
   res.json({
     success: true,
     data: consultation
@@ -83,6 +117,37 @@ const updateConsultation = asyncHandler(async (req, res) => {
   await consultation.save();
   await consultation.populate('doctor', 'firstName lastName specialization');
   await consultation.populate('patient', 'firstName lastName');
+  // Notify both doctor and patient
+  await createNotification(
+    consultation.doctor,
+    'Consultation Updated',
+    `A consultation has been updated.`,
+    'consultation',
+    consultation._id,
+    'Consultation'
+  );
+  io.to(consultation.doctor.toString()).emit('notification', {
+    id: consultation._id,
+    title: 'Consultation Updated',
+    message: `A consultation has been updated.`,
+    type: 'consultation',
+    time: new Date().toISOString(),
+  });
+  await createNotification(
+    consultation.patient,
+    'Consultation Updated',
+    `A consultation has been updated.`,
+    'consultation',
+    consultation._id,
+    'Consultation'
+  );
+  io.to(consultation.patient.toString()).emit('notification', {
+    id: consultation._id,
+    title: 'Consultation Updated',
+    message: `A consultation has been updated.`,
+    type: 'consultation',
+    time: new Date().toISOString(),
+  });
   res.json({
     success: true,
     data: consultation

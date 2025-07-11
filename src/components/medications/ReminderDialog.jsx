@@ -105,12 +105,12 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                                             />
                                             <Button
                                                 type="button"
-                                                variant="ghost"
+                                                variant="outline" className="border-red-400 "
                                                 size="sm"
                                                 onClick={() => handleRemoveTime(idx)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors"
+                                                
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="h-4 w-4 text-red-400" />
                                             </Button>
                                         </div>
                                     ))}

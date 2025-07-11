@@ -131,7 +131,7 @@ const UserProfile = ({ user, collapsed, t }) => (
       />
     </span>
     {!collapsed && (
-      <span className="font-extrabold text-lg sm:text-2xl tracking-tight text-primary dark:text-white mb-2 sm:mb-3">
+      <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight text-primary dark:text-white mb-2 sm:mb-3">
         {t('appName', 'SafeApp')}
       </span>
     )}
@@ -249,7 +249,7 @@ const MobileSidebarDrawer = ({
         <div className="flex items-center justify-between px-2 sm:px-4 py-3 sm:py-4 border-b border-border">
           <span className="flex items-center gap-1 sm:gap-2">
             <img src="/logo(1).png" alt="Logo" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
-            <span className="font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
+            <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
           </span>
           <Button
             variant="ghost"
@@ -312,6 +312,7 @@ const UnifiedLayout = ({ children }) => {
 
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const token = useSelector((state) => state.auth.token);
 
   const menuItems = useMemo(() => {
     const role = user?.role?.toLowerCase();
@@ -339,8 +340,10 @@ const UnifiedLayout = ({ children }) => {
   const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    axios.get('/api/notifications?limit=20')
+    if (!user || !token) return;
+    axios.get('/api/notifications?limit=20', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(res => {
         const notifs = res.data.notifications || [];
         setNotifications(notifs.map(n => ({
@@ -352,7 +355,7 @@ const UnifiedLayout = ({ children }) => {
         })));
         setUnreadCount(notifs.filter(n => !n.isRead).length);
       });
-  }, [user]);
+  }, [user, token]);
 
   useEffect(() => {
     if (!user) return;
@@ -394,7 +397,9 @@ const UnifiedLayout = ({ children }) => {
   const handleNotifOpen = () => {
     setNotifOpen(true);
     setUnreadCount(0);
-    axios.patch('/api/notifications/read-all');
+    axios.patch('/api/notifications/read-all', {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
   const handleNotifClose = () => setNotifOpen(false);
@@ -535,7 +540,7 @@ const UnifiedLayout = ({ children }) => {
           )}
           <div className="flex items-center gap-2 sm:gap-3">
             <img src="/logo(1).png" alt="Logo" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
-            <span className="font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
+            <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
           </div>
           <div className="flex-1" />
           <div className={cn('flex items-center gap-3 sm:gap-6', isRtl && 'flex-row-reverse')}>

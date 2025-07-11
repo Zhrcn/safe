@@ -204,8 +204,8 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                                 onValueChange={field.onChange}
                                 value={field.value}
                             >
-                                <SelectTrigger className={cn({ 'border-destructive': errors.doctorId })}>
-                                    <SelectValue placeholder="Select a doctor" />
+                                <SelectTrigger>
+                                    <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {loading ? (

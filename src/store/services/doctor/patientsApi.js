@@ -1,11 +1,8 @@
 import axiosInstance from '../axiosInstance';
 
 export const getPatients = async () => {
-  console.log('getPatients called - making API request to /doctors/patients');
-  console.log('Axios instance baseURL:', axiosInstance.defaults.baseURL);
   try {
     const res = await axiosInstance.get('/doctors/patients');
-    console.log('getPatients response:', res);
     return res.data.data;
   } catch (error) {
     console.error('getPatients error:', error);
@@ -14,8 +11,7 @@ export const getPatients = async () => {
 };
 
 export const getPatientById = async (id) => {
-  console.log('getPatientById called with ID:', id);
-  try {
+  try {log
     const res = await axiosInstance.get(`/doctors/patients/${id}`);
     return res.data.data;
   } catch (error) {

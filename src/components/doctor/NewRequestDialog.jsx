@@ -39,7 +39,7 @@ const NewRequestDialog = ({ open, onClose, pharmacies }) => {
             <label className="block text-sm font-medium mb-1">Select Pharmacy</label>
             <Select value={pharmacyId} onValueChange={setPharmacyId} disabled={isLoading}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a pharmacy" />
+                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
                 {pharmacies.map((pharmacy) => (

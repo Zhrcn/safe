@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { conversations as mockConversations } from "@/mockdata/conversations";
 import ChatList from "@/components/messaging/ChatList";
 import ChatPage from "@/components/messaging/ChatPage";
-import { useTranslation } from "next-i18next";
+import { useTranslation } from "react-i18next";
 
 function getUnreadCount(messages) {
   return messages.filter(m => !m.read && m.sender !== "You").length;
@@ -35,11 +35,13 @@ export default function PharmacistMessagingPage() {
 
   useEffect(() => {
     function handleResize() {
-      setMobileView(window.innerWidth < 768);
+      setMobileView(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
     }
+    if (typeof window !== 'undefined') {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+    }
   }, []);
 
   useEffect(() => {

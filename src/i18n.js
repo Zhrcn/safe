@@ -23,6 +23,10 @@ i18n
     react: {
       useSuspense: false,
     },
+    missingKeyHandler: function(lng, ns, key, fallbackValue) {
+      // Log missing translation keys to the console
+      console.warn(`[i18n] Missing translation for key: '${key}' in namespace: '${ns}' and language: '${lng}'`);
+    },
   });
 
 export default i18n; 

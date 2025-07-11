@@ -1,32 +1,75 @@
 import React, { useState } from 'react';
 import { UserRoleBadge, UserStatusBadge } from './AdminComponents';
-import { Settings, Edit, Trash2, Search } from 'lucide-react';
+import { Edit, Trash2, Ban, ShieldOff, UserCheck, UserX, Lock } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
+import { useTranslation } from 'react-i18next';
 
-export function UserTable({ users = [] }) {
+export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBlock, onBan, onDelete }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [editUser, setEditUser] = useState(null);
+  const [confirmAction, setConfirmAction] = useState({ type: null, user: null });
+  const [editData, setEditData] = useState({});
+
+  const roleFields = {
+    doctor: [
+      { name: 'specialty', label: t('admin.users.specialty'), type: 'text' },
+      { name: 'licenseNumber', label: t('admin.users.licenseNumber'), type: 'text' },
+      { name: 'yearsOfExperience', label: t('admin.users.yearsOfExperience'), type: 'number' },
+    ],
+    pharmacist: [
+      { name: 'licenseNumber', label: t('admin.users.licenseNumber'), type: 'text' },
+      { name: 'pharmacyName', label: t('admin.users.pharmacyName'), type: 'text' },
+    ],
+    patient: [
+      { name: 'age', label: t('admin.users.age'), type: 'number' },
+      { name: 'gender', label: t('admin.users.gender'), type: 'select', options: ['male', 'female', 'other'] },
+      { name: 'address', label: t('admin.users.address'), type: 'text' },
+      { name: 'phoneNumber', label: t('admin.users.phoneNumber'), type: 'text' },
+    ],
+  };
 
   const filteredUsers = users.filter(user => {
+    const name = user.name || ((user.firstName || '') + (user.lastName ? ' ' + user.lastName : '')) || '';
     const matchesSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase());
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(search.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
   const roles = Array.from(new Set(users.map(u => u.role)));
 
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    if (editUser && onEdit) {
+      onEdit(editUser.id, editData);
+      setEditUser(null);
+      setEditData({});
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!confirmAction.user) return;
+    const { type, user } = confirmAction;
+    if (type === 'deactivate') onDeactivate(user.id);
+    if (type === 'activate') onActivate(user.id);
+    if (type === 'block') onBlock(user.id);
+    if (type === 'ban') onBan(user.id);
+    if (type === 'delete') onDelete(user.id);
+    setConfirmAction({ type: null, user: null });
+  };
+
   return (
     <Card className="p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder={t('admin.users.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="border border-border rounded-2xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -38,7 +81,7 @@ export function UserTable({ users = [] }) {
             onChange={e => setRoleFilter(e.target.value)}
             className="border border-border rounded-2xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="all">All Roles</option>
+            <option value="all">{t('admin.users.allRoles')}</option>
             {roles.map(role => (
               <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
             ))}
@@ -48,36 +91,134 @@ export function UserTable({ users = [] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Active</TableHead>
-            <TableHead align="right">Actions</TableHead>
+            <TableHead>{t('admin.users.name')}</TableHead>
+            <TableHead>{t('admin.users.email')}</TableHead>
+            <TableHead>{t('admin.users.role')}</TableHead>
+            <TableHead>{t('admin.users.status')}</TableHead>
+            <TableHead>{t('admin.users.lastActive')}</TableHead>
+            <TableHead align="right">{t('admin.users.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredUsers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">No users found.</TableCell>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">{t('admin.users.noUsers')}</TableCell>
             </TableRow>
           ) : (
-            filteredUsers.map(user => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell><UserRoleBadge role={user.role} /></TableCell>
-                <TableCell><UserStatusBadge status={user.status} /></TableCell>
-                <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</TableCell>
-                <TableCell align="right">
-                  <Button variant="outline" size="sm" className="mr-2"><Edit className="w-4 h-4" /></Button>
-                  <Button variant="destructive" size="sm"><Trash2 className="w-4 h-4" /></Button>
-                </TableCell>
-              </TableRow>
-            ))
+            filteredUsers.map(user => {
+              const name = user.name || ((user.firstName || '') + (user.lastName ? ' ' + user.lastName : '')) || '';
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>{name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell><UserRoleBadge role={user.role} /></TableCell>
+                  <TableCell><UserStatusBadge status={user.status} /></TableCell>
+                  <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</TableCell>
+                  <TableCell align="right">
+                    <div className="flex gap-1 flex-wrap justify-end">
+                      <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => { setEditUser(user); setEditData({ name, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>
+                      {user.status === 'active' ? (
+                        <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => setConfirmAction({ type: 'deactivate', user })}><UserX className="w-4 h-4" /></Button>
+                      ) : (
+                        <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => setConfirmAction({ type: 'activate', user })}><UserCheck className="w-4 h-4" /></Button>
+                      )}
+                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'block', user })}><Lock className="w-4 h-4" /></Button>
+                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'ban', user })}><Ban className="w-4 h-4" /></Button>
+                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'delete', user })}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
+
+      {/* Edit User Modal */}
+      {editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-md border border-border">
+            <h2 className="text-lg font-semibold mb-4">{t('admin.users.editUser')}</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1">{t('admin.users.name')}</label>
+                <input
+                  className="w-full border border-border rounded-lg px-3 py-2"
+                  value={editData.name}
+                  onChange={e => setEditData({ ...editData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1">{t('admin.users.email')}</label>
+                <input
+                  className="w-full border border-border rounded-lg px-3 py-2"
+                  value={editData.email}
+                  onChange={e => setEditData({ ...editData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1">{t('admin.users.role')}</label>
+                <select
+                  className="w-full border border-border rounded-lg px-3 py-2"
+                  value={editData.role}
+                  onChange={e => setEditData({ ...editData, role: e.target.value })}
+                  required
+                >
+                  <option value="admin">Admin</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="patient">Patient</option>
+                  <option value="pharmacist">Pharmacist</option>
+                </select>
+              </div>
+              {/* Render extra fields based on role */}
+              {roleFields[editData.role]?.map(field => (
+                <div key={field.name}>
+                  <label className="block mb-1">{field.label}</label>
+                  {field.type === 'select' ? (
+                    <select
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      value={editData[field.name] || ''}
+                      onChange={e => setEditData({ ...editData, [field.name]: e.target.value })}
+                    >
+                      <option value="">{t('admin.users.select' + field.label.replace(/\s/g, ''))}</option>
+                      {field.options.map(opt => (
+                        <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      value={editData[field.name] || ''}
+                      onChange={e => setEditData({ ...editData, [field.name]: e.target.value })}
+                    />
+                  )}
+                </div>
+              ))}
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="outline" className="border-primary text-primary" onClick={() => setEditUser(null)}>{t('admin.users.cancel')}</Button>
+                <Button type="submit" variant="default" className="bg-primary text-foreground">{t('admin.users.save')}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmAction.user && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-sm border border-border">
+            <h2 className="text-lg font-semibold mb-4">{t('admin.users.confirmAction', { action: t('admin.users.' + confirmAction.type) })}</h2>
+            <p className="mb-4">{t('admin.users.confirmMessage', { action: t('admin.users.' + confirmAction.type), name: confirmAction.user.name })}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setConfirmAction({ type: null, user: null })}>{t('admin.users.cancel')}</Button>
+              <Button variant={confirmAction.type === 'delete' ? 'destructive' : 'warning'} onClick={handleConfirm}>{t('admin.users.confirm')}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 } 

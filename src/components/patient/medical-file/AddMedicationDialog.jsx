@@ -152,7 +152,7 @@ const AddMedicationDialog = ({ open, onClose }) => {
               onValueChange={handleSelectChange('frequency')}
             >
               <SelectTrigger className={cn({ 'border-destructive': errors.frequency })}>
-                <SelectValue placeholder="Select frequency" />
+                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="once_daily">Once Daily</SelectItem>

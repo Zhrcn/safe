@@ -40,11 +40,7 @@ function Calendar({
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           "flex h-9 w-9 items-center justify-center rounded-full bg-background text-foreground transition-colors hover:bg-muted hover:text-foreground focus:bg-primary focus:text-primary-foreground",
-          className,
-          isSelected && "bg-primary text-primary-foreground hover:bg-primary focus:bg-primary",
-          isToday && "border border-primary",
-          isOutside && "text-muted-foreground opacity-50",
-          isDisabled && "text-muted-foreground opacity-50 cursor-not-allowed"
+          className
         ),
         day_range_end: "day-range-end",
         day_selected:

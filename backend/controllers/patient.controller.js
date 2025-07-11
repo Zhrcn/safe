@@ -19,18 +19,38 @@ const getProfile = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient, 'Patient profile retrieved successfully.'));
 });
 const updateProfile = asyncHandler(async (req, res) => {
-    const { name, email, phone, address } = req.body;
-    const patient = await Patient.findById(req.user.id);
-    if (!patient) {
-        res.status(404);
-        throw new Error('Patient not found');
+    const userId = req.user._id;
+    const { firstName, lastName, email, phone, address, dateOfBirth, emergencyContact } = req.body;
+    // Update User info
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json(new ApiResponse(404, null, 'User not found'));
     }
-    patient.name = name || patient.name;
-    patient.email = email || patient.email;
-    patient.phone = phone || patient.phone;
-    patient.address = address || patient.address;
-    await patient.save();
-    res.status(200).json(new ApiResponse(200, patient, 'Patient profile updated successfully.'));
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phoneNumber = phone;
+    if (address !== undefined) user.address = address;
+    if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth;
+    await user.save();
+    // Update Patient emergency contacts
+    const patient = await Patient.findOne({ user: userId });
+    if (!patient) {
+        return res.status(404).json(new ApiResponse(404, null, 'Patient not found'));
+    }
+    if (emergencyContact !== undefined) {
+        patient.emergencyContacts = [emergencyContact];
+        await patient.save();
+    }
+    // Return updated profile
+    const updatedPatient = await Patient.findOne({ user: userId })
+        .select('-password')
+        .populate('medicalFile')
+        .populate({
+            path: 'user',
+            select: 'firstName lastName email phoneNumber address dateOfBirth profileImage gender',
+        });
+    res.status(200).json(new ApiResponse(200, updatedPatient, 'Patient profile updated successfully.'));
 });
 const getMedicalFile = asyncHandler(async (req, res) => {
     const patient = await Patient.findOne({ user: req.user._id })

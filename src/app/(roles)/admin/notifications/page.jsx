@@ -12,7 +12,7 @@ export default function AdminNotificationsPage() {
       setLoading(true);
       try {
         const data = await getNotifications();
-        setNotifications(data);
+        setNotifications(data.data.notifications || []);
       } catch (error) {
         setNotifications([]);
       } finally {

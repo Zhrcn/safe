@@ -10,12 +10,7 @@ import {
 import PageHeader from '@/components/patient/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/DropdownMenu';
-import { Separator } from '@/components/ui/Separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import Link from 'next/link';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/Dialog';
 import { DialogTitle, DialogDescription } from '@radix-ui/react-dialog';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
@@ -74,37 +69,20 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
     const appointmentDate = appointment.date ? new Date(appointment.date) : null;
     const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
     
-    // Check if appointment has a valid date (not the placeholder date)
     const hasValidDate = appointmentDate && appointment.date !== "1111-01-01T00:00:00.000Z";
     const canReschedule = hasValidDate && hoursDiff >= 24; // 24 hours minimum notice
     
-    // Check if appointment is eligible for reschedule request
     const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && canReschedule;
     
-    // For now, allow reschedule requests for all eligible statuses regardless of time
     const canRequestRescheduleTest = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status);
     
-    // Debug logging to see what's happening
-    console.log('Appointment debug:', {
-      id: appointment._id || appointment.id,
-      status: appointment.status,
-      date: appointment.date,
-      appointmentDate,
-      hoursDiff,
-      hasValidDate,
-      canReschedule,
-      canRequestReschedule,
-      canRequestRescheduleTest,
-      statusIncluded: ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status)
-    });
-    // Doctor name for title only
+   
     let doctorName = '';
     if (appointment.doctor && appointment.doctor.user) {
         const { firstName, lastName } = appointment.doctor.user;
         doctorName = `${firstName || ''} ${lastName || ''}`.trim();
     }
     if (!doctorName) doctorName = 'No doctor assigned';
-    // Subtitle can show specialty or ID if desired
     let doctorSubtitle = '';
     if (appointment.doctor && appointment.doctor.specialty) {
         doctorSubtitle = `Specialty: ${appointment.doctor.specialty}`;

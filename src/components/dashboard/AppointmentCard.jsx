@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 
 export default function AppointmentCard({ appointments = [] }) {
-    console.log('AppointmentCard received appointments:', appointments);
     if (!appointments?.length) {
         return (
             <div className="rounded-2xl border p-6">

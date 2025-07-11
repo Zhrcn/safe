@@ -21,9 +21,7 @@ export const doctorAppointmentsApi = {
 
   acceptAppointment: async (appointmentId, appointmentData) => {
     try {
-      console.log('API: Accepting appointment', appointmentId, appointmentData);
       const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}/accept`, appointmentData);
-      console.log('API: Accept response', res);
       return res;
     } catch (error) {
       console.error('API: Accept error', error);
@@ -33,9 +31,7 @@ export const doctorAppointmentsApi = {
 
   rejectAppointment: async (appointmentId, doctorNotes) => {
     try {
-      console.log('API: Rejecting appointment', appointmentId, doctorNotes);
       const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}/reject`, { doctorNotes });
-      console.log('API: Reject response', res);
       return res;
     } catch (error) {
       console.error('API: Reject error', error);

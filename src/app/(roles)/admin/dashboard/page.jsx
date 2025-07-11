@@ -29,7 +29,7 @@ export default function AdminDashboard() {
         setUsers(usersData);
         setSystemStats(statsData);
         setActivityLogs(logsData);
-        setNotifications(notificationsData);
+        setNotifications(notificationsData.data.notifications || []);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {

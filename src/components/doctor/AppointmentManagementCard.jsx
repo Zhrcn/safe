@@ -120,29 +120,23 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   }, [dialogMode, appointment]);
 
   const handleAccept = async () => {
-    console.log('Accept button clicked for appointment:', appointment._id);
     const appointmentData = {};
     if (acceptForm.date) appointmentData.date = acceptForm.date;
     if (acceptForm.time) appointmentData.time = acceptForm.time;
     if (acceptForm.location) appointmentData.location = acceptForm.location;
     if (acceptForm.doctorNotes) appointmentData.doctorNotes = acceptForm.doctorNotes;
 
-    console.log('Accept appointment data:', appointmentData);
     const result = await dispatch(acceptAppointment({ appointmentId: appointment._id, appointmentData }));
-    console.log('Accept result:', result);
     setIsAcceptDialogOpen(false);
     setAcceptForm({ date: '', time: '', location: '', doctorNotes: '' });
     if (onActionComplete) onActionComplete();
   };
 
   const handleReject = async () => {
-    console.log('Reject button clicked for appointment:', appointment._id);
-    console.log('Reject notes:', rejectForm.doctorNotes);
     const result = await dispatch(rejectAppointment({ 
       appointmentId: appointment._id, 
       doctorNotes: rejectForm.doctorNotes 
     }));
-    console.log('Reject result:', result);
     setIsRejectDialogOpen(false);
     setRejectForm({ doctorNotes: '' });
     if (onActionComplete) onActionComplete();
@@ -392,7 +386,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
             <>
               <Dialog open={isApproveRescheduleDialogOpen} onOpenChange={setIsApproveRescheduleDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="default" disabled={loading} className="bg-green-600 hover:bg-green-700">
+                  <Button variant="outline" disabled={loading} className="border-primary text-primary hover:bg-green-700">
                     {t('doctor.appointments.approveReschedule', 'Approve Reschedule')}
                   </Button>
                 </DialogTrigger>
@@ -429,10 +423,10 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                       />
                     </div>
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setIsApproveRescheduleDialogOpen(false)}>
+                      <Button className=" hover:bg-blue-500 bg-primary" variant="outline" onClick={() => setIsApproveRescheduleDialogOpen(false)}>
                         {t('common.cancel', 'Cancel')}
                       </Button>
-                      <Button onClick={handleApproveReschedule} disabled={loading}>
+                      <Button variant="default" className="bg-primary text-foreground " onClick={handleApproveReschedule} disabled={loading}>
                         {t('doctor.appointments.approveReschedule', 'Approve')}
                       </Button>
                     </div>
@@ -520,7 +514,9 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                       <Label htmlFor="update-type">Type</Label>
                       <Select value={updateForm.type} onValueChange={(value) => setUpdateForm({ ...updateForm, type: value })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
+                          <span>
+                            <SelectValue placeholder="Select type" />
+                          </span>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="checkup">Checkup</SelectItem>

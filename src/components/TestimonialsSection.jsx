@@ -136,7 +136,7 @@ export default function TestimonialsSection() {
             <h2 className="font-extrabold mb-2 text-3xl md:text-4xl text-foreground tracking-tight">
               {t('testimonials.heading', 'What Our Users Say')}
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-base md:text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-2 text-base md:text-lg project-title">
               {t('testimonials.intro', 'Real feedback from patients, doctors, and pharmacists using SAFE.')}
             </p>
           </motion.div>

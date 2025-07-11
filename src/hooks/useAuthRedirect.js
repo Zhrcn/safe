@@ -14,7 +14,6 @@ export const useAuthRedirect = () => {
         if (authChecked && isAuthenticated && user?.role) {
             setIsRedirecting(true);
             const dashboardPath = `/${user.role}/dashboard`;
-            console.log(`User is authenticated, redirecting to ${dashboardPath}`);
             router.replace(dashboardPath);
         }
     }, [authChecked, isAuthenticated, user?.role, router]);

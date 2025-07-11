@@ -1,10 +1,9 @@
-import { 
-    mockAdminProfile, 
-    mockUsers, 
-    mockStats, 
-    mockNotifications, 
-    mockSystemLogs 
-} from '@/data/mock/adminData';
+import axiosInstance from '@/store/services/axiosInstance';
+
+// Add mock data definitions to prevent ReferenceError
+const mockSystemLogs = [];
+const mockStats = {};
+const mockNotifications = [];
 
 export const getAdminProfile = async () => {
     try {
@@ -17,57 +16,23 @@ export const getAdminProfile = async () => {
 };
 
 export const getUsers = async () => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockUsers;
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-    }
+    const response = await axiosInstance.get('/users');
+    return response.data.data;
 };
 
 export const getUserById = async (userId) => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const user = mockUsers.find(u => u.id === userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-        return user;
-    } catch (error) {
-        console.error('Error fetching user:', error);
-        throw error;
-    }
+    const response = await axiosInstance.get(`/users/${userId}`);
+    return response.data;
 };
 
 export const updateUser = async (userId, data) => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const userIndex = mockUsers.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            throw new Error('User not found');
-        }
-        mockUsers[userIndex] = { ...mockUsers[userIndex], ...data };
-        return mockUsers[userIndex];
-    } catch (error) {
-        console.error('Error updating user:', error);
-        throw error;
-    }
+    const response = await axiosInstance.patch(`/users/${userId}`, data);
+    return response.data.data;
 };
 
 export const deleteUser = async (userId) => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const userIndex = mockUsers.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            throw new Error('User not found');
-        }
-        const deletedUser = mockUsers.splice(userIndex, 1)[0];
-        return deletedUser;
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        throw error;
-    }
+    const response = await axiosInstance.delete(`/users/${userId}`);
+    return response.data;
 };
 
 export const getStats = async () => {
@@ -81,13 +46,8 @@ export const getStats = async () => {
 };
 
 export const getNotifications = async () => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockNotifications;
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        throw error;
-    }
+    const response = await axiosInstance.get('/notifications');
+    return response.data;
 };
 
 export const getSystemLogs = async () => {
@@ -126,11 +86,7 @@ export const getSystemStats = async () => {
 };
 
 export const getActivityLogs = async () => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockSystemLogs;
-    } catch (error) {
-        console.error('Error fetching activity logs:', error);
-        throw error;
-    }
-}; 
+    const response = await axiosInstance.get('/logs');
+    // The backend returns { statusCode, data, message }, where data is the logs array
+    return response.data.data || [];
+};

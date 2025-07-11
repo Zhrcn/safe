@@ -14,12 +14,14 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
       }
     };
 
-    if (showMenu) {
+    if (showMenu && typeof document !== 'undefined') {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
     };
   }, [showMenu]);
   const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -54,7 +56,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
                     size="sm"
                     className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
-                      if (onDeleteMessage && window.confirm('Are you sure you want to delete this message?')) {
+                      if (onDeleteMessage && typeof window !== 'undefined' && window.confirm('Are you sure you want to delete this message?')) {
                         onDeleteMessage(message._id || message.id);
                       }
                       setShowMenu(false);

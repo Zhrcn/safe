@@ -7,6 +7,7 @@ export const useSession = () => {
     const sessionTimeout = useSelector(selectSessionTimeout);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
         const handleUserActivity = () => {
             dispatch(updateLastActivity());
         };

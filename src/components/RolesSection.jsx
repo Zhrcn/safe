@@ -296,7 +296,7 @@ export default function RolesSection() {
           <h2 className="mb-4 font-extrabold text-4xl sm:text-5xl md:text-6xl leading-tight text-foreground">
             {t('roles.sectionTitle', 'Choose Your Role')}
           </h2>
-          <p className="text-muted-foreground text-lg text-center max-w-2xl mx-auto">
+          <p className="project-title text-muted-foreground text-lg text-center max-w-2xl mx-auto">
             {t('roles.sectionDescription', 'Select your role to get started with SAFE.')}
           </p>
         </motion.div>
