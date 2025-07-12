@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
+const { generatePatientId } = require('../utils/idGenerator');
+
 const patientSchema = new mongoose.Schema({
+  patientId: {
+    type: String,
+    unique: true,
+    required: true,
+    trim: true
+  },
   user: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -167,6 +175,7 @@ const patientSchema = new mongoose.Schema({
   collection: 'Patients'
 });
 patientSchema.index({ user: 1 });
+patientSchema.index({ patientId: 1 });
 patientSchema.index({ 'allergies.name': 1 });
 patientSchema.index({ 'chronicConditions.name': 1 });
 patientSchema.index({ 'medications.name': 1 });
@@ -218,9 +227,30 @@ patientSchema.methods.getUpcomingReminders = async function() {
     dueDate: { $gt: new Date() }
   }).sort({ dueDate: 1 });
 };
-patientSchema.pre('save', function(next) {
+patientSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
+  
+  // Generate patient ID if not already set
+  if (!this.patientId) {
+    try {
+      // Get user's birth date from the user document
+      const User = mongoose.model('User');
+      const user = await User.findById(this.user);
+      
+      if (!user) {
+        return next(new Error('User not found'));
+      }
+      
+      // Use user's dateOfBirth if available, otherwise fallback to current date
+      const birthDate = user.dateOfBirth || new Date();
+      this.patientId = await generatePatientId(birthDate);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   next();
 });
+
 const Patient = mongoose.model('Patient', patientSchema);
 module.exports = Patient;

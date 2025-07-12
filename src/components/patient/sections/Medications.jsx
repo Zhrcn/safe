@@ -8,19 +8,30 @@ import {
 import { Button } from '@/components/ui/Button';
 
 const Medications = ({ patient }) => {
-    const medsArray = Array.isArray(patient.medications) ? patient.medications : (patient.medications?.data && Array.isArray(patient.medications.data) ? patient.medications.data : []);
+    // Handle different data structures - medications can come from patient.medications or patient.medicalFile.medicationHistory
+    const patientMedications = patient?.medications || [];
+    const medicalFileMedications = patient?.medicalFile?.medicationHistory || [];
+    
+    // Combine both sources and remove duplicates
+    const allMedications = [...patientMedications, ...medicalFileMedications];
+    const uniqueMedications = allMedications.filter((med, index, self) => 
+        index === self.findIndex(m => m.name === med.name && m.dosage === med.dosage)
+    );
+    
     function handleRefill() {
         alert('Refill requested!');
     }
+    
     function handleRemove() {
         alert('Remove requested!');
     }
+    
     return (
         <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
             <h2 className="text-xl font-extrabold mb-6 tracking-tight text-primary">Current Medications</h2>
-            {medsArray.length > 0 ? (
+            {uniqueMedications.length > 0 ? (
                 <div className="divide-y divide-border">
-                    {medsArray.map((medication, index) => (
+                    {uniqueMedications.map((medication, index) => (
                         <div key={index} className="py-5 first:pt-0 last:pb-0">
                             <div className="flex items-start gap-5">
                                 <div className="mt-1">
@@ -32,7 +43,7 @@ const Medications = ({ patient }) => {
                                             {medication.name}
                                         </h3>
                                         <span className="inline-flex items-center px-3 py-1 rounded-2xl text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-sm">
-                                            {medication.dosage}
+                                            {medication.dosage || medication.dose}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
@@ -41,15 +52,25 @@ const Medications = ({ patient }) => {
                                             {medication.frequency}
                                         </span>
                                     </div>
+                                    {medication.instructions && (
+                                        <div className="mt-2 text-sm text-muted-foreground">
+                                            <strong>Instructions:</strong> {medication.instructions}
+                                        </div>
+                                    )}
+                                    {medication.prescribedBy && (
+                                        <div className="mt-1 text-xs text-muted-foreground">
+                                            Prescribed by: {medication.prescribedBy.firstName} {medication.prescribedBy.lastName}
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-2xl text-xs font-semibold border shadow-sm ${
-                                        medication.status === 'active'
+                                        (medication.status === 'active' || medication.active === true)
                                             ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                             : 'bg-muted text-muted-foreground border-border'
                                     }`}>
                                         <AlertTriangle className="w-3 h-3" />
-                                        {medication.status}
+                                        {medication.status || (medication.active ? 'active' : 'inactive')}
                                     </span>
                                 </div>
                             </div>
@@ -84,4 +105,5 @@ const Medications = ({ patient }) => {
         </div>
     );
 };
+
 export default Medications; 

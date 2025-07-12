@@ -95,6 +95,17 @@ const PatientList = () => {
                                 <StarBorder className="h-5 w-5" />
                             )}
                         </Button>
+                        <Button
+                            onClick={e => {
+                                e.stopPropagation();
+                                handlePatientClick(patient.id);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                        >
+                            Open File
+                        </Button>
                     </div>
                 ))}
             </div>

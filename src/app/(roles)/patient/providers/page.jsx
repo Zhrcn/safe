@@ -114,6 +114,34 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
+    // Load favorite state from localStorage on component mount
+    useEffect(() => {
+        const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
+        setIsFavorite(favorites.includes(provider.id || provider._id));
+    }, [provider.id, provider._id]);
+
+    const toggleFavorite = () => {
+        const newFavoriteState = !isFavorite;
+        setIsFavorite(newFavoriteState);
+        
+        // Update localStorage
+        const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
+        const providerId = provider.id || provider._id;
+        
+        if (newFavoriteState) {
+            if (!favorites.includes(providerId)) {
+                favorites.push(providerId);
+            }
+        } else {
+            const index = favorites.indexOf(providerId);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            }
+        }
+        
+        localStorage.setItem('providerFavorites', JSON.stringify(favorites));
+    };
+
     const getAvailabilityStatus = () => {
         if (isDoctor) {
             return { status: 'available', text: t('availableForConsultations'), color: 'text-green-600 dark:text-green-400' };
@@ -163,7 +191,7 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                         "bg-background/90 backdrop-blur-sm hover:bg-background border border-border",
                         "hover:scale-110 shadow-sm"
                     )}
-                    onClick={() => setIsFavorite(!isFavorite)}
+                    onClick={toggleFavorite}
                 >
                     <Heart 
                         className={cn(
@@ -481,14 +509,14 @@ const ProvidersPageContent = () => {
                     {t('tryAdjustingSearchOrFilters')}
                 </p>
                 {type === 'doctors' && (
-                    <Button asChild className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg px-8 py-3 text-lg">
-                        <Link href="/patient/appointments/new">
+                    <Link href="/patient/appointments/new">
+                        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg px-8 py-3 text-lg">
                             <span className="flex items-center gap-3">
                                 <Plus className="h-6 w-6" />
                                 {t('bookNewAppointment')}
                             </span>
-                        </Link>
-                    </Button>
+                        </Button>
+                    </Link>
                 )}
             </div>
         </div>
@@ -521,7 +549,21 @@ const ProvidersPageContent = () => {
             );
         }
 
+        // Get favorites from localStorage
+        const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
+        
+        // Sort providers: favorites first, then by the selected criteria
         filteredProviders.sort((a, b) => {
+            const aId = a.id || a._id;
+            const bId = b.id || b._id;
+            const aIsFavorite = favorites.includes(aId);
+            const bIsFavorite = favorites.includes(bId);
+            
+            // If one is favorite and the other isn't, favorite comes first
+            if (aIsFavorite && !bIsFavorite) return -1;
+            if (!aIsFavorite && bIsFavorite) return 1;
+            
+            // If both have the same favorite status, sort by the selected criteria
             let compareA, compareB;
             if (sortBy === 'name') {
                 compareA = a.name.toLowerCase();
@@ -722,11 +764,16 @@ const ProvidersPageContent = () => {
 
             <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-6">
-                    <Tabs defaultValue="doctors" className="w-full" onValueChange={handleTabChange}>
-                        <TabsList className="grid w-full grid-cols-2 h-12 bg-muted p-1">
+                    <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
+                        <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50 p-1 rounded-xl border border-border">
                             <TabsTrigger 
                                 value="doctors" 
-                                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-300"
+                                className={cn(
+                                    "transition-all duration-300 rounded-lg font-medium",
+                                    activeTab === "doctors" 
+                                        ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                                        : "bg-transparent text-muted-foreground hover:text-foreground"
+                                )}
                             >
                                 <span className="flex items-center">
                                     <Stethoscope className="h-4 w-4 mr-2" />
@@ -735,7 +782,12 @@ const ProvidersPageContent = () => {
                             </TabsTrigger>
                             <TabsTrigger 
                                 value="pharmacies"
-                                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-300"
+                                className={cn(
+                                    "transition-all duration-300 rounded-lg font-medium",
+                                    activeTab === "pharmacies" 
+                                        ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                                        : "bg-transparent text-muted-foreground hover:text-foreground"
+                                )}
                             >
                                 <span className="flex items-center">
                                     <Pill className="h-4 w-4 mr-2" />

@@ -179,7 +179,7 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
     );
 };
 const Appointments = ({ patient }) => {
-    const [appointments, setAppointments] = useState(patient.appointments || []);
+    const [appointments, setAppointments] = useState(patient?.appointments || []);
     const [isFormOpen, setIsFormOpen] = useState(false);
  
     const handleNewAppointment = (formData) => {
@@ -211,22 +211,22 @@ const Appointments = ({ patient }) => {
     };
 
     return (
-        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-6">
+        <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold">Appointments</h2>
+                <h2 className="text-xl font-extrabold tracking-tight text-primary">Appointments</h2>
                 <Button
                     onClick={() => setIsFormOpen(true)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
                     New Appointment
                 </Button>
             </div>
             {appointments.length > 0 ? (
-                <div>
+                <div className="space-y-4">
                     {appointments.map((appointment) => (
                         <AppointmentCard
-                            key={appointment.id}
+                            key={appointment._id || appointment.id}
                             appointment={appointment}
                             onChat={handleChat}
                             onCall={handleCall}
@@ -235,9 +235,11 @@ const Appointments = ({ patient }) => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-8">
-                    <Calendar className="w-12 h-12 text-muted-foreground opacity-50 mx-auto mb-2" />
-                    <p className="text-muted-foreground">No appointments scheduled</p>
+                <div className="text-center py-12">
+                    <Calendar className="w-14 h-14 text-muted-foreground opacity-50 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-base font-medium">
+                        No appointments scheduled
+                    </p>
                 </div>
             )}
             <AppointmentForm

@@ -7,6 +7,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { addPatientById } from '@/store/slices/doctor/doctorPatientsSlice';
 const patientSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
     age: z.number().int().positive().min(1).max(120),
@@ -27,6 +29,8 @@ export default function AddPatientForm({ onClose, onSuccess }) {
     const [success, setSuccess] = useState('');
     const [patientId, setPatientId] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const dispatch = useAppDispatch();
+    const { loading } = useAppSelector(state => state.doctorPatients);
     const { 
         control, 
         handleSubmit, 
@@ -83,24 +87,19 @@ export default function AddPatientForm({ onClose, onSuccess }) {
         try {
             setIsSearching(true);
             setError('');
-            const mockPatients = [
-                { id: 'patient123', name: 'John Doe', age: 30, gender: 'Male', condition: 'Flu', contact: { email: 'john.doe@example.com', phone: '1234567890' }, user: { firstName: 'John', lastName: 'Doe', isActive: true }, medicalId: 'MED001' },
-                { id: 'patient456', name: 'Jane Smith', age: 25, gender: 'Female', condition: 'Cold', contact: { email: 'jane.smith@example.com', phone: '0987654321' }, user: { firstName: 'Jane', lastName: 'Smith', isActive: true }, medicalId: 'MED002' }
-            ];
-            const foundPatient = mockPatients.find(p => p.id === patientId);
-            if (foundPatient) {
-                setSuccess('Patient found and added successfully');
-                if (onSuccess) {
-                    onSuccess(foundPatient);
-                }
+            setSuccess('');
+            const resultAction = await dispatch(addPatientById(patientId));
+            if (addPatientById.fulfilled.match(resultAction)) {
+                setSuccess('Patient added successfully');
+                if (onSuccess) onSuccess();
                 setTimeout(() => {
                     if (onClose) onClose();
-                }, 2000);
+                }, 1500);
             } else {
-                setError('Patient not found');
+                setError(resultAction.payload || 'Patient not found or could not be added');
             }
         } catch (err) {
-            setError('An error occurred while searching for the patient');
+            setError('An error occurred while adding the patient');
             console.error(err);
         } finally {
             setIsSearching(false);

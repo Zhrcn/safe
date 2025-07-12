@@ -16,7 +16,7 @@ const Pharmacist = require('../models/Pharmacist');
 
 console.log('Environment variables:', {
     NODE_ENV: process.env.NODE_ENV,
-    MONGO_URI: "mongodb+srv://muhammadzouherkanaan:Zouher123@cluster0.jofcmme.mongodb.net/SAFE-Medical_Health_Platform?retryWrites=true&w=majority&appName=Cluster0",
+    MONGO_URI: "mongodb://localhost:27017/safe",
     PORT: process.env.PORT
 });
 
@@ -38,6 +38,13 @@ mongoose.connect(process.env.MONGO_URI, {
 });
 
 const randomDate = (start, end) => {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+};
+
+const randomDOB = () => {
+  // Random age between 18 and 70
+  const start = new Date(1954, 0, 1);
+  const end = new Date(2006, 0, 1);
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 };
 
@@ -121,6 +128,7 @@ const seedDatabase = async () => {
       phoneNumber: '+963123456789',
       gender: 'male',
       address: 'Damascus, Syria',
+      dateOfBirth: randomDOB(),
       isActive: true,
       isVerified: true
     });
@@ -137,25 +145,21 @@ const seedDatabase = async () => {
         phoneNumber: `+96398765432${i}`,
         gender: i % 2 === 0 ? 'female' : 'male',
         address: `${syrianCities[i]}, Syria`,
+        dateOfBirth: randomDOB(),
         isActive: true,
         isVerified: true
       });
       pharmacistUsers.push(user);
       const pharmacist = await Pharmacist.create({
         user: user._id,
+        pharmacistId: `PHARM${1000 + i}`,
         licenseNumber: `PHARM${1000 + i}`,
         pharmacyName: `Safe Pharmacy ${i}`,
-        pharmacyAddress: `${syrianCities[i]}, Syria`,
+        yearsOfExperience: 5 + i,
+        qualifications: ['PharmD', 'Clinical Pharmacy'],
+        professionalBio: `Experienced pharmacist with ${5 + i} years of practice in ${syrianCities[i]}, Syria.`,
         workingHours: workingHours,
-        specialties: ['General Pharmacy', 'Clinical Pharmacy'],
-        experienceYears: 5 + i,
-        education: [{
-          degree: 'PharmD',
-          institution: 'University of Damascus',
-          yearCompleted: 2018 + i
-        }],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        status: 'active'
       });
       pharmacists.push(pharmacist);
     }
@@ -173,12 +177,14 @@ const seedDatabase = async () => {
         phoneNumber: `+963${100000000 + i * 1000000}`,
         gender,
         address: `${syrianCities[i]}, Syria`,
+        dateOfBirth: randomDOB(),
         isActive: true,
         isVerified: true
       });
       doctorUsers.push(user);
       const doctor = await Doctor.create({
         user: user._id,
+        doctorId: `DOC${1000 + i}`,
         medicalLicenseNumber: `MD${1000 + i}`,
         specialty: specialties[i % specialties.length],
         experienceYears: 10 + i,
@@ -187,23 +193,21 @@ const seedDatabase = async () => {
           institution: 'University of Damascus',
           yearCompleted: 2010 + i
         }],
+        achievements: [`Award ${i}`],
         currentHospitalAffiliation: {
           name: syrianHospitals[i % syrianHospitals.length],
           address: `${syrianCities[i]}, Syria`,
           phoneNumber: `+963${200000000 + i * 1000000}`
         },
-        achievements: [`Award ${i}`],
-        languages: ['Arabic', 'English'],
         rating: 4.5 + (i * 0.1),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        patientsList: []
       });
       doctors.push(doctor);
     }
 
     const patients = [];
     const patientUsers = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 20; i++) {
       const { firstName, lastName, gender } = generateSyrianName();
       const user = await User.create({
         firstName,
@@ -213,7 +217,8 @@ const seedDatabase = async () => {
         role: 'patient',
         phoneNumber: `+963${300000000 + i * 1000000}`,
         gender,
-        address: `${syrianCities[i]}, Syria`,
+        address: `${syrianCities[i % syrianCities.length]}, Syria`,
+        dateOfBirth: randomDOB(),
         isActive: true,
         isVerified: true
       });
@@ -252,41 +257,21 @@ const seedDatabase = async () => {
           {
             date: new Date(),
             bloodPressure: '120/80',
-            heartRate: 75,
-            temperature: 37,
-            weight: 70 + i,
-            height: 170 + i,
-            bmi: 22.9 + i,
-            oxygenSaturation: 98
-          },
-          {
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-            bloodPressure: '130/85',
-            heartRate: 80,
-            temperature: 36.8,
-            weight: 71 + i,
-            height: 170 + i,
-            bmi: 23.1 + i,
-            oxygenSaturation: 97
+            heartRate: 75 + (i % 10),
+            temperature: 36.5 + (i % 3) * 0.1,
+            weight: 60 + i,
+            height: 160 + (i % 10),
+            bmi: 22.0 + (i % 5) * 0.5,
+            oxygenSaturation: 97 + (i % 3)
           }
         ],
         labResults: [
           {
             testName: 'Complete Blood Count',
             date: new Date(),
-            results: { WBC: 6.2, RBC: 4.8, HGB: 13.5 },
+            results: { WBC: 6.2 + (i % 2), RBC: 4.8 + (i % 2), HGB: 13.5 + (i % 2) },
             normalRange: 'WBC: 4.0-11.0, RBC: 4.2-5.9, HGB: 13.0-17.0',
             unit: '',
-            labName: 'Safe Lab',
-            doctorId: null,
-            documents: []
-          },
-          {
-            testName: 'Lipid Panel',
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60),
-            results: { Cholesterol: 220, HDL: 45, LDL: 150 },
-            normalRange: 'Cholesterol: <200, HDL: >40, LDL: <100',
-            unit: 'mg/dL',
             labName: 'Safe Lab',
             doctorId: null,
             documents: []
@@ -299,21 +284,6 @@ const seedDatabase = async () => {
             result: 'Clear',
             notes: 'No abnormalities detected',
             images: ['/case1_008.dcm']
-          },
-          {
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90),
-            type: 'Abdominal Ultrasound',
-            result: 'Normal',
-            notes: 'No issues found',
-            images: [
-              '/case1/case1_008.dcm',
-              '/case1/case1_010.dcm',
-              '/case1/case1_0012.dcm',
-              '/case1/case1_0014.dcm',
-              '/case1/case1_0016.dcm',
-              '/case1/case1_0018.dcm',
-              '/case1/case1_00120.dcm',
-            ]
           }
         ],
         documents: [
@@ -322,12 +292,6 @@ const seedDatabase = async () => {
             date: new Date(),
             type: 'PDF',
             url: '/mock/path/to/discharge-summary.pdf'
-          },
-          {
-            title: 'Lab Report',
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
-            type: 'PDF',
-            url: '/mock/path/to/lab-report.pdf'
           }
         ],
         emergencyContact: {
@@ -347,9 +311,9 @@ const seedDatabase = async () => {
       });
       const patient = await Patient.create({
         user: user._id,
+        patientId: `PAT${1000 + i}`,
         medicalFile: medicalFile._id,
         bloodType,
-        doctorsList: [doctors[i % doctors.length]._id],
         allergies: [
           {
             name: 'Penicillin',
@@ -401,16 +365,21 @@ const seedDatabase = async () => {
         consultations: [],
         prescriptions: [],
         messages: [],
-        reminders: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        reminders: []
       });
-      patients.push({ user, patient, medicalFile });
+      patients.push(patient);
     }
 
     for (let i = 0; i < patients.length; i++) {
-      const patient = patients[i].patient;
+      const patient = patients[i];
       const doctor = doctors[i % doctors.length];
+      
+      // Add patient to doctor's patientsList
+      if (!doctor.patientsList.includes(patient._id)) {
+        doctor.patientsList.push(patient._id);
+        await doctor.save();
+      }
+      
       const appointment = await Appointment.create({
         patient: patient._id,
         doctor: doctor._id,
@@ -473,7 +442,7 @@ const seedDatabase = async () => {
         }
       ]);
       await Consultation.create({
-        patient: patient._id,
+        patient: patient.user,
         doctor: doctor.user,
         question: 'What is the best way to manage hypertension?',
         answer: 'Lifestyle changes and regular medication.',

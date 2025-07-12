@@ -38,8 +38,9 @@ import Appointments from '@/components/patient/sections/Appointments';
 import Insurance from '@/components/patient/sections/Insurance';
 import EmergencyContact from '@/components/patient/sections/EmergencyContact';
 import { Button } from '@/components/ui/Button';
-import { getPatientConsultations, answerConsultation } from '@/store/services/doctor/consultationsApi';
+import { answerConsultation } from '@/store/services/doctor/consultationsApi';
 import { useTranslation } from 'react-i18next';
+
 function PrescriptionForm({ open, onClose, onSubmit, patient }) {
     const { t } = useTranslation();
     const [formData, setFormData] = useState({
@@ -53,6 +54,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
         notes: ''
     });
     const [errors, setErrors] = useState({});
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -66,6 +68,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
             }));
         }
     };
+    
     const validateForm = () => {
         const newErrors = {};
         if (!formData.medication) newErrors.medication = t('doctor.patientDetail.medicationRequired', 'Medication is required');
@@ -77,6 +80,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+    
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
@@ -84,7 +88,9 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
             onClose();
         }
     };
+    
     if (!open) return null;
+    
     return (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-card text-card-foreground rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg border border-border">
@@ -255,6 +261,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
         </div>
     );
 }
+
 const PatientPageContent = () => {
     const params = useParams();
     const router = useRouter();
@@ -271,9 +278,11 @@ const PatientPageContent = () => {
             dispatch(fetchPatientById(params.id));
         }
     }, [dispatch, params.id]);
+    
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
     };
+    
     const handleFavoriteToggle = () => {
         setIsFavorite(!isFavorite);
         showNotification(
@@ -281,34 +290,19 @@ const PatientPageContent = () => {
             'success'
         );
     };
+    
     const handleCreatePrescription = (prescriptionData) => {
         console.log('Creating prescription:', prescriptionData);
         showNotification('Prescription created successfully', 'success');
     };
+    
     const handleSendMessage = () => {
         router.push(`/chat/${selectedPatient?.id || selectedPatient?._id}`);
     };
-    const [patientConsultations, setPatientConsultations] = useState([]);
-    const [consultationsLoading, setConsultationsLoading] = useState(false);
-
-    useEffect(() => {
-        const loadConsultations = async () => {
-            if (selectedPatient?.id || selectedPatient?._id) {
-                setConsultationsLoading(true);
-                try {
-                    const consultations = await getPatientConsultations(selectedPatient.id || selectedPatient._id);
-                    setPatientConsultations(consultations);
-                } catch (error) {
-                    console.error('Failed to load consultations:', error);
-                    showNotification('Failed to load consultations', 'error');
-                } finally {
-                    setConsultationsLoading(false);
-                }
-            }
-        };
-        loadConsultations();
-    }, [selectedPatient?.id, selectedPatient?._id]);
-
+    
+    // Use consultations from the patient data (now included in the backend response)
+    const patientConsultations = selectedPatient?.consultations || [];
+    
     const handleAnswerChange = (consultationId, value) => {
         setAnswerInputs(prev => ({ ...prev, [consultationId]: value }));
     };
@@ -321,16 +315,18 @@ const PatientPageContent = () => {
             await answerConsultation(consultationId, answer);
             showNotification('Answer submitted successfully!', 'success');
             setAnswerInputs(prev => ({ ...prev, [consultationId]: '' }));
-            const consultations = await getPatientConsultations(selectedPatient.id || selectedPatient._id);
-            setPatientConsultations(consultations);
+            // Refresh patient data to get updated consultations
+            dispatch(fetchPatientById(params.id));
         } catch (error) {
             console.error('Failed to submit answer:', error);
             showNotification('Failed to submit answer', 'error');
         }
     };
+    
     const handleChat = (consultation) => {
         router.push(`/chat/${consultation.patientId}`);
     };
+    
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -338,6 +334,7 @@ const PatientPageContent = () => {
             </div>
         );
     }
+    
     if (error) {
         return (
             <div className="p-4 bg-danger/10 border border-danger/20 rounded-md">
@@ -345,6 +342,7 @@ const PatientPageContent = () => {
             </div>
         );
     }
+    
     if (!selectedPatient) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -364,6 +362,7 @@ const PatientPageContent = () => {
             </div>
         );
     }
+    
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="bg-card text-card-foreground rounded-2xl shadow-lg overflow-hidden border border-border">
@@ -440,11 +439,7 @@ const PatientPageContent = () => {
                             {activeTab === 6 && (
                                 <div>
                                     <h2 className="text-xl font-bold mb-4">Consultations</h2>
-                                    {consultationsLoading ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                        </div>
-                                    ) : patientConsultations.length === 0 ? (
+                                    {patientConsultations.length === 0 ? (
                                         <div className="text-muted-foreground">No consultations for this patient.</div>
                                     ) : (
                                         <div className="space-y-6">
@@ -539,7 +534,7 @@ const PatientPageContent = () => {
                     </AnimatePresence>
                 </div>
             </div>
-            {console.log('Patient medicalHistory being passed to MedicalHistory:', selectedPatient?.medicalHistory)}
+            {console.log('Patient data being passed to components:', selectedPatient)}
             <PrescriptionForm
                 open={isPrescriptionModalOpen}
                 onClose={() => setIsPrescriptionModalOpen(false)}
@@ -549,6 +544,7 @@ const PatientPageContent = () => {
         </div>
     );
 };
+
 export default function PatientPage() {
     return (
         <NotificationProvider>

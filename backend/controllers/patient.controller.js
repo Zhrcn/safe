@@ -10,13 +10,18 @@ const getProfile = asyncHandler(async (req, res) => {
         .populate('medicalFile')
         .populate({
             path: 'user',
-            select: 'firstName lastName email phoneNumber address dateOfBirth profileImage gender',
+            select: 'firstName lastName email phoneNumber address dateOfBirth profileImage gender age',
         });
     if (!patient) {
         res.status(404);
         throw new Error('Patient not found');
     }
-    res.status(200).json(new ApiResponse(200, patient, 'Patient profile retrieved successfully.'));
+    
+    // Add patientId to the response
+    const patientResponse = patient.toObject();
+    patientResponse.patientId = patient.patientId;
+    
+    res.status(200).json(new ApiResponse(200, patientResponse, 'Patient profile retrieved successfully.'));
 });
 const updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user._id;

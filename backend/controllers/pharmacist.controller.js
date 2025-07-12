@@ -24,6 +24,7 @@ exports.getPharmacistProfile = asyncHandler(async (req, res, next) => {
     address: pharmacistUser.address, 
     profilePictureUrl: pharmacistUser.profilePictureUrl,
     pharmacistId: pharmacistRecord._id,
+    pharmacistUniqueId: pharmacistRecord.pharmacistId,
     pharmacyName: pharmacistRecord.pharmacyName,
     pharmacyAddress: pharmacistRecord.pharmacyAddress, 
     licenseNumber: pharmacistRecord.licenseNumber,

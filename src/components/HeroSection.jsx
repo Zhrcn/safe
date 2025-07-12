@@ -70,8 +70,10 @@ export default function HeroSection() {
                   className="rounded-full animate-pulse-fast"
                 >
                   <Button
+                    variant="default"
                     onClick={() => scrollToSection('roles')}
-                    className="px-10 py-5 text-xl font-extrabold rounded-full bg-gradient-to-tr from-primary to-blue-500 text-primary dark:text-white shadow-2xl hover:from-blue-600 hover:to-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 border-none drop-shadow-xl"
+                    className="px-10 py-5 text-xl font-bold rounded-full border-4 bg-primary text-primary-foreground  hover:bg-primary/10 hover:text-primary-foreground transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/60 focus:ring-offset-2 shadow-lg dark:border-white dark:text-white dark:bg-transparent"
+
                   >
                     {t('hero.getStarted', 'Get Started')}
                   </Button>

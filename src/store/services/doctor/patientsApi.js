@@ -11,7 +11,7 @@ export const getPatients = async () => {
 };
 
 export const getPatientById = async (id) => {
-  try {log
+  try {
     const res = await axiosInstance.get(`/doctors/patients/${id}`);
     return res.data.data;
   } catch (error) {
@@ -72,5 +72,10 @@ export const getPatientConsultations = async (patientId) => {
 
 export const searchPatients = async (searchTerm) => {
   const res = await axiosInstance.get(`/search?q=${searchTerm}`);
+  return res.data.data;
+};
+
+export const addPatientById = async (patientId) => {
+  const res = await axiosInstance.post('/doctors/patients/add', { patientId });
   return res.data.data;
 }; 

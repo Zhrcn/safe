@@ -9,6 +9,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+
 const InfoItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-center gap-3 mb-2">
         <Icon className="w-5 h-5 text-primary" />
@@ -16,6 +17,7 @@ const InfoItem = ({ icon: Icon, label, value }) => (
         <span className="text-sm text-foreground font-semibold">{value || 'N/A'}</span>
     </div>
 );
+
 const ContactCard = ({ title, contact }) => (
     <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
         <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
@@ -40,7 +42,7 @@ const ContactCard = ({ title, contact }) => (
             <div>
                 <span className="text-sm text-muted-foreground font-semibold">Phone</span>
                 <p className="text-base text-foreground font-medium mt-1">
-                    {contact?.phone || 'N/A'}
+                    {contact?.phone || contact?.phoneNumber || 'N/A'}
                 </p>
             </div>
             <div className="h-px bg-border" />
@@ -60,10 +62,23 @@ const ContactCard = ({ title, contact }) => (
         </div>
     </div>
 );
+
 const EmergencyContact = ({ patient }) => {
     if (!patient) return null;
-    const primaryContact = patient.emergencyContacts?.[0];
-    const secondaryContact = patient.emergencyContacts?.[1];
+    
+    // Handle different data structures - emergency contacts can come from patient.emergencyContacts or patient.medicalFile.emergencyContact
+    const patientEmergencyContacts = patient?.emergencyContacts || [];
+    const medicalFileEmergencyContact = patient?.medicalFile?.emergencyContact;
+    
+    // Combine both sources
+    let allContacts = [...patientEmergencyContacts];
+    if (medicalFileEmergencyContact && !allContacts.find(c => c.name === medicalFileEmergencyContact.name)) {
+        allContacts.push(medicalFileEmergencyContact);
+    }
+    
+    const primaryContact = allContacts[0];
+    const secondaryContact = allContacts[1];
+    
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <ContactCard
@@ -77,4 +92,5 @@ const EmergencyContact = ({ patient }) => {
         </div>
     );
 };
+
 export default EmergencyContact; 

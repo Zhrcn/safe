@@ -27,6 +27,7 @@ exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
     address: doctorUser.address,
     profilePictureUrl: doctorUser.profilePictureUrl,
     doctorId: doctorRecord._id,
+    doctorUniqueId: doctorRecord.doctorId,
     specialization: doctorRecord.specialization,
     qualifications: doctorRecord.qualifications,
     licenseNumber: doctorRecord.licenseNumber,
@@ -135,6 +136,7 @@ exports.getDoctorPatients = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
   
+  // Get patients from appointments
   const appointments = await Appointment.find({ doctor: doctor._id })
     .populate({
       path: 'patient',
@@ -164,6 +166,25 @@ exports.getDoctorPatients = asyncHandler(async (req, res) => {
     }
   });
 
+  // Also get patients from patientsList
+  if (doctor.patientsList && doctor.patientsList.length > 0) {
+    const patientsFromList = await Patient.find({ _id: { $in: doctor.patientsList } })
+      .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+      .populate('medicalFile');
+    
+    patientsFromList.forEach(patient => {
+      if (!patientMap.has(patient._id.toString())) {
+        patientMap.set(patient._id.toString(), {
+          _id: patient._id,
+          user: patient.user,
+          medicalFile: patient.medicalFile,
+          lastAppointment: null,
+          appointmentCount: 0
+        });
+      }
+    });
+  }
+
   const patients = Array.from(patientMap.values());
   
   res.status(200).json(new ApiResponse(200, patients, 'Doctor patients fetched successfully.'));
@@ -178,9 +199,28 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
   
+  // Fetch patient with all relevant data
   const patient = await Patient.findById(patientId)
     .populate('user', 'firstName lastName email phoneNumber profilePictureUrl dateOfBirth gender address')
-    .populate('medicalFile');
+    .populate({
+      path: 'medicalFile',
+      populate: [
+        { path: 'prescriptionsList' },
+        { path: 'medicationHistory.medicine' },
+      ]
+    })
+    .populate({
+      path: 'consultations',
+      populate: {
+        path: 'doctor',
+        select: 'firstName lastName specialization',
+        populate: { path: 'user', select: 'firstName lastName' }
+      }
+    })
+    .populate('appointments')
+    .populate('medications.prescribedBy', 'firstName lastName')
+    .populate('prescriptions.doctor', 'firstName lastName')
+    .populate('prescriptions.medications');
     
   if (!patient) {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
@@ -206,8 +246,39 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
     medicalFile: patient.medicalFile,
     appointments: appointments,
     lastAppointment: appointments.length > 0 ? appointments[0].date : null,
-    appointmentCount: appointments.length
+    appointmentCount: appointments.length,
+    consultations: patient.consultations,
+    medications: patient.medications,
+    prescriptions: patient.prescriptions,
   };
   
   res.status(200).json(new ApiResponse(200, patientData, 'Patient details fetched successfully.'));
+});
+
+exports.addPatientById = asyncHandler(async (req, res) => {
+  const userId = req.user.id; 
+  const { patientId } = req.body;
+
+  // Validate doctor
+  const doctor = await Doctor.findOne({ user: userId });
+  if (!doctor) {
+    return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+  }
+
+  // Validate patient
+  const patient = await Patient.findOne({ patientId });
+  if (!patient) {
+    return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+  }
+
+  // Check if already in patientsList
+  if (doctor.patientsList.some(pid => pid.toString() === patient._id.toString())) {
+    return res.status(409).json(new ApiResponse(409, null, 'Patient already added to your list.'));
+  }
+
+  // Add patient
+  doctor.patientsList.push(patient._id);
+  await doctor.save();
+
+  res.status(200).json(new ApiResponse(200, { patientId: patient.patientId, patientMongoId: patient._id }, 'Patient added to your list successfully.'));
 });

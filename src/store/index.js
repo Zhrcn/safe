@@ -10,6 +10,7 @@ import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
 import doctorConsultationsReducer from './slices/doctor/doctorConsultationsSlice';
 import doctorPrescriptionsReducer from './slices/doctor/doctorPrescriptionsSlice';
 import doctorAppointmentsReducer from './slices/doctor/doctorAppointmentsSlice';
+import dashboardAnalyticsReducer from './slices/doctor/dashboardAnalyticsSlice';
 import dashboardReducer from './slices/patient/dashboardSlice';
 import appointmentsReducer from './slices/patient/appointmentsSlice';
 import medicationsReducer from './slices/patient/medicationsSlice';
@@ -38,6 +39,7 @@ export const store = configureStore({
     doctorConsultations: doctorConsultationsReducer,
     doctorPrescriptions: doctorPrescriptionsReducer,
     doctorAppointments: doctorAppointmentsReducer,
+    dashboardAnalytics: dashboardAnalyticsReducer,
     dashboard: dashboardReducer,
     appointments: appointmentsReducer,
     medications: medicationsReducer,
