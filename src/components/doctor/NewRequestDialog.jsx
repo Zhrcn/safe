@@ -65,7 +65,7 @@ const NewRequestDialog = ({ open, onClose, pharmacies }) => {
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" variant="default" disabled={isLoading}>
               {isLoading ? 'Submitting...' : 'Submit Request'}
             </Button>
           </DialogFooter>

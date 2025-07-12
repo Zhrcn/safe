@@ -295,7 +295,7 @@ export default function UploadMedicalRecordPage() {
           <CardTitle>{t("patient.medicalRecords.upload", "Upload New Medical Record")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 flex flex-col items-center">
             <label className="block font-medium mb-1">{t("Category")}</label>
             <select
               name="category"
@@ -310,7 +310,7 @@ export default function UploadMedicalRecordPage() {
             {renderFields()}
             {error && <div className="text-red-500 text-sm">{error}</div>}
             {success && <div className="text-green-600 text-sm">{t("Upload successful!")}</div>}
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button variant="outline" type="submit" disabled={loading} className="w-1/2 justify-center">
               {loading ? t("Uploading...") : t("Upload Record")}
             </Button>
           </form>

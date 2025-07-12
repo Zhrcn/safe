@@ -55,7 +55,7 @@ export default function ProtectedLayout({ children }) {
     if (!currentUser && (error || !data?.success || !data?.data?.user)) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <p className="text-lg text-destructive">
+                <p className="text-lg text-danger">
                     Unauthorized access. Redirecting to login...
                 </p>
             </div>

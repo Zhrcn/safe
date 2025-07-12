@@ -54,7 +54,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="w-full justify-start text-danger hover:text-danger hover:bg-danger/10"
                     onClick={() => {
                       if (onDeleteMessage && typeof window !== 'undefined' && window.confirm('Are you sure you want to delete this message?')) {
                         onDeleteMessage(message._id || message.id);

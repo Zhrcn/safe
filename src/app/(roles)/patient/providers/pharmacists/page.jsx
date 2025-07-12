@@ -38,7 +38,7 @@ export default function PharmacistsPage() {
                 toast({
                     title: 'Error',
                     description: 'Failed to fetch pharmacists',
-                    variant: 'destructive'
+                    variant: 'danger'
                 });
             } finally {
                 setLoading(false);

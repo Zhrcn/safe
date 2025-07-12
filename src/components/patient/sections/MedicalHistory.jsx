@@ -238,7 +238,7 @@ const MedicalHistory = ({ patient }) => {
     }
     if (error) {
         return (
-            <div className="bg-destructive/10 text-destructive border border-destructive rounded-2xl p-4 flex items-center gap-3">
+            <div className="bg-danger/10 text-danger border border-danger rounded-2xl p-4 flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5" />
                 <p className="text-sm">Error loading medical history: {error.message || 'An unknown error occurred.'}</p>
             </div>
@@ -279,7 +279,7 @@ const MedicalHistory = ({ patient }) => {
                 </Button>
                 <Button
                     onClick={handleDelete}
-                    variant="destructive"
+                    variant="danger"
                     size="sm"
                 >
                     Delete

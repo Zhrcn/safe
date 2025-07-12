@@ -65,8 +65,16 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
 
   useEffect(() => {
     if (appointment) {
+      const appointmentDate = new Date(appointment.date);
+      const placeholderDate = new Date('1111-01-01');
+      
+      // If date is a placeholder, don't set it in the form
+      const formDate = (appointment.date && appointmentDate.getTime() !== placeholderDate.getTime() && !isNaN(appointmentDate.getTime())) 
+        ? appointmentDate.toISOString().split('T')[0] 
+        : '';
+      
       setUpdateForm({
-        date: appointment.date ? new Date(appointment.date).toISOString().split('T')[0] : '',
+        date: formDate,
         time: appointment.time || '',
         location: appointment.location || '',
         doctorNotes: appointment.doctorNotes || '',
@@ -117,7 +125,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       setIsUpdateDialogOpen(false);
       setIsApproveRescheduleDialogOpen(false);
     }
-  }, [dialogMode, appointment]);
+  }, [dialogMode]);
 
   const handleAccept = async () => {
     const appointmentData = {};
@@ -143,6 +151,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   };
 
   const handleUpdate = async () => {
+    // Prepare appointment data for update
     const appointmentData = {};
     if (updateForm.date) appointmentData.date = updateForm.date;
     if (updateForm.time) appointmentData.time = updateForm.time;
@@ -152,7 +161,26 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     if (updateForm.reason) appointmentData.reason = updateForm.reason;
     if (updateForm.type) appointmentData.type = updateForm.type;
 
+    // If this is a reschedule action, also update the status to 'rescheduled'
+    if (dialogMode === 'reschedule') {
+      if (!updateForm.date || !updateForm.time) {
+        // Show error message
+        dispatch(clearError());
+        dispatch(clearSuccess());
+        console.error('Missing date or time for rescheduling:', { date: updateForm.date, time: updateForm.time });
+        return;
+      }
+      
+      console.log('Rescheduling appointment with data:', { 
+        appointmentId: appointment._id, 
+        appointmentData 
+      });
+      
+      appointmentData.status = 'rescheduled';
+    }
+
     await dispatch(updateAppointment({ appointmentId: appointment._id, appointmentData }));
+    
     setIsUpdateDialogOpen(false);
     if (onActionComplete) onActionComplete();
   };
@@ -194,7 +222,15 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    const appointmentDate = new Date(date);
+    const placeholderDate = new Date('1111-01-01');
+    
+    // If date is a placeholder (like 1/1/1111), show as TBD
+    if (appointmentDate.getTime() === placeholderDate.getTime() || isNaN(appointmentDate.getTime())) {
+      return 'TBD';
+    }
+    
+    return appointmentDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -215,7 +251,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="danger">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -350,7 +386,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
 
               <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="destructive" disabled={loading || !canModify}>
+                  <Button variant="danger" disabled={loading || !canModify}>
                     {t('doctor.appointments.rejected', 'Rejected')} {t('doctor.appointments.title', 'Appointments')}
                   </Button>
                 </DialogTrigger>
@@ -372,7 +408,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                       <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
                         {t('common.cancel', 'Cancel')}
                       </Button>
-                      <Button variant="destructive" onClick={handleReject} disabled={loading}>
+                      <Button variant="danger" onClick={handleReject} disabled={loading}>
                         {t('doctor.appointments.rejected', 'Rejected')}
                       </Button>
                     </div>
@@ -386,7 +422,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
             <>
               <Dialog open={isApproveRescheduleDialogOpen} onOpenChange={setIsApproveRescheduleDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" disabled={loading} className="border-primary text-primary hover:bg-green-700">
+                  <Button variant="outline" disabled={loading} className="">
                     {t('doctor.appointments.approveReschedule', 'Approve Reschedule')}
                   </Button>
                 </DialogTrigger>
@@ -423,10 +459,10 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                       />
                     </div>
                     <div className="flex justify-end space-x-2">
-                      <Button className=" hover:bg-blue-500 bg-primary" variant="outline" onClick={() => setIsApproveRescheduleDialogOpen(false)}>
+                      <Button variant="outline" onClick={() => setIsApproveRescheduleDialogOpen(false)}>
                         {t('common.cancel', 'Cancel')}
                       </Button>
-                      <Button variant="default" className="bg-primary text-foreground " onClick={handleApproveReschedule} disabled={loading}>
+                      <Button variant="default" onClick={handleApproveReschedule} disabled={loading}>
                         {t('doctor.appointments.approveReschedule', 'Approve')}
                       </Button>
                     </div>
@@ -436,7 +472,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
 
               <Dialog open={isRejectRescheduleDialogOpen} onOpenChange={setIsRejectRescheduleDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="default" className="bg-red-500 text-foreground" disabled={loading}>
+                  <Button variant="default" disabled={loading}>
                     {t('doctor.appointments.rejectReschedule', 'Reject Reschedule')}
                   </Button>
                 </DialogTrigger>
@@ -455,10 +491,10 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                       />
                     </div>
                     <div className="flex justify-end space-x-2 gap-3">
-                      <Button className="border-primary text-primary" variant="outline" onClick={() => setIsRejectRescheduleDialogOpen(false)}>
+                      <Button variant="outline" onClick={() => setIsRejectRescheduleDialogOpen(false)}>
                         {t('common.cancel', 'Cancel')}
                       </Button>
-                      <Button variant="default" className="bg-red-500  text-foreground" onClick={handleRejectReschedule} disabled={loading}>
+                      <Button variant="default" onClick={handleRejectReschedule} disabled={loading}>
                         {t('doctor.appointments.rejectReschedule', 'Reject')}
                       </Button>
                     </div>
@@ -558,7 +594,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
                     <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
                       {t('common.cancel', 'Cancel')}
                     </Button>
-                    <Button onClick={handleUpdate} disabled={loading}>
+                    <Button variant="default" onClick={handleUpdate} disabled={loading}>
                       {t('common.update', 'Update')}
                     </Button>
                   </div>

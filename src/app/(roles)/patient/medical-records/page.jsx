@@ -172,7 +172,7 @@ const MedicalRecordsPage = () => {
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
-                            <Button variant="outline" className="w-[180px] justify-between border-primary text-primary">
+                            <Button variant="outline" className="w-[180px] justify-between">
                                 <span>
                                     {(() => {
                                         switch (typeFilter) {
@@ -196,7 +196,7 @@ const MedicalRecordsPage = () => {
                     </DropdownMenu>
                     <DropdownMenu>
                         <DropdownMenuTrigger >
-                            <Button variant="outline" className="w-[180px] justify-between border-primary text-primary">
+                            <Button variant="outline" className="w-[180px] justify-between">
                                 <span>
                                     {dateFilter === 'all' ? t('patient.medicalRecords.allTime') : dateFilter}
                                 </span>

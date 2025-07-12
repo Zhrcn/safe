@@ -28,7 +28,7 @@ export default function MedicineRequestsPage() {
       <div className="w-full max-w-2xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-card-foreground">Medicine Requests</h1>
-          <Button variant="primary" onClick={() => dispatch(openNewRequestDialog())}>
+          <Button variant="default" onClick={() => dispatch(openNewRequestDialog())}>
             New Request
           </Button>
         </div>

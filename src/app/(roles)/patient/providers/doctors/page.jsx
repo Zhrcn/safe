@@ -40,7 +40,7 @@ export default function DoctorsPage() {
                 toast({
                     title: 'Error',
                     description: 'Failed to fetch doctors',
-                    variant: 'destructive'
+                    variant: 'danger'
                 });
             } finally {
                 setLoading(false);

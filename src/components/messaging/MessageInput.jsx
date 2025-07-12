@@ -42,7 +42,7 @@ export default function MessageInput({ value, onChange = () => {}, onSend, disab
         className="flex-1 rounded-full border border-border focus:border-primary focus:ring-primary/20 resize-none bg-background px-5 py-2 text-base min-h-[44px] max-h-32 shadow-sm focus:outline-none text-foreground placeholder:text-muted-foreground"
         aria-label="Type a message"
       />
-      <Button type="submit" size="icon" disabled={disabled} className="bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send message">
+      <Button type="submit" size="icon" disabled={disabled} className="rounded-full disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send message">
         <Send className="w-5 h-5" />
       </Button>
     </form>

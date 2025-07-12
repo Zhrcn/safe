@@ -60,7 +60,7 @@ const PersonalInfo = ({ patient }) => {
                         <div className="space-y-1">
                             <span className="text-sm font-semibold text-foreground">Blood Type</span>
                             <div className="mt-1">
-                                <span className="inline-flex items-center px-3 py-1 rounded-2xl text-xs font-bold bg-destructive/10 text-destructive border border-destructive/20 shadow-sm">
+                                <span className="inline-flex items-center px-3 py-1 rounded-2xl text-xs font-bold bg-danger/10 text-danger border border-danger/20 shadow-sm">
                                     {patient.bloodType}
                                 </span>
                             </div>

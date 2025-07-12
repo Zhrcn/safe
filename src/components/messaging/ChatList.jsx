@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
-import { Search, Plus, MessageCircle, Dot } from "lucide-react";
+import { Search, MessageCircle, Dot } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
@@ -100,14 +100,7 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
           );
         })}
       </div>
-      <button
-        onClick={onNewChat}
-        className="flex items-center justify-center fixed bottom-8 right-8 z-20 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl hover:bg-primary/90 transition border-4 border-background"
-        aria-label={t('patient.medications.messages.start_new_chat')}
-        type="button"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
+
     </div>
   );
 } 

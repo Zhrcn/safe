@@ -107,19 +107,19 @@ export default function Navbar() {
           <div className="max-w-7xl mx-auto flex items-center justify-between h-16 sm:h-20">
             <a
               href="/"
-              className="flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               aria-label="Home"
             >
               <span
                 className="relative flex items-center justify-center transition-all duration-300"
-                style={{ width: 48, height: 48 }}
+                style={{ width: 40, height: 40 }}
                 onMouseEnter={() => setLogoHovered(true)}
                 onMouseLeave={() => setLogoHovered(false)}
               >
                 <svg
                   viewBox="0 0 60 54"
-                  width={40}
-                  height={36}
+                  width={32}
+                  height={28}
                   className="absolute z-10 transition-all duration-300 pointer-events-none"
                   style={{
                     left: 0,
@@ -140,8 +140,8 @@ export default function Navbar() {
                   alt="SAFE Logo"
                   className="z-20 transition-all duration-300"
                   style={{
-                    width: logoHovered ? 28 : 32,
-                    height: logoHovered ? 28 : 32,
+                    width: logoHovered ? 24 : 28,
+                    height: logoHovered ? 24 : 28,
                     position: 'absolute',
                     left: '50%',
                     top: '50%',
@@ -155,7 +155,7 @@ export default function Navbar() {
                 />
               </span>
               <span
-                className="text-lg sm:text-2xl font-extrabold tracking-tight ml-2"
+                className="text-lg sm:text-2xl font-extrabold tracking-tight"
                 style={{
                   color: 'var(--color-on-primary)',
                 }}

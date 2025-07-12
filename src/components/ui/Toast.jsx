@@ -25,7 +25,7 @@ const toastVariants = cva(
   {
     variant: {
       default: "border border-border bg-background text-foreground",
-      destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+      danger: "danger group border-danger bg-danger text-danger-foreground",
     },
   },
   {
@@ -47,24 +47,24 @@ const Toast = React.forwardRef(({ className, ...props }, ref) => (
 ));
 Toast.displayName = "Toast";
 
-const ToastDestructive = React.forwardRef(({ className, ...props }, ref) => (
+const Toastdanger = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "pointer-events-auto flex w-full max-w-md rounded-2xl border border-destructive bg-destructive text-destructive-foreground shadow-lg ring-1 ring-black ring-opacity-5",
+      "pointer-events-auto flex w-full max-w-md rounded-2xl border border-danger bg-danger text-danger-foreground shadow-lg ring-1 ring-black ring-opacity-5",
       className
     )}
     {...props}
   />
 ));
-ToastDestructive.displayName = "ToastDestructive";
+Toastdanger.displayName = "Toastdanger";
 
 const ToastAction = React.forwardRef(function ToastAction({ className, ...props }, ref) {
   return (
     <ToastPrimitives.Action
       ref={ref}
       className={cn(
-        "inline-flex h-8 shrink-0 items-center justify-center rounded-2xl border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+        "inline-flex h-8 shrink-0 items-center justify-center rounded-2xl border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.danger]:border-muted/40 group-[.danger]:hover:border-danger/30 group-[.danger]:hover:bg-danger group-[.danger]:hover:text-danger-foreground group-[.danger]:focus:ring-danger",
         className
       )}
       {...props}
@@ -78,7 +78,7 @@ const ToastClose = React.forwardRef(function ToastClose({ className, ...props },
     <ToastPrimitives.Close
       ref={ref}
       className={cn(
-        "absolute right-2 top-2 rounded-2xl p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+        "absolute right-2 top-2 rounded-2xl p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.danger]:text-red-300 group-[.danger]:hover:text-red-50 group-[.danger]:focus:ring-red-400 group-[.danger]:focus:ring-offset-red-600",
         className
       )}
       toast-close=""
@@ -117,7 +117,7 @@ export {
   ToastProvider,
   ToastViewport,
   Toast,
-  ToastDestructive,
+  Toastdanger,
   ToastTitle,
   ToastDescription,
   ToastClose,

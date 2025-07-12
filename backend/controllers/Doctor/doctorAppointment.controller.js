@@ -161,7 +161,9 @@ exports.rejectAppointment = asyncHandler(async (req, res) => {
 exports.updateAppointment = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { appointmentId } = req.params;
-  const { date, time, location, doctorNotes, patientNotes, reason, type } = req.body;
+  const { date, time, location, doctorNotes, patientNotes, reason, type, status } = req.body;
+
+  console.log('Backend: Update appointment request:', { userId, appointmentId, body: req.body });
 
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
@@ -173,7 +175,16 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
+  console.log('Backend: Found appointment:', { 
+    id: appointment._id, 
+    date: appointment.date, 
+    time: appointment.time, 
+    status: appointment.status,
+    canBeModified: appointment.canBeModified()
+  });
+
   if (!appointment.canBeModified()) {
+    console.log('Backend: Appointment cannot be modified - within 24 hours');
     return res.status(400).json(new ApiResponse(400, null, 'Appointment cannot be modified within 24 hours of the scheduled time.'));
   }
 
@@ -185,10 +196,14 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
   if (patientNotes !== undefined) updateData.patientNotes = patientNotes;
   if (reason) updateData.reason = reason;
   if (type) updateData.type = type;
+  if (status) updateData.status = status;
 
-  if (date || time) {
+  // If date or time is being updated, set status to rescheduled (unless explicitly provided)
+  if ((date || time) && !status) {
     updateData.status = 'rescheduled';
   }
+
+  console.log('Backend: Update data:', updateData);
 
   const updatedAppointment = await Appointment.findByIdAndUpdate(
     appointmentId,
@@ -336,4 +351,6 @@ exports.getAppointmentDetails = asyncHandler(async (req, res) => {
   appointmentData.canBeModified = appointment.canBeModified();
 
   res.status(200).json(new ApiResponse(200, appointmentData, 'Appointment details fetched successfully.'));
-}); 
+});
+
+ 

@@ -75,10 +75,10 @@ const AddEducationDialog = ({ open, onClose, onAdd }) => {
               value={formData.degree}
               onChange={handleChange}
               required
-              className={errors.degree ? 'border-destructive' : ''}
+              className={errors.degree ? 'border-danger' : ''}
             />
             {errors.degree && (
-              <p className="text-sm text-destructive">{errors.degree}</p>
+              <p className="text-sm text-danger">{errors.degree}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -89,10 +89,10 @@ const AddEducationDialog = ({ open, onClose, onAdd }) => {
               value={formData.institution}
               onChange={handleChange}
               required
-              className={errors.institution ? 'border-destructive' : ''}
+              className={errors.institution ? 'border-danger' : ''}
             />
             {errors.institution && (
-              <p className="text-sm text-destructive">{errors.institution}</p>
+              <p className="text-sm text-danger">{errors.institution}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -104,18 +104,18 @@ const AddEducationDialog = ({ open, onClose, onAdd }) => {
               onChange={handleChange}
               required
               placeholder="e.g. 2020"
-              className={errors.year ? 'border-destructive' : ''}
+              className={errors.year ? 'border-danger' : ''}
               maxLength={4}
             />
             {errors.year && (
-              <p className="text-sm text-destructive">{errors.year}</p>
+              <p className="text-sm text-danger">{errors.year}</p>
             )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Add Education</Button>
+            <Button type="submit" variant="default">Add Education</Button>
           </DialogFooter>
         </form>
       </DialogContent>

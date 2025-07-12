@@ -160,7 +160,7 @@ const Consultations = ({ patientId }) => {
                                 Cancel
                             </Button>
                             <Button
-                                variant="outline"
+                                variant="default"
                                 size="sm"
                                 onClick={handleAddNote}
                             >

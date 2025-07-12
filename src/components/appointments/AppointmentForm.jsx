@@ -274,15 +274,14 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
                                 variant="outline"
                                 onClick={onClose}
                                 disabled={isSubmitting}
-                                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                                 type="button"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
+                                variant="success"
                                 disabled={isSubmitting}
-                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                             >
                                 {isSubmitting 
                                     ? (isReschedule ? 'Rescheduling...' : 'Scheduling...')

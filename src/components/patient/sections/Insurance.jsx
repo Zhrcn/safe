@@ -67,7 +67,7 @@ const Insurance = ({ patient }) => {
                             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-2xl text-xs font-bold border shadow-sm ${
                                 patient.insurance?.status === 'active'
                                     ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                    : 'bg-destructive/10 text-destructive border-destructive/20'
+                                    : 'bg-danger/10 text-danger border-danger/20'
                             }`}>
                                 <CheckCircle2 className="w-3 h-3" />
                                 {patient.insurance?.status || 'N/A'}

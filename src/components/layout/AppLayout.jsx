@@ -335,7 +335,7 @@ export default function AppLayout({
                                                 <div className="h-px bg-border my-1" />
                                                 <Button
                                                     onClick={handleLogout}
-                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-2xl hover:bg-muted/40 transition-colors text-destructive"
+                                                    className="w-full flex items-center px-3 py-2 text-sm rounded-2xl hover:bg-muted/40 transition-colors text-danger"
                                                 >
                                                     <LogOut className="mr-2 h-4 w-4" />
                                                     Logout

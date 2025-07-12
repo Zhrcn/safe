@@ -27,13 +27,19 @@ export default function AppointmentCard({ appointments = [] }) {
     };
     const formatDateTime = (date, time) => {
         try {
-            if (!date) return 'Date not specified';
+            if (!date) return 'TBD';
             const dateObj = new Date(date);
-            if (isNaN(dateObj.getTime())) return 'Invalid date';
+            const placeholderDate = new Date('1111-01-01');
+            
+            // If date is a placeholder (like 1/1/1111), show as TBD
+            if (dateObj.getTime() === placeholderDate.getTime() || isNaN(dateObj.getTime())) {
+                return 'TBD';
+            }
+            
             return `${dateObj.toLocaleDateString()}${time ? ` at ${time}` : ''}`;
         } catch (error) {
             console.error('Error formatting date:', error);
-            return 'Invalid date';
+            return 'TBD';
         }
     };
     return (

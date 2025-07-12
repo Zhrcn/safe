@@ -12,10 +12,13 @@ import {
   blockUser,
   banUser,
   removeUser,
+  createUser
 } from '@/store/slices/user/adminUsersSlice';
 import Button from '@/components/ui/Button';
+import { useSafeTranslation } from '@/hooks/useSafeTranslation';
 
 export default function AdminUsersPage() {
+  const { t } = useSafeTranslation();
   const dispatch = useDispatch();
   const { users, loading, error } = useSelector(state => state.adminUsers);
   const currentUser = useSelector(state => state.user?.user);
@@ -38,7 +41,21 @@ export default function AdminUsersPage() {
       { name: 'phoneNumber', label: 'Phone Number', type: 'text' },
     ],
   };
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'patient' });
+  const [newUser, setNewUser] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    role: 'patient',
+    age: '',
+    gender: '',
+    phoneNumber: '',
+    address: '',
+    specialty: '',
+    licenseNumber: '',
+    yearsOfExperience: '',
+    pharmacyName: ''
+  });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
 
@@ -63,14 +80,32 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    if (creating) return; 
     setCreating(true);
     setCreateError(null);
     try {
-      await dispatch(createUser(newUser)).unwrap();
+      console.log('Creating user with data:', newUser);
+      const result = await dispatch(createUser(newUser)).unwrap();
+      console.log('User creation result:', result);
       setShowCreateModal(false);
-      setNewUser({ name: '', email: '', password: '', role: 'patient' });
+      setNewUser({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        role: 'patient',
+        age: '',
+        gender: '',
+        phoneNumber: '',
+        address: '',
+        specialty: '',
+        licenseNumber: '',
+        yearsOfExperience: '',
+        pharmacyName: ''
+      });
       dispatch(fetchUsers());
     } catch (err) {
+      console.error('User creation error:', err);
       setCreateError(err.message || 'Failed to create user');
     } finally {
       setCreating(false);
@@ -79,35 +114,39 @@ export default function AdminUsersPage() {
 
   return (
     <AdminPageContainer
-      title="User Management"
-      description="Manage users in the system (Doctors, Patients, Pharmacists, Admins)."
+      title={t('admin.userManagement.title')}
+      description={t('admin.userManagement.description')}
     >
-      <AdminCard title="Users List">
+      <AdminCard title={t('admin.users.list')}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
           <div className="w-full sm:w-auto flex gap-2 items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search Users"
+                placeholder={t('admin.users.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               />
             </div>
-            <Button variant="primary" className="flex gap-2 items-center" onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-4 h-4" /> Create User
+            <Button
+              variant="primary"
+              className="flex gap-2 items-center px-6 py-2 text-base font-semibold rounded-2xl shadow-md focus:outline-none focus:ring-2 focus:ring-primary"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus className="w-5 h-5" /> {t('admin.users.createUser')}
             </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-muted-foreground">Loading users...</p>
+              <p className="text-muted-foreground">{t('loadingUsers', 'Loading users...')}</p>
             </div>
           ) : error ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-destructive">{error}</p>
+              <p className="text-danger">{error}</p>
             </div>
           ) : (
             <UserTable
@@ -124,80 +163,181 @@ export default function AdminUsersPage() {
         {/* Create User Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-md border border-border">
-              <h2 className="text-lg font-semibold mb-4">Create User</h2>
-              <form onSubmit={handleCreateUser} className="space-y-4">
-                <div>
-                  <label className="block mb-1">Name</label>
-                  <input
-                    className="w-full border border-border rounded-lg px-3 py-2"
-                    value={newUser.name}
-                    onChange={e => setNewUser({ ...newUser, name: e.target.value })}
-                    required
-                  />
+            <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-lg border border-border relative">
+              <button
+                type="button"
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-2xl font-bold focus:outline-none"
+                onClick={() => setShowCreateModal(false)}
+                aria-label={t('admin.users.cancel')}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-6 text-center">{t('admin.users.createUser')}</h2>
+              <form onSubmit={handleCreateUser} className="space-y-5">
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-2">{t('admin.users.commonFields', 'Basic Information')}</h3>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      className="w-1/2 border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.firstName', 'First Name')}
+                      value={newUser.firstName}
+                      onChange={e => setNewUser({ ...newUser, firstName: e.target.value })}
+                      required
+                    />
+                    <input
+                      className="w-1/2 border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.lastName', 'Last Name')}
+                      value={newUser.lastName}
+                      onChange={e => setNewUser({ ...newUser, lastName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <input
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.email')}
+                      value={newUser.email}
+                      onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <input
+                      type="password"
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.password', 'Password')}
+                      value={newUser.password}
+                      onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <select
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      value={newUser.role}
+                      onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                      required
+                    >
+                      <option value="admin">{t('admin.users.role', 'Admin')}</option>
+                      <option value="doctor">{t('admin.users.doctor', 'Doctor')}</option>
+                      <option value="patient">{t('admin.users.patient', 'Patient')}</option>
+                      <option value="pharmacist">{t('admin.users.pharmacist', 'Pharmacist')}</option>
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <input
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.phoneNumber')}
+                      value={newUser.phoneNumber}
+                      onChange={e => setNewUser({ ...newUser, phoneNumber: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      className="w-full border border-border rounded-lg px-3 py-2"
+                      placeholder={t('admin.users.address')}
+                      value={newUser.address}
+                      onChange={e => setNewUser({ ...newUser, address: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block mb-1">Email</label>
-                  <input
-                    className="w-full border border-border rounded-lg px-3 py-2"
-                    value={newUser.email}
-                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Password</label>
-                  <input
-                    type="password"
-                    className="w-full border border-border rounded-lg px-3 py-2"
-                    value={newUser.password}
-                    onChange={e => setNewUser({ ...newUser, password: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">Role</label>
-                  <select
-                    className="w-full border border-border rounded-lg px-3 py-2"
-                    value={newUser.role}
-                    onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                    required
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="patient">Patient</option>
-                    <option value="pharmacist">Pharmacist</option>
-                  </select>
-                </div>
-                {/* Render extra fields based on role */}
-                {roleFields[newUser.role]?.map(field => (
-                  <div key={field.name}>
-                    <label className="block mb-1">{field.label}</label>
-                    {field.type === 'select' ? (
+                {/* Patient fields */}
+                {newUser.role === 'patient' && (
+                  <div className="border-b pb-4 mb-4">
+                    <h3 className="text-lg font-semibold mb-2">{t('admin.users.patientFields', 'Patient Details')}</h3>
+                    <div className="mb-2">
+                      <input
+                        type="number"
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.age')}
+                        value={newUser.age}
+                        onChange={e => setNewUser({ ...newUser, age: e.target.value })}
+                      />
+                    </div>
+                    <div>
                       <select
                         className="w-full border border-border rounded-lg px-3 py-2"
-                        value={newUser[field.name] || ''}
-                        onChange={e => setNewUser({ ...newUser, [field.name]: e.target.value })}
+                        value={newUser.gender}
+                        onChange={e => setNewUser({ ...newUser, gender: e.target.value })}
                       >
-                        <option value="">Select {field.label}</option>
-                        {field.options.map(opt => (
-                          <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
-                        ))}
+                        <option value="">{t('admin.users.selectGender', 'Select Gender')}</option>
+                        <option value="male">{t('admin.users.male', 'Male')}</option>
+                        <option value="female">{t('admin.users.female', 'Female')}</option>
+                        <option value="other">{t('admin.users.other', 'Other')}</option>
                       </select>
-                    ) : (
-                      <input
-                        type={field.type}
-                        className="w-full border border-border rounded-lg px-3 py-2"
-                        value={newUser[field.name] || ''}
-                        onChange={e => setNewUser({ ...newUser, [field.name]: e.target.value })}
-                      />
-                    )}
+                    </div>
                   </div>
-                ))}
-                {createError && <div className="text-destructive text-sm">{createError}</div>}
+                )}
+                {/* Doctor fields */}
+                {newUser.role === 'doctor' && (
+                  <div className="border-b pb-4 mb-4">
+                    <h3 className="text-lg font-semibold mb-2">{t('admin.users.doctorFields', 'Doctor Details')}</h3>
+                    <div className="mb-2">
+                      <input
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.specialty')}
+                        value={newUser.specialty}
+                        onChange={e => setNewUser({ ...newUser, specialty: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <input
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.licenseNumber')}
+                        value={newUser.licenseNumber}
+                        onChange={e => setNewUser({ ...newUser, licenseNumber: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.yearsOfExperience')}
+                        value={newUser.yearsOfExperience}
+                        onChange={e => setNewUser({ ...newUser, yearsOfExperience: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+                {/* Pharmacist fields */}
+                {newUser.role === 'pharmacist' && (
+                  <div className="border-b pb-4 mb-4">
+                    <h3 className="text-lg font-semibold mb-2">{t('admin.users.pharmacistFields', 'Pharmacist Details')}</h3>
+                    <div className="mb-2">
+                      <input
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.licenseNumber')}
+                        value={newUser.licenseNumber}
+                        onChange={e => setNewUser({ ...newUser, licenseNumber: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <input
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.pharmacyName')}
+                        value={newUser.pharmacyName}
+                        onChange={e => setNewUser({ ...newUser, pharmacyName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        className="w-full border border-border rounded-lg px-3 py-2"
+                        placeholder={t('admin.users.yearsOfExperience')}
+                        value={newUser.yearsOfExperience}
+                        onChange={e => setNewUser({ ...newUser, yearsOfExperience: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+                {createError && <div className="text-danger text-sm text-center">{createError}</div>}
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button type="button" variant="secondary" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                  <Button type="submit" variant="primary" disabled={creating}>{creating ? 'Creating...' : 'Create'}</Button>
+                  <Button type="button" variant="outline" className="rounded-2xl" onClick={() => setShowCreateModal(false)}>{t('admin.users.cancel')}</Button>
+                  <Button type="submit" variant="success" disabled={creating}>{creating ? t('admin.users.creating', 'Creating...') : t('admin.users.create', 'Create')}</Button>
                 </div>
               </form>
             </div>

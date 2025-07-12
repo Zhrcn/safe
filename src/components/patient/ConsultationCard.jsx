@@ -125,7 +125,7 @@ const ConsultationCard = ({ consultation, onDelete, onContinueChat }) => {
         )}
         <Button
           onClick={handleDelete}
-          variant="destructive"
+          variant="danger"
           size="sm"
           disabled={isDeleting}
         >

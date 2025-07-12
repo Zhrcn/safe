@@ -129,6 +129,7 @@ const Appointments = ({ patientId }) => {
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Appointments</h2>
                 <Button
+                    variant="default"
                     className="flex items-center space-x-2"
                     onClick={() => handleOpenDialog()}
                 >

@@ -338,7 +338,7 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="flex-shrink-0 border border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 w-8"
+                                    className="flex-shrink-0 h-8 w-8"
                                     onClick={() => router.push(`/patient/messaging?user=${provider.user?._id || ''}`)}
                                 >
                                     <MessageSquare className="h-3 w-3" />
@@ -356,7 +356,7 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="flex-shrink-0 border border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 w-8"
+                                    className="flex-shrink-0 h-8 w-8"
                                     onClick={() => router.push(`/patient/messaging?user=${provider.user?._id || ''}`)}
                                 >
                                     <MessageSquare className="h-3 w-3" />
@@ -627,7 +627,7 @@ const ProvidersPageContent = () => {
                             {activeTab === 'doctors' && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px] border border-primary bg-background hover:bg-primary/5 text-primary">
+                                        <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px]">
                                             <div className="flex items-center">
                                                 <Filter className="h-4 w-4 mr-2 text-primary" />
                                                 {specialtyFilter === 'all' ? t('allSpecialties') : specialtyFilter}
@@ -651,7 +651,7 @@ const ProvidersPageContent = () => {
                             {activeTab === 'doctors' && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px] border border-primary bg-background hover:bg-primary/5 text-primary">
+                                        <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px]">
                                             <div className="flex items-center">
                                                 <Building2 className="h-4 w-4 mr-2 text-primary" />
                                                 {locationFilter === 'all' ? t('allLocations') : locationFilter}
@@ -674,7 +674,7 @@ const ProvidersPageContent = () => {
                             
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-10 px-4 justify-between min-w-[160px] border border-primary bg-background hover:bg-primary/5 text-primary">
+                                    <Button variant="outline" className="h-10 px-4 justify-between min-w-[160px]">
                                         <div className="flex items-center">
                                             <ArrowUpDown className="h-4 w-4 mr-2 text-primary" />
                                             {(() => {
@@ -710,7 +710,7 @@ const ProvidersPageContent = () => {
                             <Button 
                                 variant="outline" 
                                 size="icon" 
-                                className="h-10 w-10 border border-primary bg-primary text-primary-foreground transition-all duration-300 hover:scale-105 hover:bg-primary/90"
+                                className="h-10 w-10 transition-all duration-300 hover:scale-105"
                                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                             >
                                 <ArrowUpDown className={cn("h-4 w-4 transition-transform duration-300", sortOrder === 'desc' ? 'rotate-180' : '')} />
@@ -809,14 +809,14 @@ const ProvidersPageContent = () => {
                         )}
                     </div>
                     <DialogFooter className="gap-3">
-                        <Button variant="outline" onClick={handleCloseDialog} className="px-6 border border-input bg-background text-foreground hover:bg-muted">
+                        <Button variant="outline" onClick={handleCloseDialog} className="px-6">
                             {t('cancel')}
                         </Button>
                         {dialogType === 'message' ? (
                             <Button 
                                 onClick={handleSendMessage} 
                                 variant="outline"
-                                className="px-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                                className="px-6"
                             >
                                 <Send className="h-4 w-4 mr-2" />
                                 {t('sendMessage')}

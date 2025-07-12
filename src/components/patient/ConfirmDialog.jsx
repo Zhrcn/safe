@@ -17,7 +17,7 @@ export default function ConfirmDialog({
   if (!open) return null;
   const variantStyles = {
     default: 'bg-background',
-    destructive: 'bg-destructive text-destructive-foreground',
+    danger: 'bg-danger text-danger-foreground',
     warning: 'bg-warning text-warning-foreground',
   };
   return (
@@ -53,7 +53,7 @@ export default function ConfirmDialog({
               </Button>
               <Button
                 onClick={onConfirm}
-                variant={variant === 'destructive' ? 'destructive' : 'default'}
+                variant={variant === 'danger' ? 'danger' : 'default'}
                 size="default"
               >
                 {confirmLabel}

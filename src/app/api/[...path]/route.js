@@ -31,11 +31,21 @@ async function handleRequest(request, params, method) {
     console.log(`Proxying ${method} request to: ${backendUrl}`);
     
     const headers = new Headers();
+    
+    // Copy all headers except 'host'
     request.headers.forEach((value, key) => {
       if (key.toLowerCase() !== 'host') {
         headers.set(key, value);
       }
     });
+
+    // Ensure proper content-type for JSON requests
+    if (method !== 'GET' && method !== 'DELETE') {
+      const contentType = request.headers.get('content-type');
+      if (!contentType || contentType.includes('application/json')) {
+        headers.set('Content-Type', 'application/json');
+      }
+    }
 
     let body = null;
     if (method !== 'GET' && method !== 'DELETE') {
@@ -49,6 +59,14 @@ async function handleRequest(request, params, method) {
     });
 
     const responseBody = await response.text();
+    
+    // Log response status for debugging
+    console.log(`Backend response status: ${response.status} for ${method} ${path}`);
+    
+    // If it's a 500 error, log more details
+    if (response.status === 500) {
+      console.error(`Backend 500 error for ${method} ${path}:`, responseBody);
+    }
     
     return new NextResponse(responseBody, {
       status: response.status,

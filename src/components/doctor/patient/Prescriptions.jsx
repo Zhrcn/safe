@@ -109,7 +109,8 @@ const Prescriptions = ({ patientId }) => {
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Prescriptions</h2>
                 <Button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 flex items-center space-x-2"
+                    variant="default"
+                    className="px-4 py-2 flex items-center space-x-2"
                     onClick={() => handleOpenDialog()}
                 >
                     <AddIcon className="h-5 w-5" />
@@ -234,14 +235,16 @@ const Prescriptions = ({ patientId }) => {
                         <div className="mt-6 flex justify-end space-x-3">
                             <Button
                                 type="button"
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                variant="outline"
+                                className="px-4 py-2"
                                 onClick={handleCloseDialog}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                variant="default"
+                                className="px-4 py-2"
                                 onClick={handleSubmit}
                             >
                                 {selectedPrescription ? 'Save Changes' : 'Create Prescription'}

@@ -115,7 +115,7 @@ export default function LoginForm({ role, redirectUrl }) {
                 </CardHeader>
                 <CardContent>
                     {error && (
-                        <Alert variant="destructive" className="mb-4">
+                        <Alert variant="danger" className="mb-4">
                             <AlertDescription>
                                 {error}
                             </AlertDescription>

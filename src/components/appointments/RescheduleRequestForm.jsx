@@ -122,10 +122,10 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
                 value={formData.reason}
                 onChange={(e) => handleChange("reason", e.target.value)}
                 rows={3}
-                className={errors.reason ? "border-destructive" : ""}
+                className={errors.reason ? "border-danger" : ""}
               />
               {errors.reason && (
-                <p className="text-sm text-destructive flex items-center gap-1">
+                <p className="text-sm text-danger flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   {errors.reason}
                 </p>
@@ -163,8 +163,8 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button
                 type="button"
-                variant="outline"
-                className="border border-primary hover:bg-primary/90 text-primary"
+                variant="warning"
+                className=""
                 onClick={onCancel}
                 disabled={isLoading}
               >

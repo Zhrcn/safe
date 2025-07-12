@@ -22,8 +22,8 @@ export default class ErrorBoundary extends Component {
         if (this.state.hasError) {
             return (
                 <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-                    <div className="bg-card border-2 border-destructive/60 rounded-2xl shadow-xl p-8 max-w-lg w-full">
-                        <h1 className="text-2xl font-extrabold mb-4 text-destructive tracking-tight">
+                    <div className="bg-card border-2 border-danger/60 rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                        <h1 className="text-2xl font-extrabold mb-4 text-danger tracking-tight">
                             Oops! Something went wrong.
                         </h1>
                         <p className="text-muted-foreground mb-6 text-base">

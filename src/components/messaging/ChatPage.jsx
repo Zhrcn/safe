@@ -155,7 +155,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
         <Button 
           size="icon" 
           variant="ghost" 
-          className="text-destructive hover:bg-destructive/10" 
+          className="text-danger hover:bg-danger/10" 
           onClick={() => {
             if (onDelete) {
               onDelete(conversation._id);

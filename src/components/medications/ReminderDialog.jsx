@@ -75,16 +75,12 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                     <div>
                         <Label className="text-primary font-medium">{t('patient.medications.enableReminders', 'Enable Reminders')}</Label>
                         <div className="mt-3">
-                            <Button
-                                type="button"
-                                variant={remindersEnabled ? "default" : "outline"}
-                                onClick={() => setRemindersEnabled(!remindersEnabled)}
-                                className={`flex items-center gap-2 transition-all duration-200 ${
-                                    remindersEnabled 
-                                        ? 'bg-primary hover:bg-primary/90 text-white shadow-md' 
-                                        : 'border-primary text-primary hover:bg-primary/5'
-                                }`}
-                            >
+                                                            <Button
+                                    type="button"
+                                    variant={remindersEnabled ? "success" : "outline"}
+                                    onClick={() => setRemindersEnabled(!remindersEnabled)}
+                                    className="flex items-center gap-2 transition-all duration-200"
+                                >
                                 {remindersEnabled ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
                                 {remindersEnabled ? t('patient.medications.enabled', 'Enabled') : t('patient.medications.disabled', 'Disabled')}
                             </Button>
@@ -105,7 +101,7 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                                             />
                                             <Button
                                                 type="button"
-                                                variant="outline" className="border-red-400 "
+                                                variant="danger"
                                                 size="sm"
                                                 onClick={() => handleRemoveTime(idx)}
                                                 
@@ -119,7 +115,7 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                                         variant="outline"
                                         size="sm"
                                         onClick={handleAddTime}
-                                        className="border-primary text-primary hover:bg-primary/5 transition-colors"
+                                        className="transition-colors"
                                     >
                                         <Plus className="h-4 w-4 mr-2" />
                                         {t('patient.medications.addTime', 'Add Time')}
@@ -133,13 +129,9 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                                         <Button
                                             key={day.value}
                                             type="button"
-                                            variant={reminderDays.includes(day.value) ? "default" : "outline"}
+                                            variant={reminderDays.includes(day.value) ? "success" : "outline"}
                                             onClick={() => handleDayToggle(day.value)}
-                                            className={`w-20 transition-all duration-200 ${
-                                                reminderDays.includes(day.value)
-                                                    ? 'bg-primary hover:bg-primary/90 text-white shadow-md'
-                                                    : 'border-primary text-primary hover:bg-primary/5'
-                                            }`}
+                                            className="w-20 transition-all duration-200"
                                         >
                                             {day.label}
                                         </Button>
@@ -153,13 +145,14 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                             type="button" 
                             variant="outline" 
                             onClick={onClose}
-                            className="border-primary text-primary hover:bg-primary/5 transition-colors"
+                            className="transition-colors"
                         >
                             {t('common.cancel', 'Cancel')}
                         </Button>
                         <Button 
                             type="submit"
-                            className="bg-primary hover:bg-primary/90 text-white shadow-md transition-all duration-200"
+                            variant="success"
+                            className="transition-all duration-200"
                         >
                             {t('common.save', 'Save')}
                         </Button>

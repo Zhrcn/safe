@@ -3,7 +3,8 @@ import {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  createUser as createUserService
 } from '@/services/adminService';
 
 const initialState = {
@@ -77,6 +78,14 @@ export const removeUser = createAsyncThunk('adminUsers/removeUser', async (userI
   }
 });
 
+export const createUser = createAsyncThunk('adminUsers/createUser', async (data, { rejectWithValue }) => {
+  try {
+    return await createUserService(data);
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 const adminUsersSlice = createSlice({
   name: 'adminUsers',
   initialState,
@@ -121,6 +130,25 @@ const adminUsersSlice = createSlice({
       })
       .addCase(removeUser.fulfilled, (state, action) => {
         state.users = state.users.filter(u => u.id !== action.meta.arg);
+      })
+      .addCase(createUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createUser.fulfilled, (state, action) => {
+        state.loading = false;
+        const user = action.payload;
+        const formattedUser = {
+          ...user,
+          id: user.id || user._id,
+          name: (user.firstName || '') + (user.lastName ? ' ' + user.lastName : ''),
+          status: user.status || 'active',
+        };
+        state.users.push(formattedUser);
+      })
+      .addCase(createUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

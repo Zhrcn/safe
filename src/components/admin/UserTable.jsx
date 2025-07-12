@@ -4,10 +4,10 @@ import { Edit, Trash2, Ban, ShieldOff, UserCheck, UserX, Lock } from 'lucide-rea
 import { Card } from '@/components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/hooks/useSafeTranslation';
 
 export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBlock, onBan, onDelete }) {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [editUser, setEditUser] = useState(null);
@@ -116,15 +116,15 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
                   <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</TableCell>
                   <TableCell align="right">
                     <div className="flex gap-1 flex-wrap justify-end">
-                      <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => { setEditUser(user); setEditData({ name, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>
+                      <Button variant="info" size="sm" onClick={() => { setEditUser(user); setEditData({ name, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>
                       {user.status === 'active' ? (
-                        <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => setConfirmAction({ type: 'deactivate', user })}><UserX className="w-4 h-4" /></Button>
+                        <Button variant="warning" size="sm" onClick={() => setConfirmAction({ type: 'deactivate', user })}><UserX className="w-4 h-4" /></Button>
                       ) : (
-                        <Button variant="default" className="bg-primary text-foreground" size="sm" onClick={() => setConfirmAction({ type: 'activate', user })}><UserCheck className="w-4 h-4" /></Button>
+                        <Button variant="success" size="sm" onClick={() => setConfirmAction({ type: 'activate', user })}><UserCheck className="w-4 h-4" /></Button>
                       )}
-                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'block', user })}><Lock className="w-4 h-4" /></Button>
-                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'ban', user })}><Ban className="w-4 h-4" /></Button>
-                      <Button variant="outline" className="border-primary text-primary" size="sm" onClick={() => setConfirmAction({ type: 'delete', user })}><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="secondary" size="sm" onClick={() => setConfirmAction({ type: 'block', user })}><Lock className="w-4 h-4" /></Button>
+                      <Button variant="warning" size="sm" onClick={() => setConfirmAction({ type: 'ban', user })}><Ban className="w-4 h-4" /></Button>
+                      <Button variant="danger" size="sm" onClick={() => setConfirmAction({ type: 'delete', user })}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -198,8 +198,8 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
                 </div>
               ))}
               <div className="flex justify-end gap-2 mt-4">
-                <Button type="button" variant="outline" className="border-primary text-primary" onClick={() => setEditUser(null)}>{t('admin.users.cancel')}</Button>
-                <Button type="submit" variant="default" className="bg-primary text-foreground">{t('admin.users.save')}</Button>
+                <Button type="button" variant="outline" onClick={() => setEditUser(null)}>{t('admin.users.cancel')}</Button>
+                <Button type="submit" variant="success">{t('admin.users.save')}</Button>
               </div>
             </form>
           </div>
@@ -213,8 +213,8 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
             <h2 className="text-lg font-semibold mb-4">{t('admin.users.confirmAction', { action: t('admin.users.' + confirmAction.type) })}</h2>
             <p className="mb-4">{t('admin.users.confirmMessage', { action: t('admin.users.' + confirmAction.type), name: confirmAction.user.name })}</p>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setConfirmAction({ type: null, user: null })}>{t('admin.users.cancel')}</Button>
-              <Button variant={confirmAction.type === 'delete' ? 'destructive' : 'warning'} onClick={handleConfirm}>{t('admin.users.confirm')}</Button>
+              <Button variant="outline" onClick={() => setConfirmAction({ type: null, user: null })}>{t('admin.users.cancel')}</Button>
+              <Button variant={confirmAction.type === 'delete' ? 'danger' : 'primary'} onClick={handleConfirm}>{t('admin.users.confirm')}</Button>
             </div>
           </div>
         </div>

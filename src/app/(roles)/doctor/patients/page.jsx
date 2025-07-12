@@ -104,7 +104,7 @@ export default function PatientsPage() {
       <Card className="mb-6 rounded-xl shadow-lg bg-card border border-border">
         <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
           <h1 className="text-2xl font-bold text-card-foreground">{t('doctor.patients.title', 'Patient Management')}</h1>
-          <Button onClick={handleOpenAddDialog} className="rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground  shadow-md">
+          <Button variant="default" onClick={handleOpenAddDialog} className="rounded-2xl shadow-md">
             <UserPlus className="mr-2 h-4 w-4" />
             {t('doctor.patients.addNew', 'Add New Patient')}
           </Button>
@@ -112,7 +112,7 @@ export default function PatientsPage() {
       </Card>
       
       {error && (
-        <Alert variant="destructive" className="mb-6 rounded-2xl bg-destructive/10 border border-destructive text-destructive-foreground">
+        <Alert variant="danger" className="mb-6 rounded-2xl bg-danger/10 border border-danger text-danger-foreground">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -131,7 +131,7 @@ export default function PatientsPage() {
             </div>
             <Button
               variant="outline"
-              className="rounded-2xl whitespace-nowrap text-muted-foreground border border-border hover:bg-muted/50  shadow-sm"
+              className="rounded-2xl whitespace-nowrap shadow-sm"
             >
               <Filter className="mr-2 h-4 w-4" />
               {t('doctor.patients.advancedFilters', 'Advanced Filters')}
@@ -164,7 +164,7 @@ export default function PatientsPage() {
               <Button
                 variant="outline"
                 onClick={handleOpenAddDialog}
-                className="text-primary border-primary hover:bg-primary/10 rounded-2xl"
+                className="rounded-2xl"
               >
                 {t('doctor.patients.addNew', 'Add New Patient')}
               </Button>

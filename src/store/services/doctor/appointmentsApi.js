@@ -46,6 +46,19 @@ export const doctorAppointmentsApi = {
     } catch (error) {
       throw error;
     }
+  },
+
+  handleRescheduleRequest: async (appointmentId, action, data = {}) => {
+    try {
+      const res = await axiosInstance.post(`/doctors/appointments/${appointmentId}/reschedule-request`, {
+        action,
+        ...data
+      });
+      return res;
+    } catch (error) {
+      console.error('API: Handle reschedule request error', error);
+      throw error;
+    }
   }
 };
 

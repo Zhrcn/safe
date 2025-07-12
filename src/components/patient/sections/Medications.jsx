@@ -75,7 +75,7 @@ const Medications = ({ patient }) => {
                 </Button>
                 <Button
                     onClick={handleRemove}
-                    variant="destructive"
+                    variant="danger"
                     size="sm"
                 >
                     Remove

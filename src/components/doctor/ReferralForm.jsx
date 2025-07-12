@@ -224,7 +224,7 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                         )}
                     />
                     {errors.doctorId && (
-                        <p className="text-sm text-destructive">{errors.doctorId.message}</p>
+                        <p className="text-sm text-danger">{errors.doctorId.message}</p>
                     )}
                 </div>
                 <div className="grid gap-2">
@@ -232,12 +232,12 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                     <Textarea
                         id="reason"
                         {...control.register('reason')}
-                        className={cn({ 'border-destructive': errors.reason })}
+                        className={cn({ 'border-danger': errors.reason })}
                         rows={4}
                         placeholder="Explain the reason for referral..."
                     />
                     {errors.reason && (
-                        <p className="text-sm text-destructive">{errors.reason.message}</p>
+                        <p className="text-sm text-danger">{errors.reason.message}</p>
                     )}
                 </div>
                 <div className="grid gap-2">
@@ -276,7 +276,7 @@ export default function ReferralForm({ patientId, patientName, previousReferrals
                     <Button type="button" variant="outline" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" variant="default" disabled={isSubmitting}>
                         {isSubmitting ? 'Submitting...' : 'Submit Referral'}
                     </Button>
                 </div>

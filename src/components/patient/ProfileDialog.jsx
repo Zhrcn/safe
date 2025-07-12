@@ -69,7 +69,7 @@ export default function ProfileDialog({
             </Button>
             <Button
               onClick={onLogout}
-              variant="destructive"
+              variant="danger"
               className="w-full flex items-center gap-2 mt-4"
             >
               <LogOut className="h-5 w-5" />

@@ -8,7 +8,7 @@ import {
     Search,
     X
 } from 'lucide-react';
-import{ Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 const NotificationContext = createContext({

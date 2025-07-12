@@ -146,7 +146,7 @@ export default function PatientLayout({ children }) {
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 relative">
                             <Bell className="h-4 w-4" />
-                            <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-destructive text-destructive-foreground">
+                            <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-danger text-danger-foreground">
                                 3
                             </Badge>
                         </Button>
@@ -218,7 +218,7 @@ export default function PatientLayout({ children }) {
                     </Button>
                     <Button 
                         variant="ghost" 
-                        className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="w-full justify-start gap-2 text-danger hover:text-danger hover:bg-danger/10"
                         onClick={handleLogout}
                     >
                         <LogOut className="h-4 w-4" />

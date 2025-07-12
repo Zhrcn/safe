@@ -16,8 +16,8 @@ export default function ErrorState({
                 className
             )}
         >
-            <div className="rounded-full bg-destructive/10 p-4 mb-4">
-                <AlertCircle className="h-8 w-8 text-destructive" />
+            <div className="rounded-full bg-danger/10 p-4 mb-4">
+                <AlertCircle className="h-8 w-8 text-danger" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
                 {title}
@@ -45,8 +45,8 @@ export function ErrorBoundaryFallback({
 }) {
     return (
         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-            <div className="rounded-full bg-destructive/10 p-4 mb-4">
-                <AlertCircle className="h-8 w-8 text-destructive" />
+            <div className="rounded-full bg-danger/10 p-4 mb-4">
+                <AlertCircle className="h-8 w-8 text-danger" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
                 Something went wrong

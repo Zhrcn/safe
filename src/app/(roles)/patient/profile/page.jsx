@@ -41,7 +41,7 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProfile, editProfile } from '@/store/slices/patient/profileSlice';
 import dynamic from 'next/dynamic';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -88,7 +88,7 @@ const ProfilePage = () => {
     const [medicalTabValue, setMedicalTabValue] = useState('vitalSigns');
     const { t } = useTranslation('common');
     const dispatch = useDispatch();
-    const { theme } = useTheme();
+    const { currentTheme } = useTheme();
 
     useEffect(() => {
         dispatch(fetchProfile());
@@ -316,16 +316,16 @@ const ProfilePage = () => {
                     <Button
                         variant="outline"
                         onClick={handleRefresh}
-                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground flex items-center gap-2 rounded-full shadow"
+                        className="flex items-center gap-2 rounded-full shadow"
                         aria-label={t('patient.profile.refresh', 'Refresh')}
                     >
                         <RefreshCcw className="w-5 h-5" />
                         {t('patient.profile.refresh', 'Refresh')}
                     </Button>
                     <Button
-                        variant={isEditing ? "destructive" : "default"}
+                        variant={isEditing ? "danger" : "default"}
                         onClick={() => setIsEditing(!isEditing)}
-                        className={`flex items-center gap-2 border-primary rounded-full shadow ${isEditing ? '' : 'bg-primary text-white hover:bg-primary/90'}`}
+                        className="flex items-center gap-2 rounded-full shadow"
                         disabled={saving}
                         aria-label={isEditing ? t('patient.profile.cancel', 'Cancel') : t('patient.profile.editProfile', 'Edit Profile')}
                     >
@@ -418,7 +418,7 @@ const ProfilePage = () => {
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "w-full justify-start text-left font-normal flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground",
+                                        "w-full justify-start text-left font-normal flex items-center gap-2",
                                         !formData.dateOfBirth && "text-muted-foreground"
                                     )}
                                 >
@@ -439,7 +439,7 @@ const ProfilePage = () => {
                 </div>
                 {isEditing && (
                     <div className="flex justify-end pt-4 border-t ">
-                        <Button className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleSave} disabled={saving}>
+                        <Button className="flex items-center gap-2" onClick={handleSave} disabled={saving}>
                             {saving ? t('patient.profile.saving', 'Saving...') : t('patient.profile.saveChanges', 'Save Changes')}
                         </Button>
                     </div>
@@ -603,7 +603,7 @@ const ProfilePage = () => {
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </Button>
-                            <TabsList className={`flex w-max h-auto p-1 text-muted-foreground rounded-md bg-muted gap-1`} style={{scrollBehavior: 'smooth', background: theme['--color-muted'], border: `1px solid ${theme['--color-border']}`}}>
+                            <TabsList className="flex w-max h-auto p-1 text-muted-foreground rounded-md bg-muted gap-1">
                                 {medicalRecordCategories.map(category => (
                                     <TabsTrigger
                                         key={category.id}
@@ -680,12 +680,12 @@ const ProfilePage = () => {
                                     {medicalRecordsData.allergies.map(allergy => (
                                         <Card key={allergy._id || allergy.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
                                             <div className="flex items-center gap-3">
-                                                <DropletIcon className="h-5 w-5 text-destructive" />
+                                                <DropletIcon className="h-5 w-5 text-danger" />
                                                 <div>
                                                     <p className="font-medium text-foreground flex items-center gap-2">
                                                         {allergy.name}
                                                         {allergy.severity && (
-                                                            <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-destructive text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
+                                                            <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-danger text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
                                                         )}
                                                     </p>
                                                     {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}
@@ -783,19 +783,19 @@ const ProfilePage = () => {
                                                     </div>
                                                 )}
                                                 {result.pdfUrl && (
-                                                    <Button variant="outline" className="text-primary border-primary mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: result.pdfUrl, title: result.testName })}>
+                                                    <Button variant="outline" className="mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: result.pdfUrl, title: result.testName })}>
                                                         <FileText className="h-4 w-4 mr-2" /> PDF
                                                     </Button>
                                                 )}
                                                 {result.documents && Array.isArray(result.documents) && result.documents.length > 0 && result.documents.map((doc, i) => (
                                                     doc.endsWith('.pdf') && (
-                                                        <Button key={i} variant="outline" className="text-primary border-primary mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: doc, title: result.testName })}>
+                                                        <Button key={i} variant="outline" className="mt-2 ml-2" size="sm" onClick={() => handlePdfOpen({ url: doc, title: result.testName })}>
                                                             <FileText className="h-4 w-4 mr-2" /> PDF
                                                         </Button>
                                                     )
                                                 ))}
                                             </div>
-                                            <Button variant="outline" className="text-primary border-primary mt-2" size="sm" onClick={() => handlePdfOpen(result)}>
+                                            <Button variant="outline" className="mt-2" size="sm" onClick={() => handlePdfOpen(result)}>
                                                 <Eye className="h-4 w-4 mr-2" /> {t('patient.profile.viewReport', 'View Report')}
                                             </Button>
                                         </Card>
@@ -830,7 +830,7 @@ const ProfilePage = () => {
                                                     <div className="text-xs text-muted-foreground mt-2">{t('patient.profile.noImages', 'No images available')}</div>
                                                 )}
                                             </div>
-                                            <Button variant="outline" size="sm" className="text-primary border-primary mt-2" onClick={() => {
+                                            <Button variant="outline" size="sm" className="mt-2" onClick={() => {
                                                 setSelectedDicomImages((report.images || []).map(img => img.src || img));
                                                 setDicomImageIndex(0);
                                                 setDicomDialogOpen(true);

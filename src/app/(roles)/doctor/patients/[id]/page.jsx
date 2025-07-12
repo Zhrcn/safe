@@ -111,11 +111,11 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.medication}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.medication ? 'border-destructive' : 'border-input'
+                                    errors.medication ? 'border-danger' : 'border-input'
                                 }`}
                             />
                             {errors.medication && (
-                                <p className="mt-1 text-sm text-destructive">{errors.medication}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.medication}</p>
                             )}
                         </div>
                         <div>
@@ -128,11 +128,11 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.dosage}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.dosage ? 'border-destructive' : 'border-input'
+                                    errors.dosage ? 'border-danger' : 'border-input'
                                 }`}
                             />
                             {errors.dosage && (
-                                <p className="mt-1 text-sm text-destructive">{errors.dosage}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.dosage}</p>
                             )}
                         </div>
                         <div>
@@ -144,7 +144,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.frequency}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.frequency ? 'border-destructive' : 'border-input'
+                                    errors.frequency ? 'border-danger' : 'border-input'
                                 }`}
                             >
                                 <option value="">{t('doctor.patientDetail.selectFrequency', 'Select frequency')}</option>
@@ -155,7 +155,7 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 <option value="as_needed">{t('doctor.patientDetail.asNeeded', 'As needed')}</option>
                             </select>
                             {errors.frequency && (
-                                <p className="mt-1 text-sm text-destructive">{errors.frequency}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.frequency}</p>
                             )}
                         </div>
                         <div>
@@ -168,11 +168,11 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.duration}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.duration ? 'border-destructive' : 'border-input'
+                                    errors.duration ? 'border-danger' : 'border-input'
                                 }`}
                             />
                             {errors.duration && (
-                                <p className="mt-1 text-sm text-destructive">{errors.duration}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.duration}</p>
                             )}
                         </div>
                         <div>
@@ -185,11 +185,11 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.startDate}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.startDate ? 'border-destructive' : 'border-input'
+                                    errors.startDate ? 'border-danger' : 'border-input'
                                 }`}
                             />
                             {errors.startDate && (
-                                <p className="mt-1 text-sm text-destructive">{errors.startDate}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.startDate}</p>
                             )}
                         </div>
                         <div>
@@ -202,11 +202,11 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                                 value={formData.endDate}
                                 onChange={handleChange}
                                 className={`w-full px-3 py-2 bg-background text-foreground border rounded-md transition-colors ${
-                                    errors.endDate ? 'border-destructive' : 'border-input'
+                                    errors.endDate ? 'border-danger' : 'border-input'
                                 }`}
                             />
                             {errors.endDate && (
-                                <p className="mt-1 text-sm text-destructive">{errors.endDate}</p>
+                                <p className="mt-1 text-sm text-danger">{errors.endDate}</p>
                             )}
                         </div>
                     </div>
@@ -237,14 +237,16 @@ function PrescriptionForm({ open, onClose, onSubmit, patient }) {
                 </form>
                 <div className="p-6 border-t border-border flex justify-end gap-3">
                     <Button
+                        variant="outline"
                         onClick={onClose}
-                        className="px-4 py-2 text-foreground hover:bg-muted rounded-md transition-colors"
+                        className="px-4 py-2"
                     >
                         {t('doctor.patientDetail.cancel', 'Cancel')}
                     </Button>
                     <Button
+                        variant="default"
                         onClick={handleSubmit}
-                        className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-colors"
+                        className="px-4 py-2"
                     >
                         {t('doctor.patientDetail.createPrescription', 'Create Prescription')}
                     </Button>
@@ -338,8 +340,8 @@ const PatientPageContent = () => {
     }
     if (error) {
         return (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-                <p className="text-destructive">{error}</p>
+            <div className="p-4 bg-danger/10 border border-danger/20 rounded-md">
+                <p className="text-danger">{error}</p>
             </div>
         );
     }
@@ -352,8 +354,9 @@ const PatientPageContent = () => {
                         The patient with ID "{params.id}" could not be found. They may have been removed or the ID is incorrect.
                     </p>
                     <Button 
+                        variant="default"
                         onClick={() => router.push('/doctor/patients')}
-                        className="bg-primary text-primary-foreground hover:opacity-90"
+                        className=""
                     >
                         Back to Patients List
                     </Button>
@@ -392,8 +395,9 @@ const PatientPageContent = () => {
                                 <Star className="w-5 h-5" />
                             </Button>
                             <Button
+                                variant="default"
                                 onClick={() => setIsPrescriptionModalOpen(true)}
-                                className="flex items-center px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md transition-colors"
+                                className="flex items-center px-4 py-2"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 New Prescription
@@ -502,6 +506,7 @@ const PatientPageContent = () => {
                                                                 className="border rounded px-3 py-2 text-sm flex-1"
                                                             />
                                                             <Button
+                                                                variant="default"
                                                                 size="sm"
                                                                 onClick={() => handleAnswerSubmit(consultation._id)}
                                                                 disabled={!answerInputs[consultation._id]?.trim()}

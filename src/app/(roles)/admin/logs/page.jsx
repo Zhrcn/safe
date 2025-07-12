@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from '@/components/ui/Table';
-import { getSystemLogs } from '@/services/adminService';
+import { getActivityLogs } from '@/services/adminService';
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState([]);
@@ -13,7 +13,7 @@ export default function AdminLogsPage() {
     async function fetchLogs() {
       setLoading(true);
       try {
-        const data = await getSystemLogs();
+        const data = await getActivityLogs();
         // Map backend log fields to expected frontend fields
         const mappedLogs = (data || []).map(log => ({
           id: log._id || log.id,
@@ -25,6 +25,7 @@ export default function AdminLogsPage() {
         }));
         setLogs(mappedLogs);
       } catch (error) {
+        console.error('Failed to fetch logs:', error);
         setLogs([]);
       } finally {
         setLoading(false);

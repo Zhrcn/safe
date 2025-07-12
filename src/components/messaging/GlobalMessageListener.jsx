@@ -1,10 +1,9 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getSocket } from '@/utils/socket';
+import { getSocket, resetSocketConnection } from '@/utils/socket';
 import { addMessageToConversation } from '@/store/slices/patient/conversationsSlice';
 import { updateOnlineStatus } from '@/store/slices/patient/onlineStatusSlice';
-import { onUserPresence } from '@/store/services/patient/conversationApi';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import toast from 'react-hot-toast';
 
@@ -18,25 +17,45 @@ export default function GlobalMessageListener() {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
   const currentRole = currentUser?.role;
+  const setupTimeoutRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
   useEffect(() => {
+    // Clear any existing timeout
+    if (setupTimeoutRef.current) {
+      clearTimeout(setupTimeoutRef.current);
+    }
+
     if (!currentUser?._id) {
+      console.log('[GlobalMessageListener] No authenticated user, skipping socket setup');
       return;
     }
 
     const setupSocketListeners = () => {
       const socket = getSocket();
       if (!socket) {
-        setTimeout(setupSocketListeners, 2000);
+        if (retryCountRef.current < maxRetries) {
+          console.log('[GlobalMessageListener] No socket available, retrying in 3s...', retryCountRef.current + 1);
+          retryCountRef.current++;
+          setupTimeoutRef.current = setTimeout(setupSocketListeners, 3000);
+        } else {
+          console.warn('[GlobalMessageListener] Max retries reached, giving up on socket connection');
+        }
         return;
       }
 
       if (!socket.connected) {
+        console.log('[GlobalMessageListener] Socket not connected, waiting for connection...');
         socket.once('connect', () => {
+          console.log('[GlobalMessageListener] Socket connected, setting up listeners...');
+          retryCountRef.current = 0; // Reset retry count on successful connection
           setupSocketListeners();
         });
         return;
       }
+
+      console.log('[GlobalMessageListener] Setting up socket listeners for user:', currentUser._id);
 
       const handleReceiveMessage = ({ conversationId, message }) => {
         const isFromCurrentUser = message.sender === currentUser._id || 
@@ -78,10 +97,13 @@ export default function GlobalMessageListener() {
       };
 
       const handleDisconnect = () => {
+        console.log('[GlobalMessageListener] Socket disconnected');
       };
 
       const handleReconnect = () => {
-        setTimeout(setupSocketListeners, 1000);
+        console.log('[GlobalMessageListener] Socket reconnected, re-setting up listeners...');
+        retryCountRef.current = 0; // Reset retry count on reconnection
+        setupTimeoutRef.current = setTimeout(setupSocketListeners, 1000);
       };
 
       const handleUserPresence = ({ userId, isOnline }) => {
@@ -105,7 +127,15 @@ export default function GlobalMessageListener() {
 
     const cleanup = setupSocketListeners();
 
-    return cleanup;
+    return () => {
+      if (setupTimeoutRef.current) {
+        clearTimeout(setupTimeoutRef.current);
+      }
+      if (cleanup) {
+        cleanup();
+      }
+      retryCountRef.current = 0;
+    };
   }, [dispatch, currentUser, currentRole]);
 
   return null;

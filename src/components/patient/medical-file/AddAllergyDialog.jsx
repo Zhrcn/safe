@@ -106,11 +106,11 @@ const AddAllergyDialog = ({ open, onClose }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.name })}
+              className={cn({ 'border-danger': errors.name })}
               required
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
+              <p className="text-sm text-danger">{errors.name}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -120,7 +120,7 @@ const AddAllergyDialog = ({ open, onClose }) => {
               value={formData.severity}
               onValueChange={handleSelectChange('severity')}
             >
-              <SelectTrigger className={cn({ 'border-destructive': errors.severity })}>
+              <SelectTrigger className={cn({ 'border-danger': errors.severity })}>
                 <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
@@ -130,7 +130,7 @@ const AddAllergyDialog = ({ open, onClose }) => {
               </SelectContent>
             </Select>
             {errors.severity && (
-              <p className="text-sm text-destructive">{errors.severity}</p>
+              <p className="text-sm text-danger">{errors.severity}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -144,7 +144,7 @@ const AddAllergyDialog = ({ open, onClose }) => {
             />
           </div>
           {errors.submit && (
-            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+            <p className="text-sm text-danger text-center">{errors.submit}</p>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

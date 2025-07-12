@@ -280,7 +280,7 @@ const MobileSidebarDrawer = ({
               )}
             >
               <SettingsIcon className="h-5 w-5" />
-              <span>{t('settings', 'Settings')}</span>
+                              <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
             </Link>
             <Link
               href="/logout"
@@ -291,7 +291,7 @@ const MobileSidebarDrawer = ({
               )}
             >
               <LogoutIcon className="h-5 w-5" />
-              <span>{t('logout', 'Logout')}</span>
+                              <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
             </Link>
           </div>
         </div>
@@ -338,9 +338,46 @@ const UnifiedLayout = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  // Add health check for backend
+  useEffect(() => {
+    let isMounted = true;
+    
+    const checkBackendHealth = async () => {
+      if (!isMounted) return;
+      
+      try {
+        const { checkBackendHealth: healthCheck } = await import('@/utils/backendHealth');
+        const result = await healthCheck();
+        
+        if (!isMounted) return;
+        
+        console.log('Backend health check:', result);
+        
+        if (result.status === 'unhealthy') {
+          showNotification(
+            t('notification.backendUnavailable', 'Backend service not available. Please check if the server is running.'),
+            'error'
+          );
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Backend health check failed:', error);
+      }
+    };
+    
+    // Only run health check once when component mounts
+    checkBackendHealth();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Remove dependencies to prevent loops
 
   useEffect(() => {
     if (!user || !token) return;
+    setNotifLoading(true);
     axios.get('/api/notifications?limit=20', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -354,8 +391,28 @@ const UnifiedLayout = ({ children }) => {
           read: n.isRead,
         })));
         setUnreadCount(notifs.filter(n => !n.isRead).length);
+        setNotifLoading(false);
+      })
+      .catch(err => {
+        setNotifLoading(false);
+        console.error('Notifications fetch error:', err);
+        
+        // Provide specific error messages based on the error type
+        let errorMessage = t('notification.fetchFail', 'Failed to fetch notifications');
+        
+        if (err.response?.status === 404) {
+          errorMessage = t('notification.backendUnavailable', 'Backend service not available. Please check if the server is running.');
+        } else if (err.response?.status === 401) {
+          errorMessage = t('notification.unauthorized', 'Authentication required. Please log in again.');
+        } else if (err.response?.status === 500) {
+          errorMessage = t('notification.serverError', 'Server error. Please try again later.');
+        } else if (err.code === 'ERR_NETWORK') {
+          errorMessage = t('notification.networkError', 'Network error. Please check your connection.');
+        }
+        
+        showNotification(errorMessage, 'error');
       });
-  }, [user, token]);
+  }, [user, token, showNotification, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -481,7 +538,7 @@ const UnifiedLayout = ({ children }) => {
                 )}
               >
                 <SettingsIcon className="h-5 w-5" />
-                {!sidebarCollapsed && <span>{t('settings', 'Settings')}</span>}
+                {!sidebarCollapsed && <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>}
               </Link>
               <Link
                 href="/logout"
@@ -491,7 +548,7 @@ const UnifiedLayout = ({ children }) => {
                 )}
               >
                 <LogoutIcon className="h-5 w-5" />
-                {!sidebarCollapsed && <span>{t('logout', 'Logout')}</span>}
+                {!sidebarCollapsed && <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>}
               </Link>
             </div>
           </div>
@@ -550,7 +607,7 @@ const UnifiedLayout = ({ children }) => {
               <Button variant="ghost" size="icon" title={t('notifications', 'Notifications')} onClick={handleNotifOpen} className="relative">
                 <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-bold shadow-md">
+                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center rounded-full bg-danger text-danger-foreground text-[10px] sm:text-xs font-bold shadow-md">
                     {unreadCount}
                   </span>
                 )}
@@ -558,7 +615,7 @@ const UnifiedLayout = ({ children }) => {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 sm:h-11 sm:w-11 border-2 border-primary shadow-md bg-primary">
+                <Button variant="ghost" className="relative h-9 w-9 sm:h-11 sm:w-11 border-2 border-primary shadow-md">
                   <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                     <AvatarFallback className="bg-primary text-white text-base sm:text-lg">
                       {user?.firstName?.[0] || 'U'}
@@ -582,12 +639,12 @@ const UnifiedLayout = ({ children }) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-2xl text-sm sm:text-base">
                   <SettingsIcon className="mr-2 h-4 w-4" />
-                  <span>{t('settings', 'Settings')}</span>
+                  <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="rounded-2xl text-destructive text-sm sm:text-base">
+                <DropdownMenuItem onClick={handleLogout} className="rounded-2xl text-danger text-sm sm:text-base">
                   <LogoutIcon className="mr-2 h-4 w-4" />
-                  <span>{t('logout', 'Logout')}</span>
+                  <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -603,6 +660,7 @@ const UnifiedLayout = ({ children }) => {
         notifications={notifications}
         onMarkAsRead={handleMarkAsRead}
         onClearAll={handleClearAll}
+        loading={notifLoading}
       />
     </div>
   );

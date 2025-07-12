@@ -25,11 +25,21 @@ router.use('/medical-files', medicalFileRoutes);
 router.use('/medical-records', medicalRecordRoutes);
 router.use('/consultations', consultationRoutes);
 router.use('/prescriptions', prescriptionRoutes);
-router.use('/doctor/medicine', medicineRoutes);
+router.use('/medicines', medicineRoutes);
 router.use('/medications', medicationRoutes);
 router.use('/conversations', conversationRoutes);
 router.use('/logs', logRoutes);
 router.use('/users', require('../routes/user.routes'));
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    message: 'SAFE Backend API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
 
 router.get('/', (req, res) => {
   res.send('SAFE App Backend API v1');

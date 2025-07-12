@@ -32,11 +32,7 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPrescriptions } from '@/store/slices/patient/prescriptionsSlice';
-
-// Theme context for toggling light/dark mode
-const ThemeContext = React.createContext();
-
-const useTheme = () => React.useContext(ThemeContext);
+import { useTheme } from '@/components/ThemeProviderWrapper';
 
 const pillColors = [
   'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
@@ -57,9 +53,6 @@ const AnimatedStatusBadge = ({ status }) => {
     </span>
   );
 };
-
-
-
 
 const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
     const { t } = useTranslation('common');
@@ -124,7 +117,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                             variant="outline"
                             size="sm"
                             onClick={() => onViewDetails(prescription)}
-                            className="border-primary text-primary focus:ring-2 focus:ring-primary"
+                            className="focus:ring-2 focus:ring-primary"
                         >
                             <Eye className="w-4 h-4 mr-1" />
                             {t('patient.prescriptions.viewDetails')}
@@ -244,16 +237,16 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="px-6 py-2 border-primary text-primary"
+                        className="px-6 py-2"
                     >
                         {t('patient.prescriptions.close')}
                     </Button>
                     {(prescription.status === 'active' || prescription.status === 'pending') && (
                         <Tooltip content={t('patient.prescriptions.showQRCode')}>
                             <Button
-                                variant="default"
+                                variant="info"
                                 onClick={() => onShowQR(prescription)}
-                                className="px-6 py-2 bg-primary text-foreground focus:ring-2 focus:ring-primary"
+                                className="px-6 py-2 focus:ring-2 focus:ring-primary"
                             >
                                 <QrCode className="w-5 h-5 mr-2" />
                                 {t('patient.prescriptions.showQRCode')}
@@ -302,7 +295,7 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="px-6 py-2 border-primary text-primary"
+                        className="px-6 py-2"
                     >
                         {t('patient.prescriptions.close')}
                     </Button>
@@ -312,59 +305,38 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
     );
 };
 
-const ThemeProvider = ({ children }) => {
-    const [theme, setTheme] = useState(
-        typeof window !== 'undefined'
-            ? (localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
-            : 'light'
-    );
-
-    React.useEffect(() => {
-        if (typeof window !== 'undefined') {
-            document.documentElement.classList.remove('light', 'dark');
-            document.documentElement.classList.add(theme);
-            localStorage.setItem('theme', theme);
-        }
-    }, [theme]);
-
-    return (
-        <ThemeContext.Provider value={{ theme, setTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
-};
-
 const PrescriptionsPage = () => {
+    const { t } = useTranslation('common');
     const dispatch = useDispatch();
-    const { prescriptions, loading: isLoading, error } = useSelector(state => state.prescriptions);
-    const prescriptionsSafe = Array.isArray(prescriptions) ? prescriptions : (prescriptions?.data && Array.isArray(prescriptions.data) ? prescriptions.data : []);
-    const [selectedPrescription, setSelectedPrescription] = useState(null);
-    const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-    const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+    const { currentTheme } = useTheme();
+    const { prescriptions: prescriptionsSafe, isLoading, error } = useSelector((state) => state.prescriptions);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [sortBy, setSortBy] = useState('date');
     const [sortOrder, setSortOrder] = useState('desc');
-    const { t, i18n } = useTranslation('common');
-    const isRtl = i18n.language === 'ar';
-    const themeContext = useTheme ? useTheme() : null;
-    const { theme } = themeContext || { theme: 'light' };
+    const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+    const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+    const [selectedPrescription, setSelectedPrescription] = useState(null);
 
     useEffect(() => {
         dispatch(fetchPrescriptions());
     }, [dispatch]);
+
     const handleShowQR = (prescription) => {
         setSelectedPrescription(prescription);
         setIsQrDialogOpen(true);
     };
+
     const handleViewDetails = (prescription) => {
         setSelectedPrescription(prescription);
         setIsDetailDialogOpen(true);
     };
+
     const handleCloseDialog = () => {
         setIsDetailDialogOpen(false);
         setSelectedPrescription(null);
     };
+
     const handleCloseQrDialog = () => {
         setIsQrDialogOpen(false);
         setSelectedPrescription(null);
@@ -373,7 +345,7 @@ const PrescriptionsPage = () => {
         dispatch(fetchPrescriptions());
     };
 
-    const filteredPrescriptions = prescriptionsSafe
+    const filteredPrescriptions = (prescriptionsSafe || [])
         .filter(p => p && (filterStatus === 'all' || p.status === filterStatus))
         .filter(p => {
             if (!searchTerm || !p) return true;
@@ -402,183 +374,181 @@ const PrescriptionsPage = () => {
         });
 
     return (
-        <ThemeProvider>
-            <div className={`min-h-screen bg-card dark:bg-background p-4 sm:p-8 lg:p-12 transition-colors duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
-                
-                <PageHeader
-                    title={t('patient.prescriptions.title')}
-                    description={t('patient.prescriptions.description')}
-                />
-                <div className="mb-8 flex flex-col sm:flex-row gap-6 justify-between items-center bg-muted/40 border border-border rounded-2xl p-4">
-                    <div className="relative w-full sm:w-auto flex-grow">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder={t('patient.prescriptions.searchPlaceholder')}
-                            className="w-full pl-11 pr-3 py-3 border border-border rounded-2xl focus:ring-primary focus:border-primary text-base shadow-none bg-white dark:bg-background dark:text-blue-100"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2 w-full justify-center sm:w-auto text-base border-primary text-primary px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
-                                >
-                                    <ListFilter className="w-5 h-5" />
-                                    {t('patient.prescriptions.status')}
+        <div className={`min-h-screen bg-card dark:bg-background p-4 sm:p-8 lg:p-12 transition-colors duration-300 ${currentTheme === 'safeNight' ? 'dark' : ''}`}>
+            
+            <PageHeader
+                title={t('patient.prescriptions.title')}
+                description={t('patient.prescriptions.description')}
+            />
+            <div className="mb-8 flex flex-col sm:flex-row gap-6 justify-between items-center bg-muted/40 border border-border rounded-2xl p-4">
+                <div className="relative w-full sm:w-auto flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder={t('patient.prescriptions.searchPlaceholder')}
+                        className="w-full pl-11 pr-3 py-3 border border-border rounded-2xl focus:ring-primary focus:border-primary text-base shadow-none bg-white dark:bg-background dark:text-blue-100"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="flex items-center gap-2 w-full justify-center sm:w-auto text-base px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
+                            >
+                                <ListFilter className="w-5 h-5" />
+                                {t('patient.prescriptions.status')}
+                                {': '}
+                                {t(`patient.prescriptions.${filterStatus}`)}
+                                <ChevronDown className="w-5 h-5 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 bg-card dark:bg-blue-950/30 border-border rounded-xl shadow-lg">
+                            <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.status')}</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={filterStatus} onValueChange={setFilterStatus}>
+                                <DropdownMenuRadioItem value="all" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.all')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="active" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.active')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="completed" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.completed')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="pending" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.pending')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="expired" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.expired')}
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="flex items-center gap-2 w-full justify-center sm:w-auto text-base px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
+                            >
+                                <ListFilter className="w-5 h-5" />
+                                <span>
+                                    {t('patient.prescriptions.sort')}
                                     {': '}
-                                    {t(`patient.prescriptions.${filterStatus}`)}
-                                    <ChevronDown className="w-5 h-5 opacity-50" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56 bg-card dark:bg-blue-950/30 border-border rounded-xl shadow-lg">
-                                <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.status')}</DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-border" />
-                                <DropdownMenuRadioGroup value={filterStatus} onValueChange={setFilterStatus}>
-                                    <DropdownMenuRadioItem value="all" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.all')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="active" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.active')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="completed" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.completed')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="pending" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.pending')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="expired" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.expired')}
-                                    </DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center border-primary text-primary gap-2 w-full justify-center sm:w-auto text-base px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
-                                >
-                                    <ListFilter className="w-5 h-5" />
-                                    <span>
-                                        {t('patient.prescriptions.sort')}
-                                        {': '}
-                                        {sortBy === 'date' ? t('patient.prescriptions.date') : t('patient.prescriptions.doctorName')}
-                                        {` (${sortOrder === 'asc' ? t('patient.prescriptions.ascending') : t('patient.prescriptions.descending')})`}
-                                    </span>
-                                    <ChevronDown className="w-5 h-5 opacity-50" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56 bg-card dark:bg-blue-950/30 border-border rounded-xl shadow-lg">
-                                <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.sort')}</DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-border" />
-                                <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
-                                    <DropdownMenuRadioItem value="date" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.date')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="doctorName" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.doctorName')}
-                                    </DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                                <DropdownMenuSeparator className="bg-border" />
-                                <DropdownMenuRadioGroup value={sortOrder} onValueChange={setSortOrder}>
-                                    <DropdownMenuRadioItem value="asc" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.ascending')}
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="desc" className="text-foreground hover:bg-accent">
-                                        {t('patient.prescriptions.descending')}
-                                    </DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {sortBy === 'date' ? t('patient.prescriptions.date') : t('patient.prescriptions.doctorName')}
+                                    {` (${sortOrder === 'asc' ? t('patient.prescriptions.ascending') : t('patient.prescriptions.descending')})`}
+                                </span>
+                                <ChevronDown className="w-5 h-5 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 bg-card dark:bg-blue-950/30 border-border rounded-xl shadow-lg">
+                            <DropdownMenuLabel className="text-foreground">{t('patient.prescriptions.sort')}</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                                <DropdownMenuRadioItem value="date" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.date')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="doctorName" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.doctorName')}
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuRadioGroup value={sortOrder} onValueChange={setSortOrder}>
+                                <DropdownMenuRadioItem value="asc" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.ascending')}
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="desc" className="text-foreground hover:bg-accent">
+                                    {t('patient.prescriptions.descending')}
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+            {isLoading && (
+                <div className="flex justify-center items-center min-h-[300px]">
+                    <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-primary border-solid mb-4" />
+                        <p className="text-xl text-muted-foreground">{t('patient.prescriptions.loadingPrescriptions')}</p>
                     </div>
                 </div>
-                {isLoading && (
-                    <div className="flex justify-center items-center min-h-[300px]">
-                        <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-primary border-solid mb-4" />
-                            <p className="text-xl text-muted-foreground">{t('patient.prescriptions.loadingPrescriptions')}</p>
+            )}
+            {error && (
+                <div className="flex justify-center items-center min-h-[300px]">
+                    <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center">
+                        <AlertCircle className="w-10 h-10 text-danger mb-2" />
+                        <p className="text-xl text-danger mb-2">{error}</p>
+                        <Button
+                            onClick={handleRetry}
+                            variant="outline"
+                            className="mt-2"
+                        >
+                            {t('patient.prescriptions.retry')}
+                        </Button>
+                    </div>
+                </div>
+            )}
+            {!isLoading && !error && (filteredPrescriptions.length === 0 && searchTerm === '') && (
+                <div className="flex justify-center items-center min-h-[300px]">
+                    <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center border border-border">
+                        <div className="w-32 h-32 mx-auto mb-4 opacity-80 flex items-center justify-center">
+                            <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="128" height="128" rx="24" fill="#F3F4F6"/>
+                                <path d="M40 80c0-13.255 10.745-24 24-24s24 10.745 24 24" stroke="#A0AEC0" strokeWidth="4" strokeLinecap="round"/>
+                                <circle cx="64" cy="56" r="12" fill="#CBD5E1"/>
+                                <circle cx="64" cy="56" r="8" fill="#E5E7EB"/>
+                            </svg>
                         </div>
+                        <h3 className="text-2xl font-bold text-foreground mb-2">{t('patient.prescriptions.noPrescriptionsFound')}</h3>
+                        <p className="text-muted-foreground mb-2">{t('patient.prescriptions.itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
+                        <p className="text-base text-muted-foreground">{t('patient.prescriptions.prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
                     </div>
-                )}
-                {error && (
-                    <div className="flex justify-center items-center min-h-[300px]">
-                        <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center">
-                            <AlertCircle className="w-10 h-10 text-destructive mb-2" />
-                            <p className="text-xl text-destructive mb-2">{error}</p>
-                            <Button
-                                onClick={handleRetry}
-                                variant="outline"
-                                className="mt-2 border-primary text-primary"
-                            >
-                                {t('patient.prescriptions.retry')}
-                            </Button>
-                        </div>
+                </div>
+            )}
+            {!isLoading && !error && (filteredPrescriptions.length === 0 && searchTerm !== '') && (
+                <div className="flex justify-center items-center min-h-[300px]">
+                    <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center border border-border">
+                        <img src="/illustrations/no-results.svg" alt="No matching prescriptions" className="w-32 h-32 mx-auto mb-4 opacity-80" />
+                        <h3 className="text-2xl font-bold text-foreground mb-2">{t('patient.prescriptions.noMatchingPrescriptions')}</h3>
+                        <p className="text-muted-foreground mb-2">{t('patient.prescriptions.yourSearchFor', { searchTerm })}</p>
+                        <Button
+                            onClick={() => setSearchTerm('')}
+                            variant="outline"
+                            className="mt-2"
+                        >
+                            {t('patient.prescriptions.clearSearch')}
+                        </Button>
                     </div>
-                )}
-                {!isLoading && !error && (filteredPrescriptions.length === 0 && searchTerm === '') && (
-                    <div className="flex justify-center items-center min-h-[300px]">
-                        <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center border border-border">
-                            <div className="w-32 h-32 mx-auto mb-4 opacity-80 flex items-center justify-center">
-                                <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect width="128" height="128" rx="24" fill="#F3F4F6"/>
-                                    <path d="M40 80c0-13.255 10.745-24 24-24s24 10.745 24 24" stroke="#A0AEC0" strokeWidth="4" strokeLinecap="round"/>
-                                    <circle cx="64" cy="56" r="12" fill="#CBD5E1"/>
-                                    <circle cx="64" cy="56" r="8" fill="#E5E7EB"/>
-                                </svg>
-                            </div>
-                            <h3 className="text-2xl font-bold text-foreground mb-2">{t('patient.prescriptions.noPrescriptionsFound')}</h3>
-                            <p className="text-muted-foreground mb-2">{t('patient.prescriptions.itLooksLikeYouDontHaveAnyPrescriptionsRecordedYet')}</p>
-                            <p className="text-base text-muted-foreground">{t('patient.prescriptions.prescriptionsWillAppearHereOnceIssuedByYourDoctor')}</p>
-                        </div>
-                    </div>
-                )}
-                {!isLoading && !error && (filteredPrescriptions.length === 0 && searchTerm !== '') && (
-                    <div className="flex justify-center items-center min-h-[300px]">
-                        <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center border border-border">
-                            <img src="/illustrations/no-results.svg" alt="No matching prescriptions" className="w-32 h-32 mx-auto mb-4 opacity-80" />
-                            <h3 className="text-2xl font-bold text-foreground mb-2">{t('patient.prescriptions.noMatchingPrescriptions')}</h3>
-                            <p className="text-muted-foreground mb-2">{t('patient.prescriptions.yourSearchFor', { searchTerm })}</p>
-                            <Button
-                                onClick={() => setSearchTerm('')}
-                                variant="outline"
-                                className="mt-2 border-primary text-primary"
-                            >
-                                {t('patient.prescriptions.clearSearch')}
-                            </Button>
-                        </div>
-                    </div>
-                )}
-                {!isLoading && !error && filteredPrescriptions.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-                        {filteredPrescriptions.map((prescription) => (
-                            prescription && (
-                                <PrescriptionCard
-                                    key={prescription.id || Math.random()}
-                                    prescription={prescription}
-                                    onShowQR={handleShowQR}
-                                    onViewDetails={handleViewDetails}
-                                />
-                            )
-                        ))}
-                    </div>
-                )}
-                <PrescriptionDetailDialog
-                    open={isDetailDialogOpen}
-                    onClose={handleCloseDialog}
-                    prescription={selectedPrescription}
-                    onShowQR={handleShowQR}
-                />
-                <QRCodeDialog
-                    open={isQrDialogOpen}
-                    onClose={handleCloseQrDialog}
-                    prescription={selectedPrescription}
-                />
-            </div>
-        </ThemeProvider>
+                </div>
+            )}
+            {!isLoading && !error && filteredPrescriptions.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                    {filteredPrescriptions.map((prescription) => (
+                        prescription && (
+                            <PrescriptionCard
+                                key={prescription.id || Math.random()}
+                                prescription={prescription}
+                                onShowQR={handleShowQR}
+                                onViewDetails={handleViewDetails}
+                            />
+                        )
+                    ))}
+                </div>
+            )}
+            <PrescriptionDetailDialog
+                open={isDetailDialogOpen}
+                onClose={handleCloseDialog}
+                prescription={selectedPrescription}
+                onShowQR={handleShowQR}
+            />
+            <QRCodeDialog
+                open={isQrDialogOpen}
+                onClose={handleCloseQrDialog}
+                prescription={selectedPrescription}
+            />
+        </div>
     );
 };
 

@@ -48,7 +48,7 @@ export function AdminSettingsPanel() {
             </SelectContent>
           </Select>
         </div>
-        <Button className="w-full mt-4" onClick={handleSave}>{t('admin.settings.save')}</Button>
+        <Button variant="success" className="w-full mt-4" onClick={handleSave}>{t('admin.settings.save')}</Button>
         {saved && <div className="text-green-600 text-center mt-2">{t('admin.settings.saved')}</div>}
       </div>
     </Card>

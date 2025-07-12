@@ -22,7 +22,7 @@ export default function AdminReportsPage() {
               <div className="font-semibold text-foreground">{report.name}</div>
               <div className="text-muted-foreground text-sm mb-1">{report.description}</div>
             </div>
-            <Button disabled={!report.available} className="mt-2 md:mt-0">
+            <Button disabled={!report.available} variant="info" className="mt-2 md:mt-0 rounded-2xl">
               {report.available ? 'Download' : 'Coming Soon'}
             </Button>
           </li>

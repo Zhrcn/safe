@@ -130,7 +130,7 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
         {/* Last Message/Time/Attachments can be shown below if desired */}
         <div className="flex gap-2 mt-1">
           <Button
-            className="flex-1 border-primary text-primary text-xs py-2"
+            className="flex-1 text-xs py-2"
             variant="default"
             onClick={() => onOpenDialog(consultation)}
           >
@@ -140,7 +140,7 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
           {consultation.status === 'pending' && (
             <Button
               variant="outline"
-              className="flex-1 border-destructive text-destructive hover:bg-destructive/10 text-xs py-2"
+              className="flex-1 border-danger text-danger hover:bg-danger/10 text-xs py-2"
               onClick={() => onCancel && onCancel(consultation)}
             >
               <X className="h-4 w-4 mr-1" />
@@ -357,7 +357,7 @@ const ConsultationsPageContent = () => {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-destructive text-xl">
+            <span className="text-danger text-xl">
               {typeof error === "string"
                 ? error
                 : error?.message || JSON.stringify(error)}
@@ -456,7 +456,7 @@ const ConsultationsPageContent = () => {
           )}
           <DialogFooter className="mt-4 flex gap-2">
             <Button
-              className="border-primary text-primary"
+              className=""
               variant="outline"
               onClick={() => setSelectedConsultation(null)}
             >
@@ -480,7 +480,7 @@ const ConsultationsPageContent = () => {
             {doctorsLoading ? (
               <div className="text-muted-foreground">Loading doctors...</div>
             ) : doctorsError ? (
-              <div className="text-destructive">Failed to load doctors</div>
+              <div className="text-danger">Failed to load doctors</div>
             ) : filteredDoctors.length === 0 ? (
               <div className="text-muted-foreground">No doctors available.</div>
             ) : (
@@ -524,15 +524,13 @@ const ConsultationsPageContent = () => {
           </div>
           <DialogFooter className="mt-4 flex gap-2">
             <Button
-              className="border-primary text-primary"
               variant="outline"
               onClick={() => setNewConsultationDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
-              className="bg-primary text-foreground"
-              variant="default"
+              variant="primary"
               onClick={handleNewConsultationSubmit}
               disabled={!selectedDoctor || !question.trim()}
             >
@@ -554,13 +552,11 @@ const ConsultationsPageContent = () => {
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-primary text-primary"
             >
               Cancel
             </Button>
             <Button
-              variant="default"
-              className="bg-red-500 text-white"
+              variant="danger"
               onClick={confirmDeleteConsultation}
             >
               Delete
@@ -633,7 +629,6 @@ const ConsultationsPageContent = () => {
           )}
           <DialogFooter className="mt-4 flex gap-2">
             <Button
-              className="border-primary text-primary"
               variant="outline"
               onClick={() => {
                 setContinueChatDialogOpen(false);
@@ -644,8 +639,7 @@ const ConsultationsPageContent = () => {
               Cancel
             </Button>
             <Button
-              className="bg-primary text-foreground"
-              variant="default"
+              variant="primary"
               onClick={handleContinueChatSubmit}
               disabled={!newQuestion.trim()}
             >

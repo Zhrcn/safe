@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from 'react';
 
 const HeartSVG = React.forwardRef(({ style, className }, ref) => (
   <svg ref={ref} width="60" height="60" viewBox="0 0 60 60" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-    <path d="M30 44c-6-5-14-9-14-16a8 8 0 0 1 16 0 8 8 0 0 1 16 0c0 7-8 11-14 16z" fill="var(--color-destructive)" fillOpacity="0.18" />
+    <path d="M30 44c-6-5-14-9-14-16a8 8 0 0 1 16 0 8 8 0 0 1 16 0c0 7-8 11-14 16z" fill="var(--color-danger)" fillOpacity="0.18" />
   </svg>
 ));
 const PlusSVG = React.forwardRef(({ style, className }, ref) => (

@@ -149,9 +149,9 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
           <div className="flex items-end gap-3">
             {appointment.status === "pending" && (
               <Button
-                variant="default"
+                variant="info"
                 size="sm"
-                className="mt-5 bg-primary text-foreground"
+                className="mt-5"
                 onClick={() => onReschedule(appointment)}
               >
                 Edit
@@ -162,7 +162,7 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
                 variant="outline"
                 size="sm"
                 onClick={() => onCancel(appointment)}
-                className="mt-2 border-primary text-primary"
+                className="mt-2"
               >
                 Cancel
               </Button>
@@ -172,7 +172,7 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
                 variant="outline"
                 size="sm"
                 onClick={() => onRequestReschedule(appointment)}
-                className="mt-2 border-primary text-primary hover:bg-orange-50"
+                className="mt-2"
               >
                 <CalendarDays className="h-4 w-4 mr-1" />
                 Request Reschedule
@@ -321,7 +321,8 @@ const AppointmentsPage = () => {
             <Dialog open={showModal} onOpenChange={setShowModal}>
               <DialogTrigger asChild>
                 <Button
-                  className="flex items-center gap-2 bg-primary text-white rounded-2xl"
+                  variant="primary"
+                  className="flex items-center gap-2 rounded-2xl"
                   onClick={handleNewAppointment}
                 >
                   <Plus className="h-4 w-4 mr-2" />

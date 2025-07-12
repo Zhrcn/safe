@@ -149,7 +149,7 @@ export default function Footer() {
             &copy; {currentYear} <span className="project-title">{t('appName', 'SAFE')}</span>. {t('footer.rights', 'All rights reserved.')}
           </span>
           <span className="flex items-center gap-1">
-            {t('footer.designedWith', 'Designed with')} <span className="text-destructive">❤️</span> {t('footer.forHealthcare', 'for healthcare.')}
+            {t('footer.designedWith', 'Designed with')} <span className="text-danger">❤️</span> {t('footer.forHealthcare', 'for healthcare.')}
           </span>
         </div>
         <div className="flex justify-end mt-4">

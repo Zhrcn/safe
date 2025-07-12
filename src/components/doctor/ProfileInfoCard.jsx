@@ -18,9 +18,9 @@ const ProfileInfoCard = ({ profile, onEdit, onAddEducation, onAddAchievement }) 
         <div><span className="font-medium text-card-foreground">Experience:</span> {profile?.experienceYears} years</div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="primary" onClick={onEdit}>Edit Profile</Button>
+        <Button variant="default" onClick={onEdit}>Edit Profile</Button>
         <Button variant="outline" onClick={onAddEducation}>Add Education</Button>
-        <Button variant="secondary" onClick={onAddAchievement}>Add Achievement</Button>
+        <Button variant="outline" onClick={onAddAchievement}>Add Achievement</Button>
       </div>
     </div>
   </div>

@@ -85,8 +85,14 @@ const appointmentSchema = new mongoose.Schema({
 });
 
 appointmentSchema.methods.canBeModified = function() {
+  const appointmentDate = new Date(this.date);
+  const placeholderDate = new Date('1111-01-01');
+  
+  if (appointmentDate.getTime() === placeholderDate.getTime() || isNaN(appointmentDate.getTime())) {
+    return true;
+  }
+  
   if (!this.time || this.time === 'TBD' || !this.time.includes(':')) {
-    const appointmentDate = new Date(this.date);
     const now = new Date();
     const timeDifference = appointmentDate.getTime() - now.getTime();
     const hoursDifference = timeDifference / (1000 * 60 * 60);
@@ -97,7 +103,6 @@ appointmentSchema.methods.canBeModified = function() {
   const [hours, minutes] = this.time.split(':').map(Number);
   
   if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    const appointmentDate = new Date(this.date);
     const now = new Date();
     const timeDifference = appointmentDate.getTime() - now.getTime();
     const hoursDifference = timeDifference / (1000 * 60 * 60);

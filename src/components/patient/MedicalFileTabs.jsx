@@ -18,7 +18,7 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
         return <div className="min-h-[200px] flex items-center justify-center">Loading...</div>;
     }
     if (error) {
-        return <div className="min-h-[200px] flex items-center justify-center text-destructive">{typeof error === 'string' ? error : error?.message || 'An error occurred.'}</div>;
+        return <div className="min-h-[200px] flex items-center justify-center text-danger">{typeof error === 'string' ? error : error?.message || 'An error occurred.'}</div>;
     }
     if (!medicalFile) {
         return <div className="min-h-[200px] flex items-center justify-center text-muted-foreground">No medical file data.</div>;
@@ -70,12 +70,12 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                                 {medicalFile.allergies.map(allergy => (
                                     <Card key={allergy._id || allergy.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
                                         <div className="flex items-center gap-3">
-                                            <DropletIcon className="h-5 w-5 text-destructive" />
+                                            <DropletIcon className="h-5 w-5 text-danger" />
                                             <div>
                                                 <p className="font-medium text-foreground flex items-center gap-2">
                                                     {allergy.name}
                                                     {allergy.severity && (
-                                                        <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-destructive text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
+                                                        <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-danger text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
                                                     )}
                                                 </p>
                                                 {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}

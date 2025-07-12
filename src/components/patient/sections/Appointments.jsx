@@ -21,7 +21,7 @@ const AppointmentCard = ({ appointment, onChat, onCall, onVideo }) => {
             case 'completed':
                 return 'bg-green-500/10 text-green-500 border-green-500/20';
             case 'cancelled':
-                return 'bg-destructive/10 text-destructive border-destructive/20';
+                return 'bg-danger/10 text-danger border-danger/20';
             default:
                 return 'bg-muted text-muted-foreground border-border';
         }

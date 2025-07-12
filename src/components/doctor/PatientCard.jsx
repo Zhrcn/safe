@@ -150,7 +150,7 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="default"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
                         onClick={handleViewPatient}
                     >
                         <Eye className="h-4 w-4 mr-1" /> View
@@ -159,7 +159,7 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium text-primary"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
                         onClick={() => handleOpenDialog('condition')}
                     >
                         <Activity className="h-4 w-4 mr-1" /> Update
@@ -168,7 +168,7 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium text-primary"
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
                         onClick={() => handleOpenDialog('prescription')}
                     >
                         <FileText className="h-4 w-4 mr-1" /> Prescribe

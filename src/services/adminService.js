@@ -90,3 +90,8 @@ export const getActivityLogs = async () => {
     // The backend returns { statusCode, data, message }, where data is the logs array
     return response.data.data || [];
 };
+
+export const createUser = async (data) => {
+    const response = await axiosInstance.post('/users', data);
+    return response.data.data;
+};

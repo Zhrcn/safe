@@ -111,11 +111,11 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.name })}
+              className={cn({ 'border-danger': errors.name })}
               required
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
+              <p className="text-sm text-danger">{errors.name}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -126,11 +126,11 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
               type="date"
               value={formData.diagnosisDate}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.diagnosisDate })}
+              className={cn({ 'border-danger': errors.diagnosisDate })}
               required
             />
             {errors.diagnosisDate && (
-              <p className="text-sm text-destructive">{errors.diagnosisDate}</p>
+              <p className="text-sm text-danger">{errors.diagnosisDate}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -140,7 +140,7 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
               value={formData.status}
               onValueChange={handleSelectChange('status')}
             >
-              <SelectTrigger className={cn({ 'border-destructive': errors.status })}>
+              <SelectTrigger className={cn({ 'border-danger': errors.status })}>
                 <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
@@ -150,7 +150,7 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
               </SelectContent>
             </Select>
             {errors.status && (
-              <p className="text-sm text-destructive">{errors.status}</p>
+              <p className="text-sm text-danger">{errors.status}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -164,7 +164,7 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
             />
           </div>
           {errors.submit && (
-            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+            <p className="text-sm text-danger text-center">{errors.submit}</p>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

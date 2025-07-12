@@ -280,8 +280,9 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             <div className="flex items-end">
               <Button
                 type="button"
+                variant="default"
                 onClick={handleAddMedication}
-                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-2xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full inline-flex items-center justify-center px-4 py-2"
               >
                 <Plus className="h-5 w-5 mr-2" />Add Medication
               </Button>
@@ -352,23 +353,26 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             <div className="flex justify-end space-x-3 mt-6">
               <Button
                 type="button"
+                variant="outline"
                 onClick={handleReset}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-2xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2"
                 disabled={isSubmitting}
               >
                 Reset
               </Button>
               <Button
                 type="button"
+                variant="outline"
                 onClick={handleSaveDraft}
-                className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-transparent rounded-2xl shadow-sm hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2"
                 disabled={isSubmitting}
               >
                 Save Draft
               </Button>
               <Button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-2xl shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="default"
+                className="px-4 py-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating...' : 'Create Prescription'}
@@ -396,14 +400,16 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             <div className="mt-6 flex justify-end space-x-3">
               <Button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-2xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                variant="outline"
+                className="px-4 py-2"
                 onClick={() => setEditDialogOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-2xl shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                variant="default"
+                className="px-4 py-2"
                 onClick={handleEditDialogSave}
               >
                 Save Changes

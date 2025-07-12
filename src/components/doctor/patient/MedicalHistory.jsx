@@ -23,7 +23,7 @@ const MedicalHistory = ({ patient }) => {
       id: 'allergies',
       title: 'Allergies',
       icon: AlertTriangle,
-      color: 'text-destructive',
+      color: 'text-danger',
       items: medicalHistory?.allergies,
       renderItem: (item) => (
         <p className="text-sm text-muted-foreground">

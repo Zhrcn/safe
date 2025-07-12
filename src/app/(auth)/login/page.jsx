@@ -78,7 +78,7 @@ const LoginPage = () => {
         const primary = getCssVar('--primary', '#00b894');
         const accent = getCssVar('--accent', '#0098c3');
         const warning = getCssVar('--warning', '#fdcb6e');
-        const errorColor = getCssVar('--destructive', '#d63031');
+        const errorColor = getCssVar('--danger', '#d63031');
         const background = getCssVar('--background', '#ffffff');
         setPattern(getMedicalPattern(primary, accent, warning, errorColor, background));
     }, []);
@@ -171,7 +171,7 @@ const LoginPage = () => {
                     <CardContent className="pt-2">
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {error && (
-                                <Alert variant="destructive" className="animate-in fade-in duration-300">
+                                <Alert variant="danger" className="animate-in fade-in duration-300">
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             )}
@@ -243,7 +243,8 @@ const LoginPage = () => {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-primary text-white font-semibold hover:bg-primary/90 transition-colors rounded-2xl py-2"
+                                variant="primary"
+                                className="w-full font-semibold rounded-2xl py-2"
                                 disabled={isLoading}
                             >
                                 {isLoading ? t('login.signingIn') : t('login.signIn')}
@@ -259,7 +260,7 @@ const LoginPage = () => {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-1/2 border-border text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-2xl"
+                                    className="w-1/2 border-border font-medium flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors rounded-2xl"
                                     onClick={() => {}}
                                 >
                                     <GoogleIcon className="mr-1" />

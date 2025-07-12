@@ -123,11 +123,11 @@ const AddMedicationDialog = ({ open, onClose }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.name })}
+              className={cn({ 'border-danger': errors.name })}
               required
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
+              <p className="text-sm text-danger">{errors.name}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -137,11 +137,11 @@ const AddMedicationDialog = ({ open, onClose }) => {
               name="dosage"
               value={formData.dosage}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.dosage })}
+              className={cn({ 'border-danger': errors.dosage })}
               required
             />
             {errors.dosage && (
-              <p className="text-sm text-destructive">{errors.dosage}</p>
+              <p className="text-sm text-danger">{errors.dosage}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -151,7 +151,7 @@ const AddMedicationDialog = ({ open, onClose }) => {
               value={formData.frequency}
               onValueChange={handleSelectChange('frequency')}
             >
-              <SelectTrigger className={cn({ 'border-destructive': errors.frequency })}>
+              <SelectTrigger className={cn({ 'border-danger': errors.frequency })}>
                 <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
@@ -163,7 +163,7 @@ const AddMedicationDialog = ({ open, onClose }) => {
               </SelectContent>
             </Select>
             {errors.frequency && (
-              <p className="text-sm text-destructive">{errors.frequency}</p>
+              <p className="text-sm text-danger">{errors.frequency}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -174,11 +174,11 @@ const AddMedicationDialog = ({ open, onClose }) => {
               type="date"
               value={formData.startDate}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.startDate })}
+              className={cn({ 'border-danger': errors.startDate })}
               required
             />
             {errors.startDate && (
-              <p className="text-sm text-destructive">{errors.startDate}</p>
+              <p className="text-sm text-danger">{errors.startDate}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -198,11 +198,11 @@ const AddMedicationDialog = ({ open, onClose }) => {
               name="prescribedBy"
               value={formData.prescribedBy}
               onChange={handleChange}
-              className={cn({ 'border-destructive': errors.prescribedBy })}
+              className={cn({ 'border-danger': errors.prescribedBy })}
               required
             />
             {errors.prescribedBy && (
-              <p className="text-sm text-destructive">{errors.prescribedBy}</p>
+              <p className="text-sm text-danger">{errors.prescribedBy}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -216,7 +216,7 @@ const AddMedicationDialog = ({ open, onClose }) => {
             />
           </div>
           {errors.submit && (
-            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+            <p className="text-sm text-danger text-center">{errors.submit}</p>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

@@ -153,7 +153,7 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                             </Button>
                             <Button
                                 onClick={() => onReject(appointment)}
-                                variant="destructive"
+                                variant="danger"
                                 size="sm"
                                 className="mr-2"
                             >
@@ -496,7 +496,7 @@ export default function AppointmentManagement() {
                 </DialogContent>
             </Dialog>
             {error && (
-                <Alert variant="destructive">
+                <Alert variant="danger">
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
@@ -570,7 +570,7 @@ export default function AppointmentManagement() {
 
                     <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="destructive" disabled={reduxLoading || !selectedAppointment?.canBeModified}>
+                            <Button variant="danger" disabled={reduxLoading || !selectedAppointment?.canBeModified}>
                                 Reject Appointment
                             </Button>
                         </DialogTrigger>
@@ -592,7 +592,7 @@ export default function AppointmentManagement() {
                                     <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
                                         Cancel
                                     </Button>
-                                    <Button variant="destructive" onClick={handleReject} disabled={reduxLoading}>
+                                    <Button variant="danger" onClick={handleReject} disabled={reduxLoading}>
                                         Reject
                                     </Button>
                                 </div>

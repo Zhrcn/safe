@@ -67,13 +67,13 @@ function getChartColors(mode) {
         getCssVar('--primary-bg-chart', getCssVar('--primary', '#2563eb')),
         getCssVar('--success-bg-chart', getCssVar('--success', '#22c55e')),
         getCssVar('--warning-bg-chart', getCssVar('--warning', '#f59e42')),
-        getCssVar('--destructive-bg-chart', getCssVar('--destructive', '#ef4444')),
+        getCssVar('--danger-bg-chart', getCssVar('--danger', '#ef4444')),
       ],
       doughnutBorder: [
         getCssVar('--primary', '#2563eb'),
         getCssVar('--success', '#22c55e'),
         getCssVar('--warning', '#f59e42'),
-        getCssVar('--destructive', '#ef4444'),
+        getCssVar('--danger', '#ef4444'),
       ],
       card: getCssVar('--card', mode === 'dark' ? '#18181b' : '#fff'),
       cardForeground: getCssVar('--card-foreground', mode === 'dark' ? '#fff' : '#18181b'),
@@ -132,18 +132,18 @@ function getChartColors(mode) {
 
 export default function DoctorDashboard() {
   const { t } = useTranslation();
-  const { mode } = useTheme();
+  const { currentTheme } = useTheme();
   const dispatch = useAppDispatch();
   
   const { patients, loading: patientsLoading, error: patientsError } = useAppSelector(
     (state) => state.doctorPatients
   );
 
-  const [chartColors, setChartColors] = useState(getChartColors(mode));
+  const [chartColors, setChartColors] = useState(getChartColors(currentTheme));
 
   useEffect(() => {
-    setChartColors(getChartColors(mode));
-  }, [mode]);
+    setChartColors(getChartColors(currentTheme));
+  }, [currentTheme]);
 
   useEffect(() => {
     dispatch(fetchPatients());
@@ -271,7 +271,7 @@ export default function DoctorDashboard() {
     });
 
     setChartKey(Date.now());
-  }, [mode, t, chartColors]);
+  }, [currentTheme, t, chartColors]);
 
   const recentPatients = patients.slice(0, 3).map((patient) => ({
     _id: patient._id,
@@ -324,9 +324,9 @@ export default function DoctorDashboard() {
       href: '/doctor/messages',
       icon: <MessageSquare size={28} strokeWidth={2.2} />,
       label: t('doctor.dashboard.messages', 'Messages'),
-      colorVar: 'var(--destructive)',
-      bgVar: 'var(--destructive-bg)',
-      iconBgVar: 'var(--destructive-bg-hover, var(--destructive-bg))',
+      colorVar: 'var(--danger)',
+      bgVar: 'var(--danger-bg)',
+      iconBgVar: 'var(--danger-bg-hover, var(--danger-bg))',
     },
   ];
 
@@ -487,7 +487,7 @@ export default function DoctorDashboard() {
             <CardContent className="pt-0 px-4 pb-4">
               <div className="flex-grow min-h-[180px] h-[220px] sm:h-72">
                 <Bar
-                  key={mode + '-' + chartKey}
+                  key={currentTheme + '-' + chartKey}
                   data={chartData.appointments}
                   options={chartOptions}
                 />
@@ -504,7 +504,7 @@ export default function DoctorDashboard() {
             <CardContent className="pt-0 px-4 pb-4">
               <div className="flex-grow min-h-[180px] h-[220px] sm:h-72">
                 <Doughnut
-                  key={mode + '-' + chartKey}
+                  key={currentTheme + '-' + chartKey}
                   data={chartData.patientDistribution}
                   options={doughnutOptions}
                 />

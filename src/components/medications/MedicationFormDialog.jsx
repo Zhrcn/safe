@@ -97,10 +97,10 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
                         <Textarea value={notes} onChange={e => setNotes(e.target.value)} />
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" className="border-primary text-primary " onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={onClose}>
                             {t('common.cancel', 'Cancel')}
                         </Button>
-                        <Button variant="default" className="bg-primary text-foreground "  type="submit">
+                        <Button variant="success" type="submit">
                             {t('common.save', 'Save')}
                         </Button>
                     </DialogFooter>

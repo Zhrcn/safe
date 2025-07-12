@@ -29,7 +29,7 @@ export default function AboutSection() {
       icon: Heart,
       value: '95%',
       label: t('about.stats.satisfaction', 'Satisfaction'),
-      color: 'var(--color-destructive)',
+      color: 'var(--color-danger)',
     },
   ];
   return (

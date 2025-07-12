@@ -3,7 +3,7 @@
 import React from 'react';
 import Button from '@/components/ui/Button';
 import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/hooks/useSafeTranslation';
 
 
 
@@ -39,7 +39,7 @@ export function AdminCard({ title, subtitle, actions, children, className = '' }
 }
 
 export function StatCard({ title, value, trend = null, icon, description, className = '', onClick }) {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const getTrendIcon = () => {
     if (trend === 'up') return <TrendingUp size={16} className="text-success" />;
     if (trend === 'down') return <TrendingDown size={16} className="text-error" />;
@@ -102,17 +102,19 @@ export function ChartContainer({ title, subtitle, children, className = '' }) {
 }
 
 export function UserRoleBadge({ role }) {
+  const safeRole = role || '';
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
-      {role.charAt(0).toUpperCase() + role.slice(1)}
+      {safeRole.charAt(0).toUpperCase() + safeRole.slice(1)}
     </span>
   );
 }
 
 export function UserStatusBadge({ status }) {
+  const safeStatus = status || '';
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}
     </span>
   );
 }
@@ -167,7 +169,7 @@ export function ActivityLogItem({ user, action, timestamp, details, category }) 
 }
 
 export function NotificationItem({ title, message, timestamp, severity, isRead, onMarkAsRead }) {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const getNotificationClasses = () => {
     let baseClass = 'p-3 border-b border-border last:border-0 transition-colors duration-200';
     if (!isRead) baseClass += ' bg-primary/5';
@@ -195,7 +197,8 @@ export function NotificationItem({ title, message, timestamp, severity, isRead, 
       {!isRead && onMarkAsRead && (
         <Button
           onClick={onMarkAsRead}
-          className="text-primary text-sm flex items-center hover:underline"
+          variant="info"
+          className="text-sm flex items-center hover:underline"
         >
           {t('admin.notifications.markAsRead')}
           <ArrowRight size={16} className="ml-1" />

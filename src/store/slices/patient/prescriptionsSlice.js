@@ -68,21 +68,28 @@ const prescriptionsSlice = createSlice({
             })
             .addCase(fetchPrescriptions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.prescriptions = action.payload;
+                // Ensure we're setting an array, handle both direct array and nested data structure
+                state.prescriptions = Array.isArray(action.payload) ? action.payload : (action.payload?.data || []);
             })
             .addCase(fetchPrescriptions.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
             .addCase(createNewPrescription.fulfilled, (state, action) => {
+                if (!Array.isArray(state.prescriptions)) {
+                    state.prescriptions = [];
+                }
                 state.prescriptions.push(action.payload);
             })
             .addCase(editPrescription.fulfilled, (state, action) => {
+                if (!Array.isArray(state.prescriptions)) {
+                    state.prescriptions = [];
+                }
                 const idx = state.prescriptions.findIndex(p => p.id === action.payload.id);
                 if (idx !== -1) state.prescriptions[idx] = action.payload;
             })
             .addCase(removePrescription.fulfilled, (state, action) => {
-                state.prescriptions = state.prescriptions.filter(p => p.id !== action.payload);
+                state.prescriptions = (state.prescriptions || []).filter(p => p.id !== action.payload);
             });
     },
 });

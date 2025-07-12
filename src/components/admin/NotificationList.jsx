@@ -20,7 +20,7 @@ export function NotificationList({ notifications = [], onMarkAsRead }) {
                 <div className="text-xs text-muted-foreground">{notif.timestamp ? new Date(notif.timestamp).toLocaleString() : '-'}</div>
               </div>
               {!notif.read && onMarkAsRead && (
-                <Button size="sm" className="mt-2 md:mt-0" onClick={() => onMarkAsRead(notif.id)}>
+                <Button size="sm" variant="info" className="mt-2 md:mt-0" onClick={() => onMarkAsRead(notif.id)}>
                   {t('admin.notifications.markAsRead')}
                 </Button>
               )}

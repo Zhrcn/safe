@@ -41,7 +41,7 @@ export default function AdminSupportPage() {
                 <TableCell>{ticket.status}</TableCell>
                 <TableCell>{ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : '-'}</TableCell>
                 <TableCell>
-                  <Button size="sm" variant="outline">View</Button>
+                  <Button size="sm" variant="info" className="rounded-2xl">View</Button>
                 </TableCell>
               </TableRow>
             ))

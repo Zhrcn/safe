@@ -30,7 +30,7 @@ const getComputedCssVariable = (variableName) => {
 const CalendarComponent = ({ appointments }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { mode } = useTheme();
+  const { currentTheme } = useTheme();
 
   const [calendarColors, setCalendarColors] = useState({
     primary: '',
@@ -51,7 +51,7 @@ const CalendarComponent = ({ appointments }) => {
       border: `hsl(${borderColor})`,
       mutedForeground: `hsl(${mutedForeground})`,
     });
-  }, [mode]);
+  }, [currentTheme]);
 
   const daysInMonth = eachDayOfInterval({
     start: startOfMonth(currentMonth),

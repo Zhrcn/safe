@@ -73,6 +73,8 @@ export const rejectRescheduleRequest = createAsyncThunk(
   }
 );
 
+
+
 export const getAppointmentDetails = createAsyncThunk(
   'doctorAppointments/getAppointmentDetails',
   async (appointmentId, { rejectWithValue }) => {

@@ -37,15 +37,47 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   };
 
   console.error = (...args) => {
-    if (!shouldSuppress(args)) {
-      originalConsoleError.apply(console, args);
+    const message = args[0];
+    
+    // Filter out specific errors
+    if (
+      typeof message === 'string' && (
+        message.includes('Source map error') ||
+        message.includes('request failed with status 404') ||
+        message.includes('installHook.js.map') ||
+        message.includes('react_devtools_backend_compact.js.map') ||
+        message.includes('%3Canonymous%20code%3E') ||
+        message.includes('Resource URL:') ||
+        message.includes('Source Map URL:')
+      )
+    ) {
+      return;
     }
+    
+    originalConsoleError.apply(console, args);
   };
 
   console.warn = (...args) => {
-    if (!shouldSuppress(args)) {
-      originalConsoleWarn.apply(console, args);
+    const message = args[0];
+    
+    // Filter out specific warnings
+    if (
+      typeof message === 'string' && (
+        message.includes('i18next::translator: accessing an object - but returnObjects options is not enabled') ||
+        message.includes('Source map error') ||
+        message.includes('request failed with status 404') ||
+        message.includes('installHook.js.map') ||
+        message.includes('react_devtools_backend_compact.js.map') ||
+        message.includes('%3Canonymous%20code%3E') ||
+        message.includes('Resource URL:') ||
+        message.includes('Source Map URL:') ||
+        message.includes('Component Stack:')
+      )
+    ) {
+      return;
     }
+    
+    originalConsoleWarn.apply(console, args);
   };
 }
 

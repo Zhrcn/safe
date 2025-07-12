@@ -75,10 +75,10 @@ const AddAchievementDialog = ({ open, onClose, onAdd }) => {
               value={formData.title}
               onChange={handleChange}
               required
-              className={errors.title ? 'border-destructive' : ''}
+              className={errors.title ? 'border-danger' : ''}
             />
             {errors.title && (
-              <p className="text-sm text-destructive">{errors.title}</p>
+              <p className="text-sm text-danger">{errors.title}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -89,10 +89,10 @@ const AddAchievementDialog = ({ open, onClose, onAdd }) => {
               value={formData.issuer}
               onChange={handleChange}
               required
-              className={errors.issuer ? 'border-destructive' : ''}
+              className={errors.issuer ? 'border-danger' : ''}
             />
             {errors.issuer && (
-              <p className="text-sm text-destructive">{errors.issuer}</p>
+              <p className="text-sm text-danger">{errors.issuer}</p>
             )}
           </div>
           <div className="grid gap-2">
@@ -104,18 +104,18 @@ const AddAchievementDialog = ({ open, onClose, onAdd }) => {
               onChange={handleChange}
               required
               placeholder="e.g. 2020"
-              className={errors.year ? 'border-destructive' : ''}
+              className={errors.year ? 'border-danger' : ''}
               maxLength={4}
             />
             {errors.year && (
-              <p className="text-sm text-destructive">{errors.year}</p>
+              <p className="text-sm text-danger">{errors.year}</p>
             )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Add Achievement</Button>
+            <Button type="submit" variant="default">Add Achievement</Button>
           </DialogFooter>
         </form>
       </DialogContent>
