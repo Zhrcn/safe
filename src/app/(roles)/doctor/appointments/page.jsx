@@ -73,6 +73,24 @@ function formatDateTime(date, time) {
     }
 }
 
+function isMoreThan24HoursAway(date, time) {
+    try {
+        const now = new Date();
+        const appointmentDate = new Date(date);
+        if (!time || time === 'TBD' || !time.includes(':')) {
+            // If time is not set, just compare date
+            const timeDifference = appointmentDate.getTime() - now.getTime();
+            return timeDifference > 24 * 60 * 60 * 1000;
+        }
+        const [hours, minutes] = time.split(':').map(Number);
+        appointmentDate.setHours(hours, minutes, 0, 0);
+        const timeDifference = appointmentDate.getTime() - now.getTime();
+        return timeDifference > 24 * 60 * 60 * 1000;
+    } catch {
+        return false;
+    }
+}
+
 const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
     const appointmentDate = appointment.date || appointment.appointmentDate;
     const appointmentTime = appointment.time || appointment.appointmentTime;
@@ -171,7 +189,8 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
                         </Button>
                     </>
                 )}
-                {['accepted', 'confirmed', 'scheduled'].includes(appointment.status) && (
+                {['accepted', 'confirmed', 'scheduled', 'rescheduled'].includes(appointment.status) &&
+                    isMoreThan24HoursAway(appointment.date || appointment.appointmentDate, appointment.time || appointment.appointmentTime) && (
                     <Button
                         size="sm"
                         variant="outline"
@@ -304,7 +323,8 @@ const AppointmentTableRow = ({ appointment, onSelect, onAction, t }) => {
                             </Button>
                         </>
                     )}
-                    {['accepted', 'confirmed', 'scheduled'].includes(appointment.status) && (
+                    {['accepted', 'confirmed', 'scheduled', 'rescheduled'].includes(appointment.status) &&
+                        isMoreThan24HoursAway(appointment.date || appointment.appointmentDate, appointment.time || appointment.appointmentTime) && (
                         <Button
                             size="sm"
                             variant="outline"

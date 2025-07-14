@@ -3,6 +3,7 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { api } from './services/api';
 import { authApi } from './api/authApi';
 import { medicineApi } from './services/doctor/medicineApi';
+import { userApi } from './services/user/userApi';
 import authReducer, { clearCache } from './slices/auth/authSlice';
 import userReducer from './slices/user/userSlice';
 import doctorProfileReducer from './slices/doctor/doctorProfileSlice';
@@ -33,6 +34,7 @@ export const store = configureStore({
     [api.reducerPath]: api.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [medicineApi.reducerPath]: medicineApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
     auth: authReducer,
     user: userReducer,
     doctorProfile: doctorProfileReducer,
@@ -62,12 +64,13 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
       immutableCheck: false,
-    }).concat(api.middleware, authApi.middleware, medicineApi.middleware).concat(
+    }).concat(api.middleware, authApi.middleware, medicineApi.middleware, userApi.middleware).concat(
       (store) => (next) => (action) => {
         if (action.type === clearCache.type) {
           store.dispatch(api.util.resetApiState());
           store.dispatch(authApi.util.resetApiState());
           store.dispatch(medicineApi.util.resetApiState());
+          store.dispatch(userApi.util.resetApiState());
         }
         return next(action);
       }

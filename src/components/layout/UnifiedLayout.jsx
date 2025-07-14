@@ -26,6 +26,7 @@ import { getSocket } from '@/utils/socket';
 import { getToken } from '@/utils/tokenUtils';
 import NotificationDialog from '@/components/patient/NotificationDialog';
 import axios from 'axios';
+import { fetchUserProfile, selectUser } from '@/store/slices/user/userSlice';
 
 const NAVIGATION_CONFIG = {
   doctor: [
@@ -397,8 +398,8 @@ const UnifiedLayout = ({ children }) => {
   const isRtl = i18n.language === 'ar';
   const [mounted, setMounted] = useState(false);
 
-  const user = useSelector((state) => state.auth.user);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const user = useSelector(selectUser);
+  const isAuthenticated = !!user;
   const token = getToken();
 
   const menuItems = useMemo(() => {
@@ -631,6 +632,12 @@ const UnifiedLayout = ({ children }) => {
     setImageModalOpen(false);
     setModalImageUrl('');
   };
+
+  useEffect(() => {
+    if (!user) {
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch, user]);
 
   if (!ready || !mounted) return null;
 

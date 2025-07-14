@@ -41,6 +41,10 @@ export const selectProfileLoading = (state) => state?.user?.profileLoading ?? fa
 export const selectProfileError = (state) => state?.user?.profileError ?? null;
 export const selectImageUploadLoading = (state) => state?.user?.imageUploadLoading ?? false;
 export const selectImageUploadError = (state) => state?.user?.imageUploadError ?? null;
+export const selectUser = (state) => state.user.user;
+export const selectToken = (state) => state.user.token;
+export const selectLoading = (state) => state.user.loading;
+export const selectError = (state) => state.user.error;
 
 export const loginUser = createAsyncThunk(
   'user/loginUser',
@@ -115,6 +119,18 @@ export const uploadUserProfileImageData = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await uploadUserProfileImage(formData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(handleAuthError(error));
+    }
+  }
+);
+
+export const getCurrentUser = createAsyncThunk(
+  'user/getCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await getUserProfile();
       return response;
     } catch (error) {
       return rejectWithValue(handleAuthError(error));
@@ -269,6 +285,26 @@ const userSlice = createSlice({
       .addCase(uploadUserProfileImageData.rejected, (state, action) => {
         state.imageUploadLoading = false;
         state.imageUploadError = action.payload;
+      })
+
+      .addCase(getCurrentUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // Transform the user profile image URL to full URL
+        const user = {
+          ...action.payload.user,
+          profileImage: transformImageUrl(action.payload.user?.profileImage)
+        };
+        state.user = user;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

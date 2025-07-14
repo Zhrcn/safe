@@ -1,47 +1,38 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, X, Check } from 'lucide-react';
+import { Camera, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { useNotification } from '@/components/ui/Notification';
 import { API_BASE_URL } from '@/config/api';
 import { getToken } from '@/utils/tokenUtils';
-import { useUploadUserProfileImageMutation, useUpdateUserProfileMutation } from '@/store/services/user/userApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { setCredentials, selectUser, selectToken } from '@/store/slices/user/userSlice';
+import { fetchProfile, editProfile } from '@/store/slices/patient/profileSlice';
 
-const ImageUploader = ({ 
-    onImageUpload, 
-    onImageRemove, 
-    userId,
-    firstName,
-    lastName,
+const ImageUploaderPatient = ({
+    onImageUpload,
+    onImageRemove,
     maxSize = 5 * 1024 * 1024, // 5MB default
     acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
     className = '',
     size = 'md', // sm, md, lg
     previewImage,
     setPreviewImage,
-    updateProfile
 }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [imageError, setImageError] = useState(false);
     const fileInputRef = useRef(null);
     const { showNotification } = useNotification();
-    const [uploadUserProfileImage] = useUploadUserProfileImageMutation();
-    const [updateUserProfile] = useUpdateUserProfileMutation();
     const dispatch = useDispatch();
-    const user = useSelector(selectUser);
-    const token = useSelector(selectToken);
+    const user = useSelector(state => state.auth.user);
 
     const sizeClasses = {
         sm: 'w-20 h-20',
         md: 'w-32 h-32',
-        lg: 'w-40 h-40'
+        lg: 'w-40 h-40',
     };
 
-    // Helper to safely add cache buster
     function addCacheBuster(url) {
         if (!url) return url;
         const hasQuery = url.includes('?');
@@ -50,20 +41,14 @@ const ImageUploader = ({
 
     const handleFileSelect = async (file) => {
         if (!file) return;
-
-        // Validate file type
         if (!acceptedTypes.includes(file.type)) {
             showNotification('Please select a valid image file (JPEG, PNG, GIF, or WebP)', 'error');
             return;
         }
-
-        // Validate file size
         if (file.size > maxSize) {
             showNotification(`File size must be less than ${Math.round(maxSize / 1024 / 1024)}MB`, 'error');
             return;
         }
-
-        // Create preview
         const reader = new FileReader();
         reader.onload = (e) => {
             if (typeof setPreviewImage === 'function') {
@@ -71,32 +56,26 @@ const ImageUploader = ({
             }
         };
         reader.readAsDataURL(file);
-
         setIsUploading(true);
         try {
             const formData = new FormData();
             formData.append('profileImage', file);
-            if (userId) formData.append('userId', userId);
-            if (firstName) formData.append('firstName', firstName);
-            if (lastName) formData.append('lastName', lastName);
-
-            // 1. Upload image using RTK Query
-            const uploadResult = await uploadUserProfileImage(formData).unwrap();
-            const imageUrl = uploadResult?.imageUrl;
-
-            // 2. Update user profile with new image URL using RTK Query
-            await updateUserProfile({ profilePicture: imageUrl }).unwrap();
-
-            // 3. Update Redux user state
-            dispatch(setCredentials({
-                user: { ...user, profileImage: imageUrl },
-                token,
-            }));
-
-            // 4. Call parent callbacks as before
+            // 1. Upload image to backend (customize endpoint as needed)
+            const token = getToken();
+            const response = await fetch(`${API_BASE_URL}/api/v1/patient/profile/upload-image`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            if (!response.ok) throw new Error('Failed to upload image');
+            const data = await response.json();
+            const imageUrl = data?.imageUrl;
+            // 2. Update patient profile with new image URL
+            await dispatch(editProfile({ profileImage: imageUrl })).unwrap();
+            // 3. Refresh patient profile from backend
+            await dispatch(fetchProfile());
             if (onImageUpload) onImageUpload(imageUrl);
             if (typeof setPreviewImage === 'function') setPreviewImage(null);
-
             showNotification('Image uploaded and profile updated!', 'success');
         } catch (error) {
             console.error('Upload error:', error);
@@ -124,7 +103,6 @@ const ImageUploader = ({
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             handleFileSelect(e.dataTransfer.files[0]);
         }
@@ -147,7 +125,6 @@ const ImageUploader = ({
     };
 
     const displayImage = previewImage || (user?.profileImage ? addCacheBuster(user.profileImage) : null);
-    console.log('ImageUploader displayImage:', displayImage);
 
     React.useEffect(() => {
         setImageError(false);
@@ -240,4 +217,4 @@ const ImageUploader = ({
     );
 };
 
-export default ImageUploader; 
+export default ImageUploaderPatient; 
