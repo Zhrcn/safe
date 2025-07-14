@@ -131,14 +131,50 @@ exports.getDoctors = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, doctors, 'Doctors fetched successfully.'));
 });
 
+// Allow any authenticated doctor to fetch another doctor's public info (firstName, lastName, etc)
 exports.getDoctor = asyncHandler(async (req, res) => {
-    const doctor = await Doctor.findById(req.params.id)
-        .populate('user', 'firstName lastName email phoneNumber profileImage')
-        .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio');
+    let doctor = await Doctor.findById(req.params.id)
+        .populate('user', 'firstName lastName email profileImage')
+        .select('specialty experienceYears professionalBio');
+    // If not found by Doctor _id, try by user _id
     if (!doctor) {
-        return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+        doctor = await Doctor.findOne({ user: req.params.id })
+            .populate('user', 'firstName lastName email profileImage')
+            .select('specialty experienceYears professionalBio');
     }
-    res.status(200).json(new ApiResponse(200, doctor, 'Doctor fetched successfully.'));
+    // If still not found, try to find a User directly and return minimal info
+    if (!doctor) {
+        const User = require('../models/User');
+        const user = await User.findById(req.params.id).select('firstName lastName email profileImage');
+        if (!user) {
+            return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+        }
+        return res.status(200).json(new ApiResponse(200, {
+            _id: req.params.id,
+            user: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                profileImage: user.profileImage,
+                email: user.email
+            },
+            specialty: null,
+            experienceYears: null,
+            professionalBio: null
+        }, 'Doctor fetched successfully.'));
+    }
+    // Only return public info
+    res.status(200).json(new ApiResponse(200, {
+        _id: doctor._id,
+        user: {
+            firstName: doctor.user.firstName,
+            lastName: doctor.user.lastName,
+            profileImage: doctor.user.profileImage,
+            email: doctor.user.email
+        },
+        specialty: doctor.specialty,
+        experienceYears: doctor.experienceYears,
+        professionalBio: doctor.professionalBio
+    }, 'Doctor fetched successfully.'));
 });
 
 exports.getDoctorPatients = asyncHandler(async (req, res) => {

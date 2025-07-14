@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import NewRequestDialog from '@/components/doctor/NewRequestDialog';
-import { useGetRequestsQuery, useCreateRequestMutation } from '@/store/services/doctor/medicineApi';
+import { useGetRequestsQuery, useCreateRequestMutation, useDeleteRequestMutation } from '@/store/services/doctor/medicineApi';
 import { openNewRequestDialog, closeNewRequestDialog } from '@/store/slices/doctor/medicineUiSlice';
 import { getPharmacists } from '@/store/services/patient/providerApi';
 import { getMedicines } from '@/store/services/doctor/medicineApi';
@@ -29,6 +29,7 @@ export default function MedicineRequestsPage() {
   const dispatch = useDispatch();
   const { data: requests = [], isLoading, isError, refetch, isFetching } = useGetRequestsQuery();
   const [createRequest, { isLoading: isCreating }] = useCreateRequestMutation();
+  const [deleteRequest, { isLoading: isDeleting }] = useDeleteRequestMutation();
   const newRequestDialogOpen = useSelector((state) => state.medicineUi.newRequestDialogOpen);
 
   // Pharmacies and medicines state
@@ -103,6 +104,16 @@ export default function MedicineRequestsPage() {
       dispatch(closeNewRequestDialog());
     } catch (err) {
       toast.error('Failed to create medicine request.');
+    }
+  };
+
+  // Cancel handler
+  const handleCancelRequest = async (id) => {
+    try {
+      await deleteRequest(id).unwrap();
+      refetch();
+    } catch (err) {
+      // Optionally show error
     }
   };
 
@@ -188,8 +199,19 @@ return (
                       <TableCell>
                         <span className="text-xs text-muted-foreground">{formatDate(req.createdAt)}</span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(req); setDetailsOpen(true); }}>View</Button>
+                        {req.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelRequest(req.id || req._id)}
+                            disabled={isDeleting}
+                            title="Cancel Request"
+                          >
+                            ✕
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

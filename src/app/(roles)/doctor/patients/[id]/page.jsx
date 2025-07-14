@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import {
     User,
@@ -60,6 +60,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { getDoctorById } from '@/store/services/doctor/doctorApi';
 
 const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { ssr: false });
 
@@ -917,7 +918,9 @@ const PatientPageContent = () => {
                     {/* Ownership stamp */}
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <User className="h-3 w-3" />
-                        {record.doctorId?.toString() === user?._id?.toString() ? t('common.you', 'You') : t('common.doctor', 'Doctor')}
+                        {record.doctorId?.toString() === user?._id?.toString()
+                            ? t('common.you', 'You')
+                            : <DoctorName doctorId={record.doctorId} />}
                     </div>
                     {/* Action buttons for own records */}
                     {canEdit && (
@@ -1363,6 +1366,37 @@ const PatientPageContent = () => {
         activeMedicalTab === categoryId
             ? 'bg-primary text-primary-foreground font-semibold rounded-md'
             : 'bg-transparent text-foreground';
+
+    // Custom hook to fetch and cache doctor names by ID
+    function useDoctorName(doctorId) {
+        const [name, setName] = React.useState('');
+        React.useEffect(() => {
+            let isMounted = true;
+            async function fetchName() {
+                if (!doctorId) {
+                    if (isMounted) setName('Unknown');
+                    return;
+                }
+                try {
+                    const response = await getDoctorById(doctorId);
+                    const doctor = response?.data;
+                    const doctorName = `${doctor?.user?.firstName || ''} ${doctor?.user?.lastName || ''}`.trim();
+                    if (isMounted) setName(doctorName || 'Unknown');
+                } catch (e) {
+                    if (isMounted) setName('Unknown');
+                }
+            }
+            fetchName();
+            return () => { isMounted = false; };
+        }, [doctorId]);
+        return name;
+    }
+
+    // Component to display doctor name by ID
+    function DoctorName({ doctorId }) {
+        const name = useDoctorName(doctorId);
+        return <span className="text-xs text-muted-foreground">{name || 'Loading...'}</span>;
+    }
 
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden">

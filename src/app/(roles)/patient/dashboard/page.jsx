@@ -30,6 +30,8 @@ import {
     fetchRecentMessages,
     fetchRecentConsultations
 } from '@/store/slices/patient/dashboardSlice';
+import { Calendar as UICalendar } from '@/components/ui/Calendar';
+import { format, parseISO, isSameDay } from 'date-fns';
 
 const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t }) => (
   <motion.div
@@ -193,6 +195,7 @@ const DashboardPage = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     const [isAppointmentFormOpen, setAppointmentFormOpen] = React.useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     useEffect(() => {
         dispatch(fetchProfile());
@@ -305,7 +308,16 @@ const DashboardPage = () => {
         a.status === 'confirmed'
     );
 
-
+    // Filter appointments for selected day
+    const appointmentsForSelectedDay = (appointments || []).filter(a => {
+        if (!a.date) return false;
+        try {
+            const appDate = typeof a.date === 'string' ? parseISO(a.date) : a.date;
+            return isSameDay(appDate, selectedDate);
+        } catch {
+            return false;
+        }
+    });
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">
@@ -341,6 +353,36 @@ const DashboardPage = () => {
                                 </div>
                             ))}
                         </AnimatePresence>
+                    </div>
+                    {/* Calendar Section */}
+                    <div className="mt-8">
+                        <h3 className="text-base font-bold mb-2 text-card-foreground">{t('patient.dashboard.calendar', 'Calendar')}</h3>
+                        <UICalendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            className="rounded-2xl border-none shadow-md bg-card"
+                        />
+                        <div className="mt-4">
+                            <h4 className="font-semibold text-sm mb-2 text-card-foreground">
+                                {t('patient.dashboard.appointmentsOn', 'Appointments on')} {format(selectedDate, 'PPP')}:
+                            </h4>
+                            {isLoadingAppointments ? (
+                                <div className="flex justify-center py-4 text-muted-foreground">{t('loading')}</div>
+                            ) : appointmentsForSelectedDay.length === 0 ? (
+                                <div className="text-xs text-muted-foreground">
+                                    {t('patient.dashboard.noAppointments', 'No appointments')}
+                                </div>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {appointmentsForSelectedDay.map((app) => (
+                                        <li key={app._id || app.id}>
+                                            <AppointmentCard appointment={app} t={t} />
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="lg:col-span-2 space-y-8">

@@ -161,7 +161,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
     </div>
   );
   return (
-    <div className="max-w-xl mx-auto p-0">
+    <div className="max-w-xl mx-auto p-0 ">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-0">
         <div className="p-6 sm:p-8">
           <div className="flex justify-between items-center mb-4">

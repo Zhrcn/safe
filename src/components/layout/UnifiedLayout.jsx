@@ -54,6 +54,7 @@ const NAVIGATION_CONFIG = {
     { name: 'orders', path: '/pharmacist/orders', icon: ShoppingCart },
     { name: 'prescriptions', path: '/pharmacist/prescriptions', icon: ClipboardList },
     { name: 'profile', path: '/pharmacist/profile', icon: User },
+    { name: 'medicine Requests', path: '/pharmacist/medicine', icon: Pill },
   ],
   admin: [
     { name: 'dashboard', path: '/admin/dashboard', icon: Home },

@@ -146,20 +146,29 @@ class ConversationService {
 
   static onReceiveMessage(handler) {
     const socket = getSocket();
-    socket.on('receive_message', handler);
-    return () => socket.off('receive_message', handler);
+    if (socket) {
+      socket.on('receive_message', handler);
+      return () => socket.off('receive_message', handler);
+    }
+    return () => {};
   }
 
   static onMessageDeleted(handler) {
     const socket = getSocket();
-    socket.on('message_deleted', handler);
-    return () => socket.off('message_deleted', handler);
+    if (socket) {
+      socket.on('message_deleted', handler);
+      return () => socket.off('message_deleted', handler);
+    }
+    return () => {};
   }
 
   static onTyping(handler) {
     const socket = getSocket();
-    socket.on('typing', handler);
-    return () => socket.off('typing', handler);
+    if (socket) {
+      socket.on('typing', handler);
+      return () => socket.off('typing', handler);
+    }
+    return () => {};
   }
 
   static joinConversation(conversationId) {
@@ -199,8 +208,11 @@ class ConversationService {
 
   static onUserPresence(handler) {
     const socket = getSocket();
-    socket.on('user_presence', handler);
-    return () => socket.off('user_presence', handler);
+    if (socket) {
+      socket.on('user_presence', handler);
+      return () => socket.off('user_presence', handler);
+    }
+    return () => {};
   }
 }
 

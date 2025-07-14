@@ -19,11 +19,12 @@ import { useTranslation } from 'react-i18next';
 import MedicationFormDialog from '@/components/medications/MedicationFormDialog';
 import ReminderDialog from '@/components/medications/ReminderDialog';
 import MedicationCard from '@/components/patient/MedicationCard';
+import PatientCheckMedicinePage from './check-medicine.jsx';
 
 const MedicationsPage = () => {
     const router = useRouter();
     const { showNotification } = useNotification();
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState('medications');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [medicationDialogOpen, setMedicationDialogOpen] = useState(false);
@@ -217,14 +218,16 @@ const MedicationsPage = () => {
 
     return (
         <div className="flex flex-col space-y-6">
-            <PageHeader
-                title={t('patient.medications.title', 'Medications')}
-                description={t('patient.medications.description', 'Manage your prescribed medications and set reminders.')}
-                breadcrumbs={[
-                    { label: t('patient.breadcrumb', 'Patient'), href: '/patient/dashboard' },
-                    { label: t('patient.medications.title', 'Medications'), href: '/patient/medications' }
-                ]}
-            />
+            <div className="flex items-center justify-between">
+                <PageHeader
+                    title={t('patient.medications.title', 'Medications')}
+                    description={t('patient.medications.description', 'Manage your prescribed medications and set reminders.')}
+                    breadcrumbs={[
+                        { label: t('patient.breadcrumb', 'Patient'), href: '/patient/dashboard' },
+                        { label: t('patient.medications.title', 'Medications'), href: '/patient/medications' }
+                    ]}
+                />
+            </div>
 
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap ">
@@ -321,34 +324,34 @@ const MedicationsPage = () => {
                 <TabsList className="grid w-full grid-cols-3 rounded-2xl"
                     style={{ background: cardBg, borderColor: border }}>
                     <TabsTrigger 
-                        value="active" 
+                        value="medications" 
                         style={{ 
-                            color: activeTab === 'active' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
-                            background: activeTab === 'active' ? primary : 'transparent'
+                            color: activeTab === 'medications' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'medications' ? primary : 'transparent'
                         }}
                     >
-                        <span>{t('patient.medications.status.active', 'Active')}</span>
+                        <span>{t('patient.medications.tabs.medications', 'Medications')}</span>
                     </TabsTrigger>
                     <TabsTrigger 
-                        value="completed" 
+                        value="reminders" 
                         style={{ 
-                            color: activeTab === 'completed' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
-                            background: activeTab === 'completed' ? primary : 'transparent'
+                            color: activeTab === 'reminders' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'reminders' ? primary : 'transparent'
                         }}
                     >
-                        <span>{t('patient.medications.status.completed', 'Completed')}</span>
+                        <span>{t('patient.medications.tabs.reminders', 'Reminders')}</span>
                     </TabsTrigger>
                     <TabsTrigger 
-                        value="expired" 
+                        value="availability" 
                         style={{ 
-                            color: activeTab === 'expired' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
-                            background: activeTab === 'expired' ? primary : 'transparent'
+                            color: activeTab === 'availability' ? (text === '#ffffff' ? '#000000' : '#ffffff') : text,
+                            background: activeTab === 'availability' ? primary : 'transparent'
                         }}
                     >
-                        <span>{t('patient.medications.status.expired', 'Expired')}</span>
+                        <span>{t('patient.medications.tabs.availability', 'Check Availability')}</span>
                     </TabsTrigger>
                 </TabsList>
-                <TabsContent value={activeTab} className="mt-6">
+                <TabsContent value="medications" className="mt-6">
                     {filteredMedications.length > 0 ? (
                         <div className="grid gap-4">
                             {filteredMedications.map((medication) => (
@@ -371,7 +374,7 @@ const MedicationsPage = () => {
                             </div>
                             <h3 className="text-xl font-semibold mb-3" style={{ color: text }}>{t('patient.medications.noMedicationsFound', 'No Medications Found')}</h3>
                             <p className="mb-6" style={{ color: muted }}>
-                                {searchQuery || statusFilter !== 'all' || activeTab !== 'all'
+                                {searchQuery || statusFilter !== 'all'
                                     ? t('patient.medications.tryAdjustingSearch', 'Try adjusting your search or filters to find medications.')
                                     : t('patient.medications.noMedicationsDefault', "You don't have any medications here yet. Add your first medication!")}
                             </p>
@@ -389,14 +392,22 @@ const MedicationsPage = () => {
                         </div>
                     )}
                 </TabsContent>
+                <TabsContent value="reminders" className="mt-6">
+                    <ReminderDialog
+                        open={reminderDialogOpen}
+                        medication={selectedMedication}
+                        onClose={() => setReminderDialogOpen(false)}
+                        onSubmit={handleReminderUpdate}
+                    />
+                    <div className="text-center text-muted-foreground py-12">
+                        <span>{t('patient.medications.remindersTabPlaceholder', 'Manage and view your medication reminders here.')}</span>
+                    </div>
+                </TabsContent>
+                <TabsContent value="availability" className="mt-6">
+                    <PatientCheckMedicinePage hideHeader />
+                </TabsContent>
             </Tabs>
 
-            <ReminderDialog
-                open={reminderDialogOpen}
-                medication={selectedMedication}
-                onClose={() => setReminderDialogOpen(false)}
-                onSubmit={handleReminderUpdate}
-            />
             <MedicationFormDialog
                 open={dialog.open}
                 mode={dialog.mode}

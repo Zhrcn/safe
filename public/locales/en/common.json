@@ -288,37 +288,43 @@
       "upcomingAppointments": "Upcoming Appointments"
     },
     "dashboard": {
-      "appointments": "Appointments",
-      "appointmentsOn": "Appointments on",
-      "appointmentsOverview": "Appointments Overview",
-      "calendar": "Calendar",
-      "emergency": "Emergency",
-      "fri": "Fri",
-      "lastVisit": "Last visit",
-      "loadError": "Failed to load dashboard data.",
-      "messages": "Messages",
       "mon": "Mon",
-      "new": "New",
-      "newPatient": "New Patient",
-      "noAppointments": "No appointments",
-      "noRecentPatients": "No recent patients found",
-      "notAvailable": "N/A",
-      "patientDistribution": "Patient Distribution",
-      "prescription": "Prescription",
-      "quickActions": "Quick Actions",
-      "recentPatients": "Recent Patients",
-      "regular": "Regular",
-      "sat": "Sat",
-      "schedule": "Schedule",
-      "sun": "Sun",
-      "thu": "Thu",
-      "title": "Dashboard",
       "tue": "Tue",
-      "view": "View",
-      "viewAll": "View All",
       "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun",
+      "appointments": "Appointments",
+      "new": "New",
+      "followUp": "Follow-up",
+      "emergency": "Emergency",
+      "regular": "Regular",
+      "newPatient": "New Patient",
+      "newAppointment": "New Appointment",
+      "prescription": "Prescription",
+      "title": "Dashboard",
       "welcome": "Welcome back",
-      "followUp": "متابعة"
+      "totalPatients": "Total Patients",
+      "totalAppointments": "Total Appointments",
+      "completedAppointments": "Completed",
+      "pendingAppointments": "Pending",
+      "recentPatients": "Recent Patients",
+      "viewAll": "View All",
+      "noRecentPatients": "No recent patients found",
+      "quickActions": "Quick Actions",
+      "appointmentsOverview": "Appointments Overview",
+      "patientDistribution": "Patient Distribution",
+      "calendar": "Calendar",
+      "appointmentsOn": "Appointments on",
+      "noAppointments": "No appointments",
+      "loadError": "Failed to load dashboard data.",
+      "lastVisit": "Last visit",
+      "notAvailable": "N/A",
+      "view": "View",
+      "status": {
+        "accepted": "Accepted"
+      }
     },
     "messaging": {
       "selectConversation": "Select a conversation to start chatting.",
@@ -474,14 +480,8 @@
       "dosage": "Dosage",
       "errorLoading": "Error Loading Medications",
       "messages": {
-        "attach_file": "Attach file",
-        "emoji_picker": "Emoji picker",
         "no_messages": "No messages",
-        "online": "Online",
-        "offline": "Offline",
-        "search_placeholder": "Search messages...",
-        "start_new_chat": "Start new chat",
-        "today": "Today"
+        "search_placeholder": "Search messages..."
       },
       "notes": "Notes",
       "refillDate": "Refill Date",
@@ -1217,5 +1217,6 @@
         "medical": "Medical File"
       }
     }
-  }
+  },
+  "(Patient)": "(Patient)"
 }

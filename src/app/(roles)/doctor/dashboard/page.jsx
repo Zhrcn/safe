@@ -44,6 +44,14 @@ import {
   fetchRecentAppointments,
   fetchAppointmentsByDate
 } from '@/store/slices/doctor/dashboardAnalyticsSlice';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/Dialog';
+import { Button } from '@/components/ui/Button';
+import AddPatientForm from '@/components/doctor/AddPatientForm';
+import NewRequestDialog from '@/components/doctor/NewRequestDialog';
+import { useRouter } from 'next/navigation';
+import { createConversation } from '@/store/slices/patient/conversationsSlice';
+import { patients as mockPatients } from '@/mockdata/patients';
+import { format } from 'date-fns';
 
 ChartJS.register(
   CategoryScale,
@@ -279,6 +287,7 @@ export default function DoctorDashboard() {
   const { t } = useTranslation();
   const { currentTheme } = useTheme();
   const dispatch = useAppDispatch();
+  const router = useRouter();
   
   const { patients, loading: patientsLoading, error: patientsError } = useAppSelector(
     (state) => state.doctorPatients
@@ -315,54 +324,27 @@ export default function DoctorDashboard() {
   const [chartKey, setChartKey] = useState(0);
 
   const [calendarLoading, setCalendarLoading] = useState(false);
-  const [calendarAppointments, setCalendarAppointments] = useState([]);
-  const appointmentsCache = useRef({});
 
   useEffect(() => {
     let isMounted = true;
-    const dateString = selectedDate.toISOString().split('T')[0];
-
-    if (appointmentsCache.current[dateString]) {
-      setCalendarAppointments(
-        Array.isArray(appointmentsCache.current[dateString])
-          ? appointmentsCache.current[dateString]
-          : appointmentsCache.current[dateString]
-            ? [appointmentsCache.current[dateString]]
-            : []
-      );
-      setCalendarLoading(false);
-      return;
-    }
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
 
     setCalendarLoading(true);
     dispatch(fetchAppointmentsByDate(dateString)).then((action) => {
       if (isMounted) {
-        const state = typeof window !== 'undefined' ? window.__NEXT_REDUX_WRAPPER_STORE__?.getState?.() : null;
-        let appointmentsForDate = null;
-        if (state && state.dashboardAnalytics && state.dashboardAnalytics.appointmentsByDate) {
-          appointmentsForDate = state.dashboardAnalytics.appointmentsByDate[dateString];
-        }
-        if (!appointmentsForDate && action && action.payload) {
-          appointmentsForDate = action.payload;
-        }
-        const arr = Array.isArray(appointmentsForDate)
-          ? appointmentsForDate
-          : appointmentsForDate
-            ? [appointmentsForDate]
-            : [];
-        appointmentsCache.current[dateString] = arr;
-        setCalendarAppointments(arr);
         setCalendarLoading(false);
       }
     }).catch(() => {
       if (isMounted) {
-        setCalendarAppointments([]);
         setCalendarLoading(false);
       }
     });
 
     return () => { isMounted = false; };
   }, [selectedDate, dispatch]);
+
+  const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const calendarAppointments = (appointmentsByDate && appointmentsByDate[dateString]) || [];
 
   const chartData = {
     appointments: {
@@ -539,6 +521,108 @@ export default function DoctorDashboard() {
 
   const doctorName = doctors[0]?.user?.firstName || 'Doctor';
 
+  const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
+  const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
+  const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
+
+  // State for appointment form
+  const [appointmentForm, setAppointmentForm] = useState({
+    patientId: '',
+    date: '',
+    time: '',
+    type: 'checkup',
+    reason: '',
+    notes: '',
+    duration: 30,
+    location: '',
+  });
+  const [appointmentFormError, setAppointmentFormError] = useState('');
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
+
+  // State for prescription dialog
+  const [pharmacies, setPharmacies] = useState([]);
+  const [medicines, setMedicines] = useState([]);
+  const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+
+  // Fetch pharmacies and medicines for prescription dialog
+  useEffect(() => {
+    if (addPrescriptionDialogOpen) {
+      setPrescriptionLoading(true);
+      // Replace with actual fetch logic
+      setTimeout(() => {
+        setPharmacies([{ id: '1', name: 'Pharmacy A' }, { id: '2', name: 'Pharmacy B' }]);
+        setMedicines([
+          { name: 'Lisinopril 10mg' },
+          { name: 'Metformin 500mg' },
+          { name: 'Atorvastatin 10mg' },
+        ]);
+        setPrescriptionLoading(false);
+      }, 500);
+    }
+  }, [addPrescriptionDialogOpen]);
+
+  // Appointment form handlers
+  const handleAppointmentFormChange = (e) => {
+    const { name, value } = e.target;
+    setAppointmentForm((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleNewAppointment = async (e) => {
+    e.preventDefault();
+    setAppointmentFormError('');
+    setAppointmentSubmitting(true);
+    // Replace with actual submit logic
+    setTimeout(() => {
+      setAppointmentSubmitting(false);
+      setAddAppointmentDialogOpen(false);
+      setAppointmentForm({
+        patientId: '',
+        date: '',
+        time: '',
+        type: 'checkup',
+        reason: '',
+        notes: '',
+        duration: 30,
+        location: '',
+      });
+    }, 1000);
+  };
+
+  // Add a quick action for starting a new conversation
+  const handleStartConversation = () => {
+    router.push('/doctor/messaging?newChat=1');
+  };
+
+  const quickActions = [
+    {
+      key: 'new-patient',
+      icon: <UserPlus size={28} strokeWidth={2.2} />,
+      label: t('doctor.dashboard.newPatient', 'New Patient'),
+      onClick: () => setAddPatientDialogOpen(true),
+    },
+    {
+      key: 'new-appointment',
+      icon: <CalendarClock size={28} strokeWidth={2.2} />,
+      label: t('doctor.dashboard.newAppointment', 'New Appointment'),
+      onClick: () => setAddAppointmentDialogOpen(true),
+    },
+    {
+      key: 'prescription',
+      icon: <FileText size={28} strokeWidth={2.2} />,
+      label: t('doctor.dashboard.prescription', 'Prescription'),
+      onClick: () => setAddPrescriptionDialogOpen(true),
+    },
+    {
+      key: 'start-conversation',
+      icon: <MessageSquare size={28} strokeWidth={2.2} />,
+      label: 'Start Conversation',
+      onClick: handleStartConversation,
+    },
+  ];
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
   if (patientsLoading || analyticsLoading) {
     return <LoadingSpinner />;
   }
@@ -546,45 +630,6 @@ export default function DoctorDashboard() {
   if (patientsError || analyticsError) {
     return <ErrorMessage message={t('doctor.dashboard.loadError', 'Failed to load dashboard data.')} />;
   }
-
-  const quickActions = [
-    {
-      href: '/doctor/patients/new',
-      icon: <UserPlus size={28} strokeWidth={2.2} />,
-      label: t('doctor.dashboard.newPatient', 'New Patient'),
-      colorVar: 'var(--primary)',
-      bgVar: 'var(--primary-bg)',
-      iconBgVar: 'var(--primary-bg-hover, var(--primary-bg))',
-    },
-    {
-      href: '/doctor/appointments?new=true',
-      icon: <CalendarClock size={28} strokeWidth={2.2} />,
-      label: t('doctor.dashboard.newAppointment', 'New Appointment'),
-      colorVar: 'var(--success)',
-      bgVar: 'var(--success-bg)',
-      iconBgVar: 'var(--success-bg-hover, var(--success-bg))',
-    },
-    {
-      href: '/doctor/prescriptions/new',
-      icon: <FileText size={28} strokeWidth={2.2} />,
-      label: t('doctor.dashboard.prescription', 'Prescription'),
-      colorVar: 'var(--warning)',
-      bgVar: 'var(--warning-bg)',
-      iconBgVar: 'var(--warning-bg-hover, var(--warning-bg))',
-    },
-    {
-      href: '/doctor/messages',
-      icon: <MessageSquare size={28} strokeWidth={2.2} />,
-      label: t('doctor.dashboard.messages', 'Messages'),
-      colorVar: 'var(--danger)',
-      bgVar: 'var(--danger-bg)',
-      iconBgVar: 'var(--danger-bg-hover, var(--danger-bg))',
-    },
-  ];
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
 
   return (
     <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 min-h-screen">
@@ -715,17 +760,16 @@ export default function DoctorDashboard() {
             <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 h-full">
                 {quickActions.map((action) => (
-                  <Link
-                    key={action.href}
-                    href={action.href}
+                  <Button
+                    key={action.key}
+                    onClick={action.onClick}
                     className="group flex flex-row items-center gap-2 sm:gap-3 rounded-2xl p-2 sm:p-3 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl h-full min-h-[80px] sm:min-h-[100px]"
-                    tabIndex={0}
                   >
                     <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl transition-all shadow bg-primary/10 group-hover:bg-primary/20 group-focus:bg-primary/20 text-primary flex-shrink-0">
                       {action.icon}
                     </div>
                     <span className="text-sm sm:text-base font-bold text-card-foreground group-hover:text-primary group-focus:text-primary transition-colors truncate">{action.label}</span>
-                  </Link>
+                  </Button>
                 ))}
               </div>
             </CardContent>
@@ -777,6 +821,88 @@ export default function DoctorDashboard() {
           </Card>
         </div>
       </div>
+      <Dialog open={addPatientDialogOpen} onOpenChange={setAddPatientDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-xl bg-card border border-border">
+          <AddPatientForm onClose={() => setAddPatientDialogOpen(false)} onSuccess={() => setAddPatientDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addAppointmentDialogOpen} onOpenChange={setAddAppointmentDialogOpen}>
+        <DialogContent className="max-w-lg w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>New Appointment</DialogTitle>
+            <DialogDescription>Fill in the details to create a new appointment.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleNewAppointment} className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium">Patient</label>
+              <select
+                name="patientId"
+                value={appointmentForm.patientId}
+                onChange={handleAppointmentFormChange}
+                className="w-full border rounded p-2"
+                required
+              >
+                <option key="select" value="">Select patient</option>
+                {patients.map((p) => (
+                  <option key={p.patientId || p._id} value={p._id}>
+                    {p.user ? `${p.user.firstName} ${p.user.lastName}` : `${p.firstName} ${p.lastName}`} ({p.patientId})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block mb-1 font-medium">Date</label>
+                <input type="date" name="date" value={appointmentForm.date} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" required />
+              </div>
+              <div className="flex-1">
+                <label className="block mb-1 font-medium">Time</label>
+                <input type="time" name="time" value={appointmentForm.time} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" required />
+              </div>
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Type</label>
+              <select name="type" value={appointmentForm.type} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" required>
+                <option key="checkup" value="checkup">Checkup</option>
+                <option key="consultation" value="consultation">Consultation</option>
+                <option key="follow-up" value="follow-up">Follow-up</option>
+                <option key="emergency" value="emergency">Emergency</option>
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Reason</label>
+              <input type="text" name="reason" value={appointmentForm.reason} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" required />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Notes</label>
+              <textarea name="notes" value={appointmentForm.notes} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" rows={2} />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block mb-1 font-medium">Duration (minutes)</label>
+                <input type="number" name="duration" value={appointmentForm.duration} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" min={1} />
+              </div>
+              <div className="flex-1">
+                <label className="block mb-1 font-medium">Location</label>
+                <input type="text" name="location" value={appointmentForm.location} onChange={handleAppointmentFormChange} className="w-full border rounded p-2" />
+              </div>
+            </div>
+            {appointmentFormError && <div className="text-red-600 text-sm">{appointmentFormError}</div>}
+            <Button type="button" variant="outline" className="w-full mt-2" onClick={() => setAddAppointmentDialogOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="default" className="w-full" disabled={appointmentSubmitting}>
+              {appointmentSubmitting ? 'Creating...' : 'Create Appointment'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <NewRequestDialog
+        open={addPrescriptionDialogOpen}
+        onClose={() => setAddPrescriptionDialogOpen(false)}
+        pharmacies={pharmacies}
+        medicines={medicines}
+        isCreating={prescriptionLoading}
+        requirePharmacy
+      />
       <style jsx global>{`
         .modern-calendar {
           border-radius: 1.25rem;

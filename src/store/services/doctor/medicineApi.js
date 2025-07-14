@@ -29,10 +29,29 @@ export const medicineApi = createApi({
       }),
       invalidatesTags: ['MedicineRequest'],
     }),
+    deleteRequest: builder.mutation({
+      query: (id) => ({
+        url: `medicine-requests/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['MedicineRequest'],
+    }),
+    respondToRequest: builder.mutation({
+      query: ({ id, available, message }) => ({
+        url: `medicine-requests/${id}/respond`,
+        method: 'PATCH',
+        body: { available, message },
+      }),
+      invalidatesTags: ['MedicineRequest'],
+    }),
+    getPharmacyRequests: builder.query({
+      query: () => 'medicine-requests/pharmacy',
+      providesTags: ['MedicineRequest'],
+    }),
   }),
 });
 
-export const { useGetRequestsQuery, useCreateRequestMutation } = medicineApi;
+export const { useGetRequestsQuery, useCreateRequestMutation, useDeleteRequestMutation, useRespondToRequestMutation, useGetPharmacyRequestsQuery } = medicineApi;
 
 export const getMedicines = async () => {
   const res = await axiosInstance.get('/medicines');

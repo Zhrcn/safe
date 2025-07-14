@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { getPatients } from '@/store/services/doctor/patientsApi';
 import { getNonDoctorUsers } from '@/store/services/user/userApi';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'next/navigation';
 
 function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelectedUser, subject, setSubject, loading, error }) {
   const { t } = useTranslation('common');
@@ -71,6 +72,7 @@ function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelecte
 
 export default function DoctorMessagingPage() {
   const { t } = useTranslation('common');
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [mobileView, setMobileView] = useState(false);
@@ -127,6 +129,12 @@ export default function DoctorMessagingPage() {
       .catch(err => setUsersError(err.message || t('failedToFetchUsers')))
       .finally(() => setUsersLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (searchParams && searchParams.get('newChat') === '1') {
+      setShowNewChat(true);
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const value = e && e.target ? e.target.value : e;
