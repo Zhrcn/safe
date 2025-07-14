@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { cn } from '@/utils/styles';
+import { cn } from '@/lib/utils';
 const Card = React.forwardRef(({
     className,
     variant = 'default',

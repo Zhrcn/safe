@@ -33,7 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { NotificationProvider, useNotification } from '@/components/ui/Notification';
+import { NotificationProvider } from '@/components/ui/Notification';
 
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -43,17 +43,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchProviders as fetchDoctors } from '@/store/slices/patient/providersSlice';
 import { fetchPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
 import { selectPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
-
-// Example: How to get pharmacist data for the pharmacies tab using Redux selector
-//
-// import { useSelector } from 'react-redux';
-// import { selectPharmacies } from '@/store/slices/patient/patientPharmacistSlice';
-//
-// const pharmacies = useSelector(selectPharmacies);
-//
-// Now `pharmacies` contains the list of pharmacist/pharmacy data for the pharmacies tab.
-//
-// You can use this in any React component to access the pharmacy data.
 
 const ProviderCardSkeleton = () => (
     <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-0 bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 animate-pulse">
@@ -108,26 +97,29 @@ const pepImages = [
   '/img/pep/asdasdjpg.jpg',
 ];
 
-const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
+const ProviderCard = ({ provider, type, onOpenDialog, t, index = 0 }) => {
+    if (!provider) {
+        return null;
+    }
+    
     const isDoctor = type === 'doctor';
     const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
-    // Load favorite state from localStorage on component mount
     useEffect(() => {
+        if (!provider) return;
         const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
         setIsFavorite(favorites.includes(provider.id || provider._id));
-    }, [provider.id, provider._id]);
+    }, [provider?.id, provider?._id]);
 
     const toggleFavorite = () => {
+        if (!provider) return;
+        
         const newFavoriteState = !isFavorite;
         setIsFavorite(newFavoriteState);
-        
-        // Update localStorage
         const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
         const providerId = provider.id || provider._id;
-        
         if (newFavoriteState) {
             if (!favorites.includes(providerId)) {
                 favorites.push(providerId);
@@ -138,11 +130,14 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
                 favorites.splice(index, 1);
             }
         }
-        
         localStorage.setItem('providerFavorites', JSON.stringify(favorites));
     };
 
     const getAvailabilityStatus = () => {
+        if (!provider) {
+            return { status: 'unknown', text: t('contactForHours'), color: 'text-muted-foreground' };
+        }
+        
         if (isDoctor) {
             return { status: 'available', text: t('availableForConsultations'), color: 'text-green-600 dark:text-green-400' };
         }
@@ -150,7 +145,6 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
             const now = new Date();
             const day = now.toLocaleDateString('en-US', { weekday: 'short' });
             const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            
             if (provider.availability[day]) {
                 const [open, close] = provider.availability[day];
                 const isOpen = time >= open && time <= close;
@@ -400,7 +394,6 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index }) => {
 
 const ProvidersPageContent = () => {
     const router = useRouter();
-    const { addNotification } = useNotification();
     const { t, i18n } = useTranslation('common');
     const isRtl = i18n.language === 'ar';
 
@@ -475,11 +468,7 @@ const ProvidersPageContent = () => {
     };
 
     const handleSendMessage = () => {
-        addNotification({
-            title: t('messageSent') || 'Message Sent!',
-            description: t('yourMessageTo', { name: dialogProvider.name }) || `Your message to ${dialogProvider.name} has been sent.`, 
-            type: 'success'
-        });
+        // Message sent notification would go here
         handleCloseDialog();
     };
 
@@ -549,21 +538,15 @@ const ProvidersPageContent = () => {
             );
         }
 
-        // Get favorites from localStorage
         const favorites = JSON.parse(localStorage.getItem('providerFavorites') || '[]');
         
-        // Sort providers: favorites first, then by the selected criteria
         filteredProviders.sort((a, b) => {
             const aId = a.id || a._id;
             const bId = b.id || b._id;
             const aIsFavorite = favorites.includes(aId);
             const bIsFavorite = favorites.includes(bId);
-            
-            // If one is favorite and the other isn't, favorite comes first
             if (aIsFavorite && !bIsFavorite) return -1;
             if (!aIsFavorite && bIsFavorite) return 1;
-            
-            // If both have the same favorite status, sort by the selected criteria
             let compareA, compareB;
             if (sortBy === 'name') {
                 compareA = a.name.toLowerCase();
@@ -577,7 +560,6 @@ const ProvidersPageContent = () => {
             } else {
                 return 0; 
             }
-
             if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1;
             if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1;
             return 0;
@@ -595,16 +577,19 @@ const ProvidersPageContent = () => {
 
         return filteredProviders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                {filteredProviders.map((provider, index) => (
-                    <ProviderCard 
-                        key={provider.id} 
-                        provider={provider} 
-                        type={activeTab === 'doctors' ? 'doctor' : 'pharmacy'} 
-                        onOpenDialog={handleOpenDialog}
-                        t={t}
-                        index={index}
-                    />
-                ))}
+                {filteredProviders.map((provider, index) => {
+                    if (!provider) return null;
+                    return (
+                        <ProviderCard 
+                            key={provider.id || provider._id || index} 
+                            provider={provider} 
+                            type={activeTab === 'doctors' ? 'doctor' : 'pharmacy'} 
+                            onOpenDialog={handleOpenDialog}
+                            t={t}
+                            index={index}
+                        />
+                    );
+                })}
             </div>
         ) : (
             renderEmptyState(activeTab)
@@ -924,4 +909,3 @@ export function PharmaciesListExample() {
     </div>
   );
 }
-// --- End example --- 

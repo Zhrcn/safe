@@ -8,11 +8,9 @@ import {
 import { Button } from '@/components/ui/Button';
 
 const Medications = ({ patient }) => {
-    // Handle different data structures - medications can come from patient.medications or patient.medicalFile.medicationHistory
     const patientMedications = patient?.medications || [];
-    const medicalFileMedications = patient?.medicalFile?.medicationHistory || [];
+    const medicalFileMedications = patient?.medicalRecord?.medications || [];
     
-    // Combine both sources and remove duplicates
     const allMedications = [...patientMedications, ...medicalFileMedications];
     const uniqueMedications = allMedications.filter((med, index, self) => 
         index === self.findIndex(m => m.name === med.name && m.dosage === med.dosage)

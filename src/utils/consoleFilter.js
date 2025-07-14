@@ -39,7 +39,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   console.error = (...args) => {
     const message = args[0];
     
-    // Filter out specific errors
     if (
       typeof message === 'string' && (
         message.includes('Source map error') ||
@@ -60,7 +59,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   console.warn = (...args) => {
     const message = args[0];
     
-    // Filter out specific warnings
     if (
       typeof message === 'string' && (
         message.includes('i18next::translator: accessing an object - but returnObjects options is not enabled') ||

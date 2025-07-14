@@ -3,6 +3,7 @@ const ApiResponse = require('../../utils/apiResponse');
 const Appointment = require('../../models/Appointment');
 const Doctor = require('../../models/Doctor');
 const { createNotification } = require('../../utils/notification.utils');
+const Patient = require('../../models/Patient');
 
 exports.getDoctorAppointments = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -22,7 +23,7 @@ exports.getDoctorAppointments = asyncHandler(async (req, res) => {
       path: 'patient',
       populate: {
         path: 'user',
-        select: 'firstName lastName email profilePictureUrl'
+        select: 'firstName lastName email profileImage'
       }
     })
     .populate({
@@ -198,7 +199,6 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
   if (type) updateData.type = type;
   if (status) updateData.status = status;
 
-  // If date or time is being updated, set status to rescheduled (unless explicitly provided)
   if ((date || time) && !status) {
     updateData.status = 'rescheduled';
   }
@@ -230,7 +230,7 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
 exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { appointmentId } = req.params;
-  const { action, newDate, newTime, doctorNotes } = req.body; // action: 'approve' or 'reject'
+  const { action, newDate, newTime, doctorNotes } = req.body;
 
   if (!action || !['approve', 'reject'].includes(action)) {
     return res.status(400).json(new ApiResponse(400, null, 'Action must be either "approve" or "reject".'));
@@ -246,13 +246,11 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
   }
 
-  // Check if appointment has a reschedule request
   if (appointment.status !== 'reschedule_requested') {
     return res.status(400).json(new ApiResponse(400, null, 'No reschedule request found for this appointment.'));
   }
 
   if (action === 'approve') {
-    // Validate new date and time if provided
     if (newDate && newTime) {
       const [hours, minutes] = newTime.split(':').map(Number);
       let newDateObject = new Date(newDate);
@@ -264,7 +262,6 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
         return res.status(400).json(new ApiResponse(400, null, 'Invalid new time format.'));
       }
 
-      // Check for conflicts
       const conflictingAppointment = await Appointment.findOne({
         doctor: doctor._id,
         date: newDateObject,
@@ -277,11 +274,9 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
         return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the new date and time.'));
       }
 
-      // Update appointment with new date/time
       appointment.date = newDateObject;
       appointment.time = newTime;
     } else {
-      // Use the requested date/time from the reschedule request
       appointment.date = appointment.rescheduleRequest.requestedDate;
       appointment.time = appointment.rescheduleRequest.requestedTime;
     }
@@ -289,7 +284,6 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
     appointment.status = 'rescheduled';
     appointment.doctorNotes = doctorNotes || appointment.doctorNotes;
     
-    // Clear reschedule request
     appointment.rescheduleRequest = undefined;
   } else {
     appointment.status = appointment.rescheduleRequest.requestedDate ? 'scheduled' : 'accepted';
@@ -351,6 +345,68 @@ exports.getAppointmentDetails = asyncHandler(async (req, res) => {
   appointmentData.canBeModified = appointment.canBeModified();
 
   res.status(200).json(new ApiResponse(200, appointmentData, 'Appointment details fetched successfully.'));
+});
+
+exports.createAppointment = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const {
+    patient, // MongoDB ObjectId
+    patientId, // business id
+    date,
+    time,
+    type,
+    reason,
+    notes,
+    duration,
+    location,
+    status // should be 'accepted'
+  } = req.body;
+
+  // Find the doctor by user id
+  const doctor = await Doctor.findOne({ user: userId });
+  if (!doctor) {
+    return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+  }
+
+  // Find the patient by ObjectId or business id
+  let patientDoc;
+  if (patient) {
+    patientDoc = await Patient.findById(patient);
+  } else if (patientId) {
+    patientDoc = await Patient.findOne({ patientId });
+  }
+  if (!patientDoc) {
+    return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+  }
+
+  // Create the appointment
+  const appointment = await Appointment.create({
+    doctor: doctor._id,
+    patient: patientDoc._id,
+    date: new Date(date),
+    time,
+    type,
+    reason,
+    notes,
+    duration,
+    location,
+    status: status || 'accepted'
+  });
+
+  // Optionally, populate doctor and patient info for the response
+  await appointment.populate([
+    {
+      path: 'patient',
+      populate: { path: 'user', select: 'firstName lastName email profileImage' }
+    },
+    {
+      path: 'doctor',
+      select: 'user specialty',
+      populate: { path: 'user', select: 'firstName lastName' }
+    }
+  ]);
+
+  res.status(201).json(new ApiResponse(201, appointment, 'Appointment created successfully.'));
 });
 
  

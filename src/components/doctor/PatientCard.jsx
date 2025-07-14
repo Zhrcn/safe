@@ -97,9 +97,26 @@ export default function PatientCard({ patient }) {
             .toUpperCase();
     };
 
+    const handleCardClick = (e) => {
+        if (
+            e.target.closest('button') ||
+            e.target.closest('[role="menu"]') ||
+            e.target.closest('.no-card-click')
+        ) {
+            return;
+        }
+        handleViewPatient();
+    };
+
     return (
         <>
-            <div className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col relative min-w-[300px] min-h-[220px] max-w-full">
+            <div
+                className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col relative min-w-[300px] min-h-[220px] max-w-full cursor-pointer hover:bg-muted/30"
+                onClick={handleCardClick}
+                tabIndex={0}
+                role="button"
+                aria-label={`Open profile for ${getPatientName()}`}
+            >
                 <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold">
                         {getInitials(patient)}
@@ -124,7 +141,8 @@ export default function PatientCard({ patient }) {
                         variant="ghost"
                         aria-label="Open menu"
                         onClick={handleMenuOpen}
-                        className="ml-2 p-2 rounded-full text-muted-foreground hover:bg-muted"
+                        className="ml-2 p-2 rounded-full text-muted-foreground hover:bg-muted no-card-click"
+                        tabIndex={-1}
                     >
                         <MoreVertical className="h-5 w-5" />
                     </Button>
@@ -150,8 +168,8 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="default"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
-                        onClick={handleViewPatient}
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        onClick={e => { e.stopPropagation(); handleViewPatient(); }}
                     >
                         <Eye className="h-4 w-4 mr-1" /> View
                     </Button>
@@ -159,8 +177,8 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
-                        onClick={() => handleOpenDialog('condition')}
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        onClick={e => { e.stopPropagation(); handleOpenDialog('condition'); }}
                     >
                         <Activity className="h-4 w-4 mr-1" /> Update
                     </Button>
@@ -168,8 +186,8 @@ export default function PatientCard({ patient }) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium"
-                        onClick={() => handleOpenDialog('prescription')}
+                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        onClick={e => { e.stopPropagation(); handleOpenDialog('prescription'); }}
                     >
                         <FileText className="h-4 w-4 mr-1" /> Prescribe
                     </Button>

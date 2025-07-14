@@ -87,7 +87,6 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
   return (
     <Card className="flex flex-col shadow-sm border border-border rounded-2xl hover:shadow-lg transition-all duration-200 w-full h-full min-h-[220px]">
       <CardContent className="p-4 flex flex-col gap-3 h-full text-sm">
-        {/* Doctor Info */}
         <div className="flex items-center gap-3 mb-1">
           <Avatar className="h-10 w-10">
             <AvatarImage src={consultation.doctorAvatar || '/images/default-avatar.png'} />
@@ -106,12 +105,10 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
             {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
           </Badge>
         </div>
-        {/* Type Section */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
           <TypeIconComponent className="h-4 w-4" />
           <span className="font-medium">{getTypeLabel(consultation.type)} Consultation</span>
         </div>
-        {/* Question Section */}
         <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
           <div className="flex items-center gap-1 mb-0.5">
             <Info className="h-3 w-3 text-primary" />
@@ -119,7 +116,6 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
           </div>
           <div className="text-muted-foreground text-xs">{consultation.question || 'No question provided.'}</div>
         </div>
-        {/* Answer Section */}
         <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
           <div className="flex items-center gap-1 mb-0.5">
             <Check className="h-3 w-3 text-success" />
@@ -127,7 +123,6 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
           </div>
           <div className="text-muted-foreground text-xs">{consultation.answer || <span className="italic text-warning">No answer yet.</span>}</div>
         </div>
-        {/* Last Message/Time/Attachments can be shown below if desired */}
         <div className="flex gap-2 mt-1">
           <Button
             className="flex-1 text-xs py-2"
@@ -330,7 +325,6 @@ const ConsultationsPageContent = () => {
           },
         ]}
       />
-      {/* Show alert if present */}
       {alert && (
         <div className="w-full px-4">
           <Alert>
@@ -385,7 +379,6 @@ const ConsultationsPageContent = () => {
           </div>
         )}
       </div>
-      {/* Modal for viewing consultation Q&A */}
       <Dialog
         open={!!selectedConsultation}
         onOpenChange={(open) => !open && setSelectedConsultation(null)}
@@ -396,7 +389,6 @@ const ConsultationsPageContent = () => {
           </DialogHeader>
           {selectedConsultation && (
             <div className="flex flex-col gap-6">
-              {/* Doctor Info */}
               <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
                 <Avatar className="h-14 w-14">
                   <AvatarImage
@@ -426,7 +418,6 @@ const ConsultationsPageContent = () => {
                   )}
                 </div>
               </div>
-              {/* Question Section */}
               <div className="p-4 rounded-xl bg-muted/40 border border-border flex flex-col gap-2">
                 <div className="flex items-center gap-2 mb-1">
                   <Info className="h-5 w-5 text-primary" />
@@ -438,7 +429,6 @@ const ConsultationsPageContent = () => {
                   {selectedConsultation.question || "No question provided."}
                 </div>
               </div>
-              {/* Answer Section */}
               <div className="p-4 rounded-xl bg-muted/40 border border-border flex flex-col gap-2">
                 <div className="flex items-center gap-2 mb-1">
                   <Check className="h-5 w-5 text-success" />
@@ -492,7 +482,7 @@ const ConsultationsPageContent = () => {
                   onChange={(e) => setSelectedDoctor(e.target.value)}
                   required
                 >
-                  <option value="">Select a doctor</option>
+                  <option key="" value="">Select a doctor</option>
                   {filteredDoctors.map((doc) => (
                     <option
                       key={doc.user?._id || doc._id || doc.id}
@@ -539,7 +529,6 @@ const ConsultationsPageContent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Delete confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-md w-full">
           <DialogHeader>
@@ -564,7 +553,6 @@ const ConsultationsPageContent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Continue Chat Dialog */}
       <Dialog open={continueChatDialogOpen} onOpenChange={setContinueChatDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -572,7 +560,6 @@ const ConsultationsPageContent = () => {
           </DialogHeader>
           {continueChatConsultation && (
             <div className="flex flex-col gap-4 py-2">
-              {/* Doctor Info */}
               <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={continueChatConsultation.doctorAvatar || '/images/default-avatar.png'} />
@@ -589,8 +576,6 @@ const ConsultationsPageContent = () => {
                   )}
                 </div>
               </div>
-              
-              {/* Previous Question */}
               <div className="p-3 rounded-lg bg-muted/40 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <Info className="h-4 w-4 text-primary" />
@@ -598,8 +583,6 @@ const ConsultationsPageContent = () => {
                 </div>
                 <div className="text-muted-foreground text-sm">{continueChatConsultation.question}</div>
               </div>
-              
-              {/* Previous Answer */}
               {continueChatConsultation.answer && (
                 <div className="p-3 rounded-lg bg-muted/40 border border-border">
                   <div className="flex items-center gap-2 mb-2">
@@ -609,8 +592,6 @@ const ConsultationsPageContent = () => {
                   <div className="text-muted-foreground text-sm">{continueChatConsultation.answer}</div>
                 </div>
               )}
-              
-              {/* New Question */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="newQuestion" className="text-sm font-medium">
                   Your New Question

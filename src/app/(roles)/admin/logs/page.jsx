@@ -14,7 +14,6 @@ export default function AdminLogsPage() {
       setLoading(true);
       try {
         const data = await getActivityLogs();
-        // Map backend log fields to expected frontend fields
         const mappedLogs = (data || []).map(log => ({
           id: log._id || log.id,
           timestamp: log.timestamp || log.createdAt,

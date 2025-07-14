@@ -3,8 +3,8 @@ import { useRouter } from 'next/navigation';
 import {
     useLoginMutation,
     useLogoutMutation,
-    useVerifyTokenQuery
-} from '@/store/services/user/authApi';
+    useGetCurrentUserQuery
+} from '@/store/api/authApi';
 import {
     selectCurrentUser,
     selectIsAuthenticated,
@@ -30,7 +30,7 @@ export const useAuth = () => {
 
     const [loginMutation] = useLoginMutation();
     const [logoutMutation] = useLogoutMutation();
-    const { refetch: verifyToken } = useVerifyTokenQuery(undefined, {
+    const { refetch: verifyToken } = useGetCurrentUserQuery(undefined, {
         skip: !token
     });
 

@@ -230,10 +230,8 @@ patientSchema.methods.getUpcomingReminders = async function() {
 patientSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
   
-  // Generate patient ID if not already set
   if (!this.patientId) {
     try {
-      // Get user's birth date from the user document
       const User = mongoose.model('User');
       const user = await User.findById(this.user);
       
@@ -241,7 +239,6 @@ patientSchema.pre('save', async function(next) {
         return next(new Error('User not found'));
       }
       
-      // Use user's dateOfBirth if available, otherwise fallback to current date
       const birthDate = user.dateOfBirth || new Date();
       this.patientId = await generatePatientId(birthDate);
     } catch (error) {

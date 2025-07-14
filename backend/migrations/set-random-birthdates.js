@@ -5,7 +5,7 @@ require('dotenv').config({ path: './config/config.env' });
 function getRandomDate(startYear = 1950, endYear = 2010) {
   const year = Math.floor(Math.random() * (endYear - startYear + 1)) + startYear;
   const month = Math.floor(Math.random() * 12);
-  const day = Math.floor(Math.random() * 28) + 1; // Always valid
+  const day = Math.floor(Math.random() * 28) + 1;
   return new Date(year, month, day);
 }
 

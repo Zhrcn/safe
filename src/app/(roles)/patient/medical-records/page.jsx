@@ -128,7 +128,6 @@ const MedicalRecordsPage = () => {
     }, [dispatch]);
     const { medicalRecords, loading: isLoading, error } = useSelector(state => state.medicalRecords);
     const { medicalRecords: patientMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError } = useSelector(state => state.medicalRecord);
-    // Defensive: always use an array
     const safeMedicalRecords = Array.isArray(medicalRecords) ? medicalRecords : [];
 
     const handleViewRecord = (record) => {
@@ -232,7 +231,7 @@ const MedicalRecordsPage = () => {
                     <TabsTrigger value="medications"><span>{t('patient.profile.medications', 'Medications')}</span></TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
-                    <MedicalFileTabs medicalFile={patientMedicalRecords} loading={medicalRecordLoading} error={medicalRecordError} activeTab={activeTab} />
+                    <MedicalFileTabs medicalRecord={patientMedicalRecords} loading={medicalRecordLoading} error={medicalRecordError} activeTab={activeTab} />
                 </TabsContent>
             </Tabs>
         </div>

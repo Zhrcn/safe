@@ -13,7 +13,6 @@ const arData = JSON.parse(fs.readFileSync(arPath, 'utf8'));
 if (!enData.doctor) enData.doctor = {};
 if (!enData.doctor.dashboard) enData.doctor.dashboard = {};
 if (!('followUp' in enData.doctor.dashboard)) {
-  // Use Arabic translation as placeholder
   enData.doctor.dashboard.followUp = arData.doctor?.dashboard?.followUp || 'Follow-up';
   fs.writeFileSync(enPath, JSON.stringify(enData, null, 2), 'utf8');
   console.log('Added missing key: doctor.dashboard.followUp');

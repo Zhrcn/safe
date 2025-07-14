@@ -205,10 +205,10 @@ export default function AddPatientForm({ onClose, onSuccess }) {
                                         disabled={isSubmitting}
                                         className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md ${errors.gender ? 'border-red-500' : ''}`}
                                     >
-                                        <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
+                                        <option key="" value="">Select Gender</option>
+                                        <option key="Male" value="Male">Male</option>
+                                        <option key="Female" value="Female">Female</option>
+                                        <option key="Other" value="Other">Other</option>
                                     </select>
                                 )}
                             />

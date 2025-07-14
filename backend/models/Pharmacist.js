@@ -60,10 +60,8 @@ const pharmacistSchema = new mongoose.Schema({
 pharmacistSchema.index({ pharmacistId: 1 });
 
 pharmacistSchema.pre('save', async function(next) {
-  // Generate pharmacist ID if not already set
   if (!this.pharmacistId) {
     try {
-      // Get user's birth date from the user document
       const User = mongoose.model('User');
       const user = await User.findById(this.user);
       
@@ -71,7 +69,6 @@ pharmacistSchema.pre('save', async function(next) {
         return next(new Error('User not found'));
       }
       
-      // Use user's dateOfBirth if available, otherwise fallback to current date
       const birthDate = user.dateOfBirth || new Date();
       this.pharmacistId = await generatePharmacistId(birthDate);
     } catch (error) {

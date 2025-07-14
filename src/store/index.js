@@ -4,6 +4,7 @@ import { api } from './services/api';
 import { authApi } from './api/authApi';
 import { medicineApi } from './services/doctor/medicineApi';
 import authReducer, { clearCache } from './slices/auth/authSlice';
+import userReducer from './slices/user/userSlice';
 import doctorProfileReducer from './slices/doctor/doctorProfileSlice';
 import doctorScheduleReducer from './slices/doctor/doctorScheduleSlice';
 import doctorPatientsReducer from './slices/doctor/doctorPatientsSlice';
@@ -33,6 +34,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [medicineApi.reducerPath]: medicineApi.reducer,
     auth: authReducer,
+    user: userReducer,
     doctorProfile: doctorProfileReducer,
     doctorSchedule: doctorScheduleReducer,
     doctorPatients: doctorPatientsReducer,

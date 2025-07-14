@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, Clock, MapPin, Search, Video, Phone, User, Loader2, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import AppointmentManagementCard from '@/components/doctor/AppointmentManagementCard';
@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/Select';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchDoctorAppointments } from '@/store/slices/doctor/doctorAppointmentsSlice';
+import { fetchDoctorAppointments, createAppointment } from '@/store/slices/doctor/doctorAppointmentsSlice';
+import { fetchPatients, fetchPatientById } from '@/store/slices/doctor/doctorPatientsSlice';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '@/components/ui/Dialog';
 
 function getStatusColor(status) {
     switch (status?.toLowerCase()) {
@@ -53,7 +54,6 @@ function formatDateTime(date, time) {
         const dateObj = new Date(date);
         const placeholderDate = new Date('1111-01-01');
         
-        // If date is a placeholder (like 1/1/1111), show as TBD
         if (dateObj.getTime() === placeholderDate.getTime() || isNaN(dateObj.getTime())) {
             return {
                 date: 'TBD',
@@ -88,7 +88,6 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
 
     return (
         <div className="bg-white border border-border rounded-lg p-4 space-y-3">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-muted-foreground" />
@@ -98,8 +97,6 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
                     {status}
                 </span>
             </div>
-
-            {/* Date & Time */}
             <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -110,8 +107,6 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
                     <span>{time}</span>
                 </div>
             </div>
-
-            {/* Type & Reason */}
             <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm">
                     {getTypeIcon(type)}
@@ -123,8 +118,6 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
                     </div>
                 )}
             </div>
-
-            {/* Actions */}
             <div className="flex flex-col xs:flex-row md:flex-row lg:flex-col xl:flex-row flex-wrap gap-2 pt-2 border-t border-border">
                 {appointment.status === 'pending' && (
                     <>
@@ -356,11 +349,11 @@ const AppointmentDetailsDialog = ({ open, onOpenChange, appointment, dialogMode,
         ? `${appointment.doctor.user?.firstName || appointment.doctor.firstName || ''} ${appointment.doctor.user?.lastName || appointment.doctor.lastName || ''}`.trim()
         : t('doctor.appointments.unknownDoctor', 'Unknown Doctor');
 
-    // Limit dialog height and make content scrollable if needed
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 className="max-w-lg w-[95vw] sm:w-full p-0 mx-2"
+                aria-describedby="appointment-details-desc"
                 style={{
                     maxHeight: '90vh',
                     display: 'flex',
@@ -371,6 +364,9 @@ const AppointmentDetailsDialog = ({ open, onOpenChange, appointment, dialogMode,
                     <DialogTitle className="text-lg sm:text-xl">
                         {t('doctor.appointments.details', 'Appointment Details')}
                     </DialogTitle>
+                    <DialogDescription id="appointment-details-desc">
+                        {t('doctor.appointments.detailsDescription', 'Detailed information about the selected appointment.')}
+                    </DialogDescription>
                 </DialogHeader>
                 <div
                     className="overflow-y-auto px-4 sm:px-6 pb-2"
@@ -455,6 +451,7 @@ const AppointmentDetailsDialog = ({ open, onOpenChange, appointment, dialogMode,
 const AppointmentsPage = () => {
     const { t } = useTranslation();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
 
     const { appointments, loading, error } = useAppSelector(
@@ -470,10 +467,35 @@ const AppointmentsPage = () => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [dialogMode, setDialogMode] = useState(null);
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+    const [newDialogOpen, setNewDialogOpen] = useState(false);
+    const [form, setForm] = useState({
+        patientId: '',
+        date: '',
+        time: '',
+        type: 'checkup',
+        reason: '',
+        notes: '',
+        duration: 30,
+        location: '',
+    });
+    const [formError, setFormError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const { patients, loading: patientsLoading } = useAppSelector((state) => state.doctorPatients);
 
     useEffect(() => {
         dispatch(fetchDoctorAppointments());
+        dispatch(fetchPatients());
     }, [dispatch]);
+
+    useEffect(() => {
+        const shouldOpenNewDialog = searchParams.get('new') === 'true';
+        if (shouldOpenNewDialog) {
+            setNewDialogOpen(true);
+            const url = new URL(window.location);
+            url.searchParams.delete('new');
+            window.history.replaceState({}, '', url);
+        }
+    }, [searchParams]);
 
     const filteredAppointments = appointments.filter(appointment => {
         const patientName = appointment.patient
@@ -511,6 +533,62 @@ const AppointmentsPage = () => {
         setSelectedAppointment(null);
     };
 
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handlePatientIdSearch = async () => {
+        const patient = patients.find((p) => p.patientId === form.patientId);
+        if (patient) {
+            setForm((prev) => ({ ...prev, patientId: patient._id }));
+            await dispatch(fetchPatientById(patient._id));
+        } else {
+            setFormError('No patient found with that ID');
+        }
+    };
+
+    const handleNewAppointment = async (e) => {
+        e.preventDefault();
+        console.log('[Appointment Form] handleNewAppointment called');
+        setFormError('');
+        setSubmitting(true);
+        try {
+            if (!form.patientId || !form.date || !form.time || !form.type || !form.reason) {
+                setFormError('Please fill all required fields.');
+                setSubmitting(false);
+                return;
+            }
+            const appointmentData = {
+                patient: form.patientId,
+                date: form.date,
+                time: form.time,
+                type: form.type,
+                reason: form.reason,
+                notes: form.notes,
+                duration: form.duration,
+                location: form.location,
+                status: 'accepted',
+            };
+            console.log('[Appointment Form] Submitting:', appointmentData);
+            const resultAction = await dispatch(createAppointment(appointmentData));
+            if (createAppointment.fulfilled.match(resultAction)) {
+                console.log('[Appointment Form] Success:', resultAction.payload);
+                setNewDialogOpen(false);
+                setForm({ patientId: '', date: '', time: '', type: 'checkup', reason: '', notes: '', duration: 30, location: '' });
+                dispatch(fetchDoctorAppointments());
+            } else {
+                console.error('[Appointment Form] Error:', resultAction.payload || resultAction.error);
+                setFormError(resultAction.payload || resultAction.error?.message || 'Failed to create appointment');
+            }
+        } catch (err) {
+            console.error('[Appointment Form] Exception:', err);
+            setFormError(err?.message || 'Failed to create appointment');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto px-4 py-8">
@@ -526,7 +604,6 @@ const AppointmentsPage = () => {
 
     return (
         <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 lg:py-8">
-            {/* Header Card */}
             <Card className="mb-4 sm:mb-6 lg:mb-8 rounded-xl shadow-lg">
                 <CardContent className="p-4 sm:p-6">
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -536,10 +613,8 @@ const AppointmentsPage = () => {
                                 {t('doctor.appointments.subtitle', 'Dr.')} {doctorName}
                             </p>
                         </div>
-                        
-                        {/* Search and Filters */}
+                        <Button variant="default" onClick={() => setNewDialogOpen(true)} className="mt-2 lg:mt-0">+ New Appointment</Button>
                         <div className="w-full lg:w-auto space-y-3 lg:space-y-0 lg:space-x-3 lg:flex lg:items-center">
-                            {/* Search */}
                             <div className="relative w-full lg:w-64">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                 <Input
@@ -550,8 +625,6 @@ const AppointmentsPage = () => {
                                     className="pl-10 pr-4 py-2 rounded-2xl text-sm"
                                 />
                             </div>
-                            
-                            {/* Filters */}
                             <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                                 <div className="w-full sm:w-32 lg:w-36">
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -619,7 +692,6 @@ const AppointmentsPage = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Mobile Card View */}
                             <div className="block lg:hidden">
                                 <div className="space-y-3 p-4">
                                     {filteredAppointments.map((appointment) => (
@@ -633,8 +705,6 @@ const AppointmentsPage = () => {
                                     ))}
                                 </div>
                             </div>
-                            
-                            {/* Desktop Table View */}
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="min-w-full divide-y divide-border">
                                     <thead>
@@ -675,6 +745,93 @@ const AppointmentsPage = () => {
                 onActionComplete={handleActionComplete}
                 t={t}
             />
+
+            <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
+                <DialogContent className="max-w-lg w-[95vw]" aria-describedby="new-appointment-desc">
+                    <DialogHeader>
+                        <DialogTitle>New Appointment</DialogTitle>
+                        <DialogDescription id="new-appointment-desc">
+                            Fill in the details to create a new appointment.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleNewAppointment} className="space-y-4">
+                        <div>
+                            <label className="block mb-1 font-medium">Patient</label>
+                            <select
+                                name="patientId"
+                                value={form.patientId}
+                                onChange={handleFormChange}
+                                className="w-full border rounded p-2"
+                                required
+                            >
+                                <option key="select" value="">Select patient</option>
+                                {patients.map((p) => (
+                                    <option key={p.patientId || p._id} value={p._id}>
+                                        {p.user ? `${p.user.firstName} ${p.user.lastName}` : `${p.firstName} ${p.lastName}`} ({p.patientId})
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="flex gap-2 mt-2">
+                                <input
+                                    type="text"
+                                    name="patientId"
+                                    placeholder="Or enter patient ID"
+                                    value={form.patientId}
+                                    onChange={handleFormChange}
+                                    className="flex-1 border rounded p-2"
+                                />
+                                <Button type="button" variant="outline" onClick={handlePatientIdSearch} disabled={!form.patientId || patientsLoading}>
+                                    Search
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <label className="block mb-1 font-medium">Date</label>
+                                <input type="date" name="date" value={form.date} onChange={handleFormChange} className="w-full border rounded p-2" required />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block mb-1 font-medium">Time</label>
+                                <input type="time" name="time" value={form.time} onChange={handleFormChange} className="w-full border rounded p-2" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block mb-1 font-medium">Type</label>
+                            <select name="type" value={form.type} onChange={handleFormChange} className="w-full border rounded p-2" required>
+                                <option key="checkup" value="checkup">Checkup</option>
+                                <option key="consultation" value="consultation">Consultation</option>
+                                <option key="follow-up" value="follow-up">Follow-up</option>
+                                <option key="emergency" value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block mb-1 font-medium">Reason</label>
+                            <input type="text" name="reason" value={form.reason} onChange={handleFormChange} className="w-full border rounded p-2" required />
+                        </div>
+                        <div>
+                            <label className="block mb-1 font-medium">Notes</label>
+                            <textarea name="notes" value={form.notes} onChange={handleFormChange} className="w-full border rounded p-2" rows={2} />
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <label className="block mb-1 font-medium">Duration (minutes)</label>
+                                <input type="number" name="duration" value={form.duration} onChange={handleFormChange} className="w-full border rounded p-2" min={1} />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block mb-1 font-medium">Location</label>
+                                <input type="text" name="location" value={form.location} onChange={handleFormChange} className="w-full border rounded p-2" />
+                            </div>
+                        </div>
+                        {formError && <div className="text-red-600 text-sm">{formError}</div>}
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline" className="w-full mt-2">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" variant="default" className="w-full" disabled={submitting}>
+                            {submitting ? 'Creating...' : 'Create Appointment'}
+                        </Button>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

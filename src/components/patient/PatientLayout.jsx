@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Separator } from '@/components/ui/Separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getImageUrl } from '@/components/ui/Avatar';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import { logoutUser } from '@/store/slices/auth/authSlice';
@@ -135,7 +135,7 @@ export default function PatientLayout({ children }) {
                 <div className="p-4 border-b">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src={user?.profile?.avatar} />
+                            <AvatarImage src={getImageUrl(user?.profile?.avatar)} />
                             <AvatarFallback className="bg-primary text-primary text-lg">
                                 {user?.name?.[0]}
                             </AvatarFallback>

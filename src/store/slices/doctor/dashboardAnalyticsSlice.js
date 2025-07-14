@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { dashboardApi } from '../../services/doctor/dashboardApi';
 
-// Fetch comprehensive analytics
 export const fetchComprehensiveAnalytics = createAsyncThunk(
   'dashboardAnalytics/fetchComprehensiveAnalytics',
   async (_, { rejectWithValue }) => {
@@ -14,7 +13,6 @@ export const fetchComprehensiveAnalytics = createAsyncThunk(
   }
 );
 
-// Fetch dashboard analytics
 export const fetchDashboardAnalytics = createAsyncThunk(
   'dashboardAnalytics/fetchAnalytics',
   async (_, { rejectWithValue }) => {
@@ -27,7 +25,6 @@ export const fetchDashboardAnalytics = createAsyncThunk(
   }
 );
 
-// Fetch appointments analytics for charts
 export const fetchAppointmentsAnalytics = createAsyncThunk(
   'dashboardAnalytics/fetchAppointmentsAnalytics',
   async (period = 'week', { rejectWithValue }) => {
@@ -40,7 +37,6 @@ export const fetchAppointmentsAnalytics = createAsyncThunk(
   }
 );
 
-// Fetch patient distribution
 export const fetchPatientDistribution = createAsyncThunk(
   'dashboardAnalytics/fetchPatientDistribution',
   async (_, { rejectWithValue }) => {
@@ -53,7 +49,6 @@ export const fetchPatientDistribution = createAsyncThunk(
   }
 );
 
-// Fetch recent appointments
 export const fetchRecentAppointments = createAsyncThunk(
   'dashboardAnalytics/fetchRecentAppointments',
   async (limit = 10, { rejectWithValue }) => {
@@ -66,7 +61,6 @@ export const fetchRecentAppointments = createAsyncThunk(
   }
 );
 
-// Fetch appointments by date
 export const fetchAppointmentsByDate = createAsyncThunk(
   'dashboardAnalytics/fetchAppointmentsByDate',
   async (date, { rejectWithValue }) => {
@@ -80,7 +74,6 @@ export const fetchAppointmentsByDate = createAsyncThunk(
 );
 
 const initialState = {
-  // Comprehensive analytics data
   comprehensiveAnalytics: {
     totalPatients: 0,
     newPatientsThisMonth: 0,
@@ -102,7 +95,6 @@ const initialState = {
     busiestHour: '',
     recentPatients: []
   },
-  // Dashboard analytics data
   analytics: {
     totalPatients: 0,
     totalAppointments: 0,
@@ -138,7 +130,6 @@ const dashboardAnalyticsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Comprehensive Analytics
       .addCase(fetchComprehensiveAnalytics.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -152,7 +143,6 @@ const dashboardAnalyticsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Dashboard Analytics
       .addCase(fetchDashboardAnalytics.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -166,7 +156,6 @@ const dashboardAnalyticsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Appointments Analytics
       .addCase(fetchAppointmentsAnalytics.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -180,7 +169,6 @@ const dashboardAnalyticsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Patient Distribution
       .addCase(fetchPatientDistribution.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -194,7 +182,6 @@ const dashboardAnalyticsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Recent Appointments
       .addCase(fetchRecentAppointments.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -208,7 +195,6 @@ const dashboardAnalyticsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Appointments by Date
       .addCase(fetchAppointmentsByDate.pending, (state) => {
         state.loading = true;
         state.error = null;

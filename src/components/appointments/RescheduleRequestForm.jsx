@@ -68,7 +68,6 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Current Appointment Info */}
             <div className="bg-muted/50 p-4 rounded-lg">
               <h3 className="font-semibold mb-2 text-foreground">
                 {t(
@@ -103,7 +102,6 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               </div>
             </div>
 
-            {/* Reason */}
             <div className="space-y-2">
               <Label htmlFor="reason" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -132,7 +130,6 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               )}
             </div>
 
-            {/* Preferred Times and Additional Notes */}
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -159,7 +156,6 @@ const RescheduleRequestForm = ({ appointment, onSubmit, onCancel, isLoading }) =
               </p>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
               <Button
                 type="button"

@@ -5,13 +5,11 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-// Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 console.log('🚀 Starting SAFE Backend Server...\n');
 
-// Check if backend directory exists
 const backendPath = path.join(__dirname, 'backend');
 if (!fs.existsSync(backendPath)) {
   console.error('❌ Backend directory not found!');
@@ -19,7 +17,6 @@ if (!fs.existsSync(backendPath)) {
   process.exit(1);
 }
 
-// Check if package.json exists in backend
 const packageJsonPath = path.join(backendPath, 'package.json');
 if (!fs.existsSync(packageJsonPath)) {
   console.error('❌ Backend package.json not found!');
@@ -27,7 +24,6 @@ if (!fs.existsSync(packageJsonPath)) {
   process.exit(1);
 }
 
-// Check if node_modules exists
 const nodeModulesPath = path.join(backendPath, 'node_modules');
 if (!fs.existsSync(nodeModulesPath)) {
   console.log('📦 Installing backend dependencies...');
@@ -69,7 +65,6 @@ function startServer() {
     }
   });
   
-  // Handle process termination
   process.on('SIGINT', () => {
     console.log('\n🛑 Stopping server...');
     server.kill('SIGINT');

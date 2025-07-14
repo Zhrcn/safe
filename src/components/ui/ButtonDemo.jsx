@@ -39,7 +39,6 @@ const ButtonDemo = () => {
 
   return (
     <div className="p-8 space-y-8 bg-gradient-to-br from-background via-muted/20 to-background min-h-screen">
-      {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Advanced Button Component
@@ -49,7 +48,6 @@ const ButtonDemo = () => {
         </p>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap gap-4 justify-center">
         <Button
           variant="outline"
@@ -67,7 +65,6 @@ const ButtonDemo = () => {
         </Button>
       </div>
 
-      {/* Basic Variants */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Basic Variants</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -92,7 +89,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Advanced Variants */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Advanced Variants</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -117,7 +113,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Sizes */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Sizes</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -136,7 +131,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Icon Buttons */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Icon Buttons</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -161,7 +155,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Rounded Variants */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Rounded Variants</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -183,7 +176,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Animation Variants */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Animation Variants</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -202,7 +194,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Loading States */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Loading States</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -218,7 +209,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Icon Positions */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Icon Positions</h2>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -237,7 +227,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Interactive Demo */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Interactive Demo</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -288,7 +277,6 @@ const ButtonDemo = () => {
         </div>
       </section>
 
-      {/* Features List */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Advanced Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

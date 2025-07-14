@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
+import { getImageUrl } from '@/components/ui/Avatar';
 
 const ProfileInfoCard = ({ profile, onEdit, onAddEducation, onAddAchievement }) => (
   <div className="bg-card rounded-2xl shadow-lg border border-border p-6 flex flex-col md:flex-row items-center gap-6">
     <img
-      src={profile?.profileImage || '/placeholder-avatar.jpg'}
+      src={getImageUrl(profile?.profileImage) || '/placeholder-avatar.jpg'}
       alt="Profile"
       className="w-32 h-32 rounded-full object-cover border-4 border-primary shadow"
     />

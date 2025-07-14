@@ -1,3 +1,4 @@
+console.log('doctor.routes.js loaded');
 const express = require('express');
 const router = express.Router();
 const {
@@ -7,7 +8,17 @@ const {
   getDoctors,
   getDoctorPatients,
   getDoctorPatientById,
-  addPatientById
+  addPatientById,
+  addAchievement,
+  updateAchievement,
+  deleteAchievement,
+  addEducation,
+  updateEducation,
+  deleteEducation,
+  addLicense,
+  updateLicense,
+  deleteLicense,
+  getMedicalFileById
 } = require('../controllers/doctor.controller');
 const { 
   getDoctorAppointments, 
@@ -15,7 +26,8 @@ const {
   rejectAppointment, 
   updateAppointment, 
   getAppointmentDetails,
-  handleRescheduleRequest
+  handleRescheduleRequest,
+  createAppointment
 } = require('../controllers/Doctor/doctorAppointment.controller');
 const {
   getDashboardAnalytics,
@@ -26,6 +38,7 @@ const {
   getAppointmentsByDate
 } = require('../controllers/Doctor/dashboardAnalytics.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
+const medicineRequestController = require('../controllers/medicineRequest.controller');
 
 router.use(protect);
 router.get('/', getDoctors);
@@ -46,11 +59,33 @@ router.patch('/appointments/:appointmentId/accept', authorize('doctor'), acceptA
 router.patch('/appointments/:appointmentId/reject', authorize('doctor'), rejectAppointment);
 router.patch('/appointments/:appointmentId', authorize('doctor'), updateAppointment);
 router.post('/appointments/:appointmentId/reschedule-request', authorize('doctor'), handleRescheduleRequest);
-router.get('/:id', getDoctor);
+router.post('/appointments', authorize('doctor'), createAppointment);
 router
   .route('/profile')
   .get(getDoctorProfile)
   .patch(updateDoctorProfile);
+
+// Achievements Routes
+router.post('/achievements', authorize('doctor'), addAchievement);
+router.put('/achievements/:id', authorize('doctor'), updateAchievement);
+router.delete('/achievements/:id', authorize('doctor'), deleteAchievement);
+
+// Education Routes
+router.post('/education', authorize('doctor'), addEducation);
+router.put('/education/:id', authorize('doctor'), updateEducation);
+router.delete('/education/:id', authorize('doctor'), deleteEducation);
+
+// Licenses Routes
+router.post('/licenses', authorize('doctor'), addLicense);
+router.put('/licenses/:id', authorize('doctor'), updateLicense);
+router.delete('/licenses/:id', authorize('doctor'), deleteLicense);
+
+router.get('/:id', getDoctor);
 router.post('/patients/add', authorize('doctor'), addPatientById);
+router.get('/medical-file/:id', protect, authorize('doctor'), getMedicalFileById);
+
+// Medicine request endpoints
+router.get('/medicine/requests', protect, medicineRequestController.getMedicineRequests);
+router.post('/medicine/requests', protect, medicineRequestController.createMedicineRequest);
 
 module.exports = router;

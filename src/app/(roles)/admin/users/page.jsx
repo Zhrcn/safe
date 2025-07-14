@@ -70,7 +70,6 @@ export default function AdminUsersPage() {
      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()))
   ) : [];
 
-  // Action handlers for UserTable
   const handleEditUser = (userId, data) => dispatch(editUser({ userId, data }));
   const handleDeactivateUser = (userId) => dispatch(deactivateUser(userId));
   const handleActivateUser = (userId) => dispatch(activateUser(userId));
@@ -160,7 +159,6 @@ export default function AdminUsersPage() {
             />
           )}
         </div>
-        {/* Create User Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-lg border border-border relative">
@@ -218,10 +216,10 @@ export default function AdminUsersPage() {
                       onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                       required
                     >
-                      <option value="admin">{t('admin.users.role', 'Admin')}</option>
-                      <option value="doctor">{t('admin.users.doctor', 'Doctor')}</option>
-                      <option value="patient">{t('admin.users.patient', 'Patient')}</option>
-                      <option value="pharmacist">{t('admin.users.pharmacist', 'Pharmacist')}</option>
+                      <option key="admin" value="admin">{t('admin.users.role', 'Admin')}</option>
+                      <option key="doctor" value="doctor">{t('admin.users.doctor', 'Doctor')}</option>
+                      <option key="patient" value="patient">{t('admin.users.patient', 'Patient')}</option>
+                      <option key="pharmacist" value="pharmacist">{t('admin.users.pharmacist', 'Pharmacist')}</option>
                     </select>
                   </div>
                   <div className="mb-2">
@@ -241,7 +239,6 @@ export default function AdminUsersPage() {
                     />
                   </div>
                 </div>
-                {/* Patient fields */}
                 {newUser.role === 'patient' && (
                   <div className="border-b pb-4 mb-4">
                     <h3 className="text-lg font-semibold mb-2">{t('admin.users.patientFields', 'Patient Details')}</h3>
@@ -260,15 +257,14 @@ export default function AdminUsersPage() {
                         value={newUser.gender}
                         onChange={e => setNewUser({ ...newUser, gender: e.target.value })}
                       >
-                        <option value="">{t('admin.users.selectGender', 'Select Gender')}</option>
-                        <option value="male">{t('admin.users.male', 'Male')}</option>
-                        <option value="female">{t('admin.users.female', 'Female')}</option>
-                        <option value="other">{t('admin.users.other', 'Other')}</option>
+                        <option key="" value="">{t('admin.users.selectGender', 'Select Gender')}</option>
+                        <option key="male" value="male">{t('admin.users.male', 'Male')}</option>
+                        <option key="female" value="female">{t('admin.users.female', 'Female')}</option>
+                        <option key="other" value="other">{t('admin.users.other', 'Other')}</option>
                       </select>
                     </div>
                   </div>
                 )}
-                {/* Doctor fields */}
                 {newUser.role === 'doctor' && (
                   <div className="border-b pb-4 mb-4">
                     <h3 className="text-lg font-semibold mb-2">{t('admin.users.doctorFields', 'Doctor Details')}</h3>
@@ -301,7 +297,6 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
                 )}
-                {/* Pharmacist fields */}
                 {newUser.role === 'pharmacist' && (
                   <div className="border-b pb-4 mb-4">
                     <h3 className="text-lg font-semibold mb-2">{t('admin.users.pharmacistFields', 'Pharmacist Details')}</h3>

@@ -37,7 +37,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
         <div className={`px-5 py-2 ${isOwn ? "rounded-3xl rounded-br-md bg-primary text-primary-foreground shadow-lg" : "rounded-2xl rounded-bl-md bg-muted text-foreground border border-border shadow-sm"} animate-fade-in relative`}>
           <span className="text-sm break-words whitespace-pre-line leading-relaxed">{message.content}</span>
           
-          {/* Message menu for own messages */}
           {isOwn && (
             <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button

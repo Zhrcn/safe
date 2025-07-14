@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const medicineController = require('../controllers/medicine.controller');
+const medicineRequestController = require('../controllers/medicineRequest.controller');
+const { protect } = require('../middleware/auth.middleware');
 
 let requests = [
   {
@@ -16,7 +18,5 @@ let requests = [
 
 router.get('/', medicineController.getAllMedicines);
 router.post('/', medicineController.createMedicine);
-
-
 
 module.exports = router;

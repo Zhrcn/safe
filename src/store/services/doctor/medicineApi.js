@@ -4,7 +4,9 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const medicineApi = createApi({
   reducerPath: 'medicineApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
+      : 'http://localhost:5001/api/v1',
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth?.token || localStorage.getItem('safe_auth_token');
       if (token) {
@@ -16,12 +18,12 @@ export const medicineApi = createApi({
   tagTypes: ['MedicineRequest'],
   endpoints: (builder) => ({
     getRequests: builder.query({
-      query: () => '/doctor/medicine/requests',
+      query: () => 'medicine-requests',
       providesTags: ['MedicineRequest'],
     }),
     createRequest: builder.mutation({
       query: (request) => ({
-        url: '/doctor/medicine/requests',
+        url: 'medicine-requests',
         method: 'POST',
         body: request,
       }),
@@ -33,11 +35,11 @@ export const medicineApi = createApi({
 export const { useGetRequestsQuery, useCreateRequestMutation } = medicineApi;
 
 export const getMedicines = async () => {
-  const res = await axiosInstance.get('/doctor/medicine');
-  return res.data.data;
+  const res = await axiosInstance.get('/medicines');
+  return res.data;
 };
 
 export const addMedicine = async (newMedicine) => {
-  const res = await axiosInstance.post('/doctor/medicine', newMedicine);
-  return res.data.data;
+  const res = await axiosInstance.post('/medicines', newMedicine);
+  return res.data;
 }; 

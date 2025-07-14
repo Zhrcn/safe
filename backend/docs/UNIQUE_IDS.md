@@ -104,17 +104,11 @@ patientSchema.pre('save', async function(next) {
 ```javascript
 const { generatePatientId, generateDoctorId, generatePharmacistId } = require('./utils/idGenerator');
 
-// Generate patient ID
 const patientId = await generatePatientId(new Date('1995-03-15'));
-// Result: PAT-1995030000000001
 
-// Generate doctor ID
 const doctorId = await generateDoctorId(new Date('1980-11-22'));
-// Result: DOC-198011000001
 
-// Generate pharmacist ID
 const pharmacistId = await generatePharmacistId(new Date('1985-07-08'));
-// Result: PHC-198507000001
 ```
 
 ### Validating IDs
@@ -123,7 +117,6 @@ const pharmacistId = await generatePharmacistId(new Date('1985-07-08'));
 const { validateIdFormat } = require('./utils/idGenerator');
 
 const isValid = validateIdFormat('PAT-1995030000000001', 'patient');
-// Result: true
 ```
 
 ### Parsing IDs
@@ -132,14 +125,7 @@ const isValid = validateIdFormat('PAT-1995030000000001', 'patient');
 const { parseId } = require('./utils/idGenerator');
 
 const info = parseId('PAT-1995030000000001');
-// Result: {
-//   type: 'PAT',
-//   year: 1995,
-//   month: 3,
-//   counter: 1,
-//   datePart: '199503',
-//   fullId: 'PAT-1995030000000001'
-// }
+
 ```
 
 ## Migration

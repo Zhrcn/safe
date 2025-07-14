@@ -245,7 +245,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 onChange={(e) => handleMedicationChange(e.target.value)}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
               >
-                <option value="">Select medication</option>
+                <option key="" value="">Select medication</option>
                 {commonMedications.map((med) => (
                   <option key={med.name} value={med.name}>{med.name}</option>
                 ))}
@@ -271,7 +271,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 onChange={(e) => setNewFrequency(e.target.value)}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
               >
-                <option value="">Select frequency</option>
+                <option key="" value="">Select frequency</option>
                 {defaultFrequencyOptions.map((freq) => (
                   <option key={freq} value={freq}>{freq}</option>
                 ))}

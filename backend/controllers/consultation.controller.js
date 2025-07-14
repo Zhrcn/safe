@@ -42,7 +42,6 @@ const requestConsultation = asyncHandler(async (req, res) => {
   });
   await consultation.populate('doctor', 'firstName lastName specialization');
   await consultation.populate('patient', 'firstName lastName');
-  // Notify doctor
   await createNotification(
     doctorId,
     'New Consultation Request',
@@ -84,7 +83,6 @@ const answerConsultation = asyncHandler(async (req, res) => {
   await consultation.save();
   await consultation.populate('doctor', 'firstName lastName email');
   await consultation.populate('patient', 'firstName lastName');
-  // Notify patient
   await createNotification(
     consultation.patient,
     'Consultation Answered',
@@ -117,7 +115,6 @@ const updateConsultation = asyncHandler(async (req, res) => {
   await consultation.save();
   await consultation.populate('doctor', 'firstName lastName specialization');
   await consultation.populate('patient', 'firstName lastName');
-  // Notify both doctor and patient
   await createNotification(
     consultation.doctor,
     'Consultation Updated',

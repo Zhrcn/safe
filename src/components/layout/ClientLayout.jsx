@@ -21,7 +21,6 @@ export default function ClientLayout({ children }) {
     }
   }, [i18n.language, dir]);
 
-  // Show loading state only on client-side
   if (typeof window !== 'undefined' && (!ready || !mounted)) {
     return (
       <div className="min-h-screen flex items-center justify-center">

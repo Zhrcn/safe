@@ -31,7 +31,6 @@ export default function AppointmentCard({ appointments = [] }) {
             const dateObj = new Date(date);
             const placeholderDate = new Date('1111-01-01');
             
-            // If date is a placeholder (like 1/1/1111), show as TBD
             if (dateObj.getTime() === placeholderDate.getTime() || isNaN(dateObj.getTime())) {
                 return 'TBD';
             }

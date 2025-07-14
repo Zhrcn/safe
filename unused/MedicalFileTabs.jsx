@@ -55,7 +55,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                    {/* Vital Signs */}
                     <TabsContent value="vitalSigns" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.recentVitalSigns', 'Recent Vital Signs')}</h3>
                         {medicalFile.vitalSigns && medicalFile.vitalSigns.length > 0 ? (
@@ -88,7 +87,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Allergies */}
                     <TabsContent value="allergies" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myAllergies', 'My Allergies')}</h3>
                         {medicalFile.allergies && medicalFile.allergies.length > 0 ? (
@@ -118,7 +116,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Chronic Conditions */}
                     <TabsContent value="chronicConditions" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.chronicConditionsTitle', 'Chronic Conditions')}</h3>
                         {medicalFile.chronicConditions && medicalFile.chronicConditions.length > 0 ? (
@@ -148,7 +145,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Diagnoses */}
                     <TabsContent value="diagnoses" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myDiagnoses', 'My Diagnoses')}</h3>
                         {medicalFile.diagnoses && medicalFile.diagnoses.length > 0 ? (
@@ -168,7 +164,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Lab Results */}
                     <TabsContent value="labResults" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.labResultsTitle', 'Lab Results')}</h3>
                         {medicalFile.labResults && medicalFile.labResults.length > 0 ? (
@@ -207,7 +202,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Imaging Reports */}
                     <TabsContent value="imagingReports" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.imagingReportsTitle', 'Imaging Reports')}</h3>
                         {medicalFile.imagingReports && medicalFile.imagingReports.length > 0 ? (
@@ -239,7 +233,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Medications */}
                     <TabsContent value="medications" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.currentMedications', 'Current Medications')}</h3>
                         {medicalFile.medications && medicalFile.medications.length > 0 ? (
@@ -267,7 +260,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Immunizations */}
                     <TabsContent value="immunizations" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.immunizationsHistory', 'Immunizations History')}</h3>
                         {medicalFile.immunizations && medicalFile.immunizations.length > 0 ? (
@@ -286,7 +278,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Surgical History */}
                     <TabsContent value="surgicalHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.surgicalHistoryTitle', 'Surgical History')}</h3>
                         {medicalFile.surgicalHistory && medicalFile.surgicalHistory.length > 0 ? (
@@ -306,7 +297,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Documents */}
                     <TabsContent value="documents" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myDocuments', 'My Documents')}</h3>
                         <div className="flex justify-between items-center mb-3">
@@ -339,7 +329,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Family History */}
                     <TabsContent value="familyHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.familyMedicalHistory', 'Family Medical History')}</h3>
                         {medicalFile.familyHistory && medicalFile.familyHistory.length > 0 ? (
@@ -358,7 +347,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* Social History */}
                     <TabsContent value="socialHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.socialHistoryTitle', 'Social History')}</h3>
                         {medicalFile.socialHistory && medicalFile.socialHistory.length > 0 ? (
@@ -377,7 +365,6 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                             </Alert>
                         )}
                     </TabsContent>
-                    {/* General History */}
                     <TabsContent value="generalHistory" className="mt-4">
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.generalMedicalHistory', 'General Medical History')}</h3>
                         {medicalFile.generalHistory && medicalFile.generalHistory.length > 0 ? (

@@ -1,7 +1,6 @@
 import axiosInstance from '../axiosInstance';
 
 export const dashboardApi = {
-  // Get comprehensive analytics data for analytics page
   getComprehensiveAnalytics: async () => {
     try {
       const res = await axiosInstance.get('/doctors/analytics/comprehensive');
@@ -11,7 +10,6 @@ export const dashboardApi = {
     }
   },
 
-  // Get dashboard analytics data
   getDashboardAnalytics: async () => {
     try {
       const res = await axiosInstance.get('/doctors/dashboard/analytics');
@@ -21,7 +19,6 @@ export const dashboardApi = {
     }
   },
 
-  // Get appointments for chart data
   getAppointmentsAnalytics: async (period = 'week') => {
     try {
       const res = await axiosInstance.get(`/doctors/appointments/analytics?period=${period}`);
@@ -31,7 +28,6 @@ export const dashboardApi = {
     }
   },
 
-  // Get patient distribution data
   getPatientDistribution: async () => {
     try {
       const res = await axiosInstance.get('/doctors/patients/distribution');
@@ -41,7 +37,6 @@ export const dashboardApi = {
     }
   },
 
-  // Get recent appointments for calendar
   getRecentAppointments: async (limit = 10) => {
     try {
       const res = await axiosInstance.get(`/doctors/appointments/recent?limit=${limit}`);
@@ -51,7 +46,6 @@ export const dashboardApi = {
     }
   },
 
-  // Get appointments for specific date
   getAppointmentsByDate: async (date) => {
     try {
       const res = await axiosInstance.get(`/doctors/appointments/date/${date}`);

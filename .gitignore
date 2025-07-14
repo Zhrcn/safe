@@ -37,3 +37,7 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
+# Uploaded files (keep directory structure)
+/public/uploads/*/
+!/public/uploads/.gitkeep

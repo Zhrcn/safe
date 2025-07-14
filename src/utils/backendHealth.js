@@ -7,7 +7,6 @@ export const checkBackendHealth = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      // Add a timeout to prevent hanging
       signal: AbortSignal.timeout(5000),
     });
 

@@ -124,7 +124,6 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
 
   return (
     <div className="flex flex-col h-full bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
-      {/* Fixed Header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10 shadow-sm flex-shrink-0 z-10">
         {isMobile && (
           <Button size="icon" variant="ghost" onClick={onBack} className="mr-2">
@@ -167,7 +166,6 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
         </Button>
       </div>
 
-      {/* Scrollable Messages Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden chat-scroll bg-background">
         <div className="px-4 py-6">
           <div className="flex flex-col gap-2">
@@ -210,7 +208,6 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
         </div>
       </div>
 
-      {/* Fixed Input Area */}
       <div className="flex-shrink-0">
         <MessageInput
           value={newMessage}

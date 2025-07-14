@@ -52,7 +52,6 @@ const AdvancedButtonDemo = () => {
   };
 
   const handleAsyncAction = async () => {
-    // Simulate async operation
     await new Promise(resolve => setTimeout(resolve, 2000));
     console.log('Async action completed!');
   };
@@ -71,7 +70,6 @@ const AdvancedButtonDemo = () => {
 
   return (
     <div className="p-8 space-y-8 bg-gradient-to-br from-background via-muted/20 to-background min-h-screen">
-      {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Advanced Button Component
@@ -81,7 +79,6 @@ const AdvancedButtonDemo = () => {
         </p>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap gap-4 justify-center">
         <Button
           variant="outline"
@@ -113,7 +110,6 @@ const AdvancedButtonDemo = () => {
         </Button>
       </div>
 
-      {/* Advanced Variants */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Advanced Variants</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -160,7 +156,6 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Animation Effects */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Animation Effects</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -207,7 +202,6 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Hover Effects */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Hover Effects</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -254,12 +248,10 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Advanced Features */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Advanced Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          {/* Async Actions */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Clock className="w-5 h-5" />
@@ -280,7 +272,6 @@ const AdvancedButtonDemo = () => {
             </div>
           </div>
 
-          {/* Long Press */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Target className="w-5 h-5" />
@@ -301,7 +292,6 @@ const AdvancedButtonDemo = () => {
             </div>
           </div>
 
-          {/* Confirmation */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
@@ -324,7 +314,6 @@ const AdvancedButtonDemo = () => {
             </div>
           </div>
 
-          {/* Debounced Click */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <RotateCcw className="w-5 h-5" />
@@ -345,7 +334,6 @@ const AdvancedButtonDemo = () => {
             </div>
           </div>
 
-          {/* Throttled Click */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Clock className="w-5 h-5" />
@@ -366,7 +354,6 @@ const AdvancedButtonDemo = () => {
             </div>
           </div>
 
-          {/* All Features Combined */}
           <div className="p-6 bg-card rounded-xl border border-border space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Code className="w-5 h-5" />
@@ -391,7 +378,6 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Device Compatibility */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Device Compatibility</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -450,7 +436,6 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Performance Features */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Performance Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -473,7 +458,6 @@ const AdvancedButtonDemo = () => {
         </div>
       </section>
 
-      {/* Code Examples */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-center">Usage Examples</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

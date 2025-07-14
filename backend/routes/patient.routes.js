@@ -23,6 +23,7 @@ const {
     sendMessage,
     getDashboardSummary,
     getLatestVitals,
+    getMyMedicalRecords,
 } = require('../controllers/patient.controller');
 const {
     getDoctors,
@@ -36,6 +37,7 @@ router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.get('/medical-file', protect, getMedicalFile);
 router.put('/medical-file', protect, updateMedicalFile);
+router.get('/medical-records', protect, getMyMedicalRecords);
 router.get('/appointments', protect, getAppointments);
 router.post('/appointments', protect, createAppointment);
 router.put('/appointments/:id', protect, updateAppointment);

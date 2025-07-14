@@ -11,7 +11,6 @@ export default function I18nProvider({ children }) {
   useEffect(() => {
     setIsClient(true);
     
-    // Wait for i18n to be ready
     if (i18n.isInitialized) {
       setIsI18nReady(true);
     } else {
@@ -21,14 +20,12 @@ export default function I18nProvider({ children }) {
       
       i18n.on('initialized', handleInitialized);
       
-      // Cleanup
       return () => {
         i18n.off('initialized', handleInitialized);
       };
     }
   }, []);
 
-  // Show children immediately on server-side, but wait for i18n on client-side
   if (typeof window === 'undefined') {
     return <>{children}</>;
   }

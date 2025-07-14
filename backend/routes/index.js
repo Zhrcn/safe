@@ -8,12 +8,15 @@ const appointmentRoutes = require('../routes/appointment.routes');
 const notificationRoutes = require('../routes/notification.routes');
 const medicalFileRoutes = require('../routes/medicalFile.routes');
 const medicalRecordRoutes = require('../routes/medicalRecord.routes');
+const doctorMedicalRecordRoutes = require('../routes/doctorMedicalRecord.routes');
 const consultationRoutes = require('../routes/consultation.routes');
 const prescriptionRoutes = require('../routes/prescription.routes');
 const medicineRoutes = require('../routes/medicine.routes');
 const medicationRoutes = require('../routes/medication.routes');
 const conversationRoutes = require('../routes/conversation.routes');
 const logRoutes = require('../routes/log.routes');
+const uploadRoutes = require('../routes/upload.routes');
+const medicineRequestRoutes = require('../routes/medicineRequest.routes');
 
 router.use('/auth', authRoutes);
 router.use('/patients', patientRoutes);
@@ -23,6 +26,7 @@ router.use('/appointments', appointmentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/medical-files', medicalFileRoutes);
 router.use('/medical-records', medicalRecordRoutes);
+router.use('/doctor-medical-records', doctorMedicalRecordRoutes);
 router.use('/consultations', consultationRoutes);
 router.use('/prescriptions', prescriptionRoutes);
 router.use('/medicines', medicineRoutes);
@@ -30,6 +34,8 @@ router.use('/medications', medicationRoutes);
 router.use('/conversations', conversationRoutes);
 router.use('/logs', logRoutes);
 router.use('/users', require('../routes/user.routes'));
+router.use('/upload', uploadRoutes);
+router.use('/medicine-requests', medicineRequestRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

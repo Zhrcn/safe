@@ -70,7 +70,7 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
     const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
     
     const hasValidDate = appointmentDate && appointment.date !== "1111-01-01T00:00:00.000Z";
-    const canReschedule = hasValidDate && hoursDiff >= 24; // 24 hours minimum notice
+    const canReschedule = hasValidDate && hoursDiff >= 24;
     
     const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && canReschedule;
     
@@ -243,10 +243,9 @@ const AppointmentsPage = () => {
             await requestReschedule(selectedAppointment._id || selectedAppointment.id, rescheduleData);
             setShowRescheduleModal(false);
             setSelectedAppointment(null);
-            dispatch(fetchAppointments()); // Refresh appointments
+            dispatch(fetchAppointments()); 
         } catch (error) {
             console.error('Error submitting reschedule request:', error);
-            // You might want to show a notification here
         } finally {
             setRescheduleLoading(false);
         }
@@ -259,7 +258,6 @@ const AppointmentsPage = () => {
     };
 
     const handleSubmitAppointment = async (data) => {
-        // Prefer data.time, else map from data.timeSlot, else fallback
         const time = data.time || timeSlotToTime[data.timeSlot] || data.timeSlot || '09:00';
         try {
             if (modalType === 'reschedule' && selectedAppointment) {
@@ -288,7 +286,6 @@ const AppointmentsPage = () => {
             dispatch(fetchAppointments());
         } catch (e) {
             console.error('Error submitting appointment:', e);
-            // Optionally show notification
         }
     };
 
@@ -298,7 +295,7 @@ const AppointmentsPage = () => {
             dispatch(fetchAppointments());
         } catch (e) {
             console.error('Error cancelling appointment:', e);
-            // Optionally show notification
+  
         }
     };
 
@@ -401,7 +398,6 @@ const AppointmentsPage = () => {
         </div>
         )}
 
-        {/* Reschedule Request Modal */}
         {showRescheduleModal && selectedAppointment && (
           <RescheduleRequestForm
             appointment={selectedAppointment}

@@ -59,6 +59,12 @@ export const doctorAppointmentsApi = {
       console.error('API: Handle reschedule request error', error);
       throw error;
     }
+  },
+
+  createAppointment: async (appointmentData) => {
+    console.log('[API] doctorAppointmentsApi.createAppointment called', appointmentData);
+    const res = await axiosInstance.post('/doctors/appointments', appointmentData);
+    return res.data.data;
   }
 };
 
@@ -80,7 +86,9 @@ export const getAppointmentById = async (id) => {
 };
 
 export const createAppointment = async (appointmentData) => {
-  const res = await axiosInstance.post('/appointments', appointmentData);
+  // Doctor creates appointment for a patient
+  // appointmentData should include: patientId, date, time, reason, type, status, etc.
+  const res = await axiosInstance.post('/doctors/appointments', appointmentData);
   return res.data.data;
 };
 

@@ -14,7 +14,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+    expiresIn: process.env.JWT_EXPIRE || '30d',
   });
 };
 const validatePassword = (password) => {
@@ -171,6 +171,10 @@ exports.getMe = asyncHandler(async (req, res, next) => {
     return res.status(404).json(new ApiResponse(404, null, 'User not found.'));
   }
   let userResponse = user.toObject();
+  if (userResponse.profileImage && !userResponse.profileImage.startsWith('http')) {
+    const baseUrl = req.protocol + '://' + req.get('host');
+    userResponse.profileImage = baseUrl + userResponse.profileImage;
+  }
   if (userResponse.role === 'patient') {
     const patientDetails = await Patient.findOne({ user: user._id }).populate('medicalFile');
     if (patientDetails) {
@@ -196,8 +200,11 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     email: req.body.email,
     phoneNumber: req.body.phoneNumber,
     address: req.body.address,
-    gender: req.body.gender
+    gender: req.body.gender,
   };
+  if (req.body.profilePicture !== undefined) {
+    fieldsToUpdate.profileImage = req.body.profilePicture;
+  }
   const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
     new: true,
     runValidators: true

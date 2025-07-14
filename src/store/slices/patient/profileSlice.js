@@ -1,5 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getProfile, updateProfile } from '@/store/services/patient/patientApi';
+import { API_BASE_URL } from '@/config/api';
+
+// Helper function to transform relative image URLs to full URLs
+const transformImageUrl = (imageUrl) => {
+  if (!imageUrl) return imageUrl;
+  if (imageUrl.startsWith('http')) return imageUrl;
+  if (imageUrl.startsWith('/')) {
+    const fullUrl = `${API_BASE_URL}${imageUrl}`;
+    console.log('Transforming image URL:', { original: imageUrl, transformed: fullUrl });
+    return fullUrl;
+  }
+  console.log('Image URL not transformed:', imageUrl);
+  return imageUrl;
+};
 
 export const fetchProfile = createAsyncThunk(
     'profile/fetchProfile',
@@ -77,14 +91,32 @@ const profileSlice = createSlice({
             })
             .addCase(fetchProfile.fulfilled, (state, action) => {
                 state.loading = false;
-                state.profile = action.payload;
+                // Transform profile image URLs to full URLs
+                const profile = {
+                    ...action.payload,
+                    profileImage: transformImageUrl(action.payload?.profileImage),
+                    user: action.payload?.user ? {
+                        ...action.payload.user,
+                        profileImage: transformImageUrl(action.payload.user?.profileImage)
+                    } : action.payload?.user
+                };
+                state.profile = profile;
             })
             .addCase(fetchProfile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
             .addCase(editProfile.fulfilled, (state, action) => {
-                state.profile = action.payload;
+                // Transform profile image URLs to full URLs
+                const profile = {
+                    ...action.payload,
+                    profileImage: transformImageUrl(action.payload?.profileImage),
+                    user: action.payload?.user ? {
+                        ...action.payload.user,
+                        profileImage: transformImageUrl(action.payload.user?.profileImage)
+                    } : action.payload?.user
+                };
+                state.profile = profile;
             });
     },
 });

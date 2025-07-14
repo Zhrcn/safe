@@ -73,8 +73,6 @@ export const rejectRescheduleRequest = createAsyncThunk(
   }
 );
 
-
-
 export const getAppointmentDetails = createAsyncThunk(
   'doctorAppointments/getAppointmentDetails',
   async (appointmentId, { rejectWithValue }) => {
@@ -83,6 +81,18 @@ export const getAppointmentDetails = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to get appointment details');
+    }
+  }
+);
+
+export const createAppointment = createAsyncThunk(
+  'doctorAppointments/createAppointment',
+  async (appointmentData, { rejectWithValue }) => {
+    try {
+      const response = await doctorAppointmentsApi.createAppointment(appointmentData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create appointment');
     }
   }
 );
@@ -215,6 +225,21 @@ const doctorAppointmentsSlice = createSlice({
         }
       })
       .addCase(rejectRescheduleRequest.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createAppointment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Appointment created successfully';
+        if (action.payload) {
+          state.appointments.unshift(action.payload);
+        }
+      })
+      .addCase(createAppointment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

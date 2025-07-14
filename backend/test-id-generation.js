@@ -4,13 +4,11 @@ require('dotenv').config({ path: './config.env' });
 
 async function testIdGeneration() {
   try {
-    // Connect to database
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
     console.log('\n=== Testing ID Generation ===\n');
 
-    // Test Patient ID generation
     console.log('Testing Patient ID Generation:');
     const patientBirthDate = new Date('1995-03-15');
     const patientId = await generatePatientId(patientBirthDate);
@@ -22,7 +20,6 @@ async function testIdGeneration() {
     console.log('Parsed Info:', patientInfo);
     console.log('');
 
-    // Test Doctor ID generation
     console.log('Testing Doctor ID Generation:');
     const doctorBirthDate = new Date('1980-11-22');
     const doctorId = await generateDoctorId(doctorBirthDate);
@@ -34,7 +31,6 @@ async function testIdGeneration() {
     console.log('Parsed Info:', doctorInfo);
     console.log('');
 
-    // Test Pharmacist ID generation
     console.log('Testing Pharmacist ID Generation:');
     const pharmacistBirthDate = new Date('1985-07-08');
     const pharmacistId = await generatePharmacistId(pharmacistBirthDate);
@@ -46,7 +42,6 @@ async function testIdGeneration() {
     console.log('Parsed Info:', pharmacistInfo);
     console.log('');
 
-    // Test multiple generations for same month
     console.log('Testing Multiple Generations for Same Month:');
     const testDate = new Date('1990-05-10');
     for (let i = 0; i < 3; i++) {
@@ -55,15 +50,14 @@ async function testIdGeneration() {
     }
     console.log('');
 
-    // Test ID validation
     console.log('Testing ID Validation:');
     const testIds = [
       'PAT-1995030000000001',
       'DOC-198011000001',
       'PHC-198507000001',
-      'INV-199001000001', // Invalid prefix
-      'PAT-199503000001', // Invalid format
-      'PAT-1995030000000000000001' // Too long
+      'INV-199001000001', 
+      'PAT-199503000001', 
+      'PAT-1995030000000000000001'
     ];
 
     testIds.forEach(id => {

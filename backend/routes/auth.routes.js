@@ -23,4 +23,15 @@ router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.post('/change-password', protect, changePassword);
 router.post('/logout', protect, logoutUser);
+router.get('/debug-token', protect, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Token is valid',
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      role: req.user.role
+    }
+  });
+});
 module.exports = router;

@@ -35,7 +35,7 @@ function NewChatModal({ open, onClose, onCreate, users, selectedUser, setSelecte
             setSelectedUser(user || null);
           }}
         >
-          <option value="">{t('Choose a user')}</option>
+          <option key="" value="">{t('Choose a user')}</option>
           {allUsers.map(user => (
             <option key={user.id} value={user.id}>
               {user.displayName} {user.type === 'doctor' ? t('(Doctor)') : user.type === 'pharmacist' ? t('(Pharmacist)') : user.type === 'admin' ? t('(Admin)') : ''}
@@ -131,10 +131,8 @@ export default function PatientMessagingPage() {
   }, []);
 
   useEffect(() => {
-    // Auto-select conversation if ?user= param is present
     const userId = searchParams.get('user');
     if (userId && conversations.length > 0) {
-      // Find a conversation with this user as a participant (other than currentUser)
       const found = conversations.find(conv =>
         conv.participants && conv.participants.some(
           p => p._id === userId
@@ -211,7 +209,6 @@ export default function PatientMessagingPage() {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* New Chat Modal */}
       <NewChatModal
         open={showNewChat}
         onClose={handleCloseNewChat}
@@ -225,7 +222,6 @@ export default function PatientMessagingPage() {
         error={usersError}
       />
 
-      {/* Sidebar: Chat List */}
       <div className={`border-r border-border bg-card h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card flex-shrink-0">
           <h1 className="text-xl font-bold flex items-center gap-2 text-foreground">
@@ -261,7 +257,6 @@ export default function PatientMessagingPage() {
         </div>
       </div>
 
-      {/* Main: Chat Page */}
       <div className={`flex-1 h-full bg-background ${mobileView && !selectedConversation ? "hidden" : "block"}`}>
         {selectedConversation ? (
           <ChatPage

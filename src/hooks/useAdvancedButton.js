@@ -20,23 +20,18 @@ export const useAdvancedButton = (options = {}) => {
   const lastClickTimeRef = useRef(0);
   const throttleTimerRef = useRef(null);
 
-  // Haptic feedback function
   const triggerHapticFeedback = useCallback(() => {
     if (!hapticFeedback || !navigator.vibrate) return;
-    
     try {
-      navigator.vibrate(50); // Short vibration
+      navigator.vibrate(50);
     } catch (error) {
       console.warn('Haptic feedback not supported:', error);
     }
   }, [hapticFeedback]);
 
-  // Analytics tracking function
   const trackButtonClick = useCallback((event, buttonData = {}) => {
     if (!analytics) return;
-    
     try {
-      // You can integrate with your analytics service here
       const clickData = {
         timestamp: Date.now(),
         element: event.target,
@@ -44,90 +39,69 @@ export const useAdvancedButton = (options = {}) => {
         userAgent: navigator.userAgent,
         ...rest
       };
-      
       console.log('Button click tracked:', clickData);
-      
-      // Example: Send to analytics service
-      // analytics.track('button_click', clickData);
     } catch (error) {
       console.warn('Analytics tracking failed:', error);
     }
   }, [analytics, rest]);
 
-  // Debounced click handler
   const handleDebouncedClick = useCallback((event, handler) => {
     const now = Date.now();
     if (now - lastClickTimeRef.current < debounceMs) {
       return;
     }
     lastClickTimeRef.current = now;
-    
     triggerHapticFeedback();
     trackButtonClick(event);
     handler?.(event);
   }, [debounceMs, triggerHapticFeedback, trackButtonClick]);
 
-  // Throttled click handler
   const handleThrottledClick = useCallback((event, handler) => {
     if (throttleTimerRef.current) {
       return;
     }
-    
     throttleTimerRef.current = setTimeout(() => {
       throttleTimerRef.current = null;
     }, throttleMs);
-    
     triggerHapticFeedback();
     trackButtonClick(event);
     handler?.(event);
   }, [throttleMs, triggerHapticFeedback, trackButtonClick]);
 
-  // Press start handler
   const handlePressStart = useCallback((event) => {
     setIsPressed(true);
     setPressStartTime(Date.now());
-    
-    // Start long press timer
     longPressTimerRef.current = setTimeout(() => {
       setIsLongPressed(true);
       onLongPress?.(event);
     }, longPressDelay);
-    
     onPressStart?.(event);
   }, [longPressDelay, onLongPress, onPressStart]);
 
-  // Press end handler
   const handlePressEnd = useCallback((event) => {
     setIsPressed(false);
     setIsLongPressed(false);
     setPressStartTime(null);
-    
-    // Clear long press timer
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-    
     onPressEnd?.(event);
   }, [onPressEnd]);
 
-  // Mouse leave handler
   const handleMouseLeave = useCallback((event) => {
     handlePressEnd(event);
   }, [handlePressEnd]);
 
-  // Touch end handler
   const handleTouchEnd = useCallback((event) => {
     handlePressEnd(event);
   }, [handlePressEnd]);
 
-  // Get press duration
   const getPressDuration = useCallback(() => {
     if (!pressStartTime) return 0;
     return Date.now() - pressStartTime;
   }, [pressStartTime]);
 
-  // Cleanup function
   const cleanup = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
@@ -138,26 +112,19 @@ export const useAdvancedButton = (options = {}) => {
   }, []);
 
   return {
-    // State
     isPressed,
     isLongPressed,
     pressStartTime,
     pressDuration: getPressDuration(),
-    
-    // Handlers
     handlePressStart,
     handlePressEnd,
     handleMouseLeave,
     handleTouchEnd,
     handleDebouncedClick,
     handleThrottledClick,
-    
-    // Utilities
     triggerHapticFeedback,
     trackButtonClick,
     cleanup,
-    
-    // Event handlers for direct use
     onMouseDown: handlePressStart,
     onMouseUp: handlePressEnd,
     onMouseLeave: handleMouseLeave,
@@ -166,21 +133,17 @@ export const useAdvancedButton = (options = {}) => {
   };
 };
 
-// Hook for button with loading state
 export const useButtonWithLoading = (options = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
-  
   const startLoading = useCallback((text = 'Loading...') => {
     setIsLoading(true);
     setLoadingText(text);
   }, []);
-  
   const stopLoading = useCallback(() => {
     setIsLoading(false);
     setLoadingText('');
   }, []);
-  
   const withLoading = useCallback(async (asyncFunction, loadingText = 'Loading...') => {
     startLoading(loadingText);
     try {
@@ -190,7 +153,6 @@ export const useButtonWithLoading = (options = {}) => {
       stopLoading();
     }
   }, [startLoading, stopLoading]);
-  
   return {
     isLoading,
     loadingText,
@@ -200,7 +162,6 @@ export const useButtonWithLoading = (options = {}) => {
   };
 };
 
-// Hook for button with confirmation
 export const useButtonWithConfirmation = (options = {}) => {
   const {
     confirmationText = 'Are you sure?',
@@ -208,20 +169,16 @@ export const useButtonWithConfirmation = (options = {}) => {
     onConfirm,
     onCancel,
   } = options;
-  
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const confirmationTimerRef = useRef(null);
-  
   const handleClick = useCallback((event) => {
     if (needsConfirmation) {
-      // Second click - confirm
       setNeedsConfirmation(false);
       if (confirmationTimerRef.current) {
         clearTimeout(confirmationTimerRef.current);
       }
       onConfirm?.(event);
     } else {
-      // First click - show confirmation
       setNeedsConfirmation(true);
       confirmationTimerRef.current = setTimeout(() => {
         setNeedsConfirmation(false);
@@ -229,7 +186,6 @@ export const useButtonWithConfirmation = (options = {}) => {
       }, confirmationTimeout);
     }
   }, [needsConfirmation, confirmationTimeout, onConfirm, onCancel]);
-  
   const cancelConfirmation = useCallback(() => {
     setNeedsConfirmation(false);
     if (confirmationTimerRef.current) {
@@ -237,14 +193,11 @@ export const useButtonWithConfirmation = (options = {}) => {
     }
     onCancel?.();
   }, [onCancel]);
-  
-  // Cleanup
   const cleanup = useCallback(() => {
     if (confirmationTimerRef.current) {
       clearTimeout(confirmationTimerRef.current);
     }
   }, []);
-  
   return {
     needsConfirmation,
     confirmationText,
@@ -254,14 +207,12 @@ export const useButtonWithConfirmation = (options = {}) => {
   };
 };
 
-// Hook for button with keyboard shortcuts
 export const useButtonWithShortcut = (shortcut, options = {}) => {
   const {
     onShortcut,
     preventDefault = true,
     ...rest
   } = options;
-  
   const handleKeyDown = useCallback((event) => {
     const isShortcut = 
       (shortcut.ctrl && event.ctrlKey) &&
@@ -269,7 +220,6 @@ export const useButtonWithShortcut = (shortcut, options = {}) => {
       (shortcut.alt && event.altKey) &&
       (shortcut.meta && event.metaKey) &&
       event.key.toLowerCase() === shortcut.key.toLowerCase();
-    
     if (isShortcut) {
       if (preventDefault) {
         event.preventDefault();
@@ -277,7 +227,6 @@ export const useButtonWithShortcut = (shortcut, options = {}) => {
       onShortcut?.(event);
     }
   }, [shortcut, onShortcut, preventDefault]);
-  
   return {
     onKeyDown: handleKeyDown,
     ...rest,

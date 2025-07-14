@@ -226,9 +226,9 @@ const Prescriptions = ({ patientId }) => {
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                 >
-                                    <option value="active">Active</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
+                                    <option key="active" value="active">Active</option>
+                                    <option key="completed" value="completed">Completed</option>
+                                    <option key="cancelled" value="cancelled">Cancelled</option>
                                 </select>
                             </div>
                         </form>

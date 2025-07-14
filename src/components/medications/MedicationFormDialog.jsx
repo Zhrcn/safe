@@ -91,7 +91,6 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
                         <Label>{t('patient.medications.refillDate', 'Refill Date')}</Label>
                         <Input type="date" value={refillDate} onChange={e => setRefillDate(e.target.value)} />
                     </div>
-                    {/* Removed prescribedBy field - will use current user as default */}
                     <div>
                         <Label>{t('patient.medications.notes', 'Notes')}</Label>
                         <Textarea value={notes} onChange={e => setNotes(e.target.value)} />

@@ -88,7 +88,6 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
       appointment._id.toString(),
       'Appointment'
     );
-    // Emit socket event to the other party for real-time notification
     io.to(doctorRecord.user._id.toString()).emit('appointment:update', {
       id: appointment._id.toString(),
       title: 'New Appointment Request',
@@ -130,7 +129,7 @@ exports.getAppointments = asyncHandler(async (req, res, next) => {
       path: 'patient',
       populate: {
         path: 'user',
-        select: 'firstName lastName email profilePictureUrl'
+        select: 'firstName lastName email profileImage'
       }
     })
     .populate({
@@ -236,7 +235,6 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
       appointment._id.toString(),
       'Appointment'
     );
-    // Emit socket event to the other party for real-time notification
     io.to(notificationUserId).emit('appointment:update', {
       id: appointment._id.toString(),
       title: notificationTitle,
@@ -254,10 +252,10 @@ exports.getAppointmentById = asyncHandler(async (req, res, next) => {
   const appointment = await Appointment.findById(appointmentId)
     .populate({
       path: 'patient',
-      select: 'user firstName lastName email profilePictureUrl',
+      select: 'user firstName lastName email profileImage',
       populate: {
         path: 'user',
-        select: 'firstName lastName email profilePictureUrl'
+        select: 'firstName lastName email profileImage'
       }
     })
     .populate({
@@ -367,7 +365,6 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
         updatedAppointment._id.toString(),
         'Appointment'
       );
-      // Emit socket event to the other party for real-time notification
       io.to(appointment.doctor._id.toString()).emit('appointment:update', {
         id: updatedAppointment._id.toString(),
         title: 'Appointment Details Updated by Patient',
@@ -512,7 +509,6 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
     appointment._id.toString(),
     'Appointment'
   );
-  // Emit socket event to the other party for real-time notification
   io.to(doctorUserId.toString()).emit('appointment:update', {
     id: appointment._id.toString(),
     title: 'Reschedule Request',

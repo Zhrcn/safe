@@ -22,7 +22,7 @@ exports.getPharmacistProfile = asyncHandler(async (req, res, next) => {
     gender: pharmacistUser.gender,
     phoneNumber: pharmacistUser.phoneNumber,
     address: pharmacistUser.address, 
-    profilePictureUrl: pharmacistUser.profilePictureUrl,
+    profileImage: pharmacistUser.profileImage,
     pharmacistId: pharmacistRecord._id,
     pharmacistUniqueId: pharmacistRecord.pharmacistId,
     pharmacyName: pharmacistRecord.pharmacyName,
@@ -45,7 +45,7 @@ exports.updatePharmacistProfile = asyncHandler(async (req, res, next) => {
     gender,
     phoneNumber,
     address, 
-    profilePictureUrl,
+    profileImage,
     pharmacyName,
     pharmacyAddress, 
     qualifications, 
@@ -61,7 +61,7 @@ exports.updatePharmacistProfile = asyncHandler(async (req, res, next) => {
   if (gender) userFieldsToUpdate.gender = gender;
   if (phoneNumber) userFieldsToUpdate.phoneNumber = phoneNumber;
   if (address && Object.keys(address).length > 0) userFieldsToUpdate.address = address;
-  if (profilePictureUrl) userFieldsToUpdate.profilePictureUrl = profilePictureUrl;
+  if (profileImage) userFieldsToUpdate.profileImage = profileImage;
   let updatedUser = await User.findById(userId);
   if (!updatedUser) {
     return res.status(404).json(new ApiResponse(404, null, 'Pharmacist user not found for update.'));
@@ -95,7 +95,7 @@ exports.updatePharmacistProfile = asyncHandler(async (req, res, next) => {
     gender: updatedUser.gender,
     phoneNumber: updatedUser.phoneNumber,
     address: updatedUser.address,
-    profilePictureUrl: updatedUser.profilePictureUrl,
+    profileImage: updatedUser.profileImage,
     pharmacistId: updatedPharmacistRecord._id,
     pharmacyName: updatedPharmacistRecord.pharmacyName,
     pharmacyAddress: updatedPharmacistRecord.pharmacyAddress,
@@ -110,13 +110,13 @@ exports.updatePharmacistProfile = asyncHandler(async (req, res, next) => {
 });
 exports.getPharmacists = asyncHandler(async (req, res) => {
     const pharmacists = await Pharmacist.find({})
-        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .populate('user', 'firstName lastName email phoneNumber profileImage')
         .select('pharmacyName pharmacyAddress licenseNumber qualifications yearsOfExperience workingHours professionalBio servicesOffered');
     res.status(200).json(new ApiResponse(200, pharmacists, 'Pharmacists fetched successfully.'));
 });
 exports.getPharmacist = asyncHandler(async (req, res) => {
     const pharmacist = await Pharmacist.findById(req.params.id)
-        .populate('user', 'firstName lastName email phoneNumber profilePictureUrl')
+        .populate('user', 'firstName lastName email phoneNumber profileImage')
         .select('pharmacyName pharmacyAddress licenseNumber qualifications yearsOfExperience workingHours professionalBio servicesOffered');
     if (!pharmacist) {
         return res.status(404).json(new ApiResponse(404, null, 'Pharmacist not found.'));

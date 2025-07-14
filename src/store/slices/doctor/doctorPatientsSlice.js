@@ -1,5 +1,33 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as patientsApi from '../../services/doctor/patientsApi';
+import { API_BASE_URL } from '@/config/api';
+
+// Helper function to transform relative image URLs to full URLs
+const transformImageUrl = (imageUrl) => {
+  if (!imageUrl) return imageUrl;
+  if (imageUrl.startsWith('http')) return imageUrl;
+  if (imageUrl.startsWith('/')) {
+    const fullUrl = `${API_BASE_URL}${imageUrl}`;
+    console.log('Transforming patient image URL:', { original: imageUrl, transformed: fullUrl });
+    return fullUrl;
+  }
+  console.log('Patient image URL not transformed:', imageUrl);
+  return imageUrl;
+};
+
+// Helper function to transform patient data with image URLs
+const transformPatientData = (patient) => {
+  if (!patient) return patient;
+  return {
+    ...patient,
+    profileImage: transformImageUrl(patient.profileImage),
+    user: patient.user ? {
+      ...patient.user,
+      profileImage: transformImageUrl(patient.user.profileImage),
+      profilePicture: transformImageUrl(patient.user.profilePicture)
+    } : patient.user
+  };
+};
 
 export const fetchPatients = createAsyncThunk(
   'doctorPatients/fetchPatients',
@@ -94,7 +122,10 @@ const doctorPatientsSlice = createSlice({
             })
             .addCase(fetchPatients.fulfilled, (state, action) => {
                 state.loading = false;
-                state.patients = action.payload;
+                // Transform patient data to include full image URLs
+                state.patients = Array.isArray(action.payload) 
+                    ? action.payload.map(transformPatientData)
+                    : action.payload;
                 state.error = null;
                 console.log('Fetching patients - success:', action.payload);
             })
@@ -109,7 +140,8 @@ const doctorPatientsSlice = createSlice({
             })
             .addCase(fetchPatientById.fulfilled, (state, action) => {
                 state.loading = false;
-                state.selectedPatient = action.payload;
+                // Transform patient data to include full image URLs
+                state.selectedPatient = transformPatientData(action.payload);
                 state.error = null;
             })
             .addCase(fetchPatientById.rejected, (state, action) => {

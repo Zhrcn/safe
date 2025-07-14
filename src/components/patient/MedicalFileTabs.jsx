@@ -8,11 +8,49 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/store/slices/auth/authSlice';
+import { getDoctorById } from '@/store/services/doctor/doctorApi';
+import { useState, useEffect, useRef } from 'react';
 
 const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { ssr: false });
 
-const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
+// Custom hook to fetch and cache doctor names by ID
+function useDoctorName(doctorId) {
+    const cache = useRef({});
+    const [name, setName] = useState('');
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchName() {
+            if (!doctorId) return;
+            if (cache.current[doctorId]) {
+                setName(cache.current[doctorId]);
+                return;
+            }
+            try {
+                const doctor = await getDoctorById(doctorId);
+                console.log('Fetched doctor for ID', doctorId, doctor); // Debug log
+                const doctorName = doctor?.user?.name || `${doctor?.user?.firstName || ''} ${doctor?.user?.lastName || ''}`.trim();
+                cache.current[doctorId] = doctorName;
+                if (isMounted) setName(doctorName);
+            } catch (e) {
+                if (isMounted) setName('Unknown');
+            }
+        }
+        fetchName();
+        return () => { isMounted = false; };
+    }, [doctorId]);
+    return name;
+}
+
+function DoctorName({ doctorId }) {
+    const name = useDoctorName(doctorId);
+    return <span className="text-xs text-muted-foreground">Doctor: {name || 'Loading...'}</span>;
+}
+
+const MedicalFileTabs = ({ medicalRecord, loading, error, activeTab }) => {
     const { t } = useTranslation('common');
+    const user = useSelector(selectCurrentUser);
 
     if (loading) {
         return <div className="min-h-[200px] flex items-center justify-center">Loading...</div>;
@@ -20,7 +58,7 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
     if (error) {
         return <div className="min-h-[200px] flex items-center justify-center text-danger">{typeof error === 'string' ? error : error?.message || 'An error occurred.'}</div>;
     }
-    if (!medicalFile) {
+    if (!medicalRecord) {
         return <div className="min-h-[200px] flex items-center justify-center text-muted-foreground">No medical file data.</div>;
     }
 
@@ -30,9 +68,9 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.recentVitalSigns', 'Recent Vital Signs')}</h3>
-                        {medicalFile.vitalSigns && medicalFile.vitalSigns.length > 0 ? (
+                        {medicalRecord.vitalSigns && medicalRecord.vitalSigns.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0 max-w-full">
-                                {medicalFile.vitalSigns.map(vital => (
+                                {medicalRecord.vitalSigns.map(vital => (
                                     <Card key={vital._id || vital.id} className="bg-muted/50 w-full">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-2 mb-2">
@@ -65,25 +103,33 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myAllergies', 'My Allergies')}</h3>
-                        {medicalFile.allergies && medicalFile.allergies.length > 0 ? (
+                        {medicalRecord.allergies && medicalRecord.allergies.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.allergies.map(allergy => (
-                                    <Card key={allergy._id || allergy.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <DropletIcon className="h-5 w-5 text-danger" />
-                                            <div>
-                                                <p className="font-medium text-foreground flex items-center gap-2">
-                                                    {allergy.name}
-                                                    {allergy.severity && (
-                                                        <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-danger text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
-                                                    )}
-                                                </p>
-                                                {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}
-                                                {allergy.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {allergy.notes}</p>}
+                                {medicalRecord.allergies.map(allergy => {
+                                    const showDoctor = allergy.doctorId && user?._id && allergy.doctorId !== user._id;
+                                    return (
+                                        <Card key={allergy._id || allergy.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <DropletIcon className="h-5 w-5 text-danger" />
+                                                <div>
+                                                    <p className="font-medium text-foreground flex items-center gap-2">
+                                                        {allergy.name}
+                                                        {allergy.severity && (
+                                                            <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-danger text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
+                                                        )}
+                                                    </p>
+                                                    {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}
+                                                    {allergy.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {allergy.notes}</p>}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Card>
-                                ))}
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={allergy.doctorId} />
+                                                </div>
+                                            )}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
@@ -97,25 +143,33 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.chronicConditionsTitle', 'Chronic Conditions')}</h3>
-                        {medicalFile.chronicConditions && medicalFile.chronicConditions.length > 0 ? (
+                        {medicalRecord.chronicConditions && medicalRecord.chronicConditions.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.chronicConditions.map(condition => (
-                                    <Card key={condition._id || condition.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <Stethoscope className="h-5 w-5 text-primary" />
-                                            <div>
-                                                <p className="font-medium text-foreground flex items-center gap-2">
-                                                    {condition.name}
-                                                    {condition.status && (
-                                                        <Badge className={`ml-2 ${condition.status === 'active' ? 'bg-primary text-white' : condition.status === 'resolved' ? 'bg-green-200 text-green-900' : 'bg-muted text-muted-foreground'}`}>{condition.status}</Badge>
-                                                    )}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {condition.diagnosisDate && !isNaN(new Date(condition.diagnosisDate).getTime()) ? format(new Date(condition.diagnosisDate), 'PPP') : ''}</p>
-                                                {condition.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {condition.notes}</p>}
+                                {medicalRecord.chronicConditions.map(condition => {
+                                    const showDoctor = condition.doctorId && user?._id && condition.doctorId !== user._id;
+                                    return (
+                                        <Card key={condition._id || condition.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <Stethoscope className="h-5 w-5 text-primary" />
+                                                <div>
+                                                    <p className="font-medium text-foreground flex items-center gap-2">
+                                                        {condition.name}
+                                                        {condition.status && (
+                                                            <Badge className={`ml-2 ${condition.status === 'active' ? 'bg-primary text-white' : condition.status === 'resolved' ? 'bg-green-200 text-green-900' : 'bg-muted text-muted-foreground'}`}>{condition.status}</Badge>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {condition.diagnosisDate && !isNaN(new Date(condition.diagnosisDate).getTime()) ? format(new Date(condition.diagnosisDate), 'PPP') : ''}</p>
+                                                    {condition.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {condition.notes}</p>}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Card>
-                                ))}
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={condition.doctorId} />
+                                                </div>
+                                            )}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
@@ -129,15 +183,23 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.myDiagnoses', 'My Diagnoses')}</h3>
-                        {medicalFile.diagnoses && medicalFile.diagnoses.length > 0 ? (
+                        {medicalRecord.diagnoses && medicalRecord.diagnoses.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.diagnoses.map(diagnosis => (
-                                    <Card key={diagnosis._id || diagnosis.id} className="p-4 bg-muted/50">
-                                        <p className="font-medium text-foreground mb-1">{diagnosis.name}</p>
-                                        <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedBy', 'Diagnosed by')} {diagnosis.doctor} {t('patient.profile.on', 'on')} {diagnosis.date && !isNaN(new Date(diagnosis.date).getTime()) ? format(new Date(diagnosis.date), 'PPP') : ''}</p>
-                                        {diagnosis.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {diagnosis.notes}</p>}
-                                    </Card>
-                                ))}
+                                {medicalRecord.diagnoses.map(diagnosis => {
+                                    const showDoctor = diagnosis.doctorId && user?._id && diagnosis.doctorId !== user._id;
+                                    return (
+                                        <Card key={diagnosis._id || diagnosis.id} className="p-4 bg-muted/50">
+                                            <p className="font-medium text-foreground mb-1">{diagnosis.name}</p>
+                                            <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedBy', 'Diagnosed by')} {diagnosis.doctor} {t('patient.profile.on', 'on')} {diagnosis.date && !isNaN(new Date(diagnosis.date).getTime()) ? format(new Date(diagnosis.date), 'PPP') : ''}</p>
+                                            {diagnosis.notes && <p className="text-xs text-muted-foreground mt-2">{t('patient.profile.notes', 'Notes')}: {diagnosis.notes}</p>}
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={diagnosis.doctorId} />
+                                                </div>
+                                            )}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
@@ -151,34 +213,42 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.labResultsTitle', 'Lab Results')}</h3>
-                        {medicalFile.labResults && medicalFile.labResults.length > 0 ? (
+                        {medicalRecord.labResults && medicalRecord.labResults.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.labResults.map(result => (
-                                    <Card key={result._id || result.id} className="p-4 bg-muted/50">
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <BarChart3 className="h-5 w-5 text-primary" />
-                                                <span className="font-medium text-foreground">{result.testName}</span>
-                                                {result.labName && <span className="ml-2 text-xs text-muted-foreground">{result.labName}</span>}
+                                {medicalRecord.labResults.map(result => {
+                                    const showDoctor = result.doctorId && user?._id && result.doctorId !== user._id;
+                                    return (
+                                        <Card key={result._id || result.id} className="p-4 bg-muted/50">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <BarChart3 className="h-5 w-5 text-primary" />
+                                                    <span className="font-medium text-foreground">{result.testName}</span>
+                                                    {result.labName && <span className="ml-2 text-xs text-muted-foreground">{result.labName}</span>}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {result.date && !isNaN(new Date(result.date).getTime()) ? format(new Date(result.date), 'PPP') : ''}</p>
+                                                {result.normalRange && <p className="text-xs text-muted-foreground">{t('patient.profile.normalRange', 'Normal Range')}: {result.normalRange}</p>}
+                                                {result.unit && <p className="text-xs text-muted-foreground">{t('patient.profile.unit', 'Unit')}: {result.unit}</p>}
+                                                {result.results && typeof result.results === 'object' && (
+                                                    <div className="mt-2">
+                                                        <table className="min-w-[200px] text-xs border rounded">
+                                                            <thead><tr><th className="px-2 py-1">Test</th><th className="px-2 py-1">Value</th></tr></thead>
+                                                            <tbody>
+                                                                {Object.entries(result.results).map(([key, value]) => (
+                                                                    <tr key={key}><td className="px-2 py-1 font-semibold">{key}</td><td className="px-2 py-1">{value}</td></tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {result.date && !isNaN(new Date(result.date).getTime()) ? format(new Date(result.date), 'PPP') : ''}</p>
-                                            {result.normalRange && <p className="text-xs text-muted-foreground">{t('patient.profile.normalRange', 'Normal Range')}: {result.normalRange}</p>}
-                                            {result.unit && <p className="text-xs text-muted-foreground">{t('patient.profile.unit', 'Unit')}: {result.unit}</p>}
-                                            {result.results && typeof result.results === 'object' && (
-                                                <div className="mt-2">
-                                                    <table className="min-w-[200px] text-xs border rounded">
-                                                        <thead><tr><th className="px-2 py-1">Test</th><th className="px-2 py-1">Value</th></tr></thead>
-                                                        <tbody>
-                                                            {Object.entries(result.results).map(([key, value]) => (
-                                                                <tr key={key}><td className="px-2 py-1 font-semibold">{key}</td><td className="px-2 py-1">{value}</td></tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={result.doctorId} />
                                                 </div>
                                             )}
-                                        </div>
-                                    </Card>
-                                ))}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
@@ -192,27 +262,35 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.imagingReportsTitle', 'Imaging Reports')}</h3>
-                        {medicalFile.imagingReports && medicalFile.imagingReports.length > 0 ? (
+                        {medicalRecord.imagingReports && medicalRecord.imagingReports.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.imagingReports.map(report => (
-                                    <Card key={report._id || report.id} className="p-4 bg-muted/50">
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <FileImage className="h-5 w-5 text-primary" />
-                                                <span className="font-medium text-foreground">{report.type}</span>
-                                            </div>
-                                            <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {report.date && !isNaN(new Date(report.date).getTime()) ? format(new Date(report.date), 'PPP') : ''}</p>
-                                            {report.images && report.images.length > 0 ? (
-                                                <div className="flex flex-col gap-4 mt-2">
-                                                    <div className="w-full font-semibold text-xs mb-1">DICOM Viewer</div>
-                                                    <DicomViewer imageUrls={report.images.map(img => img.src || img)} />
+                                {medicalRecord.imagingReports.map(report => {
+                                    const showDoctor = report.doctorId && user?._id && report.doctorId !== user._id;
+                                    return (
+                                        <Card key={report._id || report.id} className="p-4 bg-muted/50">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <FileImage className="h-5 w-5 text-primary" />
+                                                    <span className="font-medium text-foreground">{report.type}</span>
                                                 </div>
-                                            ) : (
-                                                <div className="text-xs text-muted-foreground mt-2">{t('patient.profile.noImages', 'No images available')}</div>
+                                                <p className="text-sm text-muted-foreground">{t('patient.profile.date', 'Date')}: {report.date && !isNaN(new Date(report.date).getTime()) ? format(new Date(report.date), 'PPP') : ''}</p>
+                                                {report.images && report.images.length > 0 ? (
+                                                    <div className="flex flex-col gap-4 mt-2">
+                                                        <div className="w-full font-semibold text-xs mb-1">DICOM Viewer</div>
+                                                        <DicomViewer imageUrls={report.images.map(img => img.src || img)} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-muted-foreground mt-2">{t('patient.profile.noImages', 'No images available')}</div>
+                                                )}
+                                            </div>
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={report.doctorId} />
+                                                </div>
                                             )}
-                                        </div>
-                                    </Card>
-                                ))}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>
@@ -226,23 +304,31 @@ const MedicalFileTabs = ({ medicalFile, loading, error, activeTab }) => {
                 return (
                     <div>
                         <h3 className="text-lg font-semibold mb-3">{t('patient.profile.currentMedications', 'Current Medications')}</h3>
-                        {medicalFile.medications && medicalFile.medications.length > 0 ? (
+                        {medicalRecord.medications && medicalRecord.medications.length > 0 ? (
                             <div className="grid gap-3">
-                                {medicalFile.medications.map(med => (
-                                    <Card key={med._id || med.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <Pill className="h-5 w-5 text-primary" />
-                                            <div>
-                                                <p className="font-medium text-foreground flex items-center gap-2">{med.name} <span className="text-xs text-muted-foreground">{med.dosage}</span></p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.frequency', 'Frequency')}: {med.frequency}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.status', 'Status')}: {med.status}</p>
-                                                <p className="text-sm text-muted-foreground">{t('patient.profile.startDate', 'Start')}: {med.startDate && !isNaN(new Date(med.startDate).getTime()) ? format(new Date(med.startDate), 'PPP') : ''} | {t('patient.profile.endDate', 'End')}: {med.endDate && !isNaN(new Date(med.endDate).getTime()) ? format(new Date(med.endDate), 'PPP') : ''}</p>
-                                                {med.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {med.notes}</p>}
-                                                {med.prescribedBy && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.prescribedBy', 'Prescribed by')}: {med.prescribedBy}</p>}
+                                {medicalRecord.medications.map(med => {
+                                    const showDoctor = med.doctorId && user?._id && med.doctorId !== user._id;
+                                    return (
+                                        <Card key={med._id || med.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <Pill className="h-5 w-5 text-primary" />
+                                                <div>
+                                                    <p className="font-medium text-foreground flex items-center gap-2">{med.name} <span className="text-xs text-muted-foreground">{med.dosage}</span></p>
+                                                    <p className="text-sm text-muted-foreground">{t('patient.profile.frequency', 'Frequency')}: {med.frequency}</p>
+                                                    <p className="text-sm text-muted-foreground">{t('patient.profile.status', 'Status')}: {med.status}</p>
+                                                    <p className="text-sm text-muted-foreground">{t('patient.profile.startDate', 'Start')}: {med.startDate && !isNaN(new Date(med.startDate).getTime()) ? format(new Date(med.startDate), 'PPP') : ''} | {t('patient.profile.endDate', 'End')}: {med.endDate && !isNaN(new Date(med.endDate).getTime()) ? format(new Date(med.endDate), 'PPP') : ''}</p>
+                                                    {med.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {med.notes}</p>}
+                                                    {med.prescribedBy && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.prescribedBy', 'Prescribed by')}: {med.prescribedBy}</p>}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Card>
-                                ))}
+                                            {showDoctor && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <DoctorName doctorId={med.doctorId} />
+                                                </div>
+                                            )}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <Alert className="bg-blue-50 text-blue-800 border-blue-200" icon={<Info className="h-4 w-4" />}>

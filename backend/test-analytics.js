@@ -8,11 +8,9 @@ require('dotenv').config({ path: './config.env' });
 
 async function testAnalytics() {
   try {
-    // Connect to database
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Find a doctor
     const doctor = await Doctor.findOne().populate('user');
     if (!doctor) {
       console.log('No doctor found in database');
@@ -21,7 +19,6 @@ async function testAnalytics() {
 
     console.log('Found doctor:', doctor.user.firstName, doctor.user.lastName);
 
-    // Get appointments for this doctor
     const appointments = await Appointment.find({ doctor: doctor._id })
       .populate({
         path: 'patient',
@@ -33,11 +30,9 @@ async function testAnalytics() {
 
     console.log('Total appointments:', appointments.length);
 
-    // Get prescriptions for this doctor
     const prescriptions = await Prescription.find({ doctorId: doctor.user._id });
     console.log('Total prescriptions:', prescriptions.length);
 
-    // Calculate basic stats
     const totalPatients = new Set(appointments.map(apt => apt.patient._id.toString())).size;
     const totalAppointments = appointments.length;
     const completedAppointments = appointments.filter(apt => apt.status === 'completed').length;
@@ -55,7 +50,6 @@ async function testAnalytics() {
     console.log('Upcoming Appointments:', upcomingAppointments);
     console.log('Prescriptions Issued:', prescriptionsIssued);
 
-    // Calculate patient distribution by gender
     const patientGenderMap = new Map();
     appointments.forEach(apt => {
       const patientId = apt.patient._id.toString();
@@ -74,7 +68,6 @@ async function testAnalytics() {
     console.log('Female:', genderCounts.female);
     console.log('Other:', genderCounts.other);
 
-    // Calculate appointment type distribution
     const appointmentTypeCounts = {};
     appointments.forEach(apt => {
       appointmentTypeCounts[apt.type] = (appointmentTypeCounts[apt.type] || 0) + 1;

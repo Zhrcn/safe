@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '@/store/services/axiosInstance';
 
-// Async thunk for fetching pharmacies
 export const fetchPharmacies = createAsyncThunk(
     'patientPharmacist/fetchPharmacies',
     async (_, { rejectWithValue }) => {
@@ -14,7 +13,6 @@ export const fetchPharmacies = createAsyncThunk(
     }
 );
 
-// Async thunk for fetching a single pharmacy
 export const fetchPharmacyById = createAsyncThunk(
     'patientPharmacist/fetchPharmacyById',
     async (pharmacyId, { rejectWithValue }) => {
@@ -27,7 +25,6 @@ export const fetchPharmacyById = createAsyncThunk(
     }
 );
 
-// Async thunk for sending message to pharmacy
 export const sendMessageToPharmacy = createAsyncThunk(
     'patientPharmacist/sendMessageToPharmacy',
     async ({ pharmacyId, message }, { rejectWithValue }) => {
@@ -95,7 +92,6 @@ const patientPharmacistSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
-        // Fetch pharmacies
         builder
             .addCase(fetchPharmacies.pending, (state) => {
                 state.loading = true;
@@ -111,7 +107,6 @@ const patientPharmacistSlice = createSlice({
                 state.error = action.payload;
             });
 
-        // Fetch single pharmacy
         builder
             .addCase(fetchPharmacyById.pending, (state) => {
                 state.loadingSingle = true;
@@ -127,7 +122,6 @@ const patientPharmacistSlice = createSlice({
                 state.error = action.payload;
             });
 
-        // Send message to pharmacy
         builder
             .addCase(sendMessageToPharmacy.pending, (state) => {
                 state.loadingMessage = true;
@@ -154,7 +148,6 @@ export const {
     removePharmacyFromFavorites
 } = patientPharmacistSlice.actions;
 
-// Selectors
 export const selectPharmacies = (state) => state.patientPharmacist.pharmacies;
 export const selectSelectedPharmacy = (state) => state.patientPharmacist.selectedPharmacy;
 export const selectPharmaciesLoading = (state) => state.patientPharmacist.loading;
@@ -164,14 +157,12 @@ export const selectPharmaciesError = (state) => state.patientPharmacist.error;
 export const selectMessageError = (state) => state.patientPharmacist.messageError;
 export const selectPharmaciesFilters = (state) => state.patientPharmacist.filters;
 
-// Filtered pharmacies selector
 export const selectFilteredPharmacies = (state) => {
     const { pharmacies } = state.patientPharmacist;
     const { search, specialty, location, sortBy, sortOrder } = state.patientPharmacist.filters;
 
     let filtered = [...pharmacies];
 
-    // Search filter
     if (search) {
         filtered = filtered.filter(pharmacy =>
             pharmacy.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -181,21 +172,18 @@ export const selectFilteredPharmacies = (state) => {
         );
     }
 
-    // Specialty filter
     if (specialty !== 'all') {
         filtered = filtered.filter(pharmacy =>
             pharmacy.specialties?.includes(specialty)
         );
     }
 
-    // Location filter
     if (location !== 'all') {
         filtered = filtered.filter(pharmacy =>
             pharmacy.address?.includes(location)
         );
     }
 
-    // Sort
     filtered.sort((a, b) => {
         let compareA, compareB;
         

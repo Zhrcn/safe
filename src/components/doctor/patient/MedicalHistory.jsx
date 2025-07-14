@@ -18,8 +18,7 @@ import { format, isValid } from 'date-fns';
 import { cn } from '@/utils/styles';
 
 const MedicalHistory = ({ patient }) => {
-  // Use medical file data from the patient object (now included in the backend response)
-  const medicalFile = patient?.medicalFile;
+  const medicalFile = patient?.medicalRecord;
   
   const categories = [
     {
@@ -49,11 +48,11 @@ const MedicalHistory = ({ patient }) => {
       emptyMessage: 'No chronic conditions.',
     },
     {
-      id: 'medicationHistory',
+      id: 'medications',
       title: 'Medications',
       icon: Pill,
       color: 'text-blue-500',
-      items: medicalFile?.medicationHistory,
+      items: medicalFile?.medications,
       renderItem: (item) => (
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{item.name} ({item.dose})</span> - {item.frequency} 
@@ -95,9 +94,20 @@ const MedicalHistory = ({ patient }) => {
       color: 'text-cyan-500',
       items: medicalFile?.labResults,
       renderItem: (item) => (
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{item.testName}:</span> {item.results} {item.unit} (Range: {item.normalRange})
-        </p>
+        <div className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{item.testName}:</span>{' '}
+          {typeof item.results === 'object' && item.results !== null ? (
+            <ul className="ml-4 list-disc">
+              {Object.entries(item.results).map(([key, value]) => (
+                <li key={key}>
+                  <span className="font-semibold">{key}:</span> {value} {item.unit && item.unit[key] ? item.unit[key] : ''} {item.normalRange && item.normalRange[key] ? `(Range: ${item.normalRange[key]})` : ''}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span>{item.results} {item.unit} (Range: {item.normalRange})</span>
+          )}
+        </div>
       ),
       emptyMessage: 'No lab results.',
     },
@@ -128,11 +138,11 @@ const MedicalHistory = ({ patient }) => {
       emptyMessage: 'No vital signs.',
     },
     {
-      id: 'attachedDocuments',
-      title: 'Attached Documents',
+      id: 'documents',
+      title: 'Documents',
       icon: FileText,
       color: 'text-gray-500',
-      items: medicalFile?.attachedDocuments,
+      items: medicalFile?.documents,
       renderItem: (item) => (
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{item.title}:</span> {item.type} ({isValid(new Date(item.uploadDate)) ? format(new Date(item.uploadDate), 'MMM dd, yyyy') : 'N/A'})
@@ -176,14 +186,14 @@ const MedicalHistory = ({ patient }) => {
         </div>
       ))}
       
-      {medicalFile.familyMedicalHistory && medicalFile.familyMedicalHistory.length > 0 && (
+      {medicalFile.familyHistory && medicalFile.familyHistory.length > 0 && (
         <div className="p-6 bg-card rounded-2xl shadow-md border border-border md:col-span-2 lg:col-span-3">
           <h3 className="flex items-center gap-3 text-xl font-bold text-foreground mb-4">
             <User className="w-6 h-6 text-primary" />
             Family Medical History
           </h3>
           <div className="space-y-4">
-            {medicalFile.familyMedicalHistory.map((item, index) => (
+            {medicalFile.familyHistory.map((item, index) => (
               <div key={index} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">{item.relation}:</span> {item.condition} - {item.notes}
@@ -209,14 +219,14 @@ const MedicalHistory = ({ patient }) => {
         </div>
       )}
       
-      {medicalFile.generalMedicalHistory && medicalFile.generalMedicalHistory.length > 0 && (
+      {medicalFile.generalHistory && medicalFile.generalHistory.length > 0 && (
         <div className="p-6 bg-card rounded-2xl shadow-md border border-border md:col-span-2 lg:col-span-3">
           <h3 className="flex items-center gap-3 text-xl font-bold text-foreground mb-4">
             <Stethoscope className="w-6 h-6 text-primary" />
             General Medical History
           </h3>
           <div className="space-y-4">
-            {medicalFile.generalMedicalHistory.map((item, index) => (
+            {medicalFile.generalHistory.map((item, index) => (
               <div key={index} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
                 <div className="flex items-center gap-2 mb-2">
                   <CalendarDays className="w-4 h-4 text-muted-foreground" />

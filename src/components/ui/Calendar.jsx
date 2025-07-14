@@ -43,10 +43,8 @@ function Calendar({
           className
         ),
         day_range_end: "day-range-end",
-        // Make the selected day use bg-primary and text-primary-foreground
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        // Make today have a border in primary color, but use normal text color
         day_today:
           "border-2 border-primary bg-accent text-foreground",
         day_outside:

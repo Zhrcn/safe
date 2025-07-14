@@ -1,6 +1,5 @@
 import axiosInstance from '@/store/services/axiosInstance';
 
-// Add mock data definitions to prevent ReferenceError
 const mockSystemLogs = [];
 const mockStats = {};
 const mockNotifications = [];
@@ -87,7 +86,6 @@ export const getSystemStats = async () => {
 
 export const getActivityLogs = async () => {
     const response = await axiosInstance.get('/logs');
-    // The backend returns { statusCode, data, message }, where data is the logs array
     return response.data.data || [];
 };
 

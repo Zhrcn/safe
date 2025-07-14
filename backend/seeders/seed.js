@@ -42,7 +42,6 @@ const randomDate = (start, end) => {
 };
 
 const randomDOB = () => {
-  // Random age between 18 and 70
   const start = new Date(1954, 0, 1);
   const end = new Date(2006, 0, 1);
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
@@ -271,7 +270,7 @@ const seedDatabase = async () => {
             date: new Date(),
             results: { WBC: 6.2 + (i % 2), RBC: 4.8 + (i % 2), HGB: 13.5 + (i % 2) },
             normalRange: 'WBC: 4.0-11.0, RBC: 4.2-5.9, HGB: 13.0-17.0',
-            unit: '',
+            unit: 'cells/µL',
             labName: 'Safe Lab',
             doctorId: null,
             documents: []
@@ -281,17 +280,19 @@ const seedDatabase = async () => {
           {
             date: new Date(),
             type: 'Chest X-Ray',
-            result: 'Clear',
-            notes: 'No abnormalities detected',
+            findings: 'Clear',
+            location: 'Chest',
+            doctorId: null,
             images: ['/case1_008.dcm']
           }
         ],
-        documents: [
+        attachedDocuments: [
           {
             title: 'Discharge Summary',
-            date: new Date(),
             type: 'PDF',
-            url: '/mock/path/to/discharge-summary.pdf'
+            url: '/mock/path/to/discharge-summary.pdf',
+            uploadDate: new Date(),
+            tags: ['discharge', 'summary']
           }
         ],
         emergencyContact: {
@@ -300,6 +301,73 @@ const seedDatabase = async () => {
           phone: `+963${400000000 + i * 1000000}`,
           email: `emergency${i}@safe.com`
         },
+        medicationHistory: [
+          {
+            name: 'Amlodipine',
+            dose: '5mg',
+            frequency: 'Once daily',
+            route: 'Oral',
+            startDate: new Date(),
+            endDate: new Date(2025, 11, 31),
+            active: true,
+            instructions: 'Take in the morning',
+            prescribedBy: null
+          }
+        ],
+        immunizations: [
+          {
+            name: 'COVID-19 Vaccine',
+            dateAdministered: new Date(2021, 5, 15),
+            nextDoseDate: new Date(2021, 8, 15),
+            manufacturer: 'Pfizer',
+            batchNumber: `BATCH${1000 + i}`,
+            administeredBy: 'Dr. Safe'
+          }
+        ],
+        diagnoses: [
+          {
+            conditionName: 'Hypertension',
+            diagnosedBy: null,
+            date: new Date(2020, 0, 15),
+            notes: 'Essential hypertension',
+            treatmentPlan: 'Lifestyle modifications and medication',
+            status: 'active'
+          }
+        ],
+        surgicalHistory: [
+          {
+            name: 'Appendectomy',
+            date: new Date(2018, 5, 10),
+            hospital: 'Safe Hospital',
+            surgeon: 'Dr. Safe',
+            notes: 'Laparoscopic procedure',
+            complications: 'None',
+            outcome: 'Successful'
+          }
+        ],
+        familyMedicalHistory: [
+          {
+            relation: 'Father',
+            condition: 'Diabetes Type 2',
+            notes: 'Diagnosed at age 45'
+          }
+        ],
+        socialHistory: {
+          smokingStatus: 'never',
+          alcoholUse: 'Occasional',
+          occupation: 'Teacher',
+          livingSituation: 'With family'
+        },
+        generalMedicalHistory: [
+          {
+            date: new Date(),
+            doctorId: null,
+            visitReason: 'Annual checkup',
+            diagnosisSummary: 'Healthy individual',
+            treatmentSummary: 'No treatment needed',
+            notes: 'Continue healthy lifestyle'
+          }
+        ],
         insuranceDetails: {
           provider: 'Syrian Insurance Company',
           policyNumber: `POL${1000 + i}`,
@@ -374,7 +442,6 @@ const seedDatabase = async () => {
       const patient = patients[i];
       const doctor = doctors[i % doctors.length];
       
-      // Add patient to doctor's patientsList
       if (!doctor.patientsList.includes(patient._id)) {
         doctor.patientsList.push(patient._id);
         await doctor.save();

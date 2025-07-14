@@ -17,7 +17,6 @@ const getProfile = asyncHandler(async (req, res) => {
         throw new Error('Patient not found');
     }
     
-    // Add patientId to the response
     const patientResponse = patient.toObject();
     patientResponse.patientId = patient.patientId;
     
@@ -25,8 +24,7 @@ const getProfile = asyncHandler(async (req, res) => {
 });
 const updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const { firstName, lastName, email, phone, address, dateOfBirth, emergencyContact } = req.body;
-    // Update User info
+    const { firstName, lastName, email, phone, address, dateOfBirth, emergencyContact, profilePicture } = req.body;
     const user = await User.findById(userId);
     if (!user) {
         return res.status(404).json(new ApiResponse(404, null, 'User not found'));
@@ -37,8 +35,8 @@ const updateProfile = asyncHandler(async (req, res) => {
     if (phone !== undefined) user.phoneNumber = phone;
     if (address !== undefined) user.address = address;
     if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth;
+    if (profilePicture !== undefined) user.profileImage = profilePicture;
     await user.save();
-    // Update Patient emergency contacts
     const patient = await Patient.findOne({ user: userId });
     if (!patient) {
         return res.status(404).json(new ApiResponse(404, null, 'Patient not found'));
@@ -47,7 +45,6 @@ const updateProfile = asyncHandler(async (req, res) => {
         patient.emergencyContacts = [emergencyContact];
         await patient.save();
     }
-    // Return updated profile
     const updatedPatient = await Patient.findOne({ user: userId })
         .select('-password')
         .populate('medicalFile')
@@ -92,7 +89,7 @@ const getAppointments = asyncHandler(async (req, res) => {
     
     const Appointment = require('../models/Appointment');
     const appointments = await Appointment.find({ _id: { $in: patient.appointments } })
-        .populate('patient', 'firstName lastName email profilePictureUrl')
+        .populate('patient', 'firstName lastName email profileImage')
         .populate({
             path: 'doctor',
             select: 'user specialty',
@@ -393,6 +390,46 @@ const getLatestVitals = asyncHandler(async (req, res) => {
     const latestVitals = medicalFile.vitalSigns[medicalFile.vitalSigns.length - 1];
     res.status(200).json(new ApiResponse(200, latestVitals, 'Latest vital signs retrieved successfully.'));
 });
+
+// Get patient's own medical records
+const getMyMedicalRecords = asyncHandler(async (req, res) => {
+    const patient = await Patient.findOne({ user: req.user._id })
+        .populate('medicalFile');
+    
+    if (!patient) {
+        return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
+    }
+    
+    if (!patient.medicalFile) {
+        return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
+    }
+    
+    // Return the complete medical file with all sections
+    const medicalRecords = {
+        vitalSigns: patient.medicalFile.vitalSigns || [],
+        allergies: patient.medicalFile.allergies || [],
+        chronicConditions: patient.medicalFile.chronicConditions || [],
+        diagnoses: patient.medicalFile.diagnoses || [],
+        labResults: patient.medicalFile.labResults || [],
+        imagingReports: patient.medicalFile.imagingReports || [],
+        medications: patient.medicalFile.medicationHistory || [],
+        immunizations: patient.medicalFile.immunizations || [],
+        surgicalHistory: patient.medicalFile.surgicalHistory || [],
+        documents: patient.medicalFile.attachedDocuments || [],
+        familyHistory: patient.medicalFile.familyMedicalHistory || [],
+        socialHistory: patient.medicalFile.socialHistory ? [patient.medicalFile.socialHistory] : [],
+        generalHistory: patient.medicalFile.generalMedicalHistory || [],
+        emergencyContact: patient.medicalFile.emergencyContact || null,
+        personalInfo: {
+            height: patient.medicalFile.height,
+            weight: patient.medicalFile.weight,
+            bloodType: patient.medicalFile.bloodType,
+            dateOfBirth: patient.medicalFile.dateOfBirth
+        }
+    };
+    
+    res.status(200).json(new ApiResponse(200, medicalRecords, 'Medical records retrieved successfully.'));
+});
 module.exports = {
     getProfile,
     updateProfile,
@@ -415,4 +452,5 @@ module.exports = {
     sendMessage,
     getDashboardSummary,
     getLatestVitals,
+    getMyMedicalRecords,
 };

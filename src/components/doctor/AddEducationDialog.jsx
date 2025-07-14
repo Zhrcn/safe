@@ -51,7 +51,12 @@ const AddEducationDialog = ({ open, onClose, onAdd }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      if (onAdd) onAdd(formData);
+      const educationData = {
+        degree: formData.degree,
+        institution: formData.institution,
+        yearCompleted: parseInt(formData.year)
+      };
+      if (onAdd) onAdd(educationData);
       setFormData({ degree: '', institution: '', year: '' });
       onClose();
     }

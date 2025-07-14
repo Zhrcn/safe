@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 
-// Load environment variables
 require('dotenv').config({ path: './backend/config/config.env' });
 
 console.log('Environment variables:', {
@@ -26,19 +25,16 @@ mongoose.connect(process.env.MONGO_URI, {
     process.exit(1);
 });
 
-// Helper function to get random date within last 30 days
 const getRandomRecentDate = () => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
     return new Date(thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime()));
 };
 
-// Generate notifications based on user role
 const generateNotificationsForUser = (user) => {
     const notifications = [];
     const baseDate = new Date();
     
-    // Common notifications for all users
     notifications.push({
         user: user._id,
         type: 'general',
@@ -51,7 +47,6 @@ const generateNotificationsForUser = (user) => {
         updatedAt: new Date()
     });
 
-    // Role-specific notifications
     switch (user.role) {
         case 'admin':
             notifications.push(
@@ -255,11 +250,9 @@ const generateNotificationsForUser = (user) => {
 
 const seedNotifications = async () => {
     try {
-        // Clear existing notifications
         await Notification.deleteMany({});
         console.log('Cleared existing notifications');
 
-        // Get all users
         const users = await User.find({});
         console.log(`Found ${users.length} users to create notifications for`);
 
@@ -270,18 +263,15 @@ const seedNotifications = async () => {
 
         const allNotifications = [];
 
-        // Generate notifications for each user
         for (const user of users) {
             const userNotifications = generateNotificationsForUser(user);
             allNotifications.push(...userNotifications);
             console.log(`Generated ${userNotifications.length} notifications for ${user.firstName} ${user.lastName} (${user.role})`);
         }
 
-        // Insert all notifications
         const createdNotifications = await Notification.insertMany(allNotifications);
         console.log(`Successfully created ${createdNotifications.length} notifications`);
 
-        // Log statistics
         const unreadCount = await Notification.countDocuments({ isRead: false });
         const readCount = await Notification.countDocuments({ isRead: true });
         
@@ -290,7 +280,6 @@ const seedNotifications = async () => {
         console.log(`Unread notifications: ${unreadCount}`);
         console.log(`Read notifications: ${readCount}`);
 
-        // Log by type
         const typeStats = await Notification.aggregate([
             { $group: { _id: '$type', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
@@ -301,7 +290,6 @@ const seedNotifications = async () => {
             console.log(`  ${stat._id}: ${stat.count}`);
         });
 
-        // Log by role
         const roleStats = await Notification.aggregate([
             { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'userInfo' } },
             { $unwind: '$userInfo' },

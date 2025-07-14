@@ -68,7 +68,6 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       const appointmentDate = new Date(appointment.date);
       const placeholderDate = new Date('1111-01-01');
       
-      // If date is a placeholder, don't set it in the form
       const formDate = (appointment.date && appointmentDate.getTime() !== placeholderDate.getTime() && !isNaN(appointmentDate.getTime())) 
         ? appointmentDate.toISOString().split('T')[0] 
         : '';
@@ -151,7 +150,6 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   };
 
   const handleUpdate = async () => {
-    // Prepare appointment data for update
     const appointmentData = {};
     if (updateForm.date) appointmentData.date = updateForm.date;
     if (updateForm.time) appointmentData.time = updateForm.time;
@@ -161,10 +159,8 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     if (updateForm.reason) appointmentData.reason = updateForm.reason;
     if (updateForm.type) appointmentData.type = updateForm.type;
 
-    // If this is a reschedule action, also update the status to 'rescheduled'
     if (dialogMode === 'reschedule') {
       if (!updateForm.date || !updateForm.time) {
-        // Show error message
         dispatch(clearError());
         dispatch(clearSuccess());
         console.error('Missing date or time for rescheduling:', { date: updateForm.date, time: updateForm.time });
@@ -225,7 +221,6 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     const appointmentDate = new Date(date);
     const placeholderDate = new Date('1111-01-01');
     
-    // If date is a placeholder (like 1/1/1111), show as TBD
     if (appointmentDate.getTime() === placeholderDate.getTime() || isNaN(appointmentDate.getTime())) {
       return 'TBD';
     }
@@ -262,7 +257,6 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
           </Alert>
         )}
 
-        {/* Appointment Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -321,7 +315,6 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
           {appointment?.status === 'pending' && (
             <>

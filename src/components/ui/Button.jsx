@@ -1,4 +1,3 @@
-'use client';
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
@@ -96,9 +95,7 @@ const Button = React.forwardRef(({
     
     setRipples(prev => [...prev, newRipple]);
     
-    // Play sound effect if enabled
     if (sound) {
-      // You can add actual sound implementation here
       console.log('Button click sound');
     }
     
@@ -130,7 +127,6 @@ const Button = React.forwardRef(({
       onMouseLeave={handleMouseLeave}
       {...props}
     >
-      {/* Ripple Effects */}
       {ripples.map((ripple) => (
         <motion.span
           key={ripple.id}
@@ -147,7 +143,6 @@ const Button = React.forwardRef(({
         />
       ))}
 
-      {/* Loading Spinner */}
       {loading && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -177,9 +172,7 @@ const Button = React.forwardRef(({
         </motion.div>
       )}
       
-      {/* Content Container */}
       <div className="flex items-center justify-center">
-        {/* Icon with Animation */}
         {!loading && icon && iconPosition === "left" && (
           <motion.span 
             className="mr-2 flex items-center"
@@ -190,7 +183,6 @@ const Button = React.forwardRef(({
           </motion.span>
         )}
         
-        {/* Children with Animation */}
         <motion.span
           initial={{ opacity: 1 }}
           animate={{ opacity: loading ? 0.7 : 1 }}
@@ -200,7 +192,6 @@ const Button = React.forwardRef(({
           {children}
         </motion.span>
         
-        {/* Icon with Animation */}
         {!loading && icon && iconPosition === "right" && (
           <motion.span 
             className="ml-2 flex items-center"
@@ -212,7 +203,6 @@ const Button = React.forwardRef(({
         )}
       </div>
 
-      {/* Press Animation Overlay */}
       {isPressed && (
         <motion.div
           className="absolute inset-0 bg-black/10 rounded-xl"

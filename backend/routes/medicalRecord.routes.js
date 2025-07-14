@@ -16,7 +16,6 @@ const {
 const multer = require('multer');
 const path = require('path');
 
-// Set up storage for labtest and imaging
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     let dest = 'public/patient/medicalRecord/';
@@ -32,13 +31,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// All routes require authentication
 router.use(protect);
 
-// Get patient's medical records
 router.get('/', getMedicalRecords);
 
-// Add new records
 router.post('/vital-signs', addVitalSigns);
 router.post('/allergies', addAllergy);
 router.post('/chronic-conditions', addChronicCondition);
@@ -47,18 +43,15 @@ router.post('/lab-results', addLabResult);
 router.post('/imaging-reports', addImagingReport);
 router.post('/medications', addMedication);
 
-// Update and delete records
 router.put('/:category/:itemId', updateRecordItem);
 router.delete('/:category/:itemId', deleteRecordItem);
 
-// POST /api/patient/medical-records/upload/labtest
 router.post('/upload/labtest', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const filePath = `/patient/medicalRecord/labtest/${req.file.filename}`;
   res.json({ filePath });
 });
 
-// POST /api/patient/medical-records/upload/imaging
 router.post('/upload/imaging', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const filePath = `/patient/medicalRecord/imaging/${req.file.filename}`;

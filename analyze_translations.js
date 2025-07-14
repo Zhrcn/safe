@@ -5,14 +5,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read the JSON files
 const arPath = path.join(__dirname, 'public/locales/ar/common.json');
 const enPath = path.join(__dirname, 'public/locales/en/common.json');
 
 const arData = JSON.parse(fs.readFileSync(arPath, 'utf8'));
 const enData = JSON.parse(fs.readFileSync(enPath, 'utf8'));
 
-// Function to find duplicate keys in an object
 function findDuplicates(obj, prefix = '') {
   const duplicates = [];
   const seen = new Set();
@@ -37,7 +35,6 @@ function findDuplicates(obj, prefix = '') {
   return duplicates;
 }
 
-// Function to get all keys from an object
 function getAllKeys(obj, prefix = '') {
   const keys = [];
   
@@ -56,15 +53,12 @@ function getAllKeys(obj, prefix = '') {
   return keys;
 }
 
-// Find duplicates in each file
 const arDuplicates = findDuplicates(arData);
 const enDuplicates = findDuplicates(enData);
 
-// Get all keys from each file
 const arKeys = getAllKeys(arData);
 const enKeys = getAllKeys(enData);
 
-// Find missing keys
 const arKeysSet = new Set(arKeys);
 const enKeysSet = new Set(enKeys);
 

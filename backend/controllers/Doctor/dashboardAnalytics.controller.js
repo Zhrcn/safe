@@ -7,7 +7,6 @@ const Prescription = require('../../models/Prescription');
 const User = require('../../models/User');
 const MedicalFile = require('../../models/MedicalFile');
 
-// Get comprehensive analytics for doctor
 exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const doctor = await Doctor.findOne({ user: userId });
@@ -16,14 +15,12 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Get date range for analytics (last 7 months for trends)
   const sevenMonthsAgo = new Date();
   sevenMonthsAgo.setMonth(sevenMonthsAgo.getMonth() - 7);
   
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Get all appointments for this doctor
   const appointments = await Appointment.find({ doctor: doctor._id })
     .populate({
       path: 'patient',
@@ -33,10 +30,8 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
       }
     });
 
-  // Get prescriptions for this doctor
   const prescriptions = await Prescription.find({ doctorId: userId });
 
-  // Calculate basic statistics
   const totalPatients = new Set(appointments.map(apt => apt.patient._id.toString())).size;
   const totalAppointments = appointments.length;
   const completedAppointments = appointments.filter(apt => apt.status === 'completed').length;
@@ -46,7 +41,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
   ).length;
   const prescriptionsIssued = prescriptions.length;
 
-  // Calculate new patients this month
   const newPatientsThisMonth = appointments
     .filter(apt => new Date(apt.createdAt) >= thirtyDaysAgo)
     .reduce((acc, apt) => {
@@ -58,7 +52,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
       return acc;
     }, new Set()).size;
 
-  // Calculate appointment trends (last 7 months)
   const appointmentTrends = {
     labels: [],
     data: []
@@ -80,7 +73,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     appointmentTrends.data.push(monthAppointments);
   }
 
-  // Calculate prescription trends (last 7 months)
   const prescriptionTrends = {
     labels: [],
     data: []
@@ -102,7 +94,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     prescriptionTrends.data.push(monthPrescriptions);
   }
 
-  // Calculate patient distribution by gender
   const patientGenderMap = new Map();
   appointments.forEach(apt => {
     const patientId = apt.patient._id.toString();
@@ -121,7 +112,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     data: [genderCounts.male, genderCounts.female, genderCounts.other]
   };
 
-  // Calculate appointment type distribution
   const appointmentTypeCounts = {};
   appointments.forEach(apt => {
     appointmentTypeCounts[apt.type] = (appointmentTypeCounts[apt.type] || 0) + 1;
@@ -134,7 +124,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     data: Object.values(appointmentTypeCounts)
   };
 
-  // Calculate average patient age
   const patientAges = [];
   const patientAgeMap = new Map();
   appointments.forEach(apt => {
@@ -149,7 +138,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     ? Math.round(patientAges.reduce((sum, age) => sum + age, 0) / patientAges.length)
     : 0;
 
-  // Calculate gender age distribution
   const genderAgeData = { male: [], female: [], other: [] };
   patientAgeMap.forEach((age, patientId) => {
     const gender = patientGenderMap.get(patientId) || 'other';
@@ -165,11 +153,9 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     ]
   };
 
-  // Calculate no-show rate
   const noShowAppointments = appointments.filter(apt => apt.status === 'cancelled').length;
   const noShowRate = totalAppointments > 0 ? noShowAppointments / totalAppointments : 0;
 
-  // Calculate busiest day and hour
   const dayCounts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
   const hourCounts = {};
   
@@ -193,10 +179,8 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
     : '09';
   const busiestHourFormatted = `${busiestHour}:00`;
 
-  // Calculate average appointment duration (placeholder - would need actual duration data)
-  const avgAppointmentDuration = 32; // minutes
+  const avgAppointmentDuration = 32;
 
-  // Get top medical conditions from patient medical files
   const patientIds = [...new Set(appointments.map(apt => apt.patient._id))];
   let topConditions = [];
   
@@ -223,11 +207,9 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
       .map(([name, count]) => ({ name, count }));
   } catch (error) {
     console.error('Error fetching medical conditions:', error);
-    // Fallback to empty array if there's an error
     topConditions = [];
   }
 
-  // Get recent patients
   const recentPatients = appointments
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 3)
@@ -261,7 +243,6 @@ exports.getComprehensiveAnalytics = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, analytics, 'Comprehensive analytics fetched successfully.'));
 });
 
-// Get dashboard analytics overview
 exports.getDashboardAnalytics = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const doctor = await Doctor.findOne({ user: userId });
@@ -270,30 +251,24 @@ exports.getDashboardAnalytics = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Get date range for analytics (last 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Get appointments in the last 30 days
   const appointments = await Appointment.find({
     doctor: doctor._id,
     date: { $gte: thirtyDaysAgo }
   });
 
-  // Calculate analytics
   const totalAppointments = appointments.length;
   const completedAppointments = appointments.filter(apt => apt.status === 'completed').length;
   const pendingAppointments = appointments.filter(apt => apt.status === 'pending').length;
   
-  // Calculate revenue (assuming consultation fee is stored in doctor model)
   const revenue = completedAppointments * (doctor.consultationFee || 0);
   
-  // Get unique patients
   const uniquePatientIds = [...new Set(appointments.map(apt => apt.patient.toString()))];
   const totalPatients = uniquePatientIds.length;
 
-  // Calculate average rating (if you have a rating system)
-  const averageRating = 4.5; // Placeholder - implement actual rating calculation
+  const averageRating = 4.5;
 
   const analytics = {
     totalPatients,
@@ -307,7 +282,6 @@ exports.getDashboardAnalytics = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, analytics, 'Dashboard analytics fetched successfully.'));
 });
 
-// Get appointments analytics for charts
 exports.getAppointmentsAnalytics = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { period = 'week' } = req.query;
@@ -320,7 +294,6 @@ exports.getAppointmentsAnalytics = asyncHandler(async (req, res) => {
   let startDate, labels, data;
   
   if (period === 'week') {
-    // Last 7 days
     startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
     labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -336,12 +309,10 @@ exports.getAppointmentsAnalytics = asyncHandler(async (req, res) => {
       data[dayOfWeek] = (data[dayOfWeek] || 0) + 1;
     });
     
-    // Reorder data to start with Monday
     const reorderedData = [...data.slice(1), data[0]];
     data = reorderedData;
     
   } else if (period === 'month') {
-    // Last 30 days
     startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     labels = [];
@@ -359,7 +330,6 @@ exports.getAppointmentsAnalytics = asyncHandler(async (req, res) => {
       }
     });
     
-    // Generate labels for last 30 days
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -375,7 +345,6 @@ exports.getAppointmentsAnalytics = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, chartData, 'Appointments analytics fetched successfully.'));
 });
 
-// Get patient distribution
 exports.getPatientDistribution = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const doctor = await Doctor.findOne({ user: userId });
@@ -384,10 +353,8 @@ exports.getPatientDistribution = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Get all appointments for this doctor
   const appointments = await Appointment.find({ doctor: doctor._id });
 
-  // Categorize patients
   const patientCategories = {
     new: 0,
     followUp: 0,
@@ -403,7 +370,6 @@ exports.getPatientDistribution = asyncHandler(async (req, res) => {
     patientAppointmentCount.set(patientId, currentCount + 1);
   });
 
-  // Categorize based on appointment count and type
   patientAppointmentCount.forEach((count, patientId) => {
     if (count === 1) {
       patientCategories.new++;
@@ -414,7 +380,6 @@ exports.getPatientDistribution = asyncHandler(async (req, res) => {
     }
   });
 
-  // Count emergency appointments
   const emergencyAppointments = appointments.filter(apt => apt.type === 'emergency');
   patientCategories.emergency = new Set(emergencyAppointments.map(apt => apt.patient.toString())).size;
 
@@ -431,7 +396,6 @@ exports.getPatientDistribution = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, distribution, 'Patient distribution fetched successfully.'));
 });
 
-// Get recent appointments
 exports.getRecentAppointments = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { limit = 10 } = req.query;
@@ -446,7 +410,7 @@ exports.getRecentAppointments = asyncHandler(async (req, res) => {
       path: 'patient',
       populate: {
         path: 'user',
-        select: 'firstName lastName email profilePictureUrl'
+        select: 'firstName lastName email profileImage'
       }
     })
     .sort({ date: -1, time: -1 })
@@ -455,7 +419,6 @@ exports.getRecentAppointments = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, appointments, 'Recent appointments fetched successfully.'));
 });
 
-// Get appointments for specific date
 exports.getAppointmentsByDate = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { date } = req.params;
@@ -478,7 +441,7 @@ exports.getAppointmentsByDate = asyncHandler(async (req, res) => {
     path: 'patient',
     populate: {
       path: 'user',
-      select: 'firstName lastName email profilePictureUrl'
+      select: 'firstName lastName email profileImage'
     }
   })
   .sort({ time: 1 });

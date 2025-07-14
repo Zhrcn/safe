@@ -115,7 +115,6 @@ const AdvancedButton = React.forwardRef(({
   const [ripples, setRipples] = React.useState([]);
   const [isPressed, setIsPressed] = React.useState(false);
 
-  // Advanced button hooks
   const advancedButton = useAdvancedButton({
     hapticFeedback,
     analytics,
@@ -138,7 +137,6 @@ const AdvancedButton = React.forwardRef(({
     onCancel,
   });
 
-  // Determine if button should be in loading state
   const isButtonLoading = loading || isLoading;
 
   const createRipple = (event) => {
@@ -159,9 +157,7 @@ const AdvancedButton = React.forwardRef(({
     
     setRipples(prev => [...prev, newRipple]);
     
-    // Play sound effect if enabled
     if (sound) {
-      // You can add actual sound implementation here
       console.log('Button click sound');
     }
     
@@ -197,11 +193,9 @@ const AdvancedButton = React.forwardRef(({
       return;
     }
 
-    // Use debounced click for regular clicks
     advancedButton.handleDebouncedClick(event, props.onClick);
   };
 
-  // Cleanup on unmount
   React.useEffect(() => {
     return () => {
       advancedButton.cleanup();
@@ -209,7 +203,6 @@ const AdvancedButton = React.forwardRef(({
     };
   }, [advancedButton, confirmationHook]);
 
-  // Determine button text based on state
   const getButtonText = () => {
     if (isButtonLoading) {
       return hookLoadingText || loadingText || 'Loading...';
@@ -233,7 +226,6 @@ const AdvancedButton = React.forwardRef(({
       onClick={handleClick}
       {...props}
     >
-      {/* Ripple Effects */}
       {ripples.map((ripple) => (
         <motion.span
           key={ripple.id}
@@ -250,7 +242,6 @@ const AdvancedButton = React.forwardRef(({
         />
       ))}
 
-      {/* Loading Spinner */}
       {isButtonLoading && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -280,7 +271,6 @@ const AdvancedButton = React.forwardRef(({
         </motion.div>
       )}
       
-      {/* Icon with Animation */}
       {!isButtonLoading && icon && iconPosition === "left" && (
         <motion.span 
           className="mr-2"
@@ -291,7 +281,6 @@ const AdvancedButton = React.forwardRef(({
         </motion.span>
       )}
       
-      {/* Children with Animation */}
       <motion.span
         initial={{ opacity: 1 }}
         animate={{ opacity: isButtonLoading ? 0.7 : 1 }}
@@ -300,7 +289,6 @@ const AdvancedButton = React.forwardRef(({
         {getButtonText()}
       </motion.span>
       
-      {/* Icon with Animation */}
       {!isButtonLoading && icon && iconPosition === "right" && (
         <motion.span 
           className="ml-2"
@@ -311,7 +299,6 @@ const AdvancedButton = React.forwardRef(({
         </motion.span>
       )}
 
-      {/* Press Animation Overlay */}
       {isPressed && (
         <motion.div
           className="absolute inset-0 bg-black/10 rounded-xl"
@@ -322,7 +309,6 @@ const AdvancedButton = React.forwardRef(({
         />
       )}
 
-      {/* Long Press Indicator */}
       {advancedButton.isLongPressed && (
         <motion.div
           className="absolute inset-0 bg-primary/20 rounded-xl"
@@ -332,7 +318,6 @@ const AdvancedButton = React.forwardRef(({
         />
       )}
 
-      {/* Confirmation Indicator */}
       {confirmation && confirmationHook.needsConfirmation && (
         <motion.div
           className="absolute inset-0 bg-warning/20 rounded-xl"

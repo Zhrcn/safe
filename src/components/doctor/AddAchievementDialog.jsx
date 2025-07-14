@@ -51,7 +51,8 @@ const AddAchievementDialog = ({ open, onClose, onAdd }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      if (onAdd) onAdd(formData);
+      const achievementText = `${formData.title} - ${formData.issuer} (${formData.year})`;
+      if (onAdd) onAdd({ achievement: achievementText });
       setFormData({ title: '', issuer: '', year: '' });
       onClose();
     }

@@ -23,11 +23,9 @@ const InfoItem = ({ icon: Icon, label, value }) => (
 const Insurance = ({ patient }) => {
     if (!patient) return null;
     
-    // Handle different data structures - insurance can come from patient.insurance or patient.medicalFile.insuranceDetails
     const patientInsurance = patient?.insurance || {};
-    const medicalFileInsurance = patient?.medicalFile?.insuranceDetails || {};
+    const medicalFileInsurance = patient?.medicalRecord?.insuranceDetails || {};
     
-    // Combine both sources, with patient.insurance taking precedence
     const insuranceData = {
         ...medicalFileInsurance,
         ...patientInsurance

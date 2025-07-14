@@ -66,11 +66,9 @@ const ContactCard = ({ title, contact }) => (
 const EmergencyContact = ({ patient }) => {
     if (!patient) return null;
     
-    // Handle different data structures - emergency contacts can come from patient.emergencyContacts or patient.medicalFile.emergencyContact
     const patientEmergencyContacts = patient?.emergencyContacts || [];
-    const medicalFileEmergencyContact = patient?.medicalFile?.emergencyContact;
+    const medicalFileEmergencyContact = patient?.medicalRecord?.emergencyContact;
     
-    // Combine both sources
     let allContacts = [...patientEmergencyContacts];
     if (medicalFileEmergencyContact && !allContacts.find(c => c.name === medicalFileEmergencyContact.name)) {
         allContacts.push(medicalFileEmergencyContact);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,7 +8,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { logoutUser } from '@/store/slices/auth/authSlice';
 import { useNotification } from '@/components/ui/Notification';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, getImageUrl } from '@/components/ui/Avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +19,11 @@ import {
 import { ThemeButton } from '@/components/ThemeButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
-  Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight, Menu as MenuIcon, X as CloseIcon
+  Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight, Menu as MenuIcon, X as CloseIcon, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSocket } from '@/utils/socket';
+import { getToken } from '@/utils/tokenUtils';
 import NotificationDialog from '@/components/patient/NotificationDialog';
 import axios from 'axios';
 
@@ -43,9 +44,9 @@ const NAVIGATION_CONFIG = {
     { name: 'medications', path: '/patient/medications', icon: Pill },
     { name: 'messaging', path: '/patient/messaging', icon: MessageSquare },
     { name: 'prescriptions', path: '/patient/prescriptions', icon: ClipboardList },
-    { name: 'profile', path: '/patient/profile', icon: User },
     { name: 'providers', path: '/patient/providers', icon: Users },
     { name: 'medical-records', path: '/patient/medical-records', icon: FileText },
+    { name: 'profile', path: '/patient/profile', icon: User },
   ],
   pharmacist: [
     { name: 'dashboard', path: '/pharmacist/dashboard', icon: Home },
@@ -117,40 +118,82 @@ const SidebarToggle = ({ collapsed, onToggle, isRtl, t }) => (
   </Button>
 );
 
-const UserProfile = ({ user, collapsed, t }) => (
-  <div className={cn(
-    'flex flex-col items-center py-6 sm:py-8 border-b border-border transition-all duration-300',
-    collapsed ? 'px-0' : 'px-2 sm:px-6'
-  )}>
-    <span className={cn("mb-3 sm:mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-1 sm:p-2", "bg-primary/10 dark:bg-gray-800")}>
-      <img
-        src="/logo(1).png"
-        alt="App Icon"
-        className="w-10 h-10 sm:w-14 sm:h-14 object-contain rounded-full"
-        style={{ backgroundColor: 'var(--color-navbar, #f0f4f8)', filter: 'var(--logo-img-filter, none)' }}
-      />
-    </span>
-    {!collapsed && (
-      <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight text-primary dark:text-white mb-2 sm:mb-3">
-        {t('appName', 'SafeApp')}
-      </span>
-    )}
-    {!collapsed && user && (
-      <div className="flex flex-row items-center gap-2 sm:gap-3 mb-4 sm:mb-6 w-full">
-        <Avatar className="h-10 w-10 sm:h-14 sm:w-14" src={user?.profile?.avatar} />
-        <div className="flex flex-col min-w-0">
-          <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
-            {user?.firstName} {user?.lastName}
-          </span>
-          <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
-            {user?.email}
-          </span>
-        </div>
+function ImageModal({ open, onClose, imageUrl, alt }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70" onClick={onClose}>
+      <div className="relative" onClick={e => e.stopPropagation()}>
+        <img
+          src={imageUrl}
+          alt={alt}
+          className="max-w-[90vw] max-h-[80vh] rounded-2xl shadow-2xl border-4 border-white"
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 bg-black/60 rounded-full p-1 hover:bg-black/80 transition-colors"
+          aria-label="Close image preview"
+        >
+          <CloseIcon className="h-6 w-6 text-white" />
+        </button>
       </div>
-    )}
-    <div className="w-full h-px bg-border mb-2" />
-  </div>
-);
+    </div>
+  );
+}
+
+const UserProfile = ({ user, collapsed, t, onAvatarClick }) => {
+  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : '/avatars/default-avatar.svg';
+  return (
+    <div className={cn(
+      'flex flex-col items-center py-6 sm:py-8 border-b border-border transition-all duration-300',
+      collapsed ? 'px-0' : 'px-2 sm:px-6'
+    )}>
+      <span className={cn("mb-3 sm:mb-4 flex items-center justify-center rounded-full ring-2 ring-primary/20 p-1 sm:p-2", "bg-primary/10 dark:bg-gray-800")}> 
+        <img
+          src="/logo(1).png"
+          alt="App Icon"
+          className="w-10 h-10 sm:w-14 sm:h-14 object-contain rounded-full"
+          style={{ backgroundColor: 'var(--color-navbar, #f0f4f8)', filter: 'var(--logo-img-filter, none)' }}
+        />
+      </span>
+      {!collapsed && (
+        <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight text-primary dark:text-white mb-2 sm:mb-3">
+          {t('appName', 'SafeApp')}
+        </span>
+      )}
+      {!collapsed && user && (
+        <div className="flex flex-row items-center gap-2 sm:gap-3 mb-4 sm:mb-6 w-full">
+          <button
+            type="button"
+            className="focus:outline-none"
+            onClick={() => onAvatarClick && onAvatarClick(imageUrl)}
+            title="View profile image"
+          >
+            <Avatar 
+              src={imageUrl}
+              alt="Profile Picture"
+              className="h-10 w-10 sm:h-14 sm:w-14"
+            >
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg sm:text-2xl flex items-center justify-center w-full h-full rounded-full">
+                {(user?.firstName || user?.lastName)
+                  ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
+                  : 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+          <div className="flex flex-col min-w-0">
+            <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
+              {user?.firstName} {user?.lastName}
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
+              {user?.email}
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="w-full h-px bg-border mb-2" />
+    </div>
+  );
+};
 
 const NavigationMenu = ({ items, pathname, collapsed, t, onNavigate }) => (
   <nav className="px-0.5 sm:px-1 py-2 sm:py-4 space-y-1 sm:space-y-2 overflow-y-auto">
@@ -217,7 +260,6 @@ const MobileSidebarDrawer = ({
       role="dialog"
       style={{ display: open ? 'block' : 'none' }}
     >
-      {/* Overlay */}
       <div
         className={cn(
           "fixed inset-0 bg-black bg-opacity-40 transition-opacity duration-300",
@@ -225,7 +267,6 @@ const MobileSidebarDrawer = ({
         )}
         onClick={onClose}
       />
-      {/* Drawer */}
       <aside
         className={cn(
           "fixed top-0 h-full bg-[var(--color-navbar)] flex flex-col transition-transform duration-300 shadow-2xl",
@@ -261,7 +302,7 @@ const MobileSidebarDrawer = ({
             <CloseIcon className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
         </div>
-        <UserProfile user={user} collapsed={false} t={t} />
+        <UserProfile user={user} collapsed={false} t={t} onAvatarClick={handleNavigation} />
         <div className="flex-1 flex flex-col justify-between">
           <NavigationMenu
             items={menuItems}
@@ -300,6 +341,51 @@ const MobileSidebarDrawer = ({
   );
 };
 
+const HeaderUserAvatar = ({ user, onAvatarClick, asButton = true }) => {
+  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : '/avatars/default-avatar.svg';
+  if (asButton) {
+    return (
+      <button
+        type="button"
+        className="focus:outline-none"
+        onClick={() => onAvatarClick && onAvatarClick(imageUrl)}
+        title="View profile image"
+      >
+        <Avatar 
+          src={imageUrl}
+          alt="Profile Picture"
+          className="h-8 w-8 sm:h-10 sm:w-10"
+        >
+          <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
+            {(user?.firstName || user?.lastName)
+              ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
+              : 'U'}
+          </AvatarFallback>
+        </Avatar>
+      </button>
+    );
+  }
+  return (
+    <span
+      className="focus:outline-none"
+      title="View profile image"
+      style={{ display: 'inline-block' }}
+    >
+      <Avatar 
+        src={imageUrl}
+        alt="Profile Picture"
+        className="h-8 w-8 sm:h-10 sm:w-10"
+      >
+        <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
+          {(user?.firstName || user?.lastName)
+            ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
+            : 'U'}
+        </AvatarFallback>
+      </Avatar>
+    </span>
+  );
+};
+
 const UnifiedLayout = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -312,7 +398,7 @@ const UnifiedLayout = ({ children }) => {
 
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const token = useSelector((state) => state.auth.token);
+  const token = getToken();
 
   const menuItems = useMemo(() => {
     const role = user?.role?.toLowerCase();
@@ -340,7 +426,6 @@ const UnifiedLayout = ({ children }) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
 
-  // Add health check for backend
   useEffect(() => {
     let isMounted = true;
     
@@ -367,16 +452,37 @@ const UnifiedLayout = ({ children }) => {
       }
     };
     
-    // Only run health check once when component mounts
     checkBackendHealth();
     
     return () => {
       isMounted = false;
     };
-  }, []); // Remove dependencies to prevent loops
+  }, []); 
 
   useEffect(() => {
     if (!user || !token) return;
+    
+    console.log('Notifications request - Token exists:', !!token);
+    console.log('Notifications request - User:', user);
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Token payload:', payload);
+      console.log('Token expires:', new Date(payload.exp * 1000).toLocaleString());
+      console.log('Current time:', new Date().toLocaleString());
+      console.log('Token expired:', payload.exp * 1000 < Date.now());
+      
+      if (payload.exp * 1000 < Date.now()) {
+        console.error('Token expired');
+        showNotification(t('notification.tokenExpired', 'Session expired. Please log in again.'), 'error');
+        return;
+      }
+    } catch (error) {
+      console.error('Invalid token format:', error);
+      showNotification(t('notification.invalidToken', 'Invalid session. Please log in again.'), 'error');
+      return;
+    }
+    
     setNotifLoading(true);
     axios.get('/api/notifications?limit=20', {
       headers: { Authorization: `Bearer ${token}` }
@@ -396,14 +502,18 @@ const UnifiedLayout = ({ children }) => {
       .catch(err => {
         setNotifLoading(false);
         console.error('Notifications fetch error:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        console.error('Error headers:', err.response?.headers);
         
-        // Provide specific error messages based on the error type
         let errorMessage = t('notification.fetchFail', 'Failed to fetch notifications');
         
         if (err.response?.status === 404) {
           errorMessage = t('notification.backendUnavailable', 'Backend service not available. Please check if the server is running.');
         } else if (err.response?.status === 401) {
           errorMessage = t('notification.unauthorized', 'Authentication required. Please log in again.');
+          dispatch(logoutUser());
+          router.push('/login');
         } else if (err.response?.status === 500) {
           errorMessage = t('notification.serverError', 'Server error. Please try again later.');
         } else if (err.code === 'ERR_NETWORK') {
@@ -454,14 +564,41 @@ const UnifiedLayout = ({ children }) => {
   const handleNotifOpen = () => {
     setNotifOpen(true);
     setUnreadCount(0);
+    
+    if (!token) {
+      console.error('No token available for marking notifications as read');
+      return;
+    }
+    
     axios.patch('/api/notifications/read-all', {}, {
       headers: { Authorization: `Bearer ${token}` }
+    }).catch(err => {
+      console.error('Error marking notifications as read:', err);
+      if (err.response?.status === 401) {
+        dispatch(logoutUser());
+        router.push('/login');
+      }
     });
+    
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
   const handleNotifClose = () => setNotifOpen(false);
   const handleMarkAsRead = (id) => {
-    axios.patch(`/api/notifications/${id}/read`);
+    if (!token) {
+      console.error('No token available for marking notification as read');
+      return;
+    }
+    
+    axios.patch(`/api/notifications/${id}/read`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).catch(err => {
+      console.error('Error marking notification as read:', err);
+      if (err.response?.status === 401) {
+        dispatch(logoutUser());
+        router.push('/login');
+      }
+    });
+    
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
   const handleClearAll = () => {
@@ -482,11 +619,22 @@ const UnifiedLayout = ({ children }) => {
     }
   }, [mounted, isAuthenticated, user?.role, pathname, handleNavigation]);
 
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState('');
+
+  const handleAvatarClick = (imageUrl) => {
+    setModalImageUrl(imageUrl);
+    setImageModalOpen(true);
+  };
+  const handleModalClose = () => {
+    setImageModalOpen(false);
+    setModalImageUrl('');
+  };
+
   if (!ready || !mounted) return null;
 
   return (
     <div className={cn("flex h-screen bg-background overflow-hidden", 'flex-row')}>
-      {/* Desktop Sidebar */}
       {!isMobile && (
         <aside
           className={cn(
@@ -500,7 +648,6 @@ const UnifiedLayout = ({ children }) => {
             color: 'var(--color-navbar-foreground)'
           }}
         >
-          {/* Sidebar toggle button as a half-circle protruding from the sidebar edge */}
           <div
             className={cn(
               'hidden md:block',
@@ -526,7 +673,7 @@ const UnifiedLayout = ({ children }) => {
               t={t}
             />
           </div>
-          <UserProfile user={user} collapsed={sidebarCollapsed} t={t} />
+          <UserProfile user={user} collapsed={sidebarCollapsed} t={t} onAvatarClick={handleAvatarClick} />
           <div className="flex-1 flex flex-col justify-between h-[calc(100vh-8rem)]">
             <NavigationMenu items={menuItems} pathname={pathname} collapsed={sidebarCollapsed} t={t} />
             <div className="flex flex-col gap-1.5 sm:gap-2 pb-4 sm:pb-6 px-1">
@@ -555,7 +702,6 @@ const UnifiedLayout = ({ children }) => {
         </aside>
       )}
 
-      {/* Mobile Sidebar Drawer */}
       {isMobile && (
         <MobileSidebarDrawer
           open={mobileOpen}
@@ -583,7 +729,6 @@ const UnifiedLayout = ({ children }) => {
           className="sticky top-0 z-20 w-full h-14 sm:h-20 flex items-center px-2 sm:px-4 md:px-8 backdrop-blur-xl shadow-xl border-b border-border transition-colors flex-shrink-0"
           style={{ background: 'var(--color-primary)', color: '#fff' }}
         >
-          {/* Mobile menu button */}
           {isMobile && (
             <Button
               variant="ghost"
@@ -595,60 +740,63 @@ const UnifiedLayout = ({ children }) => {
               <MenuIcon className="h-6 w-6 sm:h-7 sm:w-7" />
             </Button>
           )}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1">
             <img src="/logo(1).png" alt="Logo" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
             <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
           </div>
-          <div className="flex-1" />
-          <div className={cn('flex items-center gap-3 sm:gap-6', isRtl && 'flex-row-reverse')}>
-            <ThemeButton />
-            <LanguageSwitcher />
-            <div className="relative">
-              <Button variant="ghost" size="icon" title={t('notifications', 'Notifications')} onClick={handleNotifOpen} className="relative">
-                <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          
+          {user && (
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNotifOpen}
+                className="relative h-9 w-9 sm:h-11 sm:w-11 text-white hover:bg-white/10 transition-colors"
+                aria-label={t('notifications', 'Notifications')}
+              >
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center rounded-full bg-danger text-danger-foreground text-[10px] sm:text-xs font-bold shadow-md">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 h-5 w-5 sm:h-6 sm:w-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </Button>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 sm:h-11 sm:w-11 border-2 border-primary shadow-md">
-                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                    <AvatarFallback className="bg-primary text-white text-base sm:text-lg">
-                      {user?.firstName?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-44 sm:w-56 rounded-xl shadow-lg" align={isRtl ? 'start' : 'end'} forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium text-sm sm:text-base">{user?.firstName} {user?.lastName}</p>
-                    <p className="w-[120px] sm:w-[200px] truncate text-xs sm:text-sm text-muted-foreground">
-                      {user?.email}
-                    </p>
+              <LanguageSwitcher />
+              <ThemeButton />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 sm:h-11 sm:w-11 border-2 border-primary shadow-md p-0 flex items-center justify-center">
+                    <HeaderUserAvatar user={user} onAvatarClick={handleAvatarClick} asButton={false} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-44 sm:w-56 rounded-xl shadow-lg" align={isRtl ? 'start' : 'end'} forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium text-sm sm:text-base">{user?.firstName} {user?.lastName}</p>
+                      <p className="w-[120px] sm:w-[200px] truncate text-xs sm:text-sm text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} className="rounded-2xl text-sm sm:text-base">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>{t('profile', 'Profile')}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-2xl text-sm sm:text-base">
-                  <SettingsIcon className="mr-2 h-4 w-4" />
-                  <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="rounded-2xl text-danger text-sm sm:text-base">
-                  <LogoutIcon className="mr-2 h-4 w-4" />
-                  <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleNavigation(`/${user?.role}/profile`)} className="rounded-2xl text-sm sm:text-base">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{t('profile', 'Profile')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigation('/settings')} className="rounded-2xl text-sm sm:text-base">
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="rounded-2xl text-sm sm:text-base text-red-500">
+                    <LogoutIcon className="mr-2 h-4 w-4" />
+                    <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <span className="text-xs sm:text-sm text-white truncate max-w-[120px] sm:max-w-[200px]">{user?.email}</span>
+            </div>
+          )}
         </header>
         <main className="flex-1 p-2 sm:p-4 md:p-8 overflow-y-auto">
           {children}
@@ -661,6 +809,12 @@ const UnifiedLayout = ({ children }) => {
         onMarkAsRead={handleMarkAsRead}
         onClearAll={handleClearAll}
         loading={notifLoading}
+      />
+      <ImageModal
+        open={imageModalOpen}
+        onClose={handleModalClose}
+        imageUrl={modalImageUrl}
+        alt="Profile Image"
       />
     </div>
   );

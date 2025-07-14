@@ -97,7 +97,6 @@ export default function UploadMedicalRecordPage() {
   const [file, setFile] = useState(null);
   const [fileUrl, setFileUrl] = useState("");
 
-  // Update form when category changes
   React.useEffect(() => {
     setForm(initialFormState[category]);
     setError(null);
@@ -109,7 +108,6 @@ export default function UploadMedicalRecordPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle file upload for labResults and imagingReports
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
@@ -181,7 +179,6 @@ export default function UploadMedicalRecordPage() {
     }
   };
 
-  // Render form fields based on category
   const renderFields = () => {
     switch (category) {
       case "vitalSigns":
@@ -202,9 +199,9 @@ export default function UploadMedicalRecordPage() {
           <>
             <Input label="Allergy Name" name="name" value={form.name || ""} onChange={handleChange} placeholder="e.g. Penicillin" />
             <select name="severity" value={form.severity} onChange={handleChange} className="input">
-              <option value="mild">Mild</option>
-              <option value="moderate">Moderate</option>
-              <option value="severe">Severe</option>
+              <option key="mild" value="mild">Mild</option>
+              <option key="moderate" value="moderate">Moderate</option>
+              <option key="severe" value="severe">Severe</option>
             </select>
             <Input label="Reaction" name="reaction" value={form.reaction || ""} onChange={handleChange} placeholder="e.g. Rash" />
             <Textarea label="Notes" name="notes" value={form.notes || ""} onChange={handleChange} placeholder="Additional notes" />
@@ -215,9 +212,9 @@ export default function UploadMedicalRecordPage() {
           <>
             <Input label="Condition Name" name="name" value={form.name || ""} onChange={handleChange} placeholder="e.g. Hypertension" />
             <select name="status" value={form.status} onChange={handleChange} className="input">
-              <option value="active">Active</option>
-              <option value="resolved">Resolved</option>
-              <option value="managed">Managed</option>
+              <option key="active1" value="active">Active</option>
+              <option key="resolved" value="resolved">Resolved</option>
+              <option key="managed" value="managed">Managed</option>
             </select>
             <Input label="Diagnosis Date" name="diagnosisDate" value={form.diagnosisDate || ""} onChange={handleChange} type="date" />
             <Textarea label="Notes" name="notes" value={form.notes || ""} onChange={handleChange} placeholder="Additional notes" />
@@ -265,9 +262,9 @@ export default function UploadMedicalRecordPage() {
             <Input label="Dosage" name="dosage" value={form.dosage || ""} onChange={handleChange} placeholder="e.g. 10mg" />
             <Input label="Frequency" name="frequency" value={form.frequency || ""} onChange={handleChange} placeholder="e.g. Once daily" />
             <select name="status" value={form.status} onChange={handleChange} className="input">
-              <option value="active">Active</option>
-              <option value="discontinued">Discontinued</option>
-              <option value="completed">Completed</option>
+              <option key="active2" value="active">Active</option>
+              <option key="discontinued" value="discontinued">Discontinued</option>
+              <option key="completed" value="completed">Completed</option>
             </select>
             <Input label="Start Date" name="startDate" value={form.startDate || ""} onChange={handleChange} type="date" />
             <Input label="Prescribed By" name="prescribedBy" value={form.prescribedBy || ""} onChange={handleChange} placeholder="e.g. Dr. Ahmad" />

@@ -16,17 +16,14 @@ export const getSocket = () => {
     return null;
   }
 
-  // If backend is marked as unavailable, don't attempt connection
   if (isBackendUnavailable) {
     return null;
   }
 
-  // If socket exists and is connected, return it
   if (socket && socket.connected) {
     return socket;
   }
 
-  // If socket exists but not connected, and we haven't exceeded max attempts
   if (socket && !socket.connected && connectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
     console.log('[Socket] Socket exists but not connected, reconnecting...', connectionAttempts + 1);
     connectionAttempts++;
@@ -34,7 +31,6 @@ export const getSocket = () => {
     return socket;
   }
 
-  // If we've exceeded max attempts, reset and create new socket
   if (connectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
     console.warn('[Socket] Max reconnection attempts reached. Backend may be unavailable.');
     isBackendUnavailable = true;
@@ -42,17 +38,16 @@ export const getSocket = () => {
     return null;
   }
 
-  // Create new socket
   if (!socket) {
     console.log('[Socket] Creating new socket connection...');
     socket = io(SOCKET_URL, { 
-      autoConnect: false, // Don't auto-connect, we'll do it manually
+      autoConnect: false, 
       auth: {
         token: token
       },
       transports: ['websocket', 'polling'],
-      reconnection: false, // Disable automatic reconnection, we'll handle it manually
-      timeout: 10000, // Reduced timeout
+      reconnection: false, 
+      timeout: 10000, 
       forceNew: true,
       upgrade: true
     });
@@ -60,8 +55,8 @@ export const getSocket = () => {
     socket.on('connect', () => {
       console.log('[Socket] Connected successfully:', socket.id);
       console.log('[Socket] Auth token:', token ? 'Present' : 'Missing');
-      connectionAttempts = 0; // Reset attempts on successful connection
-      isBackendUnavailable = false; // Reset backend availability flag
+      connectionAttempts = 0; 
+      isBackendUnavailable = false; 
     });
     
     socket.on('connect_error', (error) => {
@@ -78,14 +73,13 @@ export const getSocket = () => {
         }
       }
       
-      // Only attempt reconnection if we haven't exceeded max attempts
       if (connectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
         setTimeout(() => {
           if (socket && !socket.connected) {
             console.log('[Socket] Attempting to reconnect after error...', connectionAttempts);
             socket.connect();
           }
-        }, 2000); // Reduced delay
+        }, 2000);
       }
     });
     
@@ -108,7 +102,6 @@ export const getSocket = () => {
       console.error('[Socket] General error:', error);
     });
 
-    // Connect the socket
     socket.connect();
   }
   

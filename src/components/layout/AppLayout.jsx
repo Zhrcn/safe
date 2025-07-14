@@ -17,6 +17,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher';
+import { getImageUrl } from '@/components/ui/Avatar';
 
 const drawerWidth = 240;
 
@@ -174,7 +175,7 @@ export default function AppLayout({
                 {user && (
                   <div className="flex flex-col items-center gap-1 mt-2">
                     <div className="rounded-full overflow-hidden border border-border mb-1">
-                      <img src={user?.profile?.avatar || "/avatars/default-avatar.svg"} alt="User Avatar" className="h-10 w-10 object-cover" />
+                      <img src={getImageUrl(user?.profile?.avatar) || "/avatars/default-avatar.svg"} alt="User Avatar" className="h-10 w-10 object-cover" />
                     </div>
                     <div className="font-bold text-base text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
                     <div className="text-xs text-gray-400 dark:text-gray-400 text-center break-all">{user?.email}</div>

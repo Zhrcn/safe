@@ -226,7 +226,6 @@ const MedicationsPage = () => {
                 ]}
             />
 
-            {/* Search and Filter Section */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex flex-1 gap-4 w-full md:w-auto flex-wrap ">
                     <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -318,7 +317,6 @@ const MedicationsPage = () => {
 
             <Separator style={{ borderColor: border }} />
 
-            {/* Tabs Section */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full rounded-2xl">
                 <TabsList className="grid w-full grid-cols-3 rounded-2xl"
                     style={{ background: cardBg, borderColor: border }}>
@@ -393,7 +391,6 @@ const MedicationsPage = () => {
                 </TabsContent>
             </Tabs>
 
-            {/* Dialogs */}
             <ReminderDialog
                 open={reminderDialogOpen}
                 medication={selectedMedication}

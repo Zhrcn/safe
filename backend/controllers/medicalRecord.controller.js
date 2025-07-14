@@ -3,12 +3,10 @@ const ApiResponse = require('../utils/apiResponse');
 const MedicalRecord = require('../models/MedicalRecord');
 const ErrorResponse = require('../utils/errorResponse');
 
-// Get patient's medical records
 const getMedicalRecords = asyncHandler(async (req, res) => {
     let medicalRecord = await MedicalRecord.findOne({ patientId: req.user._id });
     
     if (!medicalRecord) {
-        // Create a new medical record if it doesn't exist
         medicalRecord = await MedicalRecord.create({
             patientId: req.user._id
         });
@@ -17,7 +15,6 @@ const getMedicalRecords = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, medicalRecord, 'Medical records retrieved successfully.'));
 });
 
-// Add vital signs
 const addVitalSigns = asyncHandler(async (req, res) => {
     const { bloodPressure, heartRate, temperature, weight, height, bmi, oxygenSaturation, notes } = req.body;
     
@@ -47,7 +44,6 @@ const addVitalSigns = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, vitalSign, 'Vital signs added successfully.'));
 });
 
-// Add allergy
 const addAllergy = asyncHandler(async (req, res) => {
     const { name, severity, reaction, notes } = req.body;
     
@@ -73,7 +69,6 @@ const addAllergy = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, allergy, 'Allergy added successfully.'));
 });
 
-// Add chronic condition
 const addChronicCondition = asyncHandler(async (req, res) => {
     const { name, status, diagnosisDate, notes } = req.body;
     
@@ -99,7 +94,6 @@ const addChronicCondition = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, condition, 'Chronic condition added successfully.'));
 });
 
-// Add diagnosis
 const addDiagnosis = asyncHandler(async (req, res) => {
     const { name, doctor, date, notes } = req.body;
     
@@ -125,7 +119,6 @@ const addDiagnosis = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, diagnosis, 'Diagnosis added successfully.'));
 });
 
-// Add lab result
 const addLabResult = asyncHandler(async (req, res) => {
     const { testName, labName, date, normalRange, unit, results, notes } = req.body;
     
@@ -154,7 +147,6 @@ const addLabResult = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, labResult, 'Lab result added successfully.'));
 });
 
-// Add imaging report
 const addImagingReport = asyncHandler(async (req, res) => {
     const { type, date, images, notes } = req.body;
     
@@ -180,7 +172,6 @@ const addImagingReport = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, imagingReport, 'Imaging report added successfully.'));
 });
 
-// Add medication
 const addMedication = asyncHandler(async (req, res) => {
     const { name, dosage, frequency, status, startDate, endDate, prescribedBy, notes } = req.body;
     
@@ -210,7 +201,6 @@ const addMedication = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, medication, 'Medication added successfully.'));
 });
 
-// Update record item
 const updateRecordItem = asyncHandler(async (req, res) => {
     const { category, itemId } = req.params;
     const updateData = req.body;
@@ -235,14 +225,12 @@ const updateRecordItem = asyncHandler(async (req, res) => {
         throw new Error('Item not found');
     }
     
-    // Update the item
     categoryArray[itemIndex] = { ...categoryArray[itemIndex].toObject(), ...updateData };
     await medicalRecord.save();
     
     res.status(200).json(new ApiResponse(200, categoryArray[itemIndex], 'Record updated successfully.'));
 });
 
-// Delete record item
 const deleteRecordItem = asyncHandler(async (req, res) => {
     const { category, itemId } = req.params;
     
@@ -266,7 +254,6 @@ const deleteRecordItem = asyncHandler(async (req, res) => {
         throw new Error('Item not found');
     }
     
-    // Remove the item
     categoryArray.splice(itemIndex, 1);
     await medicalRecord.save();
     

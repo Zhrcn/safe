@@ -13,7 +13,6 @@ const counterSchema = new mongoose.Schema({
   collection: 'Counters'
 });
 
-// Method to get next sequence number
 counterSchema.statics.getNextSequence = async function(name) {
   const counter = await this.findByIdAndUpdate(
     name,

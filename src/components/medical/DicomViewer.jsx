@@ -64,14 +64,12 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
             cornerstoneTools.setToolDisabled(tool.name, {});
           }
         } catch (e) {
-          // ignore
         }
       });
     },
     []
   );
 
-  // Handle image navigation
   const goToImage = useCallback(
     (idx) => {
       if (!elementRef.current) return;
@@ -91,7 +89,6 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
     [getImageIds]
   );
 
-  // Zoom controls
   const handleZoom = useCallback((factor) => {
     if (!elementRef.current) return;
     const viewport = cornerstone.getViewport(elementRef.current);
@@ -108,7 +105,6 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
     cornerstone.setViewport(elementRef.current, viewport);
   }, []);
 
-  // Main cornerstone setup
   useEffect(() => {
     const element = elementRef.current;
     if (!element || !imageUrls.length) return;
@@ -120,7 +116,6 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
     const imageIds = getImageIds();
     setNumImages(imageIds.length);
 
-    // Prepare stack
     const stack = {
       currentImageIdIndex: currentIndex,
       imageIds,
@@ -136,16 +131,13 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
         cornerstone.displayImage(element, image);
         setZoomLevel(1);
 
-        // Initialize cornerstoneTools only once
         if (!cornerstoneTools.store || !cornerstoneTools.store.state) {
           cornerstoneTools.init();
         }
 
-        // Add stack state manager and tool state
         cornerstoneTools.addStackStateManager(element, ['stack']);
         cornerstoneTools.addToolState(element, 'stack', stack);
 
-        // Add and activate tools
         TOOL_LIST.forEach((tool) => {
           if (!cornerstoneTools.getToolForElement(element, tool.name)) {
             const ToolClass = cornerstoneTools[tool.name + 'Tool'];
@@ -155,14 +147,12 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
 
         activateTool(activeTool);
 
-        // Clean up function for tools
         toolCleanup = () => {
           try {
             TOOL_LIST.forEach((tool) => {
               cornerstoneTools.setToolDisabled(tool.name, {});
             });
           } catch (e) {
-            // ignore
           }
         };
       })
@@ -171,13 +161,11 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
         console.error('Error loading DICOM image:', err);
       });
 
-    // Clean up on unmount
     return () => {
       toolCleanup();
       try {
         cornerstone.disable(element);
       } catch (e) {
-        // ignore
       }
     };
   }, [imageUrls, currentIndex, activeTool, activateTool, getImageIds]);
@@ -194,7 +182,6 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
   };
 }
 
-// Custom hook for fullscreen management
 function useFullscreen() {
   const [fullView, setFullView] = useState(false);
   const fullScreenRef = useRef(null);
@@ -231,7 +218,6 @@ function useFullscreen() {
   return { fullView, fullScreenRef, handleFullScreenToggle };
 }
 
-// Custom hook for keyboard navigation
 function useKeyboardNavigation(currentIndex, numImages, goToImage, toggleFullView) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -257,7 +243,6 @@ function useKeyboardNavigation(currentIndex, numImages, goToImage, toggleFullVie
   }, [currentIndex, numImages, goToImage, toggleFullView]);
 }
 
-// Toolbar Button Component
 const ToolbarButton = React.memo(function ToolbarButton({
   onClick,
   title,
@@ -294,7 +279,6 @@ const ToolbarButton = React.memo(function ToolbarButton({
   );
 });
 
-// Zoom Controls Component
 const ZoomControls = React.memo(function ZoomControls({ onZoomIn, onZoomOut, onReset }) {
   return (
     <>
@@ -323,7 +307,6 @@ const ZoomControls = React.memo(function ZoomControls({ onZoomIn, onZoomOut, onR
   );
 });
 
-// Image Navigation Component
 const ImageNavigation = React.memo(function ImageNavigation({ currentIndex, numImages, onPrevious, onNext }) {
   if (numImages <= 1) return null;
   return (
@@ -351,7 +334,6 @@ const ImageNavigation = React.memo(function ImageNavigation({ currentIndex, numI
   );
 });
 
-// Floating Toolbar Component
 const FloatingToolbar = React.memo(function FloatingToolbar({
   fullView,
   activeTool,
@@ -414,7 +396,6 @@ const FloatingToolbar = React.memo(function FloatingToolbar({
   );
 });
 
-// Instructions Overlay Component
 const InstructionsOverlay = React.memo(function InstructionsOverlay({ error }) {
   return (
     <div
@@ -439,7 +420,6 @@ const InstructionsOverlay = React.memo(function InstructionsOverlay({ error }) {
   );
 });
 
-// Spinner Component
 const Spinner = React.memo(function Spinner() {
   return (
     <div style={{
@@ -468,7 +448,6 @@ const Spinner = React.memo(function Spinner() {
   );
 });
 
-// Metadata Overlay
 const MetadataOverlay = React.memo(function MetadataOverlay({ metadata }) {
   if (!metadata) return null;
   return (
@@ -496,7 +475,6 @@ const MetadataOverlay = React.memo(function MetadataOverlay({ metadata }) {
   );
 });
 
-// Enhanced Error Message
 const ErrorMessage = React.memo(function ErrorMessage({ error }) {
   if (!error) return null;
   return (
@@ -528,7 +506,6 @@ const ErrorMessage = React.memo(function ErrorMessage({ error }) {
   );
 });
 
-// Main DicomViewer Component
 function DicomViewer({ imageUrls = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTool, setActiveTool] = useState('Wwwc');
@@ -548,7 +525,6 @@ function DicomViewer({ imageUrls = [] }) {
 
   const { fullView, fullScreenRef, handleFullScreenToggle } = useFullscreen();
 
-  // Navigation handlers
   const handlePreviousImage = useCallback(() => {
     const newIndex = Math.max(currentIndex - 1, 0);
     setCurrentIndex(newIndex);
@@ -561,14 +537,11 @@ function DicomViewer({ imageUrls = [] }) {
     goToImage(newIndex);
   }, [currentIndex, numImages, goToImage]);
 
-  // Zoom handlers
   const handleZoomIn = useCallback(() => handleZoom(ZOOM_FACTOR), [handleZoom]);
   const handleZoomOut = useCallback(() => handleZoom(1 / ZOOM_FACTOR), [handleZoom]);
 
-  // Keyboard navigation
   useKeyboardNavigation(currentIndex, numImages, goToImage, handleFullScreenToggle);
 
-  // Responsive container styles
   const containerStyles = useMemo(() => ({
     position: 'relative',
     width: fullView ? '100vw' : 'min(98vw, 540px)',
@@ -597,7 +570,6 @@ function DicomViewer({ imageUrls = [] }) {
     boxShadow: fullView ? 'none' : '0 2px 8px rgba(0,0,0,0.10)',
   }), [fullView]);
 
-  // Loading and metadata extraction
   useEffect(() => {
     if (!elementRef.current || !imageUrls.length) return;
     setLoading(true);
@@ -607,7 +579,6 @@ function DicomViewer({ imageUrls = [] }) {
       .loadImage(imageIds[currentIndex])
       .then((image) => {
         setLoading(false);
-        // Extract metadata
         setMetadata({
           rows: image.rows,
           columns: image.columns,
@@ -620,7 +591,6 @@ function DicomViewer({ imageUrls = [] }) {
       .catch(() => setLoading(false));
   }, [currentIndex, imageUrls, elementRef]);
 
-  // Tool activation handler
   const handleToolActivate = useCallback((toolName) => {
     setActiveTool(toolName);
     activateTool(toolName);

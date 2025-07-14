@@ -194,6 +194,17 @@
         -ms-overflow-style: none;
     }
     
+    /* Hide scrollbar for tabs and other scrollable areas */
+    .scrollbar-hide::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+    }
+    
+    .scrollbar-hide {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
     /* Chat message animations */
     .animate-fade-in {
         animation: fadeIn 0.3s ease-in-out;

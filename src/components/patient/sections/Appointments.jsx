@@ -112,11 +112,11 @@ const AppointmentForm = ({ open, onClose, onSubmit }) => {
                             className="w-full px-3 py-2 bg-background border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
                             required
                         >
-                            <option value="">Select type</option>
-                            <option value="Check-up">Check-up</option>
-                            <option value="Follow-up">Follow-up</option>
-                            <option value="Consultation">Consultation</option>
-                            <option value="Emergency">Emergency</option>
+                            <option key="" value="">Select type</option>
+                            <option key="Check-up" value="Check-up">Check-up</option>
+                            <option key="Follow-up" value="Follow-up">Follow-up</option>
+                            <option key="Consultation" value="Consultation">Consultation</option>
+                            <option key="Emergency" value="Emergency">Emergency</option>
                         </select>
                     </div>
                     <div>

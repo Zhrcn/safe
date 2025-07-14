@@ -22,7 +22,6 @@ export default function GlobalMessageListener() {
   const maxRetries = 3;
 
   useEffect(() => {
-    // Clear any existing timeout
     if (setupTimeoutRef.current) {
       clearTimeout(setupTimeoutRef.current);
     }
@@ -49,7 +48,7 @@ export default function GlobalMessageListener() {
         console.log('[GlobalMessageListener] Socket not connected, waiting for connection...');
         socket.once('connect', () => {
           console.log('[GlobalMessageListener] Socket connected, setting up listeners...');
-          retryCountRef.current = 0; // Reset retry count on successful connection
+          retryCountRef.current = 0;
           setupSocketListeners();
         });
         return;
@@ -102,7 +101,7 @@ export default function GlobalMessageListener() {
 
       const handleReconnect = () => {
         console.log('[GlobalMessageListener] Socket reconnected, re-setting up listeners...');
-        retryCountRef.current = 0; // Reset retry count on reconnection
+        retryCountRef.current = 0; 
         setupTimeoutRef.current = setTimeout(setupSocketListeners, 1000);
       };
 

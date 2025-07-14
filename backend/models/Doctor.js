@@ -29,6 +29,22 @@ const DoctorSchema = new mongoose.Schema({
     type: Number,
     min: [0, 'Experience years cannot be negative']
   },
+  qualifications: {
+    type: String,
+    trim: true
+  },
+  consultationFee: {
+    type: Number,
+    min: [0, 'Consultation fee cannot be negative']
+  },
+  workingHours: {
+    type: String,
+    trim: true
+  },
+  professionalBio: {
+    type: String,
+    trim: true
+  },
   education: [{
     degree: { type: String, trim: true, required: true },
     institution: { type: String, trim: true, required: true },
@@ -76,10 +92,8 @@ DoctorSchema.index({ doctorId: 1 });
 DoctorSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
   
-  // Generate doctor ID if not already set
   if (!this.doctorId) {
     try {
-      // Get user's birth date from the user document
       const User = mongoose.model('User');
       const user = await User.findById(this.user);
       
@@ -87,7 +101,6 @@ DoctorSchema.pre('save', async function(next) {
         return next(new Error('User not found'));
       }
       
-      // Use user's dateOfBirth if available, otherwise fallback to current date
       const birthDate = user.dateOfBirth || new Date();
       this.doctorId = await generateDoctorId(birthDate);
     } catch (error) {

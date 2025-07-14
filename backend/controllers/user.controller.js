@@ -29,12 +29,10 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     console.log('DEBUG updateUser: id =', id, 'updateData =', updateData);
-    // Update main user fields
     const user = await User.findByIdAndUpdate(id, updateData, { new: true }).select('-password');
     if (!user) {
       return res.status(404).json(new ApiResponse(404, null, 'User not found'));
     }
-    // Update role-specific fields
     if (user.role === 'doctor') {
       await require('../models/Doctor').findOneAndUpdate(
         { user: user._id },
@@ -140,7 +138,6 @@ exports.createUser = async (req, res) => {
     res.status(201).json(new ApiResponse(201, userResponse, 'User created successfully.'));
   } catch (err) {
     console.error('Error in createUser:', err);
-    // If duplicate key error (MongoDB), return 409
     if (err.code === 11000 && err.keyPattern && err.keyPattern.email) {
       return res.status(409).json(new ApiResponse(409, null, 'User with this email already exists.'));
     }

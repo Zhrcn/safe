@@ -59,7 +59,6 @@ async function migrateUniqueIds() {
       }
     }
 
-    // Migrate Pharmacists
     console.log('\nMigrating Pharmacists...');
     const pharmacists = await Pharmacist.find().populate('user');
     console.log(`Found ${pharmacists.length} pharmacists.`);
@@ -67,7 +66,6 @@ async function migrateUniqueIds() {
     for (let i = 0; i < pharmacists.length; i++) {
       const pharmacist = pharmacists[i];
       try {
-        // Use user's dateOfBirth if available, otherwise fallback to current date
         let birthDate;
         if (pharmacist.user && pharmacist.user.dateOfBirth) {
           birthDate = pharmacist.user.dateOfBirth;
@@ -98,7 +96,6 @@ async function migrateUniqueIds() {
   }
 }
 
-// Run migration if this file is executed directly
 if (require.main === module) {
   migrateUniqueIds();
 }

@@ -68,7 +68,6 @@ const prescriptionsSlice = createSlice({
             })
             .addCase(fetchPrescriptions.fulfilled, (state, action) => {
                 state.loading = false;
-                // Ensure we're setting an array, handle both direct array and nested data structure
                 state.prescriptions = Array.isArray(action.payload) ? action.payload : (action.payload?.data || []);
             })
             .addCase(fetchPrescriptions.rejected, (state, action) => {

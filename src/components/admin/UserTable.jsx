@@ -81,10 +81,11 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
             onChange={e => setRoleFilter(e.target.value)}
             className="border border-border rounded-2xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="all">{t('admin.users.allRoles')}</option>
-            {roles.map(role => (
-              <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
-            ))}
+            <option key="all" value="all">{t('admin.users.allRoles')}</option>
+            <option key="admin" value="admin">Admin</option>
+            <option key="doctor" value="doctor">Doctor</option>
+            <option key="patient" value="patient">Patient</option>
+            <option key="pharmacist" value="pharmacist">Pharmacist</option>
           </select>
         </div>
       </div>
@@ -134,7 +135,6 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
         </TableBody>
       </Table>
 
-      {/* Edit User Modal */}
       {editUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-md border border-border">
@@ -166,13 +166,12 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
                   onChange={e => setEditData({ ...editData, role: e.target.value })}
                   required
                 >
-                  <option value="admin">Admin</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="patient">Patient</option>
-                  <option value="pharmacist">Pharmacist</option>
+                  <option key="admin" value="admin">Admin</option>
+                  <option key="doctor" value="doctor">Doctor</option>
+                  <option key="patient" value="patient">Patient</option>
+                  <option key="pharmacist" value="pharmacist">Pharmacist</option>
                 </select>
               </div>
-              {/* Render extra fields based on role */}
               {roleFields[editData.role]?.map(field => (
                 <div key={field.name}>
                   <label className="block mb-1">{field.label}</label>
@@ -182,7 +181,7 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
                       value={editData[field.name] || ''}
                       onChange={e => setEditData({ ...editData, [field.name]: e.target.value })}
                     >
-                      <option value="">{t('admin.users.select' + field.label.replace(/\s/g, ''))}</option>
+                      <option key="" value="">{t('admin.users.select' + field.label.replace(/\s/g, ''))}</option>
                       {field.options.map(opt => (
                         <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
                       ))}
@@ -206,7 +205,6 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
         </div>
       )}
 
-      {/* Confirmation Dialog */}
       {confirmAction.user && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-sm border border-border">

@@ -64,7 +64,6 @@ function getCssVar(name, fallback) {
   return fallback;
 }
 
-// Convert HSL to hex color
 function hslToHex(h, s, l) {
   h /= 360;
   s /= 100;
@@ -96,7 +95,6 @@ function hslToHex(h, s, l) {
   return `#${rHex}${gHex}${bHex}`;
 }
 
-// Parse HSL string and convert to hex
 function parseHslToHex(hslString) {
   if (!hslString || hslString === '') return '#3b82f6';
   
@@ -112,7 +110,6 @@ function parseHslToHex(hslString) {
 
 function getChartColors(mode) {
   if (typeof window !== 'undefined') {
-    // Get colors from CSS variables and convert HSL to hex
     const primary = parseHslToHex(getCssVar('--primary', '221.2 83.2% 53.3%'));
     const secondary = parseHslToHex(getCssVar('--secondary', '210 40% 96%'));
     const accent = parseHslToHex(getCssVar('--accent', '210 40% 96%'));
@@ -125,16 +122,15 @@ function getChartColors(mode) {
     const card = parseHslToHex(getCssVar('--card', '0 0% 100%'));
     const cardForeground = parseHslToHex(getCssVar('--card-foreground', '222.2 84% 4.9%'));
     
-    // Create a diverse color palette using theme colors
     const chartColors = [
       primary,
       success,
       warning,
       error,
       info,
-      '#8b5cf6', // Purple
-      '#ec4899', // Pink
-      '#f97316'  // Orange
+      '#8b5cf6', 
+      '#ec4899', 
+      '#f97316'  
     ];
     
     return {
@@ -154,16 +150,15 @@ function getChartColors(mode) {
     };
   }
   
-  // Fallback colors for SSR
   const fallbackColors = [
-    '#3b82f6', // blue-500 (primary)
-    '#10b981', // green-500 (success)
-    '#f59e0b', // yellow-500 (warning)
-    '#ef4444', // red-500 (error)
-    '#06b6d4', // cyan-500 (info)
-    '#8b5cf6', // purple-500
-    '#ec4899', // pink-500
-    '#f97316'  // orange-500
+    '#3b82f6',
+    '#10b981',
+    '#f59e0b',
+    '#ef4444',
+    '#06b6d4',
+    '#8b5cf6',
+    '#ec4899',
+    '#f97316'
   ];
   
   if (mode === 'dark') {
@@ -191,7 +186,6 @@ function getChartColors(mode) {
   }
 }
 
-// --- Calendar and Appointments Card (Isolated) ---
 const CalendarAppointmentsCard = memo(function CalendarAppointmentsCard({
   selectedDate,
   onDateChange,
@@ -200,7 +194,6 @@ const CalendarAppointmentsCard = memo(function CalendarAppointmentsCard({
   t,
   handleDateChange,
 }) {
-  // Defensive: always use an array for appointmentsForSelectedDate
   const appointments = Array.isArray(appointmentsForSelectedDate)
     ? appointmentsForSelectedDate
     : appointmentsForSelectedDate
@@ -209,7 +202,6 @@ const CalendarAppointmentsCard = memo(function CalendarAppointmentsCard({
 
   const Calendar = dynamic(() => import('react-calendar'), { ssr: false });
 
-  // Helper to get status translation key, fallback to 'undefined'
   function getStatusTranslationKey(status) {
     if (typeof status === 'undefined' || status === null || status === '') {
       return 'doctor.dashboard.status.undefined';
@@ -217,7 +209,6 @@ const CalendarAppointmentsCard = memo(function CalendarAppointmentsCard({
     return 'doctor.dashboard.status.' + status;
   }
 
-  // Helper to get status label for display
   function getStatusLabel(status) {
     if (typeof status === 'undefined' || status === null || status === '') {
       return t('doctor.dashboard.status.undefined', 'Unknown');
@@ -307,7 +298,6 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     setChartColors(getChartColors(currentTheme));
-    // Force chart re-render when theme changes
     setChartKey(Date.now());
   }, [currentTheme]);
 
@@ -324,18 +314,14 @@ export default function DoctorDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [chartKey, setChartKey] = useState(0);
 
-  // --- Calendar/appointments state ---
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarAppointments, setCalendarAppointments] = useState([]);
-  // Keep a local cache to avoid unnecessary fetches
   const appointmentsCache = useRef({});
 
-  // Fetch appointments for selected date only when it changes
   useEffect(() => {
     let isMounted = true;
     const dateString = selectedDate.toISOString().split('T')[0];
 
-    // If already in cache, use it
     if (appointmentsCache.current[dateString]) {
       setCalendarAppointments(
         Array.isArray(appointmentsCache.current[dateString])
@@ -349,11 +335,8 @@ export default function DoctorDashboard() {
     }
 
     setCalendarLoading(true);
-    // Dispatch fetch and update local state on completion
     dispatch(fetchAppointmentsByDate(dateString)).then((action) => {
-      // action.payload should contain the appointments for the date
       if (isMounted) {
-        // Try to get from redux, fallback to action.payload
         const state = typeof window !== 'undefined' ? window.__NEXT_REDUX_WRAPPER_STORE__?.getState?.() : null;
         let appointmentsForDate = null;
         if (state && state.dashboardAnalytics && state.dashboardAnalytics.appointmentsByDate) {
@@ -362,7 +345,6 @@ export default function DoctorDashboard() {
         if (!appointmentsForDate && action && action.payload) {
           appointmentsForDate = action.payload;
         }
-        // Defensive: always store as array
         const arr = Array.isArray(appointmentsForDate)
           ? appointmentsForDate
           : appointmentsForDate
@@ -380,10 +362,8 @@ export default function DoctorDashboard() {
     });
 
     return () => { isMounted = false; };
-    // eslint-disable-next-line
   }, [selectedDate, dispatch]);
 
-  // Create chart data from backend data
   const chartData = {
     appointments: {
       labels: appointmentsChart.labels.length > 0 ? appointmentsChart.labels : [
@@ -398,7 +378,7 @@ export default function DoctorDashboard() {
       datasets: [
         {
           label: t('doctor.dashboard.appointments', 'Appointments'),
-          data: appointmentsChart.data.length > 0 ? appointmentsChart.data : [1, 2, 1, 3, 2, 1, 1], // Default values to show chart
+          data: appointmentsChart.data.length > 0 ? appointmentsChart.data : [1, 2, 1, 3, 2, 1, 1],
           backgroundColor: chartColors.bar,
           borderRadius: 8,
           borderSkipped: false,
@@ -419,13 +399,13 @@ export default function DoctorDashboard() {
       ],
       datasets: [
         {
-          data: patientDistribution.data.length > 0 ? patientDistribution.data : [1, 1, 1, 1], // Default values to show chart
-          backgroundColor: chartColors.doughnut.slice(0, 4), // Use first 4 colors
+          data: patientDistribution.data.length > 0 ? patientDistribution.data : [1, 1, 1, 1],
+          backgroundColor: chartColors.doughnut.slice(0, 4),
           borderColor: chartColors.doughnutBorder.slice(0, 4),
           borderWidth: 3,
           hoverOffset: 15,
           hoverBorderWidth: 4,
-          hoverBackgroundColor: chartColors.doughnut.slice(0, 4).map(color => color + 'dd'), // Add transparency on hover
+          hoverBackgroundColor: chartColors.doughnut.slice(0, 4).map(color => color + 'dd'),
         },
       ],
     },
@@ -485,7 +465,7 @@ export default function DoctorDashboard() {
     setDoughnutOptions({
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '60%', // Reduced cutout for better visibility
+      cutout: '60%', 
       plugins: {
         legend: {
           position: 'bottom',
@@ -577,9 +557,9 @@ export default function DoctorDashboard() {
       iconBgVar: 'var(--primary-bg-hover, var(--primary-bg))',
     },
     {
-      href: '/doctor/appointments/new',
+      href: '/doctor/appointments?new=true',
       icon: <CalendarClock size={28} strokeWidth={2.2} />,
-      label: t('doctor.dashboard.schedule', 'Schedule'),
+      label: t('doctor.dashboard.newAppointment', 'New Appointment'),
       colorVar: 'var(--success)',
       bgVar: 'var(--success-bg)',
       iconBgVar: 'var(--success-bg-hover, var(--success-bg))',
@@ -602,7 +582,6 @@ export default function DoctorDashboard() {
     },
   ];
 
-  // Only rerender the calendar/appointments card when selectedDate changes
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
@@ -610,7 +589,6 @@ export default function DoctorDashboard() {
   return (
     <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 min-h-screen">
       <div className="flex flex-col gap-y-4 sm:gap-y-6">
-        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="space-y-1">
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-card-foreground drop-shadow-sm">
@@ -622,13 +600,12 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Analytics Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t('doctor.dashboard.totalPatients', 'Total Patients')}</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground">{analytics.totalPatients}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground">{patients.length}</p>
               </div>
               <div className="h-6 w-6 sm:h-8 sm:w-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 ml-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
@@ -663,8 +640,8 @@ export default function DoctorDashboard() {
           <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t('doctor.dashboard.revenue', 'Revenue')}</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground">${analytics.revenue}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t('doctor.dashboard.pendingAppointments', 'Pending')}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground">{analytics.pendingAppointments || 0}</p>
               </div>
               <div className="h-6 w-6 sm:h-8 sm:w-8 bg-danger/10 rounded-lg flex items-center justify-center flex-shrink-0 ml-2">
                 <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-danger" />
@@ -729,19 +706,19 @@ export default function DoctorDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col min-w-0" noPadding>
+          <Card className="flex flex-col min-w-0 h-full" noPadding>
             <CardHeader className="p-3 sm:p-4 pb-2">
               <CardTitle className="text-base sm:text-lg lg:text-xl font-bold mb-2 text-card-foreground">
                 {t('doctor.dashboard.quickActions', 'Quick Actions')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 h-full">
                 {quickActions.map((action) => (
                   <Link
                     key={action.href}
                     href={action.href}
-                    className="group flex flex-row items-center gap-2 sm:gap-3 rounded-2xl p-2 sm:p-3 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl"
+                    className="group flex flex-row items-center gap-2 sm:gap-3 rounded-2xl p-2 sm:p-3 font-semibold outline-none focus:ring-2 focus:ring-offset-2 border-0 transition-all bg-white/80 hover:bg-primary/10 focus:bg-primary/20 shadow-md hover:shadow-xl h-full min-h-[80px] sm:min-h-[100px]"
                     tabIndex={0}
                   >
                     <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl transition-all shadow bg-primary/10 group-hover:bg-primary/20 group-focus:bg-primary/20 text-primary flex-shrink-0">
@@ -754,7 +731,6 @@ export default function DoctorDashboard() {
             </CardContent>
           </Card>
 
-          {/* Calendar and Appointments Card - only rerenders on selectedDate change */}
           <CalendarAppointmentsCard
             selectedDate={selectedDate}
             onDateChange={handleDateChange}

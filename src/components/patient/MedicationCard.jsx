@@ -110,9 +110,7 @@ const MedicationCard = ({
             style={{ background: cardBg, color: text, borderColor: border }}
         >
             <CardContent className="p-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                {/* Left side - Medication info */}
                 <div className="flex-1 space-y-3">
-                    {/* Header */}
                     <div className="flex items-center gap-3">
                         <Pill className="h-6 w-6" style={{ color: primary }} />
                         <h3 className="text-lg font-bold" style={{ color: text }}>
@@ -120,12 +118,10 @@ const MedicationCard = ({
                         </h3>
                     </div>
 
-                    {/* Dosage and frequency */}
                     <p className="text-sm" style={{ color: muted }}>
                         {medication.dosage} - {medication.frequency}
                     </p>
 
-                    {/* Additional details */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm" style={{ color: muted }}>
                         {medication.refillDate && (
                             <div className="flex items-center gap-1">
@@ -145,7 +141,6 @@ const MedicationCard = ({
                         )}
                     </div>
 
-                    {/* Notes alert */}
                     {medication.notes && (
                         <Alert
                             className="mt-3"
@@ -161,7 +156,6 @@ const MedicationCard = ({
                         </Alert>
                     )}
 
-                    {/* Reminders alert */}
                     {medication.remindersEnabled && reminderText && (
                         <Alert
                             className="mt-3"
@@ -178,9 +172,7 @@ const MedicationCard = ({
                     )}
                 </div>
 
-                {/* Right side - Status and actions */}
                 <div className="flex flex-col items-end gap-3">
-                    {/* Status badge */}
                     <Badge
                         style={{
                             background: statusStyle.background,
@@ -193,9 +185,7 @@ const MedicationCard = ({
                         {medication.status}
                     </Badge>
 
-                    {/* Action buttons */}
                     <div className="flex flex-wrap gap-2 justify-end">
-                        {/* Refill button */}
                         {isRefillable() && (
                             <Button
                                 variant="default"
@@ -215,7 +205,6 @@ const MedicationCard = ({
                             </Button>
                         )}
 
-                        {/* Reminder button */}
                         <Button
                             variant="default"
                             size="sm"
@@ -236,7 +225,6 @@ const MedicationCard = ({
                             }
                         </Button>
 
-                        {/* View details button */}
                         <Button
                             variant="outline"
                             size="sm"
@@ -253,7 +241,6 @@ const MedicationCard = ({
                             {t('patient.medications.viewDetails', 'View Details')}
                         </Button>
 
-                        {/* Edit button */}
                         <Button
                             variant="outline"
                             size="sm"
@@ -271,7 +258,6 @@ const MedicationCard = ({
                             {t('patient.medications.edit', 'Edit')}
                         </Button>
 
-                        {/* Delete button */}
                         <Button
                             variant="ghost"
                             size="sm"

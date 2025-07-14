@@ -5,16 +5,13 @@ require('dotenv').config({ path: path.resolve(__dirname, '../config/config.env')
 
 async function fixGeneralNotifications() {
   try {
-    // Connect to MongoDB
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
-    // Find all notifications with relatedModel: 'General'
     const generalNotifications = await Notification.find({ relatedModel: 'General' });
     console.log(`Found ${generalNotifications.length} notifications with relatedModel: 'General'`);
 
     if (generalNotifications.length > 0) {
-      // Update these notifications to remove the General reference
       const result = await Notification.updateMany(
         { relatedModel: 'General' },
         { 
@@ -33,5 +30,4 @@ async function fixGeneralNotifications() {
   }
 }
 
-// Run the migration
 fixGeneralNotifications(); 

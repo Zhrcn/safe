@@ -337,11 +337,9 @@ const generateGeneralHistory = () => {
 
 const seedMedicalRecords = async () => {
     try {
-        // Clear existing medical records
         await MedicalRecord.deleteMany({});
         console.log('Cleared existing medical records');
 
-        // Get all patients
         const patients = await User.find({ role: 'patient' });
         console.log(`Found ${patients.length} patients to seed medical records for`);
 
@@ -375,11 +373,9 @@ const seedMedicalRecords = async () => {
             medicalRecords.push(medicalRecord);
         }
 
-        // Insert all medical records
         const createdRecords = await MedicalRecord.insertMany(medicalRecords);
         console.log(`Successfully created ${createdRecords.length} medical records`);
 
-        // Log some statistics
         const totalVitalSigns = createdRecords.reduce((sum, record) => sum + record.vitalSigns.length, 0);
         const totalAllergies = createdRecords.reduce((sum, record) => sum + record.allergies.length, 0);
         const totalMedications = createdRecords.reduce((sum, record) => sum + record.medications.length, 0);
@@ -401,5 +397,4 @@ const seedMedicalRecords = async () => {
     }
 };
 
-// Run the seeding
 seedMedicalRecords(); 
