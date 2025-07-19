@@ -177,6 +177,19 @@ exports.getDoctor = asyncHandler(async (req, res) => {
     }, 'Doctor fetched successfully.'));
 });
 
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return null;
+  const dob = new Date(dateOfBirth);
+  if (isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 exports.getDoctorPatients = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   
@@ -188,22 +201,37 @@ exports.getDoctorPatients = asyncHandler(async (req, res) => {
   const appointments = await Appointment.find({ doctor: doctor._id })
     .populate({
       path: 'patient',
-      populate: {
-        path: 'user',
-        select: 'firstName lastName email phoneNumber profileImage'
-      }
+      populate: [
+        { path: 'user', select: 'firstName lastName email phoneNumber profileImage dateOfBirth age' },
+        { path: 'medicalFile' }
+      ]
     })
     .sort({ date: -1 });
 
   const patientMap = new Map();
   appointments.forEach(appointment => {
     if (appointment.patient && !patientMap.has(appointment.patient._id.toString())) {
+      let age = appointment.patient.user?.age;
+      if (!age && appointment.patient.user?.dateOfBirth) {
+        age = calculateAge(appointment.patient.user.dateOfBirth);
+      }
+      let condition = null;
+      if (appointment.patient.medicalFile && Array.isArray(appointment.patient.medicalFile.chronicConditions) && appointment.patient.medicalFile.chronicConditions.length > 0) {
+        const sorted = [...appointment.patient.medicalFile.chronicConditions].sort((a, b) => new Date(b.diagnosisDate || 0) - new Date(a.diagnosisDate || 0));
+        condition = sorted[0].name;
+      } else if (appointment.patient.medicalFile && Array.isArray(appointment.patient.medicalFile.diagnoses) && appointment.patient.medicalFile.diagnoses.length > 0) {
+        const sorted = [...appointment.patient.medicalFile.diagnoses].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        condition = sorted[0].name;
+      }
       patientMap.set(appointment.patient._id.toString(), {
         _id: appointment.patient._id,
+        patientId: appointment.patient.patientId,
         user: appointment.patient.user,
         medicalFile: appointment.patient.medicalFile,
         lastAppointment: appointment.date,
-        appointmentCount: 1
+        appointmentCount: 1,
+        age,
+        condition
       });
     } else if (appointment.patient) {
       const existingPatient = patientMap.get(appointment.patient._id.toString());
@@ -216,17 +244,32 @@ exports.getDoctorPatients = asyncHandler(async (req, res) => {
 
   if (doctor.patientsList && doctor.patientsList.length > 0) {
     const patientsFromList = await Patient.find({ _id: { $in: doctor.patientsList } })
-      .populate('user', 'firstName lastName email phoneNumber profileImage')
+      .populate('user', 'firstName lastName email phoneNumber profileImage dateOfBirth age')
       .populate('medicalFile');
     
     patientsFromList.forEach(patient => {
+      let age = patient.user?.age;
+      if (!age && patient.user?.dateOfBirth) {
+        age = calculateAge(patient.user.dateOfBirth);
+      }
+      let condition = null;
+      if (patient.medicalFile && Array.isArray(patient.medicalFile.chronicConditions) && patient.medicalFile.chronicConditions.length > 0) {
+        const sorted = [...patient.medicalFile.chronicConditions].sort((a, b) => new Date(b.diagnosisDate || 0) - new Date(a.diagnosisDate || 0));
+        condition = sorted[0].name;
+      } else if (patient.medicalFile && Array.isArray(patient.medicalFile.diagnoses) && patient.medicalFile.diagnoses.length > 0) {
+        const sorted = [...patient.medicalFile.diagnoses].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        condition = sorted[0].name;
+      }
       if (!patientMap.has(patient._id.toString())) {
         patientMap.set(patient._id.toString(), {
           _id: patient._id,
+          patientId: patient.patientId,
           user: patient.user,
           medicalFile: patient.medicalFile,
           lastAppointment: null,
-          appointmentCount: 0
+          appointmentCount: 0,
+          age,
+          condition
         });
       }
     });
@@ -247,7 +290,7 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
   }
   
   const patient = await Patient.findById(patientId)
-    .populate('user', 'firstName lastName email phoneNumber profileImage dateOfBirth gender address')
+    .populate('user', 'firstName lastName username email phoneNumber profileImage dateOfBirth gender address')
     .populate({
       path: 'medicalFile',
       populate: [
@@ -509,3 +552,4 @@ exports.getMedicalFileById = asyncHandler(async (req, res) => {
   }
   res.status(200).json(new ApiResponse(200, medicalFile, 'Medical file fetched successfully.'));
 });
+"console.log(JSON.stringify(patients[0], null, 2));"  

@@ -158,6 +158,9 @@ const medicalFileSchema = new mongoose.Schema({
     policyNumber: { type: String, trim: true },
     groupNumber: { type: String, trim: true },
     expiryDate: { type: Date },
+    contactPhone: { type: String, trim: true },
+    contactEmail: { type: String, trim: true },
+    contactAddress: { type: String, trim: true }
   },
   createdAt: {
     type: Date,

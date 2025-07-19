@@ -83,7 +83,10 @@ const patientSchema = new mongoose.Schema({
     provider: String,
     policyNumber: String,
     groupNumber: String,
-    expiryDate: Date
+    expiryDate: Date,
+    contactPhone: String,
+    contactEmail: String,
+    contactAddress: String
   },
   preferredPharmacy: {
     name: String,

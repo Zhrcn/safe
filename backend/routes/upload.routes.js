@@ -49,7 +49,7 @@ router.post('/profile', protect, (req, res) => {
       }
 
       // Create upload directory if it doesn't exist
-      const uploadDir = 'public/uploads/profile';
+      const uploadDir = path.join(__dirname, '../public/uploads/profile');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
@@ -117,7 +117,7 @@ router.delete('/profile', protect, (req, res) => {
 
     // Extract filename from URL
     const fileName = path.basename(imageUrl);
-    const filePath = path.join('public/uploads/profile', fileName);
+    const filePath = path.join(__dirname, '../public/uploads/profile', fileName);
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {

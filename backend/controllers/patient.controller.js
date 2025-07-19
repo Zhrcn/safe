@@ -86,9 +86,15 @@ const getAppointments = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('Patient not found');
     }
-    
     const Appointment = require('../models/Appointment');
-    const appointments = await Appointment.find({ _id: { $in: patient.appointments } })
+    let query = { _id: { $in: patient.appointments } };
+    const { startDate, endDate } = req.query;
+    if (startDate || endDate) {
+        query.date = {};
+        if (startDate) query.date.$gte = new Date(startDate);
+        if (endDate) query.date.$lte = new Date(endDate);
+    }
+    const appointments = await Appointment.find(query)
         .populate('patient', 'firstName lastName email profileImage')
         .populate({
             path: 'doctor',
@@ -99,7 +105,6 @@ const getAppointments = asyncHandler(async (req, res) => {
             }
         })
         .sort({ date: -1, time: -1 });
-    
     res.status(200).json(new ApiResponse(200, appointments, 'Appointments retrieved successfully.'));
 });
 const createAppointment = asyncHandler(async (req, res) => {
