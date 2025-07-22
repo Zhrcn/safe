@@ -13,6 +13,9 @@ import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPatients } from '@/store/slices/doctor/doctorPatientsSlice';
+import { getImageUrl, getInitials } from '@/components/ui/Avatar';
+import { getAgeFromDateOfBirth } from '@/lib/utils';
+
 
 export default function PatientsPage() {
   const { t } = useTranslation();
@@ -171,9 +174,20 @@ export default function PatientsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-              {filteredPatients.map((patient) => (
-                <PatientCard key={patient._id || patient.id} patient={patient} />
-              ))}
+              {filteredPatients.map((patient) => {
+                const userProfileImage = patient.user?.profileImage;
+                const age = patient.age || patient.user?.age || getAgeFromDateOfBirth(patient.user?.dateOfBirth || patient.dateOfBirth);
+                return (
+                  <PatientCard
+                    key={patient._id || patient.id}
+                    patient={{
+                      ...patient,
+                      profileImage: userProfileImage,
+                      age
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
         </CardContent>

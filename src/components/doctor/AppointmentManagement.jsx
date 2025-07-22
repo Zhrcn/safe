@@ -27,7 +27,7 @@ import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
@@ -107,9 +107,9 @@ function AppointmentCard({ appointment, onView, onEdit, onAccept, onReject }) {
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src={appointment.patient.avatar} alt={appointment.patient.name} />
+                            <AvatarImage src={appointment.patient.avatar ? appointment.patient.avatar : undefined} alt={appointment.patient.name} />
                             <AvatarFallback>
-                                <User className="h-6 w-6" />
+                                {getInitialsFromName(appointment.patient.name)}
                             </AvatarFallback>
                         </Avatar>
                         <div>

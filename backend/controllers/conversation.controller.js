@@ -4,8 +4,8 @@ class ConversationController {
   static async getUserConversations(req, res) {
     try {
       let conversations = await Conversation.find({ participants: req.user.id })
-        .populate('participants', 'firstName lastName email role')
-        .populate('messages.sender', 'firstName lastName email')
+        .populate('participants', 'firstName lastName email role profileImage avatar')
+        .populate('messages.sender', 'firstName lastName email profileImage avatar')
         .sort({ updatedAt: -1 });
 
       conversations = conversations.filter(conv =>
@@ -36,8 +36,8 @@ class ConversationController {
   static async getConversationById(req, res) {
     try {
       const conversation = await Conversation.findById(req.params.id)
-        .populate('participants', 'firstName lastName email role')
-        .populate('messages.sender', 'firstName lastName email');
+        .populate('participants', 'firstName lastName email role profileImage avatar')
+        .populate('messages.sender', 'firstName lastName email profileImage avatar');
 
       if (!conversation) {
         return res.status(404).json({ error: 'Conversation not found' });
@@ -89,7 +89,7 @@ class ConversationController {
       await conversation.save();
 
       const populatedConversation = await Conversation.findById(conversation._id)
-        .populate('participants', 'firstName lastName email role');
+        .populate('participants', 'firstName lastName email role profileImage avatar');
 
       res.status(201).json({ data: populatedConversation });
     } catch (err) {
@@ -114,7 +114,7 @@ class ConversationController {
         req.params.id,
         req.body,
         { new: true }
-      ).populate('participants', 'firstName lastName email role');
+      ).populate('participants', 'firstName lastName email role profileImage avatar');
 
       res.status(200).json({ data: updatedConversation });
     } catch (err) {
@@ -178,8 +178,8 @@ class ConversationController {
       await conversation.save();
 
       const updatedConversation = await Conversation.findById(req.params.id)
-        .populate('participants', 'firstName lastName email role')
-        .populate('messages.sender', 'firstName lastName email');
+        .populate('participants', 'firstName lastName email role profileImage avatar')
+        .populate('messages.sender', 'firstName lastName email profileImage avatar');
 
       res.status(200).json({ data: updatedConversation });
     } catch (err) {
@@ -228,8 +228,8 @@ class ConversationController {
       await conversation.save();
 
       const updatedConversation = await Conversation.findById(conversationId)
-        .populate('participants', 'firstName lastName email role')
-        .populate('messages.sender', 'firstName lastName email');
+        .populate('participants', 'firstName lastName email role profileImage avatar')
+        .populate('messages.sender', 'firstName lastName email profileImage avatar');
 
       res.status(200).json({ 
         data: updatedConversation,

@@ -163,14 +163,14 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
   return (
     <div className="max-w-xl mx-auto p-0 ">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-0">
-        <div className="p-6 sm:p-8">
-          <div className="flex justify-between items-center mb-4">
+        <div className="p-4 sm:p-5">
+          <div className="flex justify-between items-center mb-3">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
                 New Prescription
               </h2>
               {patientName && (
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-gray-600">
                   for {patientName}
                 </p>
               )}
@@ -182,50 +182,50 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
             )}
           </div>
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-800 rounded-2xl bg-red-50">
+            <div className="p-2 mb-3 text-xs text-red-800 rounded-2xl bg-red-50">
               {error}
             </div>
           )}
           {success && (
-            <div className="p-3 mb-4 text-sm text-green-800 rounded-2xl bg-green-50">
+            <div className="p-2 mb-3 text-xs text-green-800 rounded-2xl bg-green-50">
               {success}
             </div>
           )}
-          <SectionHeader icon={<Info size={18} className="text-blue-600" />}>
+          <SectionHeader icon={<Info size={16} className="text-blue-600" />}>
             Medications
           </SectionHeader>
-          <div className="border border-gray-200 rounded-2xl overflow-hidden mb-4">
+          <div className="border border-gray-200 rounded-2xl overflow-hidden mb-3">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosage</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Edit</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remove</th>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosage</th>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                  <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Edit</th>
+                  <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remove</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {medications.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 italic">
+                    <td colSpan="6" className="px-4 py-2 text-center text-xs text-gray-500 italic">
                       No medications added yet.
                     </td>
                   </tr>
                 ) : (
                   medications.map((med, index) => (
                     <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{med.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.dosage}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{med.frequency}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-2 whitespace-nowrap text-xs font-medium text-gray-900">{med.name}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.type}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.dosage}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.frequency}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-right text-xs font-medium">
                         <Button variant="ghost" size="icon" onClick={() => handleEditMedication(index)} aria-label="Edit medication">
                           <Edit2 className="h-4 w-4" />
                         </Button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-2 whitespace-nowrap text-right text-xs font-medium">
                         <Button variant="ghost" size="icon" onClick={() => handleRemoveMedication(index)} aria-label="Remove medication">
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -236,40 +236,40 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div>
-              <label htmlFor="newMedication" className="block text-sm font-medium text-gray-700">Medication</label>
+              <label htmlFor="newMedication" className="block text-xs font-medium text-gray-700">Medication</label>
               <select
                 id="newMedication"
                 value={newMedication}
                 onChange={(e) => handleMedicationChange(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
+                className="mt-1 block w-full pl-3 pr-10 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-2xl"
               >
                 <option key="" value="">Select medication</option>
                 {commonMedications.map((med) => (
                   <option key={med.name} value={med.name}>{med.name}</option>
                 ))}
               </select>
-              {medicationError && <p className="mt-1 text-sm text-red-600">{medicationError}</p>}
+              {medicationError && <p className="mt-1 text-xs text-red-600">{medicationError}</p>}
             </div>
             <div>
-              <label htmlFor="newDosage" className="block text-sm font-medium text-gray-700">Dosage</label>
+              <label htmlFor="newDosage" className="block text-xs font-medium text-gray-700">Dosage</label>
               <input
                 type="text"
                 id="newDosage"
                 value={newDosage}
                 onChange={(e) => setNewDosage(e.target.value)}
                 placeholder="Dosage"
-                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-2xl"
+                className="mt-1 block w-full shadow-sm text-xs border-gray-300 rounded-2xl py-1.5"
               />
             </div>
             <div>
-              <label htmlFor="newFrequency" className="block text-sm font-medium text-gray-700">Frequency</label>
+              <label htmlFor="newFrequency" className="block text-xs font-medium text-gray-700">Frequency</label>
               <select
                 id="newFrequency"
                 value={newFrequency}
                 onChange={(e) => setNewFrequency(e.target.value)}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-2xl"
+                className="mt-1 block w-full pl-3 pr-10 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-2xl"
               >
                 <option key="" value="">Select frequency</option>
                 {defaultFrequencyOptions.map((freq) => (
@@ -282,39 +282,39 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 type="button"
                 variant="default"
                 onClick={handleAddMedication}
-                className="w-full inline-flex items-center justify-center px-4 py-2"
+                className="w-full inline-flex items-center justify-center px-3 py-1.5 text-xs"
               >
                 <Plus className="h-5 w-5 mr-2" />Add Medication
               </Button>
             </div>
           </div>
-          <div className="border-t border-gray-200 my-6" />
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <SectionHeader icon={<Info size={18} className="text-blue-600" />}>
+          <div className="border-t border-gray-200 my-4" />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <SectionHeader icon={<Info size={16} className="text-blue-600" />}>
               Prescription Details
             </SectionHeader>
             <div>
-              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Overall Instructions</label>
+              <label htmlFor="instructions" className="block text-xs font-medium text-gray-700">Overall Instructions</label>
               <Controller
                 name="instructions"
                 control={control}
                 render={({ field }) => (
                   <textarea
                     id="instructions"
-                    rows="4"
+                    rows="2"
                     {...field}
                     disabled={isSubmitting}
                     placeholder="e.g., Take with food, complete the full course..."
-                    className={`mt-1 block w-full px-3 py-2 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-1 block w-full px-2 py-1.5 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs ${errors.instructions ? 'border-red-500' : 'border-gray-300'}`}
                   ></textarea>
                 )}
               />
               {errors.instructions && (
-                <p className="mt-1 text-sm text-red-600">{errors.instructions.message}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.instructions.message}</p>
               )}
             </div>
             <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duration</label>
+              <label htmlFor="duration" className="block text-xs font-medium text-gray-700">Duration</label>
               <Controller
                 name="duration"
                 control={control}
@@ -325,37 +325,37 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                     {...field}
                     disabled={isSubmitting}
                     placeholder="e.g., 7 days, 2 weeks, indefinitely"
-                    className={`mt-1 block w-full px-3 py-2 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.duration ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`mt-1 block w-full px-2 py-1.5 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs ${errors.duration ? 'border-red-500' : 'border-gray-300'}`}
                   />
                 )}
               />
               {errors.duration && (
-                <p className="mt-1 text-sm text-red-600">{errors.duration.message}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.duration.message}</p>
               )}
             </div>
             <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+              <label htmlFor="notes" className="block text-xs font-medium text-gray-700">Notes (Optional)</label>
               <Controller
                 name="notes"
                 control={control}
                 render={({ field }) => (
                   <textarea
                     id="notes"
-                    rows="3"
+                    rows="2"
                     {...field}
                     disabled={isSubmitting}
                     placeholder="Any additional notes for the pharmacist or patient"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
                   ></textarea>
                 )}
               />
             </div>
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex justify-end space-x-2 mt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleReset}
-                className="px-4 py-2"
+                className="px-3 py-1.5 text-xs"
                 disabled={isSubmitting}
               >
                 Reset
@@ -364,7 +364,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                 type="button"
                 variant="outline"
                 onClick={handleSaveDraft}
-                className="px-4 py-2"
+                className="px-3 py-1.5 text-xs"
                 disabled={isSubmitting}
               >
                 Save Draft
@@ -372,7 +372,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               <Button
                 type="submit"
                 variant="default"
-                className="px-4 py-2"
+                className="px-3 py-1.5 text-xs"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating...' : 'Create Prescription'}
@@ -383,25 +383,25 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
       </div>
       {editDialogOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="relative p-6 bg-white rounded-2xl shadow-xl max-w-md mx-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Medication Instructions</h3>
-            <form className="space-y-4">
+          <div className="relative p-4 bg-white rounded-2xl shadow-xl max-w-md mx-auto">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Edit Medication Instructions</h3>
+            <form className="space-y-3">
               <div>
-                <label htmlFor="editInstructions" className="block text-sm font-medium text-gray-700">Instructions</label>
+                <label htmlFor="editInstructions" className="block text-xs font-medium text-gray-700">Instructions</label>
                 <textarea
                   id="editInstructions"
-                  rows="4"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  rows="2"
+                  className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs"
                   value={editInstructions}
                   onChange={(e) => setEditInstructions(e.target.value)}
                 ></textarea>
               </div>
             </form>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-4 flex justify-end space-x-2">
               <Button
                 type="button"
                 variant="outline"
-                className="px-4 py-2"
+                className="px-3 py-1.5 text-xs"
                 onClick={() => setEditDialogOpen(false)}
               >
                 Cancel
@@ -409,7 +409,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
               <Button
                 type="button"
                 variant="default"
-                className="px-4 py-2"
+                className="px-3 py-1.5 text-xs"
                 onClick={handleEditDialogSave}
               >
                 Save Changes

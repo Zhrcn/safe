@@ -32,7 +32,6 @@ async function handleRequest(request, params, method) {
     
     const headers = new Headers();
     
-    // Debug logging for authorization header
     const authHeader = request.headers.get('authorization');
     console.log('API Proxy - Authorization header:', authHeader ? 'Present' : 'Missing');
     if (authHeader) {

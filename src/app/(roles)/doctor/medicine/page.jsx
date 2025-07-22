@@ -32,7 +32,6 @@ export default function MedicineRequestsPage() {
   const [deleteRequest, { isLoading: isDeleting }] = useDeleteRequestMutation();
   const newRequestDialogOpen = useSelector((state) => state.medicineUi.newRequestDialogOpen);
 
-  // Pharmacies and medicines state
   const [pharmacies, setPharmacies] = useState([]);
   const [pharmaciesLoading, setPharmaciesLoading] = useState(true);
   const [pharmaciesError, setPharmaciesError] = useState(null);
@@ -42,7 +41,6 @@ export default function MedicineRequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Fetch pharmacies
   const fetchPharmacies = useCallback(() => {
     setPharmaciesLoading(true);
     setPharmaciesError(null);
@@ -64,7 +62,6 @@ export default function MedicineRequestsPage() {
       });
   }, []);
 
-  // Fetch medicines
   const fetchMedicines = useCallback(() => {
     setMedicinesLoading(true);
     setMedicinesError(null);
@@ -79,21 +76,17 @@ export default function MedicineRequestsPage() {
       });
   }, []);
 
-  // Initial load
   useEffect(() => {
     fetchPharmacies();
     fetchMedicines();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Manual refresh handler
   const handleRefresh = () => {
     refetch();
     fetchPharmacies();
     fetchMedicines();
   };
 
-  // Handle new request creation with toast feedback
   const handleCreateRequest = async (requestData) => {
     try {
       await createRequest(requestData).unwrap();
@@ -107,7 +100,6 @@ export default function MedicineRequestsPage() {
     }
   };
 
-  // Cancel handler
   const handleCancelRequest = async (id) => {
     try {
       await deleteRequest(id).unwrap();
@@ -137,9 +129,7 @@ return (
             </Button>
           </div>
         </div>
-        {/* Divider */}
         <div className="my-4 border-t" />
-        {/* Table */}
         {isLoading || isFetching ? (
           <div className="flex flex-col gap-4 py-8 px-6">
             {[...Array(3)].map((_, i) => (
@@ -170,7 +160,6 @@ return (
               </TableHeader>
               <TableBody>
                 {requests.map((req) => {
-                  // Use populated pharmacy object if present
                   const pharmacyObj = req.pharmacy && typeof req.pharmacy === 'object' ? req.pharmacy : null;
                   const pharmacyName = pharmacyObj?.pharmacyName || req.pharmacyName || 'Pharmacy';
                   const pharmacyAvatar = pharmacyObj?.user?.profileImage || '';
@@ -220,7 +209,6 @@ return (
             </Table>
           </div>
         )}
-        {/* Pharmacies and medicines loading/error */}
         {(pharmaciesLoading || medicinesLoading) && (
           <div className="text-muted-foreground mt-4 px-6">Loading data...</div>
         )}
@@ -228,7 +216,6 @@ return (
           <div className="text-error mt-4 px-6">{pharmaciesError || medicinesError}</div>
         )}
       </div>
-      {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -271,7 +258,6 @@ return (
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* New Request Dialog (pharmacy required) */}
       <NewRequestDialog
         open={newRequestDialogOpen}
         onClose={() => dispatch(closeNewRequestDialog())}

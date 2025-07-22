@@ -78,7 +78,6 @@ function isMoreThan24HoursAway(date, time) {
         const now = new Date();
         const appointmentDate = new Date(date);
         if (!time || time === 'TBD' || !time.includes(':')) {
-            // If time is not set, just compare date
             const timeDifference = appointmentDate.getTime() - now.getTime();
             return timeDifference > 24 * 60 * 60 * 1000;
         }

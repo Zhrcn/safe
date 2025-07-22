@@ -83,12 +83,13 @@ exports.createUser = async (req, res) => {
       specialty,
       licenseNumber,
       yearsOfExperience,
-      pharmacyName
+      pharmacyName,
+      companyName
     } = req.body;
     if (!firstName || !lastName || !email || !password || !role) {
       return res.status(400).json(new ApiResponse(400, null, 'Please provide firstName, lastName, email, password, and role.'));
     }
-    if (!['patient', 'doctor', 'pharmacist', 'admin'].includes(role)) {
+    if (!['patient', 'doctor', 'pharmacist', 'admin', 'distributor'].includes(role)) {
       return res.status(400).json(new ApiResponse(400, null, 'Invalid role specified.'));
     }
     const userExists = await User.findOne({ email });
@@ -131,6 +132,21 @@ exports.createUser = async (req, res) => {
         licenseNumber,
         pharmacyName,
         yearsOfExperience
+      });
+    } else if (role === 'distributor') {
+      if (!companyName) {
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json(new ApiResponse(400, null, 'Distributor role requires companyName.'));
+      }
+      const Distributor = require('../models/Distributor');
+      await Distributor.create({
+        user: user._id,
+        companyName,
+        contactName: req.body.contactName,
+        contactEmail: req.body.contactEmail,
+        contactPhone: req.body.contactPhone,
+        address: req.body.address,
+        distributorId: `DST-${Date.now()}` // Simple unique ID, can be improved
       });
     }
     const userResponse = user.toObject();

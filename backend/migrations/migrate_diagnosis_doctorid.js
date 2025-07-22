@@ -1,4 +1,3 @@
-// Migration script to copy diagnosedBy to doctorId for all diagnoses in MedicalFile
 const mongoose = require('mongoose');
 const MedicalFile = require('../models/MedicalFile');
 

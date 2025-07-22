@@ -5,11 +5,13 @@ import {
     mockNotifications, 
     mockStats 
 } from '@/data/mock/pharmacistData';
+import axiosInstance from '@/store/services/axiosInstance';
+import { getPharmacistOrders, cancelOrder } from '@/store/services/orderApi';
 
 export const getInventory = async () => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockInventory;
+        const response = await axiosInstance.get('/pharmacists/inventory');
+        return response.data.data;
     } catch (error) {
         console.error('Error fetching inventory:', error);
         throw error;
@@ -18,8 +20,8 @@ export const getInventory = async () => {
 
 export const getPrescriptions = async () => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockPrescriptions;
+        const response = await axiosInstance.get('/prescriptions');
+        return response.data.data;
     } catch (error) {
         console.error('Error fetching prescriptions:', error);
         throw error;
@@ -28,8 +30,8 @@ export const getPrescriptions = async () => {
 
 export const getPharmacistProfile = async () => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockPharmacistProfile;
+        const response = await axiosInstance.get('/pharmacists/profile');
+        return response.data.data;
     } catch (error) {
         console.error('Error fetching pharmacist profile:', error);
         throw error;
@@ -58,8 +60,8 @@ export const getStats = async () => {
 
 export const getOrders = async () => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockPrescriptions;
+        const response = await getPharmacistOrders();
+        return response.data.data;
     } catch (error) {
         console.error('Error fetching orders:', error);
         throw error;
@@ -68,13 +70,12 @@ export const getOrders = async () => {
 
 export const updateOrderStatus = async (orderId, status) => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const order = mockPrescriptions.find(p => p.id === orderId);
-        if (order) {
-            order.status = status;
-            return order;
+        if (status === 'cancelled') {
+            const response = await cancelOrder(orderId);
+            return response.data.data;
         }
-        throw new Error('Order not found');
+        // For other statuses, implement as needed
+        throw new Error('Only cancellation is supported from pharmacist side.');
     } catch (error) {
         console.error('Error updating order status:', error);
         throw error;
@@ -96,15 +97,10 @@ export const updatePrescriptionStatus = async (prescriptionId, status) => {
     }
 };
 
-export const updateInventoryItem = async (itemId, data) => {
+export const updateInventoryItem = async (item) => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const item = mockInventory.find(i => i.id === itemId);
-        if (item) {
-            Object.assign(item, data);
-            return item;
-        }
-        throw new Error('Inventory item not found');
+        const response = await axiosInstance.patch(`/pharmacists/inventory/${item._id || item.id}`, item);
+        return response.data.data;
     } catch (error) {
         console.error('Error updating inventory item:', error);
         throw error;
@@ -113,30 +109,50 @@ export const updateInventoryItem = async (itemId, data) => {
 
 export const addInventoryItem = async (data) => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const newItem = {
-            id: `inv_${String(mockInventory.length + 1).padStart(3, '0')}`,
-            ...data
-        };
-        mockInventory.push(newItem);
-        return newItem;
+        const response = await axiosInstance.post('/pharmacists/inventory', data);
+        return response.data.data;
     } catch (error) {
         console.error('Error adding inventory item:', error);
         throw error;
     }
 };
 
-export const deleteInventoryItem = async (itemId) => {
+export const deleteInventoryItem = async (id) => {
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const index = mockInventory.findIndex(i => i.id === itemId);
-        if (index !== -1) {
-            const deletedItem = mockInventory.splice(index, 1)[0];
-            return deletedItem;
-        }
-        throw new Error('Inventory item not found');
+        const response = await axiosInstance.delete(`/pharmacists/inventory/${id}`);
+        return response.data.data;
     } catch (error) {
         console.error('Error deleting inventory item:', error);
+        throw error;
+    }
+};
+
+export const updatePharmacistProfile = async (profileData) => {
+    try {
+        const response = await axiosInstance.patch('/pharmacists/profile', profileData);
+        return response.data.data;
+    } catch (error) {
+        console.error('Error updating pharmacist profile:', error);
+        throw error;
+    }
+};
+
+export const markPrescriptionFilled = async (prescriptionId) => {
+    try {
+        const response = await axiosInstance.patch(`/prescriptions/${prescriptionId}`, { status: 'filled' });
+        return response.data.data;
+    } catch (error) {
+        console.error('Error marking prescription as filled:', error);
+        throw error;
+    }
+};
+
+export const getPharmacists = async () => {
+    try {
+        const response = await axiosInstance.get('/pharmacists');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching pharmacists:', error);
         throw error;
     }
 }; 

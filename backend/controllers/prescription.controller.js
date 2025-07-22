@@ -5,8 +5,9 @@ const Doctor = require('../models/Doctor');
 exports.getPrescriptions = async (req, res) => {
   try {
     const prescriptions = await Prescription.find()
-      .populate('doctorId', 'firstName lastName photo') 
-      .populate('medications.medicineId', 'name'); 
+      .populate('doctorId', 'firstName lastName photo')
+      .populate('patientId', 'firstName lastName')
+      .populate('medications.medicineId', 'name');
 
     const doctorIds = prescriptions.map(p => p.doctorId?._id).filter(Boolean);
     const doctorSpecialties = await Doctor.find({ user: { $in: doctorIds } }).select('user specialty');
@@ -15,12 +16,12 @@ exports.getPrescriptions = async (req, res) => {
       specialtyMap[doc.user.toString()] = doc.specialty;
     });
 
-
     const data = prescriptions.map(p => ({
       id: p._id,
       doctorName: p.doctorId ? `${p.doctorId.firstName} ${p.doctorId.lastName}` : null,
       doctorSpecialty: p.doctorId && specialtyMap[p.doctorId._id.toString()] ? specialtyMap[p.doctorId._id.toString()] : null,
       doctorPhoto: p.doctorId && p.doctorId.photo ? p.doctorId.photo : null,
+      patientName: p.patientId ? `${p.patientId.firstName} ${p.patientId.lastName}` : null,
       date: p.issueDate,
       endDate: p.expiryDate,
       medications: p.medications.map(m => ({

@@ -22,12 +22,10 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
   const [medicinesLoading, setMedicinesLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
-  // RTK Query for requests
   const { data: requests = [], isLoading, isError, refetch, isFetching } = useGetRequestsQuery();
   const [createRequest, { isLoading: isCreatingRequest }] = useCreateRequestMutation();
   const [deleteRequest, { isLoading: isDeleting }] = useDeleteRequestMutation();
 
-  // Fetch pharmacies
   const fetchPharmacies = useCallback(() => {
     setPharmaciesLoading(true);
     getPharmacists()
@@ -48,7 +46,6 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
       });
   }, []);
 
-  // Fetch medicines
   const fetchMedicines = useCallback(() => {
     setMedicinesLoading(true);
     getMedicines()
@@ -67,7 +64,6 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
     fetchMedicines();
   }, [fetchPharmacies, fetchMedicines]);
 
-  // Create request handler
   const handleCreateRequest = async ({ pharmacyId, medicineName }) => {
     setIsCreating(true);
     try {
@@ -81,7 +77,6 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
     }
   };
 
-  // Cancel handler
   const handleCancelRequest = async (id) => {
     try {
       await deleteRequest(id).unwrap();

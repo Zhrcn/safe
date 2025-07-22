@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Avatar, AvatarFallback, getImageUrl } from '@/components/ui/Avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/Dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
@@ -44,11 +44,12 @@ import { fetchProfile, editProfile } from '@/store/slices/patient/profileSlice';
 import { fetchMedicalFile } from '@/store/slices/patient/dashboardSlice';
 import dynamic from 'next/dynamic';
 import { useTheme } from '@/components/ThemeProviderWrapper';
-import ImageUploader from '@/components/ui/ImageUploader';
+import ImageUploaderPatient from '@/components/ui/ImageUploaderPatient';
 import ImageTest from '@/components/ui/ImageTest';
 import { updateUser } from '@/store/slices/auth/authSlice';
+import { getInitials, getImageUrl } from '@/components/ui/Avatar';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 const glassCard = "backdrop-blur-md bg-card/70 border border-border shadow-xl";
 const fadeIn = "animate-fade-in";
@@ -61,16 +62,14 @@ const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { 
 
 function PatientProfileAvatar({ src, firstName, lastName, avatarHover }) {
   return (
-    <Avatar
-      src={src}
-      alt="Profile Picture"
-      className="h-32 w-32 border-4 border-primary shadow-xl "
-    >
-      <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold flex items-center justify-center w-full h-full rounded-full">
-        {(firstName || lastName)
-          ? `${firstName ? firstName.charAt(0) : ''}${lastName ? lastName.charAt(0) : ''}`
-          : null}
-      </AvatarFallback>
+    <Avatar className="h-32 w-32 border-4 border-primary shadow-xl ">
+      {src ? (
+        <AvatarImage src={src} alt="Profile Picture" />
+      ) : (
+        <AvatarFallback className="bg-primary/10 text-primary text-5xl font-semibold flex items-center justify-center w-full h-full rounded-full">
+          {getInitials(firstName, lastName)}
+        </AvatarFallback>
+      )}
     </Avatar>
   );
 }
@@ -143,7 +142,7 @@ const ProfilePage = () => {
         if (user?.profileImage) {
             setFormData(prev => ({
                 ...prev,
-                profilePicture: getImageUrl(user.profileImage) + '?t=' + Date.now()
+                profilePicture: getImageUrl(user.profileImage)
             }));
         }
     }, [user?.profileImage]);
@@ -297,11 +296,7 @@ const ProfilePage = () => {
     };
 
     const handleImageUpload = (imagePath) => {
-        const fullImageUrl = imagePath.startsWith('/')
-            ? window.location.origin + imagePath
-            : imagePath;
-        const cacheBustedUrl = fullImageUrl + '?t=' + Date.now();
-        dispatch(updateUser({ profileImage: cacheBustedUrl }));
+        dispatch(updateUser({ profileImage: imagePath }));
     };
 
     const handleImageRemove = () => {
@@ -366,21 +361,17 @@ const ProfilePage = () => {
         <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
             <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-1/3">
                 {isEditing ? (
-                    <ImageUploader
-                        currentImage={getImageUrl(user?.profileImage)}
+                    <ImageUploaderPatient
                         onImageUpload={handleImageUpload}
                         onImageRemove={handleImageRemove}
                         size="lg"
                         className="mb-4"
-                        userId={profile?.user?._id || ''}
-                        firstName={formData.firstName}
-                        lastName={formData.lastName}
                         previewImage={previewImage}
                         setPreviewImage={setPreviewImage}
                     />
                 ) : (
                     <PatientProfileAvatar
-                        src={getImageUrl(user?.profileImage)}
+                        src={user?.profileImage ? getImageUrl(user?.profileImage) : undefined}
                         firstName={formData.firstName}
                         lastName={formData.lastName}
                         avatarHover={avatarHover}
@@ -1204,6 +1195,9 @@ const ProfilePage = () => {
                     <DialogContent className="max-w-3xl w-full">
                         <DialogHeader>
                             <DialogTitle>{selectedPdf.title || t('patient.profile.labResultPdf', 'Lab Result PDF')}</DialogTitle>
+                            <DialogDescription id="pdf-desc">
+                                This dialog displays a PDF document for the selected lab result.
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="w-full flex flex-col items-center">
                             <Document file={selectedPdf.url} onLoadSuccess={onDocumentLoadSuccess} loading={<LoadingSpinner />}>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Pill, Search, Star, MapPin, Clock, MessageCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -142,7 +142,7 @@ export default function PharmacistsPage() {
                                 <div className="flex items-center gap-4">
                                     <Avatar className="h-16 w-16">
                                         <AvatarImage src={pharmacist.avatar} alt={pharmacist.name} />
-                                        <AvatarFallback>{pharmacist.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                        <AvatarFallback>{getInitialsFromName(pharmacist.name)}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <CardTitle className="text-xl">{pharmacist.name}</CardTitle>

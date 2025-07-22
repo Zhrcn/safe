@@ -3,9 +3,9 @@ import { getAppointments, createAppointment as addAppointment, updateAppointment
 
 export const fetchAppointments = createAsyncThunk(
     'appointments/fetchAppointments',
-    async (_, { rejectWithValue }) => {
+    async ({ startDate, endDate } = {}, { rejectWithValue }) => {
         try {
-            const response = await getAppointments();
+            const response = await getAppointments(startDate, endDate);
             if (Array.isArray(response)) return response;
             if (response && Array.isArray(response.data)) return response.data;
             return [];

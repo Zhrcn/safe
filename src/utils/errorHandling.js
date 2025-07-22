@@ -6,10 +6,8 @@
 export const extractErrorMessage = (error) => {
   if (!error) return 'An error occurred';
   
-  // If it's already a string, return it
   if (typeof error === 'string') return error;
   
-  // If it's an object with a message property
   if (error.message) {
     if (typeof error.message === 'string') return error.message;
     if (typeof error.message === 'object') {
@@ -17,7 +15,6 @@ export const extractErrorMessage = (error) => {
     }
   }
   
-  // If it's an API response object
   if (error.response?.data) {
     const data = error.response.data;
     if (typeof data === 'string') return data;
@@ -26,17 +23,14 @@ export const extractErrorMessage = (error) => {
     return JSON.stringify(data);
   }
   
-  // If it's an object with statusCode and message (backend format)
   if (error.statusCode && error.message) {
     return error.message;
   }
   
-  // If it's an object with success and message
   if (error.success === false && error.message) {
     return error.message;
   }
   
-  // Fallback: stringify the error
   try {
     return JSON.stringify(error);
   } catch {
@@ -44,11 +38,7 @@ export const extractErrorMessage = (error) => {
   }
 };
 
-/**
- * Handle auth errors specifically
- * @param {any} error - The error object
- * @returns {string} - The extracted error message
- */
+
 export const handleAuthError = (error) => {
   return extractErrorMessage(error);
 };

@@ -314,7 +314,7 @@ export default function AddPatientForm({ onClose, onSuccess }) {
                                 {isSearching ? 'Searching...' : 'Search'}
                             </Button>
                         </div>
-                        {error && !patientId.trim() && (
+                        {error && !String(patientId || '').trim() && (
                             <p className="mt-1 text-sm text-red-600">{error}</p>
                         )}
                     </div>

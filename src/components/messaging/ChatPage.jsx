@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName, getImageUrl } from "@/components/ui/Avatar";
 import { ArrowLeft, MoreVertical, Circle, Trash2 } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
@@ -53,7 +53,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
           <Avatar className="h-12 w-12 border-2 border-primary/20 relative shadow">
             <AvatarImage src={conversation?.avatar} alt={conversation?.title} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold">
-              {conversation?.title?.[0] || "U"}
+              {getInitialsFromName(conversation?.title) || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -83,7 +83,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
           <Avatar className="h-12 w-12 border-2 border-primary/20 relative shadow">
             <AvatarImage src={conversation?.avatar} alt={conversation?.title} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold">
-              {conversation?.title?.[0] || "U"}
+              {getInitialsFromName(conversation?.title) || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -113,11 +113,15 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
         grouped.push({ type: "date", date: dateStr, key: `date-${dateStr}-${idx}` });
         lastDate = dateStr;
       }
-      if (msg.sender !== lastSender) {
+      if (
+        (msg.sender === "You") ||
+        (currentUser && (msg.sender === currentUser._id || (typeof msg.sender === 'object' && msg.sender._id === currentUser._id)))
+      ) {
         grouped.push({ type: "bubble", msg, showAvatar: true, key: msg.id || idx });
         lastSender = msg.sender;
       } else {
         grouped.push({ type: "bubble", msg, showAvatar: false, key: msg.id || idx });
+        lastSender = msg.sender;
       }
     });
   }
@@ -131,10 +135,30 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
           </Button>
         )}
         <Avatar className="h-12 w-12 border-2 border-primary/20 relative shadow">
-          <AvatarImage src={conversation?.avatar} alt={conversation?.title} />
-          <AvatarFallback className="bg-primary/10 text-primary font-bold">
-            {conversation?.title?.[0] || "U"}
-          </AvatarFallback>
+          {(() => {
+            let img = null;
+            let initials = '';
+            let other = null;
+            if (conversation?.participants && Array.isArray(conversation.participants)) {
+              other = conversation.participants.find(p => (p._id || p.id) !== (currentUser?._id || currentUser?.id));
+            }
+            if (other && (other.profileImage || other.avatar)) {
+              img = other.profileImage ? getImageUrl(other.profileImage) : getImageUrl(other.avatar);
+              initials = getInitialsFromName(other.firstName || other.name || conversation.title);
+            } else if (conversation?.avatar) {
+              img = getImageUrl(conversation.avatar);
+              initials = getInitialsFromName(conversation.title);
+            } else {
+              initials = getInitialsFromName(conversation.title);
+            }
+            return img ? (
+              <AvatarImage src={img} alt={other ? (other.firstName || other.name || conversation.title) : conversation.title} />
+            ) : (
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {initials || "U"}
+              </AvatarFallback>
+            );
+          })()}
           <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
             isOtherParticipantOnline ? 'bg-green-500' : 'bg-muted-foreground'
           }`} />
@@ -197,6 +221,7 @@ export default function ChatPage({ conversation, onSend, newMessage, onInputChan
                       } 
                       showAvatar={item.showAvatar}
                       onDeleteMessage={onDeleteMessage}
+                      participants={conversation?.participants}
                     />
                   </div>
                 );

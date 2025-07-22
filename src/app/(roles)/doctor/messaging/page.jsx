@@ -6,7 +6,6 @@ import ChatPage from "@/components/messaging/ChatPage";
 import { MessageCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { getPatients } from '@/store/services/doctor/patientsApi';
-import { getNonDoctorUsers } from '@/store/services/user/userApi';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 
@@ -99,9 +98,6 @@ export default function DoctorMessagingPage() {
   const [patients, setPatients] = useState([]);
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientsError, setPatientsError] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [usersLoading, setUsersLoading] = useState(true);
-  const [usersError, setUsersError] = useState(null);
 
   useEffect(() => {
     setPatientsLoading(true);
@@ -119,15 +115,6 @@ export default function DoctorMessagingPage() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    setUsersLoading(true);
-    setUsersError(null);
-    getNonDoctorUsers()
-      .then(data => setUsers(data))
-      .catch(err => setUsersError(err.message || t('failedToFetchUsers')))
-      .finally(() => setUsersLoading(false));
   }, []);
 
   useEffect(() => {
@@ -205,13 +192,13 @@ export default function DoctorMessagingPage() {
         open={showNewChat}
         onClose={handleCloseNewChat}
         onCreate={handleCreateChat}
-        users={users}
+        users={patients}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         subject={subject}
         setSubject={setSubject}
-        loading={usersLoading}
-        error={usersError}
+        loading={patientsLoading}
+        error={patientsError}
       />
 
       <div className={`border-r border-border bg-card h-full ${mobileView && selectedConversation ? "hidden" : "block"} w-full md:w-1/3 lg:w-1/4 flex flex-col`}>

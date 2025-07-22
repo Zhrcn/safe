@@ -23,7 +23,6 @@ const transformImageUrl = (imageUrl) => {
   return imageUrl;
 };
 
-// Fetch doctor profile
 export const fetchDoctorProfile = createAsyncThunk(
     'doctorProfile/fetchProfile',
     async (_, { rejectWithValue }) => {
@@ -48,7 +47,6 @@ export const updateDoctorProfileData = createAsyncThunk(
     }
 );
 
-// Upload profile image
 export const uploadDoctorProfileImage = createAsyncThunk(
     'doctorProfile/uploadImage',
     async (formData, { rejectWithValue }) => {
@@ -61,7 +59,6 @@ export const uploadDoctorProfileImage = createAsyncThunk(
     }
 );
 
-// Achievements management
 export const addDoctorAchievement = createAsyncThunk(
     'doctorProfile/addAchievement',
     async (achievementData, { rejectWithValue }) => {
@@ -98,7 +95,6 @@ export const deleteDoctorAchievement = createAsyncThunk(
     }
 );
 
-// Education management
 export const addDoctorEducation = createAsyncThunk(
     'doctorProfile/addEducation',
     async (educationData, { rejectWithValue }) => {
@@ -135,7 +131,6 @@ export const deleteDoctorEducation = createAsyncThunk(
     }
 );
 
-// Licenses management
 export const addDoctorLicense = createAsyncThunk(
     'doctorProfile/addLicense',
     async (licenseData, { rejectWithValue }) => {
@@ -209,14 +204,12 @@ const doctorProfileSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Fetch profile
             .addCase(fetchDoctorProfile.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchDoctorProfile.fulfilled, (state, action) => {
                 state.loading = false;
-                // Transform the profile image URL to full URL
                 const profile = {
                     ...action.payload,
                     profileImage: transformImageUrl(action.payload.profileImage)
@@ -229,14 +222,12 @@ const doctorProfileSlice = createSlice({
                 state.error = action.payload;
             })
             
-            // Update profile
             .addCase(updateDoctorProfileData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(updateDoctorProfileData.fulfilled, (state, action) => {
                 state.loading = false;
-                // Transform the profile image URL to full URL
                 const profile = {
                     ...action.payload,
                     profileImage: transformImageUrl(action.payload.profileImage)
@@ -249,7 +240,6 @@ const doctorProfileSlice = createSlice({
                 state.error = action.payload;
             })
             
-            // Upload image
             .addCase(uploadDoctorProfileImage.pending, (state) => {
                 state.imageUploadLoading = true;
                 state.imageUploadError = null;
@@ -265,7 +255,6 @@ const doctorProfileSlice = createSlice({
                 state.imageUploadError = action.payload;
             })
             
-            // Achievements
             .addCase(addDoctorAchievement.pending, (state) => {
                 state.achievementsLoading = true;
                 state.error = null;
@@ -314,7 +303,6 @@ const doctorProfileSlice = createSlice({
                 state.error = action.payload;
             })
             
-            // Education
             .addCase(addDoctorEducation.pending, (state) => {
                 state.educationLoading = true;
                 state.error = null;
@@ -363,7 +351,6 @@ const doctorProfileSlice = createSlice({
                 state.error = action.payload;
             })
             
-            // Licenses
             .addCase(addDoctorLicense.pending, (state) => {
                 state.licensesLoading = true;
                 state.error = null;
@@ -426,7 +413,6 @@ const doctorProfileSlice = createSlice({
 
 export const { clearProfile, resetStatus, clearImageUploadError } = doctorProfileSlice.actions;
 
-// Selectors
 export const selectDoctorProfile = (state) => state.doctorProfile.profile;
 export const selectDoctorProfileLoading = (state) => state.doctorProfile.loading;
 export const selectDoctorProfileError = (state) => state.doctorProfile.error;

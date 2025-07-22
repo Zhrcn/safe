@@ -211,7 +211,7 @@ const MedicalRecordsPage = () => {
                 </div>
                 <Button  className="w-full md:w-auto">
                     <Link href="/patient/medical-records/upload">
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-2 text-primary-foreground">
                             <Plus className="h-4 w-4 mr-2" />
                             {t('patient.medicalRecords.upload', 'Upload New Record')}
                         </span>

@@ -350,8 +350,8 @@ exports.getAppointmentDetails = asyncHandler(async (req, res) => {
 exports.createAppointment = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const {
-    patient, // MongoDB ObjectId
-    patientId, // business id
+    patient, 
+    patientId, 
     date,
     time,
     type,
@@ -359,16 +359,14 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     notes,
     duration,
     location,
-    status // should be 'accepted'
+    status
   } = req.body;
 
-  // Find the doctor by user id
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
   }
 
-  // Find the patient by ObjectId or business id
   let patientDoc;
   if (patient) {
     patientDoc = await Patient.findById(patient);
@@ -379,7 +377,6 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
   }
 
-  // Create the appointment
   const appointment = await Appointment.create({
     doctor: doctor._id,
     patient: patientDoc._id,
@@ -393,7 +390,6 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     status: status || 'accepted'
   });
 
-  // Optionally, populate doctor and patient info for the response
   await appointment.populate([
     {
       path: 'patient',

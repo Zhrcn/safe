@@ -1,13 +1,16 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Eye, CheckCircle, X } from 'lucide-react';
 import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
 import { SearchField } from '@/components/ui/Notification';
 import { getPrescriptions, updatePrescriptionStatus } from '@/services/pharmacistService';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
+import dynamic from 'next/dynamic';
+import { Html5Qrcode } from 'html5-qrcode';
+const QrReader = dynamic(() => import('@blackbox-vision/react-qr-reader').then(mod => mod.QrReader), { ssr: false });
 function PrescriptionDetailDialog({ open, onClose, prescription }) {
   if (!prescription) return null;
   return (
@@ -73,6 +76,11 @@ export default function PharmacistPrescriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [qrError, setQrError] = useState('');
+  const [videoDevices, setVideoDevices] = useState([]);
+  const html5QrRef = useRef(null);
+  const qrContainerId = 'html5qr-code-full-region';
   useEffect(() => {
     async function loadPrescriptions() {
       try {
@@ -86,6 +94,20 @@ export default function PharmacistPrescriptionsPage() {
       }
     }
     loadPrescriptions();
+  }, []);
+  // Debug: List available video input devices and store in state
+  useEffect(() => {
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        setVideoDevices(videoInputs);
+        videoInputs.forEach((device, idx) => {
+          console.log(`Camera ${idx}: label=${device.label}, id=${device.deviceId}`);
+        });
+      });
+    } else {
+      console.log('navigator.mediaDevices.enumerateDevices not supported');
+    }
   }, []);
   const filteredPrescriptions = searchTerm
     ? prescriptions.filter(prescription =>
@@ -110,6 +132,56 @@ export default function PharmacistPrescriptionsPage() {
       console.error('Error updating prescription status:', error);
     }
   };
+  // QR code scan handler
+  const handleScan = (data) => {
+    if (data) {
+      setQrDialogOpen(false);
+      setQrError('');
+      // Assume QR code contains prescription ID
+      const prescriptionId = data.trim();
+      handleViewDetails(prescriptionId);
+    }
+  };
+  useEffect(() => {
+    if (qrDialogOpen) {
+      setQrError('');
+      if (html5QrRef.current) {
+        html5QrRef.current.clear().catch(() => {});
+      }
+      const qr = new Html5Qrcode(qrContainerId);
+      html5QrRef.current = qr;
+      qr.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: 250,
+        },
+        (decodedText) => {
+          handleScan(decodedText);
+          setQrError('');
+          qr.stop().catch(() => {});
+        },
+        (errorMessage) => {
+          // Only show real errors
+          if (
+            errorMessage &&
+            !errorMessage.includes('No QR code found') &&
+            !errorMessage.includes('has been stopped')
+          ) {
+            setQrError('QR Scan Error: ' + errorMessage);
+          }
+        }
+      ).catch((err) => {
+        setQrError('Camera error: ' + (err.message || String(err)));
+      });
+    }
+    return () => {
+      if (html5QrRef.current) {
+        html5QrRef.current.clear().catch(() => {});
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrDialogOpen]);
   return (
     <PharmacistPageContainer
       title="Prescription Management"
@@ -118,11 +190,16 @@ export default function PharmacistPrescriptionsPage() {
       <PharmacistCard
         title="Prescriptions List"
         actions={
-          <SearchField
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search Prescriptions"
-          />
+          <div className="flex gap-2 items-center">
+            <SearchField
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search Prescriptions"
+            />
+            <Button variant="outline" onClick={() => setQrDialogOpen(true)}>
+              Scan QR
+            </Button>
+          </div>
         }
       >
         <div className="rounded-md border">
@@ -200,6 +277,26 @@ export default function PharmacistPrescriptionsPage() {
         onClose={() => setDetailDialogOpen(false)}
         prescription={selectedPrescription}
       />
+      {/* QR Code Reader Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan Prescription QR Code</DialogTitle>
+            <DialogDescription>
+              Please allow camera access to scan the prescription QR code. If you have denied camera access, enable it in your browser settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4">
+            <div id={qrContainerId} style={{ width: 300, height: 300 }} />
+            {qrError && <div className="text-red-500 text-sm">{qrError}</div>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PharmacistPageContainer>
   );
 }

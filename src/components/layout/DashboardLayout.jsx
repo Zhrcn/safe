@@ -20,7 +20,7 @@ import { useVerifyTokenQuery } from '@/store/services/user/authApi';
 import { selectIsAuthenticated, selectCurrentUser, logoutUser } from '@/store/slices/auth/authSlice';
 import { ROLES, ROLE_ROUTES } from '@/config/app-config';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,7 +153,11 @@ const DashboardLayout = ({ children }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback>{user?.firstName?.[0] || 'U'}</AvatarFallback>
+                    {user?.profileImage ? (
+                      <AvatarImage src={getImageUrl(user?.profileImage)} alt={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'} />
+                    ) : (
+                      <AvatarFallback>{getInitials(user?.firstName, user?.lastName) || 'U'}</AvatarFallback>
+                    )}
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>

@@ -33,7 +33,8 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
   };
 
   const filteredUsers = users.filter(user => {
-    const name = user.name || ((user.firstName || '') + (user.lastName ? ' ' + user.lastName : '')) || '';
+    let name = user.name || ((user.firstName || '') + (user.lastName ? ' ' + user.lastName : '')) || '';
+    if (typeof name !== 'string') name = String(name);
     const matchesSearch =
       name.toLowerCase().includes(search.toLowerCase()) ||
       (user.email?.toLowerCase() || '').includes(search.toLowerCase());
@@ -108,16 +109,17 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
           ) : (
             filteredUsers.map(user => {
               const name = user.name || ((user.firstName || '') + (user.lastName ? ' ' + user.lastName : '')) || '';
+              const safeName = typeof name === 'string' ? name : String(name);
               return (
                 <TableRow key={user.id}>
-                  <TableCell>{name}</TableCell>
+                  <TableCell>{safeName}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell><UserRoleBadge role={user.role} /></TableCell>
                   <TableCell><UserStatusBadge status={user.status} /></TableCell>
                   <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</TableCell>
                   <TableCell align="right">
                     <div className="flex gap-1 flex-wrap justify-end">
-                      <Button variant="info" size="sm" onClick={() => { setEditUser(user); setEditData({ name, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>
+                      <Button variant="info" size="sm" onClick={() => { setEditUser(user); setEditData({ name: safeName, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>
                       {user.status === 'active' ? (
                         <Button variant="warning" size="sm" onClick={() => setConfirmAction({ type: 'deactivate', user })}><UserX className="w-4 h-4" /></Button>
                       ) : (

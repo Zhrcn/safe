@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, setLoginError, setAuthLoading, clearAuth, clearCache, selectAuthLoading, selectAuthError } from '@/store/slices/auth/authSlice';
@@ -13,6 +13,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { useTranslation } from 'react-i18next';
+import DistributorCard from '@/components/distributor/DistributorCard';
 
 const GoogleIcon = (props) => (
     <svg viewBox="0 0 24 24" width={16} height={16} {...props}>
@@ -52,7 +53,6 @@ function getMedicalPattern(primary, accent, warning, error, background) {
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-import { useEffect, useState as useReactState } from 'react';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 function getCssVar(name, fallback) {

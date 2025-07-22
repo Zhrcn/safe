@@ -1,8 +1,8 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getImageUrl } from '@/components/ui/Avatar';
 import { useNotification } from '@/components/ui/Notification';
 import { API_BASE_URL } from '@/config/api';
 import { getToken } from '@/utils/tokenUtils';
@@ -12,10 +12,10 @@ import { fetchProfile, editProfile } from '@/store/slices/patient/profileSlice';
 const ImageUploaderPatient = ({
     onImageUpload,
     onImageRemove,
-    maxSize = 5 * 1024 * 1024, // 5MB default
+    maxSize = 5 * 1024 * 1024, 
     acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
     className = '',
-    size = 'md', // sm, md, lg
+    size = 'md', 
     previewImage,
     setPreviewImage,
 }) => {
@@ -26,6 +26,7 @@ const ImageUploaderPatient = ({
     const { showNotification } = useNotification();
     const dispatch = useDispatch();
     const user = useSelector(state => state.auth.user);
+    const lastAvatarRef = useRef(user?.profileImage ? getImageUrl(user.profileImage) : null);
 
     const sizeClasses = {
         sm: 'w-20 h-20',
@@ -60,22 +61,18 @@ const ImageUploaderPatient = ({
         try {
             const formData = new FormData();
             formData.append('profileImage', file);
-            // 1. Upload image to backend (customize endpoint as needed)
             const token = getToken();
-            const response = await fetch(`${API_BASE_URL}/api/v1/patient/profile/upload-image`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/upload/profile`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
             if (!response.ok) throw new Error('Failed to upload image');
             const data = await response.json();
-            const imageUrl = data?.imageUrl;
-            // 2. Update patient profile with new image URL
+            const imageUrl = data?.data?.imageUrl;
             await dispatch(editProfile({ profileImage: imageUrl })).unwrap();
-            // 3. Refresh patient profile from backend
             await dispatch(fetchProfile());
             if (onImageUpload) onImageUpload(imageUrl);
-            if (typeof setPreviewImage === 'function') setPreviewImage(null);
             showNotification('Image uploaded and profile updated!', 'success');
         } catch (error) {
             console.error('Upload error:', error);
@@ -124,7 +121,13 @@ const ImageUploaderPatient = ({
         }
     };
 
-    const displayImage = previewImage || (user?.profileImage ? addCacheBuster(user.profileImage) : null);
+    useEffect(() => {
+        if (user?.profileImage) {
+            lastAvatarRef.current = getImageUrl(user.profileImage);
+        }
+    }, [user?.profileImage]);
+
+    const displayImage = previewImage || (user?.profileImage ? getImageUrl(user.profileImage) : lastAvatarRef.current);
 
     React.useEffect(() => {
         setImageError(false);
@@ -132,10 +135,14 @@ const ImageUploaderPatient = ({
 
     function UploaderAvatar({ src, sizeClass }) {
         return (
-            <Avatar src={src} alt="Profile Picture" className={`${sizeClass} border-4 border-border shadow-lg`}>
-                <AvatarFallback className="bg-muted text-muted-foreground text-2xl flex items-center justify-center w-full h-full rounded-full">
-                    <Camera className="w-8 h-8" />
-                </AvatarFallback>
+            <Avatar className={`${sizeClass} border-4 border-border shadow-lg`}>
+                {src ? (
+                    <AvatarImage src={src} alt="Profile Picture" />
+                ) : (
+                    <AvatarFallback className="bg-muted text-muted-foreground text-2xl flex items-center justify-center w-full h-full rounded-full">
+                        <Camera className="w-8 h-8" />
+                    </AvatarFallback>
+                )}
             </Avatar>
         );
     }

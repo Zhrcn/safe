@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { getImageUrl } from '@/components/ui/Avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 
 const drawerWidth = 240;
 
@@ -175,7 +176,15 @@ export default function AppLayout({
                 {user && (
                   <div className="flex flex-col items-center gap-1 mt-2">
                     <div className="rounded-full overflow-hidden border border-border mb-1">
-                      <img src={getImageUrl(user?.profile?.avatar) || "/avatars/default-avatar.svg"} alt="User Avatar" className="h-10 w-10 object-cover" />
+                      <Avatar className="h-10 w-10 w-10 h-10">
+                        {user?.profile?.avatar ? (
+                          <AvatarImage src={getImageUrl(user?.profile?.avatar)} alt="User Avatar" />
+                        ) : (
+                          <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold flex items-center justify-center w-full h-full rounded-full">
+                            {user?.firstName?.[0] || 'U'}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
                     </div>
                     <div className="font-bold text-base text-center text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</div>
                     <div className="text-xs text-gray-400 dark:text-gray-400 text-center break-all">{user?.email}</div>
@@ -298,11 +307,15 @@ export default function AppLayout({
                                 </div>
                                 <div className="relative">
                                     <Button onClick={() => setProfileMenuOpen(!profileMenuOpen)} variant="ghost" className="flex items-center gap-2 p-2 text-foreground hover:text-foreground/80 transition-colors">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <span className="text-sm font-medium text-primary">
-                                                {user?.firstName?.[0] || 'U'}
-                                            </span>
-                                        </div>
+                                        <Avatar className="h-8 w-8">
+                                            {user?.profile?.avatar ? (
+                                                <AvatarImage src={getImageUrl(user?.profile?.avatar)} alt="User Avatar" />
+                                            ) : (
+                                                <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold flex items-center justify-center w-full h-full rounded-full">
+                                                    {user?.firstName?.[0] || 'U'}
+                                                </AvatarFallback>
+                                            )}
+                                        </Avatar>
                                         <span className="text-sm font-medium hidden md:inline-block">
                                             {user?.firstName || 'User'}
                                         </span>

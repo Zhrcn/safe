@@ -15,7 +15,6 @@ export async function POST(request) {
             );
         }
 
-        // Validate file types
         const allowedTypes = [
             'application/pdf',
             'application/msword',
@@ -32,24 +31,20 @@ export async function POST(request) {
             );
         }
 
-        // Create upload directory if it doesn't exist
         const uploadDir = join(process.cwd(), 'public', 'upload', 'documents');
         if (!existsSync(uploadDir)) {
             await mkdir(uploadDir, { recursive: true });
         }
 
-        // Generate unique filename
         const timestamp = Date.now();
         const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileName = `document_${timestamp}_${originalName}`;
         const filePath = join(uploadDir, fileName);
 
-        // Convert file to buffer and save
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         await writeFile(filePath, buffer);
 
-        // Return the public URL
         const publicUrl = `/upload/documents/${fileName}`;
 
         return NextResponse.json({

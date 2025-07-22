@@ -27,8 +27,6 @@ cornerstoneWADOImageLoader.webWorkerManager.initialize({
 
 const TOOL_LIST = [
   { name: 'Wwwc', label: 'Window/Level', icon: '🌗' },
-  { name: 'Pan', label: 'Pan', icon: '✋' },
-  { name: 'Zoom', label: 'Zoom', icon: '🔍' },
   { name: 'StackScrollMouseWheel', label: 'Scroll', icon: '🖱️' },
 ];
 
@@ -46,26 +44,45 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
     imageUrls.map((url) => (url.startsWith('wadouri:') ? url : `wadouri:${url}`))
   ), [imageUrls]);
 
+  useEffect(() => {
+    [
+      { name: 'Wwwc', tool: cornerstoneTools.WwwcTool },
+      { name: 'Pan', tool: cornerstoneTools.PanTool },
+      { name: 'Zoom', tool: cornerstoneTools.ZoomTool },
+      { name: 'StackScrollMouseWheel', tool: cornerstoneTools.StackScrollMouseWheelTool },
+    ].forEach(({ name, tool }) => {
+      if (!cornerstoneTools.getToolForElement || !cornerstoneTools.getToolForElement(document.createElement('div'), name)) {
+        if (tool && cornerstoneTools.addTool) {
+          try {
+            cornerstoneTools.addTool(tool);
+          } catch (e) {}
+        }
+      }
+    });
+  }, []);
+
   const activateTool = useCallback(
     (toolName) => {
       if (!elementRef.current) return;
       TOOL_LIST.forEach((tool) => {
         try {
-          if (!cornerstoneTools.getToolForElement(elementRef.current, tool.name)) {
-            const ToolClass = cornerstoneTools[tool.name + 'Tool'];
-            if (ToolClass) cornerstoneTools.addTool(ToolClass);
-          }
-          if (tool.name === toolName) {
-            const config = tool.name === 'StackScrollMouseWheel'
-              ? {}
-              : { mouseButtonMask: tool.name === 'Wwwc' ? 1 : tool.name === 'Pan' ? 4 : 2 };
-            cornerstoneTools.setToolActive(tool.name, config);
-          } else {
-            cornerstoneTools.setToolDisabled(tool.name, {});
-          }
-        } catch (e) {
-        }
+          cornerstoneTools.setToolDisabled(tool.name, {});
+        } catch (e) {}
       });
+
+      try {
+        let config = {};
+        if (toolName === 'Wwwc') {
+          config = { mouseButtonMask: 1 }; 
+        } else if (toolName === 'Pan') {
+          config = { mouseButtonMask: 4 }; 
+        } else if (toolName === 'Zoom') {
+          config = { mouseButtonMask: 2 }; 
+        } else if (toolName === 'StackScrollMouseWheel') {
+          config = {}; 
+        }
+        cornerstoneTools.setToolActive(toolName, config);
+      } catch (e) {}
     },
     []
   );
@@ -139,10 +156,12 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
         cornerstoneTools.addToolState(element, 'stack', stack);
 
         TOOL_LIST.forEach((tool) => {
-          if (!cornerstoneTools.getToolForElement(element, tool.name)) {
+          try {
             const ToolClass = cornerstoneTools[tool.name + 'Tool'];
-            if (ToolClass) cornerstoneTools.addTool(ToolClass);
-          }
+            if (ToolClass) {
+              cornerstoneTools.addTool(ToolClass);
+            }
+          } catch (e) {}
         });
 
         activateTool(activeTool);
@@ -152,8 +171,7 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
             TOOL_LIST.forEach((tool) => {
               cornerstoneTools.setToolDisabled(tool.name, {});
             });
-          } catch (e) {
-          }
+          } catch (e) {}
         };
       })
       .catch((err) => {
@@ -165,10 +183,25 @@ function useCornerstone(imageUrls, currentIndex, activeTool) {
       toolCleanup();
       try {
         cornerstone.disable(element);
-      } catch (e) {
-      }
+      } catch (e) {}
     };
   }, [imageUrls, currentIndex, activeTool, activateTool, getImageIds]);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    const preventContextMenu = (e) => {
+      if (activeTool === 'Pan') {
+        e.preventDefault();
+      }
+    };
+    element.addEventListener('contextmenu', preventContextMenu);
+
+    return () => {
+      element.removeEventListener('contextmenu', preventContextMenu);
+    };
+  }, [activeTool]);
 
   return {
     elementRef,
@@ -243,6 +276,7 @@ function useKeyboardNavigation(currentIndex, numImages, goToImage, toggleFullVie
   }, [currentIndex, numImages, goToImage, toggleFullView]);
 }
 
+
 const ToolbarButton = React.memo(function ToolbarButton({
   onClick,
   title,
@@ -257,19 +291,21 @@ const ToolbarButton = React.memo(function ToolbarButton({
       title={title}
       disabled={disabled}
       style={{
-        background: isActive ? '#1976d2' : 'transparent',
-        color: isActive ? '#fff' : '#bbb',
-        border: 'none',
-        borderRadius: 4,
-        padding: '2px 10px',
-        marginRight: 2,
+        background: isActive ? 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)' : 'rgba(255,255,255,0.04)',
+        color: isActive ? '#fff' : '#1976d2',
+        border: isActive ? '1.5px solid #1976d2' : '1.5px solid #e3eaf3',
+        borderRadius: 6,
+        padding: '6px 14px',
+        marginRight: 4,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        fontWeight: isActive ? 600 : 400,
+        fontWeight: isActive ? 700 : 500,
         fontSize: 15,
         display: 'flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 6,
         opacity: disabled ? 0.5 : 1,
+        boxShadow: isActive ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
+        transition: 'all 0.15s cubic-bezier(.4,2,.6,1)',
         ...style,
       }}
       type="button"
@@ -281,56 +317,66 @@ const ToolbarButton = React.memo(function ToolbarButton({
 
 const ZoomControls = React.memo(function ZoomControls({ onZoomIn, onZoomOut, onReset }) {
   return (
-    <>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
       <ToolbarButton
         onClick={onZoomIn}
         title="Zoom In"
-        style={{ marginLeft: 8, fontSize: 18, padding: '2px 6px' }}
+        style={{ fontSize: 18, padding: '6px 10px' }}
       >
-        ➕
+        <span role="img" aria-label="Zoom In">➕</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={onZoomOut}
         title="Zoom Out"
-        style={{ fontSize: 18, padding: '2px 6px' }}
+        style={{ fontSize: 18, padding: '6px 10px' }}
       >
-        ➖
+        <span role="img" aria-label="Zoom Out">➖</span>
       </ToolbarButton>
       <ToolbarButton
         onClick={onReset}
         title="Reset Zoom"
-        style={{ fontSize: 18, padding: '2px 6px' }}
+        style={{ fontSize: 18, padding: '6px 10px' }}
       >
-        🔄
+        <span role="img" aria-label="Reset Zoom">🔄</span>
       </ToolbarButton>
-    </>
+    </div>
   );
 });
 
 const ImageNavigation = React.memo(function ImageNavigation({ currentIndex, numImages, onPrevious, onNext }) {
   if (numImages <= 1) return null;
   return (
-    <span style={{ color: '#bbb', fontSize: 13, marginLeft: 8 }}>
+    <div style={{ color: '#1976d2', fontSize: 14, marginLeft: 12, display: 'flex', alignItems: 'center', gap: 2 }}>
       <ToolbarButton
         onClick={onPrevious}
         title="Previous Image (←)"
         disabled={currentIndex === 0}
-        style={{ fontSize: 16, padding: '2px 4px' }}
+        style={{ fontSize: 16, padding: '6px 8px' }}
       >
-        ◀
+        <span role="img" aria-label="Previous">◀</span>
       </ToolbarButton>
-      <span style={{ minWidth: 40, display: 'inline-block', textAlign: 'center' }}>
+      <span style={{
+        minWidth: 48,
+        display: 'inline-block',
+        textAlign: 'center',
+        fontWeight: 600,
+        color: '#222',
+        background: '#e3eaf3',
+        borderRadius: 6,
+        padding: '4px 10px',
+        margin: '0 2px'
+      }}>
         {currentIndex + 1} / {numImages}
       </span>
       <ToolbarButton
         onClick={onNext}
         title="Next Image (→)"
         disabled={currentIndex === numImages - 1}
-        style={{ fontSize: 16, padding: '2px 4px' }}
+        style={{ fontSize: 16, padding: '6px 8px' }}
       >
-        ▶
+        <span role="img" aria-label="Next">▶</span>
       </ToolbarButton>
-    </span>
+    </div>
   );
 });
 
@@ -351,36 +397,48 @@ const FloatingToolbar = React.memo(function FloatingToolbar({
     <div
       style={{
         position: 'absolute',
-        top: 16,
+        top: 18,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 20,
         display: 'flex',
         gap: 10,
-        background: 'rgba(30,30,30,0.85)',
-        borderRadius: 8,
-        padding: '6px 16px',
+        background: 'rgba(255,255,255,0.98)',
+        borderRadius: 12,
+        padding: '10px 24px',
         alignItems: 'center',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        boxShadow: '0 4px 24px rgba(25,118,210,0.10)',
+        border: '1.5px solid #e3eaf3',
+        minHeight: 54,
       }}
     >
       <ToolbarButton
         onClick={onFullScreenToggle}
         title={fullView ? 'Exit Full View (F)' : 'Full View (F)'}
-        style={{ fontSize: 20, marginRight: 8, padding: '2px 6px' }}
+        style={{
+          fontSize: 22,
+          marginRight: 10,
+          padding: '6px 10px',
+          background: fullView ? 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)' : 'rgba(255,255,255,0.04)',
+          color: fullView ? '#fff' : '#1976d2',
+        }}
+        isActive={fullView}
       >
-        {fullView ? '🗗' : '🗖'}
+        {fullView ? <span role="img" aria-label="Exit Fullscreen">🗗</span> : <span role="img" aria-label="Fullscreen">🗖</span>}
       </ToolbarButton>
-      {TOOL_LIST.map((tool) => (
-        <ToolbarButton
-          key={tool.name}
-          onClick={() => onToolActivate(tool.name)}
-          isActive={activeTool === tool.name}
-          title={tool.label}
-        >
-          <span>{tool.icon}</span> {tool.label}
-        </ToolbarButton>
-      ))}
+      <div className='flex ' style={{ display: 'flex', gap: 2 }}>
+        {TOOL_LIST.map((tool) => (
+          <ToolbarButton
+            key={tool.name}
+            onClick={() => onToolActivate(tool.name)}
+            isActive={activeTool === tool.name}
+            title={tool.label}
+          >
+            <span style={{ fontSize: 18 }}>{tool.icon}</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{tool.label}</span>
+          </ToolbarButton>
+        ))}
+      </div>
       <ZoomControls
         onZoomIn={onZoomIn}
         onZoomOut={onZoomOut}
@@ -401,20 +459,23 @@ const InstructionsOverlay = React.memo(function InstructionsOverlay({ error }) {
     <div
       style={{
         position: 'absolute',
-        bottom: error ? 40 : 10,
+        bottom: error ? 54 : 18,
         left: 0,
         width: '100%',
         textAlign: 'center',
-        color: '#bbb',
-        fontSize: 13,
+        color: '#1976d2',
+        fontSize: 14,
         pointerEvents: 'none',
         zIndex: 10,
-        textShadow: '0 1px 2px #000',
+        textShadow: '0 1px 2px #fff',
+        fontWeight: 500,
+        letterSpacing: 0.1,
+        opacity: 0.92,
       }}
     >
       <span>
-        Mouse: Left=Window/Level, Middle=Zoom, Right=Pan. Scroll=Slice. <br />
-        Keyboard: ←/→ = Prev/Next, F = Full View
+        <span style={{ fontWeight: 700 }}>Mouse:</span> Left=Window/Level, Middle=Zoom, Right=Pan, Scroll=Slice. &nbsp;|&nbsp;
+        <span style={{ fontWeight: 700 }}>Keyboard:</span> ←/→ = Prev/Next, F = Full View
       </span>
     </div>
   );
@@ -429,15 +490,22 @@ const Spinner = React.memo(function Spinner() {
       transform: 'translate(-50%, -50%)',
       zIndex: 100,
       pointerEvents: 'none',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 10,
     }}>
       <div style={{
-        width: 48,
-        height: 48,
-        border: '5px solid #eee',
-        borderTop: '5px solid #1976d2',
+        width: 54,
+        height: 54,
+        border: '6px solid #e3eaf3',
+        borderTop: '6px solid #1976d2',
         borderRadius: '50%',
         animation: 'dicom-spin 1s linear infinite',
+        background: 'rgba(255,255,255,0.7)',
+        boxShadow: '0 2px 8px rgba(25,118,210,0.10)',
       }} />
+      <span style={{ color: '#1976d2', fontWeight: 600, fontSize: 15, letterSpacing: 0.2 }}>Loading...</span>
       <style>{`
         @keyframes dicom-spin {
           0% { transform: rotate(0deg); }
@@ -453,24 +521,26 @@ const MetadataOverlay = React.memo(function MetadataOverlay({ metadata }) {
   return (
     <div style={{
       position: 'absolute',
-      top: 16,
-      right: 16,
-      background: 'rgba(24,24,24,0.85)',
-      color: '#fff',
-      borderRadius: 8,
-      padding: '10px 18px',
-      fontSize: 13,
+      top: 18,
+      right: 18,
+      background: 'rgba(255,255,255,0.98)',
+      color: '#1976d2',
+      borderRadius: 12,
+      padding: '14px 22px',
+      fontSize: 14,
       zIndex: 30,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-      minWidth: 120,
-      maxWidth: 220,
+      boxShadow: '0 4px 24px rgba(25,118,210,0.10)',
+      minWidth: 140,
+      maxWidth: 260,
       pointerEvents: 'none',
-      lineHeight: 1.6,
+      lineHeight: 1.7,
+      border: '1.5px solid #e3eaf3',
+      fontWeight: 500,
     }}>
-      <div><b>Modality:</b> {metadata.modality || 'N/A'}</div>
-      <div><b>Size:</b> {metadata.rows} x {metadata.columns}</div>
-      <div><b>Slice:</b> {metadata.slice || 'N/A'}</div>
-      <div><b>Window:</b> {metadata.windowWidth} / {metadata.windowCenter}</div>
+      <div><b>Modality:</b> <span style={{ color: '#222' }}>{metadata.modality || 'N/A'}</span></div>
+      <div><b>Size:</b> <span style={{ color: '#222' }}>{metadata.rows} x {metadata.columns}</span></div>
+      <div><b>Slice:</b> <span style={{ color: '#222' }}>{metadata.slice || 'N/A'}</span></div>
+      <div><b>Window:</b> <span style={{ color: '#222' }}>{metadata.windowWidth} / {metadata.windowCenter}</span></div>
     </div>
   );
 });
@@ -483,22 +553,23 @@ const ErrorMessage = React.memo(function ErrorMessage({ error }) {
       aria-live="assertive"
       style={{
         position: 'absolute',
-        bottom: 20,
+        bottom: 30,
         left: '50%',
         transform: 'translateX(-50%)',
-        minWidth: 220,
-        maxWidth: 400,
+        minWidth: 240,
+        maxWidth: 440,
         textAlign: 'center',
         color: '#fff',
-        fontSize: 16,
-        fontWeight: 600,
+        fontSize: 17,
+        fontWeight: 700,
         background: 'linear-gradient(90deg, #d32f2f 0%, #b71c1c 100%)',
-        padding: '14px 24px',
+        padding: '16px 28px',
         zIndex: 30,
-        borderRadius: 12,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        borderRadius: 14,
+        boxShadow: '0 4px 24px rgba(211,47,47,0.10)',
         pointerEvents: 'none',
         textShadow: '0 1px 2px #000',
+        letterSpacing: 0.1,
       }}
     >
       {error}
@@ -544,12 +615,12 @@ function DicomViewer({ imageUrls = [] }) {
 
   const containerStyles = useMemo(() => ({
     position: 'relative',
-    width: fullView ? '100vw' : 'min(98vw, 540px)',
-    height: fullView ? '100vh' : 'min(80vh, 580px)',
-    background: '#181818',
+    width: fullView ? '100vw' : 'min(98vw, 860px)',
+    height: fullView ? '100vh' : 'min(90vh, 900px)', 
+    background: 'linear-gradient(120deg, #e3eaf3 0%, #f5fafd 100%)',
     margin: '0 auto',
-    borderRadius: fullView ? 0 : 16,
-    boxShadow: fullView ? '0 0 0 9999px rgba(0,0,0,0.7)' : '0 2px 16px rgba(0,0,0,0.18)',
+    borderRadius: fullView ? 0 : 22,
+    boxShadow: fullView ? '0 0 0 9999px rgba(25,118,210,0.18)' : '0 4px 32px rgba(25,118,210,0.10)',
     zIndex: fullView ? 1000 : 'auto',
     transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
     overflow: 'hidden',
@@ -557,17 +628,21 @@ function DicomViewer({ imageUrls = [] }) {
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    outline: fullView ? '2px solid #1976d2' : 'none',
+    outline: fullView ? '2.5px solid #1976d2' : 'none',
+    border: fullView ? 'none' : '1.5px solid #e3eaf3',
   }), [fullView]);
 
   const dicomElementStyles = useMemo(() => ({
     width: '100%',
     height: '100%',
-    backgroundColor: 'black',
+    backgroundColor: '#111',
     outline: 'none',
-    borderRadius: fullView ? 0 : 12,
+    borderRadius: fullView ? 0 : 16,
     display: 'block',
-    boxShadow: fullView ? 'none' : '0 2px 8px rgba(0,0,0,0.10)',
+    boxShadow: fullView ? 'none' : '0 2px 8px rgba(25,118,210,0.08)',
+    border: '1.5px solid #e3eaf3',
+    marginTop: 70,
+    marginBottom: 18,
   }), [fullView]);
 
   useEffect(() => {

@@ -28,7 +28,7 @@ import ImageUploader from '@/components/ui/ImageUploader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 import { useNotification } from '@/components/ui/Notification';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { useDoctorProfile } from '@/hooks/useDoctorProfile';
 import { getToken } from '@/utils/tokenUtils';
 import { updateUserProfileData } from '@/store/slices/user/userSlice';
@@ -42,8 +42,6 @@ const personalInfoSchema = z.object({
   email: z.string().email('Invalid email address'),
   profileImage: z.string().optional(),
 });
-
-const DEFAULT_AVATAR = '/avatars/default-avatar.svg';
 
 function PersonalInfoForm() {
   const { showNotification } = useNotification();
@@ -95,13 +93,10 @@ function PersonalInfoForm() {
     },
   });
 
-  // Fetch profile on mount
   useEffect(() => {
     getProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync form with profile data
   useEffect(() => {
     if (profile) {
       reset({
@@ -117,7 +112,6 @@ function PersonalInfoForm() {
     }
   }, [profile, reset]);
 
-  // Handle notifications and local state for success/error
   useEffect(() => {
     if (success) {
       setLocalSuccess('Profile updated successfully!');
@@ -190,7 +184,6 @@ function PersonalInfoForm() {
       setValue('profileImage', '', { shouldDirty: true });
       await updateProfile({ profileImage: '' });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Error deleting image:', error);
       const errorMessage =
         typeof error === 'string' ? error : error?.message || 'Failed to delete image';
@@ -278,18 +271,10 @@ function PersonalInfoForm() {
           />
         ) : (
           <div className="relative group">
-            <Avatar
-              src={
-                user?.profileImage
-                  ? `${user.profileImage}?t=${Date.now()}`
-                  : DEFAULT_AVATAR
-              }
-              alt="Profile Picture"
-              className="w-48 h-48 border-4 border-white shadow-2xl ring-4 ring-blue-100"
-            >
+            <Avatar className="w-48 h-48 border-4 border-white shadow-2xl ring-4 ring-blue-100">
+              <AvatarImage src={user?.profileImage ? `${user.profileImage}?t=${Date.now()}` : undefined} alt={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Profile Picture'} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-6xl font-bold flex items-center justify-center w-full h-full rounded-full">
-                {firstName.charAt(0)}
-                {lastName.charAt(0)}
+                {getInitials(user?.firstName, user?.lastName)}
               </AvatarFallback>
             </Avatar>
             <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -540,11 +525,20 @@ function PersonalInfoForm() {
         onClose={() => setOpenAchievementDialog(false)}
         onAdd={handleAddAchievement}
       />
+
+      <div className="mt-4">
+        <Avatar className="w-24 h-24 border-2 border-green-500">
+          <AvatarImage src="https://via.placeholder.com/150" alt="Debug Avatar" />
+          <AvatarFallback className="bg-green-100 text-green-900 text-2xl font-bold flex items-center justify-center w-full h-full rounded-full">
+            DG
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-xs text-green-700 mt-1">Debug: Known good image</div>
+      </div>
     </form>
   );
 }
 
-// Extracted form input for DRYness
 function FormInput({
   label,
   name,

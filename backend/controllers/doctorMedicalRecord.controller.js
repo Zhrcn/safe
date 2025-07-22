@@ -7,7 +7,6 @@ const ErrorResponse = require('../utils/errorResponse');
 const mongoose = require('mongoose');
 const { Types } = mongoose;
 
-// Helper function to verify doctor has access to patient
 const verifyDoctorPatientAccess = async (doctorId, patientId) => {
     const doctor = await Doctor.findOne({ user: doctorId });
     if (!doctor) {
@@ -22,14 +21,12 @@ const verifyDoctorPatientAccess = async (doctorId, patientId) => {
     return doctor;
 };
 
-// Get patient medical records (for doctors)
 const getPatientMedicalRecords = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const doctorId = req.user._id;
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -43,7 +40,6 @@ const getPatientMedicalRecords = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, patient.medicalFile, 'Patient medical records retrieved successfully.'));
 });
 
-// Add vital signs to patient
 const addPatientVitalSigns = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { bloodPressure, heartRate, temperature, weight, height, bmi, oxygenSaturation, notes } = req.body;
@@ -51,7 +47,6 @@ const addPatientVitalSigns = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -81,7 +76,6 @@ const addPatientVitalSigns = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, vitalSign, 'Vital signs added successfully.'));
 });
 
-// Add allergy to patient
 const addPatientAllergy = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { name, severity, reaction, notes } = req.body;
@@ -89,7 +83,6 @@ const addPatientAllergy = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -115,7 +108,6 @@ const addPatientAllergy = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, allergy, 'Allergy added successfully.'));
 });
 
-// Add chronic condition to patient
 const addPatientChronicCondition = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { name, status, diagnosisDate, notes } = req.body;
@@ -123,7 +115,6 @@ const addPatientChronicCondition = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -149,7 +140,6 @@ const addPatientChronicCondition = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, condition, 'Chronic condition added successfully.'));
 });
 
-// Add diagnosis to patient
 const addPatientDiagnosis = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { conditionName, diagnosedBy, date, notes, treatmentPlan, status } = req.body;
@@ -157,7 +147,6 @@ const addPatientDiagnosis = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -185,7 +174,6 @@ const addPatientDiagnosis = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, diagnosis, 'Diagnosis added successfully.'));
 });
 
-// Add lab result to patient
 const addPatientLabResult = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { testName, labName, date, normalRange, unit, results, notes, documents } = req.body;
@@ -193,7 +181,6 @@ const addPatientLabResult = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -222,7 +209,6 @@ const addPatientLabResult = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, labResult, 'Lab result added successfully.'));
 });
 
-// Add imaging report to patient
 const addPatientImagingReport = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { type, date, images, notes, findings, location } = req.body;
@@ -230,7 +216,6 @@ const addPatientImagingReport = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -257,7 +242,6 @@ const addPatientImagingReport = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, imagingReport, 'Imaging report added successfully.'));
 });
 
-// Add medication to patient
 const addPatientMedication = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { name, dose, frequency, route, startDate, endDate, active, instructions } = req.body;
@@ -265,7 +249,6 @@ const addPatientMedication = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -296,7 +279,6 @@ const addPatientMedication = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, medication, 'Medication added successfully.'));
 });
 
-// Add immunization to patient
 const addPatientImmunization = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { name, dateAdministered, nextDoseDate, manufacturer, batchNumber, administeredBy } = req.body;
@@ -304,7 +286,6 @@ const addPatientImmunization = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -332,7 +313,6 @@ const addPatientImmunization = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, immunization, 'Immunization added successfully.'));
 });
 
-// Add surgical history to patient
 const addPatientSurgicalHistory = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { name, date, hospital, surgeon, notes, complications, outcome } = req.body;
@@ -340,7 +320,6 @@ const addPatientSurgicalHistory = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -369,7 +348,6 @@ const addPatientSurgicalHistory = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, surgicalHistory, 'Surgical history added successfully.'));
 });
 
-// Add document to patient
 const addPatientDocument = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { title, type, url, tags } = req.body;
@@ -377,7 +355,6 @@ const addPatientDocument = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -404,7 +381,6 @@ const addPatientDocument = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, document, 'Document added successfully.'));
 });
 
-// Add family history to patient
 const addPatientFamilyHistory = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { relation, condition, notes } = req.body;
@@ -412,7 +388,6 @@ const addPatientFamilyHistory = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -437,7 +412,6 @@ const addPatientFamilyHistory = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, familyHistory, 'Family history added successfully.'));
 });
 
-// Add social history to patient
 const addPatientSocialHistory = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { smokingStatus, alcoholUse, occupation, livingSituation } = req.body;
@@ -445,7 +419,6 @@ const addPatientSocialHistory = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -456,7 +429,6 @@ const addPatientSocialHistory = asyncHandler(async (req, res) => {
         return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
     }
     
-    // Update social history (it's a single object, not an array)
     patient.medicalFile.socialHistory = {
         smokingStatus,
         alcoholUse,
@@ -471,7 +443,6 @@ const addPatientSocialHistory = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, patient.medicalFile.socialHistory, 'Social history updated successfully.'));
 });
 
-// Add general history to patient
 const addPatientGeneralHistory = asyncHandler(async (req, res) => {
     const { patientId } = req.params;
     const { visitReason, diagnosisSummary, treatmentSummary, notes } = req.body;
@@ -479,7 +450,6 @@ const addPatientGeneralHistory = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -506,7 +476,6 @@ const addPatientGeneralHistory = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, generalHistory, 'General history added successfully.'));
 });
 
-// Update record item (only if created by the doctor)
 const updatePatientRecordItem = asyncHandler(async (req, res) => {
     const { patientId, category, itemId } = req.params;
     const updateData = req.body;
@@ -514,7 +483,6 @@ const updatePatientRecordItem = asyncHandler(async (req, res) => {
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {
@@ -557,14 +525,12 @@ const updatePatientRecordItem = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, categoryArray[itemIndex], 'Record updated successfully.'));
 });
 
-// Delete record item (only if created by the doctor)
 const deletePatientRecordItem = asyncHandler(async (req, res) => {
     const { patientId, category, itemId } = req.params;
     const doctorId = req.user._id;
     
     await verifyDoctorPatientAccess(doctorId, patientId);
     
-    // Find patient and get their medical file
     const patient = await Patient.findById(patientId).populate('medicalFile');
     
     if (!patient) {

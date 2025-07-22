@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
 import { Textarea } from '@/components/ui/Textarea';
@@ -89,10 +89,13 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
       <CardContent className="p-4 flex flex-col gap-3 h-full text-sm">
         <div className="flex items-center gap-3 mb-1">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={consultation.doctorAvatar || '/images/default-avatar.png'} />
-            <AvatarFallback className="bg-primary text-primary text-base font-semibold">
-              {getDoctorName().charAt(0)}
-            </AvatarFallback>
+            {consultation.doctorAvatar ? (
+              <AvatarImage src={consultation.doctorAvatar} />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary text-base font-semibold">
+                {getInitialsFromName(getDoctorName())}
+              </AvatarFallback>
+            )}
           </Avatar>
           <div className="flex flex-col gap-0.5 min-w-0">
             <div className="font-semibold text-base text-foreground truncate">{getDoctorName()}</div>
@@ -391,18 +394,16 @@ const ConsultationsPageContent = () => {
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
                 <Avatar className="h-14 w-14">
-                  <AvatarImage
-                    src={
-                      selectedConsultation.doctorAvatar ||
-                      "/images/default-avatar.png"
-                    }
-                  />
-                  <AvatarFallback className="bg-primary text-primary text-xl font-semibold">
-                    {getDoctorNameFromConsultation(
-                      selectedConsultation,
-                      filteredDoctors
-                    ).charAt(0)}
-                  </AvatarFallback>
+                  {selectedConsultation?.doctorAvatar ? (
+                    <AvatarImage src={selectedConsultation.doctorAvatar} />
+                  ) : (
+                    <AvatarFallback className="bg-primary text-primary text-xl font-semibold">
+                      {getInitialsFromName(getDoctorNameFromConsultation(
+                        selectedConsultation,
+                        filteredDoctors
+                      ))}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div>
                   <div className="font-semibold text-lg text-foreground">
@@ -564,7 +565,7 @@ const ConsultationsPageContent = () => {
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={continueChatConsultation.doctorAvatar || '/images/default-avatar.png'} />
                   <AvatarFallback className="bg-primary text-primary text-lg font-semibold">
-                    {getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors).charAt(0)}
+                    {getInitialsFromName(getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors))}
                   </AvatarFallback>
                 </Avatar>
                 <div>

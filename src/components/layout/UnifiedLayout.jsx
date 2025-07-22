@@ -8,7 +8,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { logoutUser } from '@/store/slices/auth/authSlice';
 import { useNotification } from '@/components/ui/Notification';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback, getImageUrl } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,8 @@ import { getToken } from '@/utils/tokenUtils';
 import NotificationDialog from '@/components/patient/NotificationDialog';
 import axios from 'axios';
 import { fetchUserProfile, selectUser } from '@/store/slices/user/userSlice';
+import { getInitials } from '@/components/ui/Avatar';
+import { getImageUrl } from '@/components/ui/Avatar';
 
 const NAVIGATION_CONFIG = {
   doctor: [
@@ -54,6 +56,7 @@ const NAVIGATION_CONFIG = {
     { name: 'inventory', path: '/pharmacist/inventory', icon: Package },
     { name: 'orders', path: '/pharmacist/orders', icon: ShoppingCart },
     { name: 'prescriptions', path: '/pharmacist/prescriptions', icon: ClipboardList },
+    { name: 'messaging', path: '/pharmacist/messaging', icon: MessageSquare },
     { name: 'profile', path: '/pharmacist/profile', icon: User },
     { name: 'medicine Requests', path: '/pharmacist/medicine', icon: Pill },
   ],
@@ -65,6 +68,14 @@ const NAVIGATION_CONFIG = {
     { name: 'support', path: '/admin/support', icon: MessageSquare },
     { name: 'notifications', path: '/admin/notifications', icon: Bell },
     { name: 'settings', path: '/admin/settings', icon: SettingsIcon },
+  ],
+  distributor: [
+    { name: 'dashboard', path: '/distributor/dashboard', icon: Home },
+    { name: 'orders', path: '/distributor/orders', icon: ShoppingCart },
+    { name: 'accepted orders', path: '/distributor/orders/accepted', icon: Package },
+    { name: 'inventory', path: '/distributor/inventory', icon: ClipboardList },
+    { name: 'messaging', path: '/distributor/messaging', icon: MessageSquare },
+    { name: 'profile', path: '/distributor/profile', icon: User },
   ],
 };
 
@@ -143,7 +154,7 @@ function ImageModal({ open, onClose, imageUrl, alt }) {
 }
 
 const UserProfile = ({ user, collapsed, t, onAvatarClick }) => {
-  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : '/avatars/default-avatar.svg';
+  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : undefined;
   return (
     <div className={cn(
       'flex flex-col items-center py-6 sm:py-8 border-b border-border transition-all duration-300',
@@ -170,16 +181,14 @@ const UserProfile = ({ user, collapsed, t, onAvatarClick }) => {
             onClick={() => onAvatarClick && onAvatarClick(imageUrl)}
             title="View profile image"
           >
-            <Avatar 
-              src={imageUrl}
-              alt="Profile Picture"
-              className="h-10 w-10 sm:h-14 sm:w-14"
-            >
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg sm:text-2xl flex items-center justify-center w-full h-full rounded-full">
-                {(user?.firstName || user?.lastName)
-                  ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
-                  : 'U'}
-              </AvatarFallback>
+            <Avatar className="h-10 w-10 sm:h-14 sm:w-14">
+              {user?.profileImage ? (
+                <AvatarImage src={imageUrl} alt="Profile Picture" />
+              ) : (
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg sm:text-2xl flex items-center justify-center w-full h-full rounded-full">
+                  {getInitials(user?.firstName, user?.lastName) || 'U'}
+                </AvatarFallback>
+              )}
             </Avatar>
           </button>
           <div className="flex flex-col min-w-0">
@@ -344,7 +353,7 @@ const MobileSidebarDrawer = ({
 };
 
 const HeaderUserAvatar = ({ user, onAvatarClick, asButton = true }) => {
-  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : '/avatars/default-avatar.svg';
+  const imageUrl = user?.profileImage ? getImageUrl(user.profileImage) + `?t=${Date.now()}` : undefined;
   if (asButton) {
     return (
       <button
@@ -353,16 +362,14 @@ const HeaderUserAvatar = ({ user, onAvatarClick, asButton = true }) => {
         onClick={() => onAvatarClick && onAvatarClick(imageUrl)}
         title="View profile image"
       >
-        <Avatar 
-          src={imageUrl}
-          alt="Profile Picture"
-          className="h-8 w-8 sm:h-10 sm:w-10"
-        >
-          <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
-            {(user?.firstName || user?.lastName)
-              ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
-              : 'U'}
-          </AvatarFallback>
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+          {user?.profileImage ? (
+            <AvatarImage src={imageUrl} alt="Profile Picture" />
+          ) : (
+            <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
+              {getInitials(user?.firstName, user?.lastName) || 'U'}
+            </AvatarFallback>
+          )}
         </Avatar>
       </button>
     );
@@ -373,16 +380,14 @@ const HeaderUserAvatar = ({ user, onAvatarClick, asButton = true }) => {
       title="View profile image"
       style={{ display: 'inline-block' }}
     >
-      <Avatar 
-        src={imageUrl}
-        alt="Profile Picture"
-        className="h-8 w-8 sm:h-10 sm:w-10"
-      >
-        <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
-          {(user?.firstName || user?.lastName)
-            ? `${user?.firstName ? user.firstName.charAt(0) : ''}${user?.lastName ? user.lastName.charAt(0) : ''}`
-            : 'U'}
-        </AvatarFallback>
+      <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+        {user?.profileImage ? (
+          <AvatarImage src={imageUrl} alt="Profile Picture" />
+        ) : (
+          <AvatarFallback className="bg-primary/10 text-primary font-bold text-base sm:text-lg flex items-center justify-center w-full h-full rounded-full">
+            {getInitials(user?.firstName, user?.lastName) || 'U'}
+          </AvatarFallback>
+        )}
       </Avatar>
     </span>
   );

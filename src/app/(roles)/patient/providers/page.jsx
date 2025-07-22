@@ -31,7 +31,7 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarImage, AvatarFallback, getInitialsFromName, getImageUrl } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { NotificationProvider } from '@/components/ui/Notification';
 
@@ -84,23 +84,12 @@ const ProviderCardSkeleton = () => (
     </Card>
 );
 
-const pepImages = [
-  '/img/pep/dfasdf.jpg',
-  '/img/pep/adfasdf.jpg',
-  '/img/pep/imag2es.jpg',
-  '/img/pep/sadasd.webp',
-  '/img/pep/aadsfadsf.jpg',
-  '/img/pep/patient-1.jpg',
-  '/img/pep/patient-2.jpg',
-  '/img/pep/istockphoto-1437816897-612x612.jpg',
-  '/img/pep/360_F_608557356_ELcD2pwQO9pduTRL30umabzgJoQn5fnd.jpg',
-  '/img/pep/asdasdjpg.jpg',
-];
-
 const ProviderCard = ({ provider, type, onOpenDialog, t, index = 0 }) => {
     if (!provider) {
         return null;
     }
+    
+    console.log('ProviderCard data:', provider);
     
     const isDoctor = type === 'doctor';
     const router = useRouter();
@@ -227,7 +216,25 @@ const ProviderCard = ({ provider, type, onOpenDialog, t, index = 0 }) => {
                                 "h-20 w-20 ring-2 ring-border transition-all duration-300 shadow-sm",
                                 isHovered && "scale-110 ring-primary/30"
                             )}>
-                                <AvatarImage src={pepImages[index % pepImages.length]} />
+                                {(() => {
+                                    const initials = getInitialsFromName(provider.name || provider.pharmacyName || (provider.user ? `${provider.user.firstName || ''} ${provider.user.lastName || ''}`.trim() : ''));
+                                    const img = isDoctor && provider.user && provider.user.profileImage
+                                        ? getImageUrl(provider.user.profileImage)
+                                        : provider.profileImage
+                                            ? getImageUrl(provider.profileImage)
+                                            : undefined;
+                                    return (
+                                        <>
+                                            {img ? (
+                                                <AvatarImage src={img} alt={provider.name || 'Provider'} />
+                                            ) : (
+                                                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                                                    {initials}
+                                                </AvatarFallback>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </Avatar>
                             <div className={cn(
                                 "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border border-background flex items-center justify-center transition-all duration-300",
@@ -468,7 +475,6 @@ const ProvidersPageContent = () => {
     };
 
     const handleSendMessage = () => {
-        // Message sent notification would go here
         handleCloseDialog();
     };
 

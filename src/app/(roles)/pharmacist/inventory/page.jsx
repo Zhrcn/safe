@@ -5,20 +5,30 @@ import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/Dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
-import { getInventory, addInventoryItem, updateInventoryItem } from '@/services/pharmacistService';
+import { getInventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } from '@/services/pharmacistService';
 function InventoryItemDialog({ open, onClose, item, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
+    genericName: '',
+    category: '',
     stock: 0,
     lowStockThreshold: 0
   });
   const [errors, setErrors] = useState({});
   useEffect(() => {
     if (open) {
-      setFormData(item || {
+      setFormData(item ? {
+        name: item.name || '',
+        genericName: item.genericName || '',
+        category: item.category || '',
+        stock: item.stock || 0,
+        lowStockThreshold: item.lowStockThreshold || 0
+      } : {
         name: '',
+        genericName: '',
+        category: '',
         stock: 0,
         lowStockThreshold: 0
       });
@@ -29,7 +39,7 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'name' ? value : parseInt(value, 10) || 0
+      [name]: name === 'name' || name === 'genericName' || name === 'category' ? value : parseInt(value, 10) || 0
     }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -39,6 +49,12 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
     const newErrors = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
+    }
+    if (!formData.genericName.trim()) {
+      newErrors.genericName = 'Generic name is required';
+    }
+    if (!formData.category.trim()) {
+      newErrors.category = 'Category is required';
     }
     if (formData.stock < 0) {
       newErrors.stock = 'Stock cannot be negative';
@@ -51,7 +67,17 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
   };
   const handleSubmit = () => {
     if (validateForm()) {
-      onSave(formData);
+      const payload = {
+        name: formData.name,
+        genericName: formData.genericName,
+        category: formData.category,
+        stock: formData.stock,
+        lowStockThreshold: formData.lowStockThreshold
+      };
+      if (item && (item.id || item._id)) {
+        payload.id = item.id || item._id;
+      }
+      onSave(payload);
       onClose();
     }
   };
@@ -60,6 +86,9 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{item?.id ? 'Edit Inventory Item' : 'Add New Inventory Item'}</DialogTitle>
+          <DialogDescription>
+            {item?.id ? 'Edit the details of this inventory item.' : 'Fill in the details to add a new inventory item.'}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -72,6 +101,28 @@ function InventoryItemDialog({ open, onClose, item, onSave }) {
               className="col-span-3"
             />
             {errors.name && <p className="col-span-4 text-sm text-red-500 text-right">{errors.name}</p>}
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="genericName" className="text-right">Generic Name</Label>
+            <Input
+              id="genericName"
+              name="genericName"
+              value={formData.genericName}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+            {errors.genericName && <p className="col-span-4 text-sm text-red-500 text-right">{errors.genericName}</p>}
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="category" className="text-right">Category</Label>
+            <Input
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+            {errors.category && <p className="col-span-4 text-sm text-red-500 text-right">{errors.category}</p>}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="stock" className="text-right">Current Stock</Label>
@@ -112,12 +163,18 @@ export default function PharmacistInventoryPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   useEffect(() => {
     async function loadInventory() {
       try {
         setLoading(true);
         const data = await getInventory();
-        setInventory(data);
+        const normalized = data.map(item => ({
+          ...item,
+          id: item.id || item._id
+        }));
+        setInventory(normalized);
       } catch (error) {
         console.error('Error loading inventory:', error);
       } finally {
@@ -145,15 +202,32 @@ export default function PharmacistInventoryPage() {
       let updatedItem;
       if (itemData.id) {
         updatedItem = await updateInventoryItem(itemData);
+        updatedItem.id = updatedItem.id || updatedItem._id;
         setInventory(prev => prev.map(item =>
           item.id === updatedItem.id ? updatedItem : item
         ));
       } else {
         updatedItem = await addInventoryItem(itemData);
+        updatedItem.id = updatedItem.id || updatedItem._id;
         setInventory(prev => [...prev, updatedItem]);
       }
     } catch (error) {
       console.error('Error saving inventory item:', error);
+    }
+  };
+  const handleDeleteItem = (itemId) => {
+    setItemToDelete(itemId);
+    setDeleteDialogOpen(true);
+  };
+  const confirmDeleteItem = async () => {
+    try {
+      await deleteInventoryItem(itemToDelete);
+      setInventory(prev => prev.filter(item => item.id !== itemToDelete));
+    } catch (error) {
+      console.error('Error deleting inventory item:', error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
   const getRowClassName = (item) => {
@@ -230,7 +304,9 @@ export default function PharmacistInventoryPage() {
                         <Button variant="outline" size="sm" onClick={() => handleEditItem(item.id)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {}
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteItem(item.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -246,6 +322,20 @@ export default function PharmacistInventoryPage() {
         item={selectedItem}
         onSave={handleSaveItem}
       />
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Inventory Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this inventory item?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteItem}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PharmacistPageContainer>
   );
 } 

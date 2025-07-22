@@ -1,4 +1,3 @@
-// Migration script to add missing _id fields to all subdocuments in MedicalFile arrays
 const mongoose = require('mongoose');
 const { Types } = mongoose;
 const MedicalFile = require('../models/MedicalFile');

@@ -1,12 +1,44 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName, getImageUrl } from "@/components/ui/Avatar";
 import { Search, MessageCircle, Dot } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
   const { t } = useTranslation('common');
+  const [userImages, setUserImages] = useState({}); // { userId: { profileImage, avatar, ... } }
+
+  useEffect(() => {
+    // Find all unique participant IDs (excluding current user)
+    const ids = new Set();
+    conversations.forEach(conv => {
+      if (conv.participants) {
+        conv.participants.forEach(p => {
+          if (p && (p._id || p.id)) {
+            ids.add(p._id || p.id);
+          }
+        });
+      }
+    });
+    // Fetch missing user profiles
+    const missingIds = Array.from(ids).filter(id => !userImages[id]);
+    if (missingIds.length > 0) {
+      Promise.all(
+        missingIds.map(id =>
+          axios.get(`/api/v1/users/${id}`).then(res => ({ id, data: res.data.data })).catch(() => null)
+        )
+      ).then(results => {
+        const newImages = {};
+        results.forEach(r => {
+          if (r && r.id && r.data) newImages[r.id] = r.data;
+        });
+        setUserImages(prev => ({ ...prev, ...newImages }));
+      });
+    }
+  }, [conversations]);
+
   return (
     <div className="h-full flex flex-col bg-card">
       <div className="p-4 pb-2 bg-card flex-shrink-0">
@@ -65,10 +97,36 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
                 onClick={() => onSelect(conv)}
               >
                 <Avatar className={`h-12 w-12 shadow ${isUnread ? "ring-2 ring-primary/60" : ""}`}>
-                  <AvatarImage src={conv.avatar} alt={conv.title} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                    {conv.title?.split(" ").map(w => w[0]).join("") || "U"}
-                  </AvatarFallback>
+                  {(() => {
+                    let img = null;
+                    let initials = '';
+                    // Try to find the other participant (not currentUser)
+                    let other = null;
+                    if (conv.participants && Array.isArray(conv.participants)) {
+                      const currentId = currentUser?._id || currentUser?.id;
+                      other = conv.participants.find(p => (p._id || p.id) && (p._id || p.id) !== currentId);
+                    }
+                    let userProfile = other && userImages[other._id || other.id];
+                    if (userProfile && (userProfile.profileImage || userProfile.avatar)) {
+                      img = userProfile.profileImage ? getImageUrl(userProfile.profileImage) : getImageUrl(userProfile.avatar);
+                      initials = getInitialsFromName(userProfile.firstName || userProfile.name || conv.title);
+                    } else if (other && (other.profileImage || other.avatar)) {
+                      img = other.profileImage ? getImageUrl(other.profileImage) : getImageUrl(other.avatar);
+                      initials = getInitialsFromName(other.firstName || other.name || conv.title);
+                    } else if (conv.avatar) {
+                      img = getImageUrl(conv.avatar);
+                      initials = getInitialsFromName(conv.title);
+                    } else {
+                      initials = getInitialsFromName(conv.title);
+                    }
+                    return img ? (
+                      <AvatarImage src={img} alt={other ? (other.firstName || other.name || conv.title) : conv.title} />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {initials || "U"}
+                      </AvatarFallback>
+                    );
+                  })()}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">

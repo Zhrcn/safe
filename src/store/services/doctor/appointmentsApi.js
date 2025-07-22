@@ -86,8 +86,6 @@ export const getAppointmentById = async (id) => {
 };
 
 export const createAppointment = async (appointmentData) => {
-  // Doctor creates appointment for a patient
-  // appointmentData should include: patientId, date, time, reason, type, status, etc.
   const res = await axiosInstance.post('/doctors/appointments', appointmentData);
   return res.data.data;
 };

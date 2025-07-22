@@ -20,14 +20,11 @@ const {
     deletePatientRecordItem
 } = require('../controllers/doctorMedicalRecord.controller');
 
-// Protect all routes
 router.use(protect);
 router.use(authorize('doctor'));
 
-// Get patient medical records
 router.get('/:patientId', getPatientMedicalRecords);
 
-// Add medical record items
 router.post('/:patientId/vital-signs', addPatientVitalSigns);
 router.post('/:patientId/allergies', addPatientAllergy);
 router.post('/:patientId/chronic-conditions', addPatientChronicCondition);
@@ -42,7 +39,6 @@ router.post('/:patientId/family-history', addPatientFamilyHistory);
 router.post('/:patientId/social-history', addPatientSocialHistory);
 router.post('/:patientId/general-history', addPatientGeneralHistory);
 
-// Update and delete record items (only for records created by the doctor)
 router.put('/:patientId/:category/:itemId', updatePatientRecordItem);
 router.delete('/:patientId/:category/:itemId', deletePatientRecordItem);
 

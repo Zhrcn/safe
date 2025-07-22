@@ -63,6 +63,8 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
     consultationFee,
     workingHours,
     professionalBio,
+    education,
+    achievements,
   } = req.body;
   const userFieldsToUpdate = {};
   if (firstName) userFieldsToUpdate.firstName = firstName;
@@ -88,6 +90,8 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   if (consultationFee !== undefined) doctorFieldsToUpdate.consultationFee = consultationFee;
   if (workingHours) doctorFieldsToUpdate.workingHours = workingHours; 
   if (professionalBio) doctorFieldsToUpdate.professionalBio = professionalBio;
+  if (education) doctorFieldsToUpdate.education = education;
+  if (achievements) doctorFieldsToUpdate.achievements = achievements;
   let updatedDoctorRecord = await Doctor.findOne({ user: userId });
   if (!updatedDoctorRecord) {
      return res.status(404).json(new ApiResponse(404, null, 'Doctor-specific record not found for update.'));
@@ -127,22 +131,19 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
 exports.getDoctors = asyncHandler(async (req, res) => {
     const doctors = await Doctor.find({})
         .populate('user', 'firstName lastName email phoneNumber profileImage')
-        .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio');
+        .select('specialization qualifications licenseNumber yearsOfExperience consultationFee availability workingHours professionalBio rating');
     res.status(200).json(new ApiResponse(200, doctors, 'Doctors fetched successfully.'));
 });
 
-// Allow any authenticated doctor to fetch another doctor's public info (firstName, lastName, etc)
 exports.getDoctor = asyncHandler(async (req, res) => {
     let doctor = await Doctor.findById(req.params.id)
         .populate('user', 'firstName lastName email profileImage')
         .select('specialty experienceYears professionalBio');
-    // If not found by Doctor _id, try by user _id
     if (!doctor) {
         doctor = await Doctor.findOne({ user: req.params.id })
             .populate('user', 'firstName lastName email profileImage')
             .select('specialty experienceYears professionalBio');
     }
-    // If still not found, try to find a User directly and return minimal info
     if (!doctor) {
         const User = require('../models/User');
         const user = await User.findById(req.params.id).select('firstName lastName email profileImage');
@@ -162,7 +163,6 @@ exports.getDoctor = asyncHandler(async (req, res) => {
             professionalBio: null
         }, 'Doctor fetched successfully.'));
     }
-    // Only return public info
     res.status(200).json(new ApiResponse(200, {
         _id: doctor._id,
         user: {
@@ -341,7 +341,6 @@ exports.getDoctorPatientById = asyncHandler(async (req, res) => {
     prescriptions: patient.prescriptions,
   };
 
-  // Debug: Log the patient data being sent
   console.log('Patient Data being sent:', JSON.stringify(patientData, null, 2));
   console.log('Medical File:', patientData.medicalFile);
   
@@ -372,7 +371,6 @@ exports.addPatientById = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, { patientId: patient.patientId, patientMongoId: patient._id }, 'Patient added to your list successfully.'));
 });
 
-// Achievements Management
 exports.addAchievement = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { achievement } = req.body;
@@ -427,7 +425,6 @@ exports.deleteAchievement = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, doctor.achievements, 'Achievement deleted successfully.'));
 });
 
-// Education Management
 exports.addEducation = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { degree, institution, yearCompleted } = req.body;
@@ -482,7 +479,6 @@ exports.deleteEducation = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, doctor.education, 'Education deleted successfully.'));
 });
 
-// Licenses Management (using experience field for licenses)
 exports.addLicense = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { title, institution, startDate, endDate, description } = req.body;
@@ -537,7 +533,6 @@ exports.deleteLicense = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, doctor.experience, 'License deleted successfully.'));
 });
 
-// Get a medical file by its ID (for doctors)
 exports.getMedicalFileById = asyncHandler(async (req, res) => {
   const medicalFileId = req.params.id;
   const medicalFile = await require('../models/MedicalFile').findById(medicalFileId)

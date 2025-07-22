@@ -5,14 +5,23 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5001"
 
 let socket = null;
 let connectionAttempts = 0;
-const MAX_RECONNECTION_ATTEMPTS = 3;
+const MAX_RECONNECTION_ATTEMPTS = 5;
 let isBackendUnavailable = false;
+let lastErrorLogTime = 0;
+
+function showBackendUnavailableMessage() {
+  if (typeof window !== 'undefined') {
+    alert('Unable to connect to the server. Please try again later.');
+  }
+}
 
 export const getSocket = () => {
   const token = getToken();
   
   if (!token) {
-    console.warn('[Socket] No authentication token found. Socket connection will NOT be established.');
+    if (connectionAttempts === 0) {
+      console.warn('[Socket] No authentication token found. Socket connection will NOT be established.');
+    }
     return null;
   }
 
@@ -25,14 +34,20 @@ export const getSocket = () => {
   }
 
   if (socket && !socket.connected && connectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
-    console.log('[Socket] Socket exists but not connected, reconnecting...', connectionAttempts + 1);
+    if (Date.now() - lastErrorLogTime > 5000) {
+      console.log('[Socket] Socket exists but not connected, reconnecting...', connectionAttempts + 1);
+      lastErrorLogTime = Date.now();
+    }
     connectionAttempts++;
     socket.connect();
     return socket;
   }
 
   if (connectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
-    console.warn('[Socket] Max reconnection attempts reached. Backend may be unavailable.');
+    if (!isBackendUnavailable) {
+      console.warn('[Socket] Max reconnection attempts reached. Backend may be unavailable.');
+      showBackendUnavailableMessage();
+    }
     isBackendUnavailable = true;
     disconnectSocket();
     return null;
@@ -60,46 +75,63 @@ export const getSocket = () => {
     });
     
     socket.on('connect_error', (error) => {
-      console.error('[Socket] Connection error:', error.message);
+      if (Date.now() - lastErrorLogTime > 5000) {
+        console.error('[Socket] Connection error:', error.message);
+        lastErrorLogTime = Date.now();
+      }
       connectionAttempts++;
+      let delay = Math.min(2000 * Math.pow(2, connectionAttempts), 20000);
       
       if (error.message.includes('Authentication error')) {
         console.error('[Socket] Authentication failed - please log in again.');
         disconnectSocket();
       } else if (error.message.includes('xhr poll error') || error.message.includes('timeout') || error.message.includes('transport close')) {
-        console.warn('[Socket] Backend unreachable at', SOCKET_URL, '- is the server running?');
         if (connectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
           isBackendUnavailable = true;
+          showBackendUnavailableMessage();
         }
       }
       
       if (connectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
         setTimeout(() => {
           if (socket && !socket.connected) {
-            console.log('[Socket] Attempting to reconnect after error...', connectionAttempts);
+            if (Date.now() - lastErrorLogTime > 5000) {
+              console.log('[Socket] Attempting to reconnect after error...', connectionAttempts);
+              lastErrorLogTime = Date.now();
+            }
             socket.connect();
           }
-        }, 2000);
+        }, delay);
       }
     });
     
     socket.on('disconnect', (reason) => {
-      console.warn('[Socket] Disconnected:', reason);
+      if (Date.now() - lastErrorLogTime > 5000) {
+        console.warn('[Socket] Disconnected:', reason);
+        lastErrorLogTime = Date.now();
+      }
       if (reason === 'io server disconnect' || reason === 'transport close') {
         if (connectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
+          let delay = Math.min(1000 * Math.pow(2, connectionAttempts), 20000);
           setTimeout(() => {
             if (socket && !socket.connected) {
-              console.log('[Socket] Attempting to reconnect after disconnect...', connectionAttempts + 1);
+              if (Date.now() - lastErrorLogTime > 5000) {
+                console.log('[Socket] Attempting to reconnect after disconnect...', connectionAttempts + 1);
+                lastErrorLogTime = Date.now();
+              }
               connectionAttempts++;
               socket.connect();
             }
-          }, 1000);
+          }, delay);
         }
       }
     });
 
     socket.on('error', (error) => {
-      console.error('[Socket] General error:', error);
+      if (Date.now() - lastErrorLogTime > 5000) {
+        console.error('[Socket] General error:', error);
+        lastErrorLogTime = Date.now();
+      }
     });
 
     socket.connect();

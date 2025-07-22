@@ -15,7 +15,6 @@ export async function POST(request) {
             );
         }
 
-        // Validate file type - DICOM files typically have .dcm extension
         const fileName = file.name.toLowerCase();
         if (!fileName.endsWith('.dcm')) {
             return NextResponse.json(
@@ -24,24 +23,20 @@ export async function POST(request) {
             );
         }
 
-        // Create upload directory if it doesn't exist
         const uploadDir = join(process.cwd(), 'public', 'upload', 'imaging');
         if (!existsSync(uploadDir)) {
             await mkdir(uploadDir, { recursive: true });
         }
 
-        // Generate unique filename
         const timestamp = Date.now();
         const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const newFileName = `imaging_${timestamp}_${originalName}`;
         const filePath = join(uploadDir, newFileName);
 
-        // Convert file to buffer and save
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         await writeFile(filePath, buffer);
 
-        // Return the public URL
         const publicUrl = `/upload/imaging/${newFileName}`;
 
         return NextResponse.json({

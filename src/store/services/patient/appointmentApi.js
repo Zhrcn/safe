@@ -1,7 +1,10 @@
 import axiosInstance from '../axiosInstance';
 
-export const getAppointments = async () => {
-  const res = await axiosInstance.get('/patients/appointments');
+export const getAppointments = async (startDate, endDate) => {
+  const params = {};
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  const res = await axiosInstance.get('/patients/appointments', { params });
   if (Array.isArray(res.data)) return res.data;
   if (res.data && Array.isArray(res.data.data)) return res.data.data;
   return [];

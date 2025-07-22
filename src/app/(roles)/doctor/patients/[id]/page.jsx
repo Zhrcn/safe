@@ -309,7 +309,6 @@ const PatientPageContent = () => {
     const [selectedDicomImages, setSelectedDicomImages] = useState([]);
     const [dicomImageIndex, setDicomImageIndex] = useState(0);
 
-    // Dialog states
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -373,12 +372,11 @@ const PatientPageContent = () => {
         );
     }
 
-    // Avatar logic (with cache-buster)
+    const DEFAULT_AVATAR = '/avatars/avatar-1.svg';
     const avatarUrl = selectedPatient.user?.profileImage
         ? getImageUrl(selectedPatient.user.profileImage) + '?t=' + Date.now()
-        : '/avatars/default-avatar.svg';
+        : undefined;
 
-    // --- Unified Header ---
     const renderProfileHeader = () => (
         <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
             <Avatar src={avatarUrl} alt="Profile Picture" className="h-32 w-32 border-4 border-primary shadow-xl" />
@@ -395,7 +393,6 @@ const PatientPageContent = () => {
         </div>
     );
 
-    // --- Unified Tabs ---
     const medicalRecordsData = {
         vitalSigns: selectedPatient?.medicalFile?.vitalSigns || [],
         allergies: selectedPatient?.medicalFile?.allergies || [],
@@ -412,7 +409,6 @@ const PatientPageContent = () => {
         generalHistory: selectedPatient?.medicalFile?.generalMedicalHistory || [],
     };
 
-    // Debug: Log the medical file data
     console.log('Selected Patient:', selectedPatient);
     console.log('Medical File:', selectedPatient?.medicalFile);
     console.log('Medical Records Data:', medicalRecordsData);
@@ -427,7 +423,6 @@ const PatientPageContent = () => {
         setCurrentCategory(category);
         setCurrentRecord(record);
         
-        // Map all fields from the record to form data
         const mappedData = {};
         Object.keys(record).forEach(key => {
             if (key === 'date' || key === 'dateAdded' || key === 'startDate' || key === 'endDate') {
@@ -450,7 +445,6 @@ const PatientPageContent = () => {
     };
 
     const canEditRecord = (record) => {
-        // Compare as strings for type safety
         return record.doctorId?.toString() === user?._id?.toString();
     };
 
@@ -642,10 +636,9 @@ const PatientPageContent = () => {
             }
             const recordData = {
                 ...formData,
-                doctorId: user?._id // Add doctorId to identify ownership
+                doctorId: user?._id 
             };
 
-            // Handle file uploads
             if (formData.pdfFile && currentCategory === 'labResults') {
                 const pdfUrl = await handleFileUpload(formData.pdfFile, 'labResults');
                 recordData.documents = [pdfUrl];
@@ -668,7 +661,6 @@ const PatientPageContent = () => {
                 delete recordData.documentFile;
             }
 
-            // Handle special field mappings
             if (currentCategory === 'labResults' && formData.results) {
                 try {
                     recordData.results = JSON.parse(formData.results);
@@ -684,19 +676,15 @@ const PatientPageContent = () => {
             console.log(`${isEdit ? 'Editing' : 'Adding'} ${currentCategory} record:`, recordData);
             
             if (isEdit) {
-                // Update existing record
                 await updatePatientRecordItem(params.id, currentCategory, currentRecord._id, recordData);
                 setEditDialogOpen(false);
             } else {
-                // Add new record
                 await addPatientMedicalRecord(params.id, currentCategory, recordData);
                 setAddDialogOpen(false);
             }
             
-            // Refresh patient data
             dispatch(fetchPatientById(params.id));
             
-            // Show success notification
             showNotification({
                 type: 'success',
                 title: t('common.success', 'Success'),
@@ -728,10 +716,8 @@ const PatientPageContent = () => {
             await deletePatientRecordItem(params.id, currentCategory, currentRecord._id);
             setDeleteDialogOpen(false);
             
-            // Refresh patient data
             dispatch(fetchPatientById(params.id));
             
-            // Show success notification
             showNotification({
                 type: 'success',
                 title: t('common.success', 'Success'),
@@ -755,7 +741,6 @@ const PatientPageContent = () => {
                 key={record._id || record.name || record.id || `${category}-${index}`}
                 className="relative bg-white/90 dark:bg-card/90 border-2 border-border rounded-xl shadow-lg hover:shadow-xl transition-shadow p-0 flex flex-col min-h-[120px]"
             >
-                {/* Card Header */}
                 <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-border">
                     {categoryMeta?.icon && <categoryMeta.icon className="h-5 w-5 text-primary" />}
                     <div className="font-bold text-lg text-foreground flex-1 truncate">
@@ -765,9 +750,7 @@ const PatientPageContent = () => {
                         {categoryMeta?.label}
                     </span>
                 </div>
-                {/* Card Content */}
                 <div className="flex-1 px-4 py-3 space-y-1 text-sm">
-                    {/* Category-specific data display */}
                     {category === 'vitalSigns' && (
                         <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                             {record.bloodPressure && <div><span className="font-semibold">{t('patient.profile.bp', 'BP')}:</span> {record.bloodPressure}</div>}
@@ -913,16 +896,13 @@ const PatientPageContent = () => {
                     {record.notes && <div className="text-xs text-muted-foreground mt-1">{record.notes}</div>}
                     {record.date && <div className="text-xs text-muted-foreground mt-1">{t('patient.profile.date', 'Date')}: {format(new Date(record.date), 'PPP')}</div>}
                 </div>
-                {/* Card Footer */}
                 <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/40 rounded-b-xl mt-2">
-                    {/* Ownership stamp */}
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <User className="h-3 w-3" />
                         {record.doctorId?.toString() === user?._id?.toString()
                             ? t('common.you', 'You')
                             : <DoctorName doctorId={record.doctorId} />}
                     </div>
-                    {/* Action buttons for own records */}
                     {canEdit && (
                         <div className="flex gap-1">
                             <Button
@@ -1097,7 +1077,6 @@ const PatientPageContent = () => {
                         </div>
                     </div>
                     
-                    {/* Vital Signs */}
                     <TabsContent value="vitalSigns" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1117,7 +1096,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Allergies */}
                     <TabsContent value="allergies" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1137,7 +1115,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Chronic Conditions */}
                     <TabsContent value="chronicConditions" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1157,7 +1134,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Diagnoses */}
                     <TabsContent value="diagnoses" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1177,7 +1153,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Lab Results */}
                     <TabsContent value="labResults" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1197,7 +1172,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Imaging Reports */}
                     <TabsContent value="imagingReports" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1217,7 +1191,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Medications */}
                     <TabsContent value="medications" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1237,7 +1210,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Immunizations */}
                     <TabsContent value="immunizations" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1257,7 +1229,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Surgical History */}
                     <TabsContent value="surgicalHistory" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1277,7 +1248,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Documents */}
                     <TabsContent value="documents" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1297,7 +1267,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Family History */}
                     <TabsContent value="familyHistory" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1317,7 +1286,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* Social History */}
                     <TabsContent value="socialHistory" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1337,7 +1305,6 @@ const PatientPageContent = () => {
                         )}
                     </TabsContent>
                     
-                    {/* General History */}
                     <TabsContent value="generalHistory" className="mt-4">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -1361,13 +1328,11 @@ const PatientPageContent = () => {
         </Card>
     );
 
-    // Helper for active tab styling
     const getMedicalTabTriggerClass = (categoryId) =>
         activeMedicalTab === categoryId
             ? 'bg-primary text-primary-foreground font-semibold rounded-md'
             : 'bg-transparent text-foreground';
 
-    // Custom hook to fetch and cache doctor names by ID
     function useDoctorName(doctorId) {
         const [name, setName] = React.useState('');
         React.useEffect(() => {
@@ -1392,7 +1357,6 @@ const PatientPageContent = () => {
         return name;
     }
 
-    // Component to display doctor name by ID
     function DoctorName({ doctorId }) {
         const name = useDoctorName(doctorId);
         return <span className="text-xs text-muted-foreground">{name || 'Loading...'}</span>;
@@ -1470,19 +1434,16 @@ const PatientPageContent = () => {
                     </div>
                 </div>
             </div>
-            {/* Doctor-only actions, e.g., PrescriptionForm */}
             <PrescriptionForm
                 open={isPrescriptionModalOpen}
                 onClose={() => setIsPrescriptionModalOpen(false)}
                 onSubmit={() => {}}
                 patient={selectedPatient}
             />
-            {/* Dialogs */}
             {renderAddEditDialog(false)}
             {renderAddEditDialog(true)}
             {renderDeleteDialog()}
             
-            {/* DICOM Viewer Dialog */}
             {dicomDialogOpen && selectedDicomImages.length > 0 && (
                 <Dialog open={dicomDialogOpen} onOpenChange={setDicomDialogOpen}>
                     <DialogContent className="max-w-4xl w-full">

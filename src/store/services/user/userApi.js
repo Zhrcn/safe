@@ -55,7 +55,7 @@ export const uploadUserProfileImage = async (formData) => {
   return res.data.data;
 };
 
-export const getNonDoctorUsers = async () => {
-  const res = await axiosInstance.get('/doctor/messaging');
-  return res.data.data;
+export const getNonPatientUsers = async () => {
+  const res = await axiosInstance.get('/users');
+  return res.data.data.filter(user => user.role !== 'patient');
 }; 

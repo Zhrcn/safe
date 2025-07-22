@@ -68,10 +68,10 @@ export default function GlobalMessageListener() {
           unreadCounts[conversationId] = (unreadCounts[conversationId] || 0) + 1;
           
           const senderName = typeof message.sender === 'object' 
-            ? `${message.sender.firstName || ''} ${message.sender.lastName || ''}`.trim()
+            ? `${message.sender.firstName || ''} ${message.sender.lastName || ''}`
             : 'Someone';
-          
-          const displayName = senderName || 'Someone';
+          const safeSenderName = typeof senderName === 'string' ? senderName.trim() : String(senderName || '').trim();
+          const displayName = safeSenderName || 'Someone';
           const messagePreview = message.content.length > 50 
             ? `${message.content.substring(0, 50)}...` 
             : message.content;

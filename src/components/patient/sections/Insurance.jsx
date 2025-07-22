@@ -24,11 +24,13 @@ const Insurance = ({ patient }) => {
     if (!patient) return null;
     
     const patientInsurance = patient?.insurance || {};
-    const medicalFileInsurance = patient?.medicalRecord?.insuranceDetails || {};
+    const medicalRecordInsurance = (patient?.medicalRecord && patient?.medicalRecord.insuranceDetails) || {};
+    const medicalFileInsurance = (patient?.medicalFile && patient?.medicalFile.insuranceDetails) || {};
     
     const insuranceData = {
-        ...medicalFileInsurance,
-        ...patientInsurance
+        ...patientInsurance,
+        ...medicalRecordInsurance,
+        ...medicalFileInsurance
     };
     
     const formatDate = (dateString) => {
@@ -38,7 +40,7 @@ const Insurance = ({ patient }) => {
     };
     
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
                 <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
                     <Building2 className="w-6 h-6" />
@@ -86,39 +88,6 @@ const Insurance = ({ patient }) => {
                             </span>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">
-                <h2 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-primary tracking-tight">
-                    <FileText className="w-6 h-6" />
-                    Coverage Details
-                </h2>
-                <div className="space-y-4">
-                    <InfoItem
-                        icon={CreditCard}
-                        label="Deductible"
-                        value={`$${insuranceData.deductible || '0'}`}
-                    />
-                    <InfoItem
-                        icon={CreditCard}
-                        label="Co-pay"
-                        value={`$${insuranceData.copay || '0'}`}
-                    />
-                    <InfoItem
-                        icon={CreditCard}
-                        label="Out-of-pocket Maximum"
-                        value={`$${insuranceData.outOfPocketMax || '0'}`}
-                    />
-                    <InfoItem
-                        icon={Calendar}
-                        label="Effective Date"
-                        value={formatDate(insuranceData.effectiveDate)}
-                    />
-                    <InfoItem
-                        icon={Calendar}
-                        label="Expiration Date"
-                        value={formatDate(insuranceData.expiryDate)}
-                    />
                 </div>
             </div>
             <div className="bg-card text-card-foreground rounded-2xl border border-primary/20 shadow-lg p-8">

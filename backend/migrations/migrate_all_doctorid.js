@@ -1,4 +1,3 @@
-// Migration script to set doctorId for all subdocuments in MedicalFile
 const mongoose = require('mongoose');
 const MedicalFile = require('../models/MedicalFile');
 
@@ -8,7 +7,6 @@ async function migrateAllDoctorId() {
   let updatedCount = 0;
   for (const file of files) {
     let changed = false;
-    // Allergies
     if (Array.isArray(file.allergies)) {
       for (const sub of file.allergies) {
         if (!sub.doctorId) {
@@ -17,7 +15,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Chronic Conditions
     if (Array.isArray(file.chronicConditions)) {
       for (const sub of file.chronicConditions) {
         if (!sub.doctorId) {
@@ -26,7 +23,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Lab Results
     if (Array.isArray(file.labResults)) {
       for (const sub of file.labResults) {
         if (!sub.doctorId) {
@@ -35,7 +31,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Imaging Reports
     if (Array.isArray(file.imagingReports)) {
       for (const sub of file.imagingReports) {
         if (!sub.doctorId) {
@@ -44,7 +39,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Medications
     if (Array.isArray(file.medicationHistory)) {
       for (const sub of file.medicationHistory) {
         if (!sub.doctorId) {
@@ -53,7 +47,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Immunizations
     if (Array.isArray(file.immunizations)) {
       for (const sub of file.immunizations) {
         if (!sub.doctorId) {
@@ -62,7 +55,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Attached Documents
     if (Array.isArray(file.attachedDocuments)) {
       for (const sub of file.attachedDocuments) {
         if (!sub.doctorId) {
@@ -71,7 +63,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Diagnoses
     if (Array.isArray(file.diagnoses)) {
       for (const sub of file.diagnoses) {
         if (!sub.doctorId) {
@@ -80,7 +71,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Surgical History
     if (Array.isArray(file.surgicalHistory)) {
       for (const sub of file.surgicalHistory) {
         if (!sub.doctorId) {
@@ -89,7 +79,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // Family Medical History
     if (Array.isArray(file.familyMedicalHistory)) {
       for (const sub of file.familyMedicalHistory) {
         if (!sub.doctorId) {
@@ -98,7 +87,6 @@ async function migrateAllDoctorId() {
         }
       }
     }
-    // General Medical History
     if (Array.isArray(file.generalMedicalHistory)) {
       for (const sub of file.generalMedicalHistory) {
         if (!sub.doctorId) {

@@ -396,7 +396,6 @@ const getLatestVitals = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, latestVitals, 'Latest vital signs retrieved successfully.'));
 });
 
-// Get patient's own medical records
 const getMyMedicalRecords = asyncHandler(async (req, res) => {
     const patient = await Patient.findOne({ user: req.user._id })
         .populate('medicalFile');
@@ -409,7 +408,6 @@ const getMyMedicalRecords = asyncHandler(async (req, res) => {
         return res.status(404).json(new ApiResponse(404, null, 'Medical file not found for patient.'));
     }
     
-    // Return the complete medical file with all sections
     const medicalRecords = {
         vitalSigns: patient.medicalFile.vitalSigns || [],
         allergies: patient.medicalFile.allergies || [],

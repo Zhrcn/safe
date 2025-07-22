@@ -12,7 +12,6 @@ import { useGetPharmacyRequestsQuery, useRespondToRequestMutation } from '@/stor
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 
-// Placeholder for fetching requests - replace with RTK Query or axios as needed
 const usePharmacyMedicineRequests = () => {
   // TODO: Replace with real fetch logic
   const [loading, setLoading] = useState(true);

@@ -3,13 +3,12 @@ const Patient = require('../models/Patient');
 const MedicalFile = require('../models/MedicalFile');
 
 async function addInsuranceContactInfo() {
-  await mongoose.connect('mongodb://localhost:27017/safe'); // <-- Replace with your DB name or connection string
+  await mongoose.connect('mongodb://localhost:27017/safe'); 
 
   const patients = await Patient.find({}).populate('medicalFile');
 
   if (patients.length > 0) {
     for (const patient of patients) {
-      // Update patient.insurance
       patient.insurance = {
         ...patient.insurance,
         contactPhone: '123-456-7890',
@@ -17,7 +16,6 @@ async function addInsuranceContactInfo() {
         contactAddress: '123 Main St, City, Country'
       };
 
-      // Update or create patient.medicalFile.insuranceDetails
       if (patient.medicalFile) {
         if (!patient.medicalFile.insuranceDetails) {
           patient.medicalFile.insuranceDetails = {};
@@ -39,9 +37,8 @@ async function addInsuranceContactInfo() {
 }
 
 async function updateOnePatientInsuranceContact() {
-  await mongoose.connect('mongodb://localhost:27017/safe'); // <-- Use your DB name/connection string
+  await mongoose.connect('mongodb://localhost:27017/safe');
 
-  // Update this to match a real patient in your DB
   const policyNumber = 'POL1008';
 
   const result = await Patient.updateOne(
@@ -65,4 +62,3 @@ async function updateOnePatientInsuranceContact() {
 }
 
 addInsuranceContactInfo();
-// updateOnePatientInsuranceContact();

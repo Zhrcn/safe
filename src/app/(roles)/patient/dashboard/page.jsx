@@ -30,8 +30,8 @@ import {
     fetchRecentMessages,
     fetchRecentConsultations
 } from '@/store/slices/patient/dashboardSlice';
-import { Calendar as UICalendar } from '@/components/ui/Calendar';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO, isSameDay, addDays } from 'date-fns';
+import { getToken, verifyToken, getTokenExpiration } from '@/utils/tokenUtils';
 
 const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t }) => (
   <motion.div
@@ -77,32 +77,52 @@ const HealthMetricCard = ({ title, value, icon: Icon, trend, color, progress, t 
   </motion.div>
 );
 
-const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, tooltip, onClick }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 24 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
-    className="focus-within:ring-2 focus-within:ring-primary outline-none h-full"
-  >
-    <Card className="hover:shadow-2xl transition-all duration-300 rounded-2xl bg-card/95 border-none h-full flex flex-col">
-      <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
-        <Tooltip content={tooltip}>
-          <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1" onClick={onClick}>
-            <div className={`p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform ${bgClass}`} tabIndex={0} aria-label={title}>
-              <Icon className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors truncate">{title}</h3>
-              <p className="text-sm text-muted-foreground mt-1 truncate">{description}</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-          </Link>
-        </Tooltip>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
+const quickActionIconColors = {
+  Calendar: 'text-primary',
+  FileText: 'text-success',
+  MessageSquare: 'text-secondary',
+};
+
+const QuickActionCard = ({ title, description, icon: Icon, href, bgClass, tooltip, onClick }) => {
+  let iconColorClass = '';
+  if (Icon === Calendar) iconColorClass = 'text-primary';
+  else if (Icon === FileText) iconColorClass = 'text-success';
+  else if (Icon === MessageSquare) iconColorClass = 'text-secondary';
+  else iconColorClass = 'text-primary';
+
+  let iconBgClass = '';
+  if (Icon === Calendar) iconBgClass = 'bg-primary/20';
+  else if (Icon === FileText) iconBgClass = 'bg-success/20';
+  else if (Icon === MessageSquare) iconBgClass = 'bg-secondary/20';
+  else iconBgClass = 'bg-primary/20';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.04, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.10)' }}
+      className="focus-within:ring-2 focus-within:ring-primary outline-none h-full"
+    >
+      <Card className="hover:shadow-2xl transition-all duration-300 rounded-2xl bg-card/95 border-none h-full flex flex-col">
+        <CardContent className="p-6 rounded-2xl h-full flex flex-col justify-between">
+          <Tooltip content={tooltip}>
+            <Link href={href} className="flex items-center gap-4 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-colors hover:bg-muted/60 py-2 px-1" onClick={onClick}>
+              <div className={`p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform ${bgClass} ${iconBgClass}`} tabIndex={0} aria-label={title}>
+                <Icon className={`h-6 w-6 ${iconColorClass}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors truncate">{title}</h3>
+                <p className="text-sm text-muted-foreground mt-1 truncate">{description}</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+          </Tooltip>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 const AppointmentCard = ({ appointment, t }) => {
   
@@ -140,8 +160,8 @@ const AppointmentCard = ({ appointment, t }) => {
       <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none">
         <CardContent className="p-6 rounded-2xl">
           <div className="flex items-start justify-between">
-            <div className="flex gap-4">
-              <div className="p-3 rounded-xl bg-primary/10 shadow-md">
+            <div className="flex  items-center  gap-4">
+              <div className="p-3 rounded-xl bg-primary/10 shadow-md h-12">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
@@ -226,7 +246,10 @@ const DashboardPage = () => {
         dispatch(fetchAllergies());
         dispatch(fetchRecentMessages());
         dispatch(fetchRecentConsultations());
-        dispatch(fetchAppointments());
+        const today = new Date();
+        const startDate = format(today, 'yyyy-MM-dd');
+        const endDate = format(addDays(today, 2), 'yyyy-MM-dd');
+        dispatch(fetchAppointments({ startDate, endDate }));
     }, [dispatch]);
 
     const healthMetrics = [
@@ -280,7 +303,7 @@ const DashboardPage = () => {
             description: t('patient.dashboard.scheduleAppointmentDesc'),
             icon: Calendar,
             href: '#',
-            bgClass: 'bg-primary/90 dark:bg-primary/80',
+            bgClass: 'bg-success/90 dark:bg-success/80',
             tooltip: t('patient.dashboard.scheduleAppointmentTooltip'),
             onClick: () => setAppointmentFormOpen(true),
         },
@@ -302,13 +325,8 @@ const DashboardPage = () => {
         }
     ];
 
-    const upcoming = (appointments || []).filter(a => 
-        a.status === 'scheduled' || 
-        a.status === 'upcoming' || 
-        a.status === 'confirmed'
-    );
+    const allAppointments = appointments || [];
 
-    // Filter appointments for selected day
     const appointmentsForSelectedDay = (appointments || []).filter(a => {
         if (!a.date) return false;
         try {
@@ -318,6 +336,14 @@ const DashboardPage = () => {
             return false;
         }
     });
+
+    const token = (typeof window !== 'undefined') ? getToken() : null;
+    let tokenValid = false;
+    let tokenExp = null;
+    if (token) {
+        tokenValid = verifyToken(token);
+        tokenExp = getTokenExpiration();
+    }
 
     return (
         <div className="flex flex-col gap-8 bg-background min-h-screen text-foreground px-2 sm:px-6 md:px-10 py-8 relative overflow-x-hidden rounded-2xl">
@@ -354,36 +380,7 @@ const DashboardPage = () => {
                             ))}
                         </AnimatePresence>
                     </div>
-                    {/* Calendar Section */}
-                    <div className="mt-8">
-                        <h3 className="text-base font-bold mb-2 text-card-foreground">{t('patient.dashboard.calendar', 'Calendar')}</h3>
-                        <UICalendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            className="rounded-2xl border-none shadow-md bg-card"
-                        />
-                        <div className="mt-4">
-                            <h4 className="font-semibold text-sm mb-2 text-card-foreground">
-                                {t('patient.dashboard.appointmentsOn', 'Appointments on')} {format(selectedDate, 'PPP')}:
-                            </h4>
-                            {isLoadingAppointments ? (
-                                <div className="flex justify-center py-4 text-muted-foreground">{t('loading')}</div>
-                            ) : appointmentsForSelectedDay.length === 0 ? (
-                                <div className="text-xs text-muted-foreground">
-                                    {t('patient.dashboard.noAppointments', 'No appointments')}
-                                </div>
-                            ) : (
-                                <ul className="space-y-2">
-                                    {appointmentsForSelectedDay.map((app) => (
-                                        <li key={app._id || app.id}>
-                                            <AppointmentCard appointment={app} t={t} />
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
+                   
                 </div>
                 <div className="lg:col-span-2 space-y-8">
                     <Tabs defaultValue="appointments" className="w-full rounded-2xl">
@@ -398,12 +395,12 @@ const DashboardPage = () => {
                                         <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
                                     ) : (dashboardError || appointmentsError) ? (
                                         <div className="text-center py-8 text-red-500">{t('error')}</div>
-                                    ) : upcoming.length > 0 ? (
-                                        upcoming.map((appointment) => (
+                                    ) : allAppointments.length > 0 ? (
+                                        allAppointments.map((appointment) => (
                                             <AppointmentCard key={appointment._id || appointment.id} appointment={appointment} t={t} />
                                         ))
                                     ) : (
-                                        <div className="text-center py-8 text-muted-foreground">{t('patient.dashboard.noUpcomingAppointments')}</div>
+                                        <div className="text-center py-8 text-muted-foreground">{t('patient.dashboard.noAppointments')}</div>
                                     )}
                                 </AnimatePresence>
                             </div>

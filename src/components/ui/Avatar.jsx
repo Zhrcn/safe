@@ -9,36 +9,29 @@ const sizeMap = {
   lg: "w-32 h-32",
 };
 
-// Helper to resolve image URL from backend or relative path
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
 export const getImageUrl = (src) => {
-  if (!src) return undefined;
-  if (/^https?:\/\//.test(src)) return src; // absolute URL
-  if (src.startsWith('/uploads/')) return src; // already correct public path
-  // fallback: treat as profile image filename
-  return `/uploads/profile/${src}`;
+  if (!src || typeof src !== 'string' || !src.trim()) return undefined;
+  if (/^https?:\/\//.test(src)) return src; // already absolute
+  return `${BACKEND_URL}${src}`;
 };
 
-const Avatar = React.forwardRef(({ src, alt, children, size = "md", className, ...props }, ref) => (
-  <AvatarPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative overflow-hidden rounded-full bg-muted flex items-center justify-center",
-      sizeMap[size],
-      className
-    )}
-    {...props}
-  >
-    {src ? (
-      <AvatarPrimitive.Image
-        src={getImageUrl(src)}
-        alt={alt || "Avatar"}
-        className="absolute inset-0 w-full h-full object-cover rounded-full"
-      />
-    ) : (
-      children
-    )}
-  </AvatarPrimitive.Root>
-))
+const Avatar = React.forwardRef(({ size = "md", className, children, ...props }, ref) => {
+  return (
+    <AvatarPrimitive.Root
+      ref={ref}
+      className={cn(
+        "relative overflow-hidden rounded-full bg-muted flex items-center justify-center",
+        sizeMap[size],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </AvatarPrimitive.Root>
+  );
+})
 Avatar.displayName = "Avatar"
 
 const AvatarImage = React.forwardRef(({ className, ...props }, ref) => (
@@ -74,10 +67,27 @@ export function PatientProfileAvatar({ src, firstName, lastName, size = "lg", cl
       ? `${firstName ? firstName.charAt(0) : ""}${lastName ? lastName.charAt(0) : ""}`
       : null;
   return (
-    <Avatar src={src} alt="Profile Picture" size={size} className={className}>
+    <Avatar size={size} className={className}>
+      <AvatarImage src={src} alt="Profile Picture" />
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
+}
+
+// Helper to get initials from first and last name or a full name string
+export function getInitials(firstName, lastName) {
+  if (firstName || lastName) {
+    return `${firstName ? firstName.charAt(0) : ''}${lastName ? lastName.charAt(0) : ''}`.toUpperCase();
+  }
+  return '';
+}
+
+export function getInitialsFromName(name) {
+  if (!name) return '';
+  const safeName = String(name);
+  const parts = safeName.trim().split(' ');
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export { Avatar, AvatarImage, AvatarFallback } 

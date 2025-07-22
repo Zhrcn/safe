@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Separator } from '@/components/ui/Separator';
-import { Avatar, AvatarFallback, AvatarImage, getImageUrl } from '@/components/ui/Avatar';
+import { Avatar, AvatarImage, AvatarFallback, getInitialsFromName, getInitials } from '@/components/ui/Avatar';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/store/slices/auth/authSlice';
 import { logoutUser } from '@/store/slices/auth/authSlice';
@@ -135,10 +135,13 @@ export default function PatientLayout({ children }) {
                 <div className="p-4 border-b">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src={getImageUrl(user?.profile?.avatar)} />
-                            <AvatarFallback className="bg-primary text-primary text-lg">
-                                {user?.name?.[0]}
-                            </AvatarFallback>
+                            {user?.profileImage ? (
+                                <AvatarImage src={getImageUrl(user?.profileImage)} alt={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'} />
+                            ) : (
+                                <AvatarFallback className="bg-primary text-primary text-lg">
+                                    {getInitials(user?.firstName, user?.lastName)}
+                                </AvatarFallback>
+                            )}
                         </Avatar>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold truncate">{user?.name}</p>

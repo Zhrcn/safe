@@ -61,7 +61,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
   if (!firstName || !lastName || !email || !password || !role) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide firstName, lastName, email, password, and role.'));
   }
-  if (!['patient', 'doctor', 'pharmacist', 'admin'].includes(role)) {
+  if (!['patient', 'doctor', 'pharmacist', 'admin', 'distributor'].includes(role)) {
     return res.status(400).json(new ApiResponse(400, null, 'Invalid role specified.'));
   }
   try {
@@ -116,6 +116,22 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
         licenseNumber, 
         pharmacyName,
         yearsOfExperience,
+      });
+    } else if (role === 'distributor') {
+      const { companyName, contactName, contactEmail, contactPhone, address } = req.body;
+      if (!companyName) {
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json(new ApiResponse(400, null, 'Distributor role requires companyName.'));
+      }
+      const Distributor = require('../models/Distributor');
+      await Distributor.create({
+        user: user._id,
+        companyName,
+        contactName,
+        contactEmail,
+        contactPhone,
+        address,
+        distributorId: `DST-${Date.now()}`
       });
     }
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
@@ -203,7 +219,12 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     gender: req.body.gender,
   };
   if (req.body.profilePicture !== undefined) {
-    fieldsToUpdate.profileImage = req.body.profilePicture;
+    let profilePath = req.body.profilePicture;
+    if (profilePath.startsWith('http')) {
+      const url = new URL(profilePath);
+      profilePath = url.pathname;
+    }
+    fieldsToUpdate.profileImage = profilePath;
   }
   const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
     new: true,

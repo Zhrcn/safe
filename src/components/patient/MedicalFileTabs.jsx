@@ -15,7 +15,6 @@ import { useState, useEffect, useRef } from 'react';
 
 const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { ssr: false });
 
-// Custom hook to fetch and cache doctor names by ID
 function useDoctorName(doctorId) {
     const cache = useRef({});
     const [name, setName] = useState('');
@@ -29,7 +28,7 @@ function useDoctorName(doctorId) {
             }
             try {
                 const doctor = await getDoctorById(doctorId);
-                console.log('Fetched doctor for ID', doctorId, doctor); // Debug log
+                console.log('Fetched doctor for ID', doctorId, doctor);
                 const doctorName = doctor?.user?.name || `${doctor?.user?.firstName || ''} ${doctor?.user?.lastName || ''}`.trim();
                 cache.current[doctorId] = doctorName;
                 if (isMounted) setName(doctorName);
@@ -112,12 +111,12 @@ const MedicalFileTabs = ({ medicalRecord, loading, error, activeTab }) => {
                                             <div className="flex items-center gap-3">
                                                 <DropletIcon className="h-5 w-5 text-danger" />
                                                 <div>
-                                                    <p className="font-medium text-foreground flex items-center gap-2">
+                                                    <div className="font-medium text-foreground flex items-center gap-2">
                                                         {allergy.name}
                                                         {allergy.severity && (
                                                             <Badge className={`ml-2 ${allergy.severity === 'severe' ? 'bg-danger text-white' : allergy.severity === 'moderate' ? 'bg-orange-200 text-orange-900' : 'bg-yellow-100 text-yellow-900'}`}>{allergy.severity}</Badge>
                                                         )}
-                                                    </p>
+                                                    </div>
                                                     {allergy.reaction && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.reaction', 'Reaction')}: {allergy.reaction}</p>}
                                                     {allergy.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {allergy.notes}</p>}
                                                 </div>
@@ -152,12 +151,12 @@ const MedicalFileTabs = ({ medicalRecord, loading, error, activeTab }) => {
                                             <div className="flex items-center gap-3">
                                                 <Stethoscope className="h-5 w-5 text-primary" />
                                                 <div>
-                                                    <p className="font-medium text-foreground flex items-center gap-2">
+                                                    <div className="font-medium text-foreground flex items-center gap-2">
                                                         {condition.name}
                                                         {condition.status && (
                                                             <Badge className={`ml-2 ${condition.status === 'active' ? 'bg-primary text-white' : condition.status === 'resolved' ? 'bg-green-200 text-green-900' : 'bg-muted text-muted-foreground'}`}>{condition.status}</Badge>
                                                         )}
-                                                    </p>
+                                                    </div>
                                                     <p className="text-sm text-muted-foreground">{t('patient.profile.diagnosedOn', 'Diagnosed on')} {condition.diagnosisDate && !isNaN(new Date(condition.diagnosisDate).getTime()) ? format(new Date(condition.diagnosisDate), 'PPP') : ''}</p>
                                                     {condition.notes && <p className="text-xs text-muted-foreground mt-1">{t('patient.profile.notes', 'Notes')}: {condition.notes}</p>}
                                                 </div>
@@ -313,7 +312,7 @@ const MedicalFileTabs = ({ medicalRecord, loading, error, activeTab }) => {
                                             <div className="flex items-center gap-3">
                                                 <Pill className="h-5 w-5 text-primary" />
                                                 <div>
-                                                    <p className="font-medium text-foreground flex items-center gap-2">{med.name} <span className="text-xs text-muted-foreground">{med.dosage}</span></p>
+                                                    <div className="font-medium text-foreground flex items-center gap-2">{med.name} <span className="text-xs text-muted-foreground">{med.dosage}</span></div>
                                                     <p className="text-sm text-muted-foreground">{t('patient.profile.frequency', 'Frequency')}: {med.frequency}</p>
                                                     <p className="text-sm text-muted-foreground">{t('patient.profile.status', 'Status')}: {med.status}</p>
                                                     <p className="text-sm text-muted-foreground">{t('patient.profile.startDate', 'Start')}: {med.startDate && !isNaN(new Date(med.startDate).getTime()) ? format(new Date(med.startDate), 'PPP') : ''} | {t('patient.profile.endDate', 'End')}: {med.endDate && !isNaN(new Date(med.endDate).getTime()) ? format(new Date(med.endDate), 'PPP') : ''}</p>

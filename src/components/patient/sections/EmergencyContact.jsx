@@ -65,28 +65,36 @@ const ContactCard = ({ title, contact }) => (
 
 const EmergencyContact = ({ patient }) => {
     if (!patient) return null;
-    
-    const patientEmergencyContacts = patient?.emergencyContacts || [];
-    const medicalFileEmergencyContact = patient?.medicalRecord?.emergencyContact;
-    
+    const patientEmergencyContacts =
+        patient?.emergencyContacts
+        || (patient?.emergencyContact ? [patient.emergencyContact] : [])
+        || [];
+    const medicalFileEmergencyContact =
+        (patient?.medicalRecord?.emergencyContact)
+        || (patient?.medicalFile?.emergencyContact);
+
     let allContacts = [...patientEmergencyContacts];
     if (medicalFileEmergencyContact && !allContacts.find(c => c.name === medicalFileEmergencyContact.name)) {
         allContacts.push(medicalFileEmergencyContact);
     }
-    
+
     const primaryContact = allContacts[0];
     const secondaryContact = allContacts[1];
-    
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <ContactCard
-                title="Primary Emergency Contact"
-                contact={primaryContact}
-            />
-            <ContactCard
-                title="Secondary Emergency Contact"
-                contact={secondaryContact}
-            />
+            {primaryContact && (
+                <ContactCard
+                    title="Primary Emergency Contact"
+                    contact={primaryContact}
+                />
+            )}
+            {secondaryContact && (
+                <ContactCard
+                    title="Secondary Emergency Contact"
+                    contact={secondaryContact}
+                />
+            )}
         </div>
     );
 };

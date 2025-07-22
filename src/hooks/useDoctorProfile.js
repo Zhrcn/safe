@@ -29,7 +29,6 @@ import {
 export const useDoctorProfile = () => {
     const dispatch = useDispatch();
 
-    // Selectors
     const profile = useSelector(selectDoctorProfile);
     const loading = useSelector(selectDoctorProfileLoading);
     const error = useSelector(selectDoctorProfileError);
@@ -40,7 +39,6 @@ export const useDoctorProfile = () => {
     const educationLoading = useSelector(selectEducationLoading);
     const licensesLoading = useSelector(selectLicensesLoading);
 
-    // Actions (memoized)
     const getProfile = useCallback(() => dispatch(fetchDoctorProfile()), [dispatch]);
     const updateProfile = useCallback((profileData) => dispatch(updateDoctorProfileData(profileData)), [dispatch]);
     const uploadImage = useCallback((formData) => dispatch(uploadDoctorProfileImage(formData)), [dispatch]);
@@ -57,7 +55,6 @@ export const useDoctorProfile = () => {
     const clearImageError = useCallback(() => dispatch(clearImageUploadError()), [dispatch]);
 
     return {
-        // State
         profile,
         loading,
         error,
@@ -68,7 +65,6 @@ export const useDoctorProfile = () => {
         educationLoading,
         licensesLoading,
         
-        // Actions
         getProfile,
         updateProfile,
         uploadImage,

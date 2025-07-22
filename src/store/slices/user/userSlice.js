@@ -13,7 +13,6 @@ import { getToken, setToken, removeToken } from '@/utils/tokenUtils';
 import { handleAuthError } from '@/utils/errorHandling';
 import { API_BASE_URL } from '@/config/api';
 
-// Helper function to transform relative image URLs to full URLs
 const transformImageUrl = (imageUrl) => {
   if (!imageUrl) return imageUrl;
   if (imageUrl.startsWith('http')) return imageUrl;
@@ -87,7 +86,6 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-// Fetch user profile
 export const fetchUserProfile = createAsyncThunk(
   'user/fetchProfile',
   async (_, { rejectWithValue }) => {
@@ -100,7 +98,6 @@ export const fetchUserProfile = createAsyncThunk(
   }
 );
 
-// Update user profile
 export const updateUserProfileData = createAsyncThunk(
   'user/updateProfile',
   async (profileData, { rejectWithValue }) => {
@@ -113,7 +110,6 @@ export const updateUserProfileData = createAsyncThunk(
   }
 );
 
-// Upload user profile image
 export const uploadUserProfileImageData = createAsyncThunk(
   'user/uploadImage',
   async (formData, { rejectWithValue }) => {
@@ -172,14 +168,12 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Transform the user profile image URL to full URL
         const user = {
           ...action.payload.user,
           profileImage: transformImageUrl(action.payload.user?.profileImage)
@@ -197,14 +191,12 @@ const userSlice = createSlice({
         state.token = null;
       })
       
-      // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Transform the user profile image URL to full URL
         const user = {
           ...action.payload.user,
           profileImage: transformImageUrl(action.payload.user?.profileImage)
@@ -222,7 +214,6 @@ const userSlice = createSlice({
         state.token = null;
       })
       
-      // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.token = null;
@@ -230,14 +221,12 @@ const userSlice = createSlice({
         state.error = null;
       })
       
-      // Fetch profile
       .addCase(fetchUserProfile.pending, (state) => {
         state.profileLoading = true;
         state.profileError = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
         state.profileLoading = false;
-        // Transform the user profile image URL to full URL
         const user = {
           ...action.payload.user,
           profileImage: transformImageUrl(action.payload.user?.profileImage)
@@ -250,14 +239,12 @@ const userSlice = createSlice({
         state.profileError = action.payload;
       })
       
-      // Update profile
       .addCase(updateUserProfileData.pending, (state) => {
         state.profileLoading = true;
         state.profileError = null;
       })
       .addCase(updateUserProfileData.fulfilled, (state, action) => {
         state.profileLoading = false;
-        // Transform the user profile image URL to full URL
         const user = {
           ...action.payload,
           profileImage: transformImageUrl(action.payload?.profileImage)
@@ -270,7 +257,6 @@ const userSlice = createSlice({
         state.profileError = action.payload;
       })
       
-      // Upload image
       .addCase(uploadUserProfileImageData.pending, (state) => {
         state.imageUploadLoading = true;
         state.imageUploadError = null;
@@ -293,7 +279,6 @@ const userSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Transform the user profile image URL to full URL
         const user = {
           ...action.payload.user,
           profileImage: transformImageUrl(action.payload.user?.profileImage)

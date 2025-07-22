@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Stethoscope, Search, Star, MapPin, Clock, MessageCircle, Calendar } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -148,7 +148,7 @@ export default function DoctorsPage() {
                                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                     <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
                                         <AvatarImage src={doctor.avatar} alt={doctor.name} />
-                                        <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                        <AvatarFallback>{getInitialsFromName(doctor.name)}</AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0">
                                         <CardTitle className="text-lg sm:text-xl truncate">{doctor.name}</CardTitle>

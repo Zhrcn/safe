@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Separator } from '@/components/ui/Separator';
@@ -86,7 +86,7 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                                 <AvatarImage src={doctorPhoto} alt={doctorName} />
                             ) : (
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                                    {doctorName.split(' ').map(n => n[0]).join('').slice(0,2)}
+                                    {getInitialsFromName(doctorName)}
                                 </AvatarFallback>
                             )}
                         </Avatar>
@@ -152,49 +152,49 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
     const dispenseHistory = Array.isArray(prescription.dispenseHistory) ? prescription.dispenseHistory : [];
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl w-full p-0 rounded-2xl bg-card border border-border overflow-hidden">
-                <div className="bg-primary/10 border-b border-border px-8 py-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-16 w-16 border-2 border-primary/30 shadow">
+            <DialogContent className="max-w-lg w-full p-0 rounded-2xl bg-card border border-border overflow-hidden"> 
+                <div className="bg-primary/10 border-b border-border px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 border-2 border-primary/30 shadow">
                             {doctorPhoto ? (
                                 <AvatarImage src={doctorPhoto} alt={doctorName} />
                             ) : (
-                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">
-                                    {doctorName.split(' ').map(n => n[0]).join('').slice(0,2)}
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                                    {getInitialsFromName(doctorName)}
                                 </AvatarFallback>
                             )}
                         </Avatar>
                         <div>
-                            <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                                <Pill className="w-6 h-6 text-primary" />
+                            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                                <Pill className="w-5 h-5 text-primary" /> 
                                 {t('patient.prescriptions.prescriptionDetails')}
                             </DialogTitle>
-                            <div className="text-sm text-muted-foreground font-medium mt-1">{doctorName}</div>
+                            <div className="text-xs text-muted-foreground font-medium mt-1">{doctorName}</div>
                             <div className="text-xs text-muted-foreground font-medium">{doctorSpecialty}</div>
                         </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-4 py-1 text-sm font-semibold border shadow-sm ${statusInfo.className}`}>{statusInfo.icon}{statusInfo.label}</span>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border shadow-sm ${statusInfo.className}`}>{statusInfo.icon}{statusInfo.label}</span>
                 </div>
-                <div className="p-8 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground flex items-center gap-2"><Calendar className="h-4 w-4" /> <b>{t('patient.prescriptions.prescribedOn')}</b>: {prescriptionDate}</span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4" /> <b>{t('patient.prescriptions.validUntil')}</b>: {prescriptionEndDate}</span>
+                <div className="p-4 space-y-4"> 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2"> 
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" /> <b>{t('patient.prescriptions.prescribedOn')}</b>: {prescriptionDate}</span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> <b>{t('patient.prescriptions.validUntil')}</b>: {prescriptionEndDate}</span>
                             <span className="text-xs text-muted-foreground"><b>{t('patient.prescriptions.prescriptionID')}</b>: {prescriptionId}</span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-sm text-muted-foreground flex items-center gap-2"><Info className="h-4 w-4 text-blue-400" /> <b>{t('patient.prescriptions.diagnosis')}</b>: {diagnosis}</span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-2"><Pill className="h-4 w-4 text-primary" /> <b>{t('patient.prescriptions.medications')}</b>: {medications.length}</span>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Info className="h-3 w-3 text-blue-400" /> <b>{t('patient.prescriptions.diagnosis')}</b>: {diagnosis}</span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Pill className="h-3 w-3 text-primary" /> <b>{t('patient.prescriptions.medications')}</b>: {medications.length}</span>
                         </div>
                     </div>
                     <Separator />
                     <div>
-                        <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2"><Pill className="h-5 w-5 text-primary" />{t('patient.prescriptions.medications')}</h4>
-                        <ul className="space-y-2">
+                        <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-1"><Pill className="h-4 w-4 text-primary" />{t('patient.prescriptions.medications')}</h4>
+                        <ul className="space-y-1">
                             {medications.length > 0 ? medications.map((medication, index) => (
-                                <li key={index} className="border border-border rounded-lg p-3 bg-muted/30">
-                                    <div className="font-semibold text-primary mb-1 flex items-center gap-2"><Pill className="h-4 w-4 text-primary" />{medication?.name || t('patient.prescriptions.unknownMedication')}</div>
-                                    <div className="text-sm text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <li key={index} className="border border-border rounded-lg p-2 bg-muted/30">
+                                    <div className="font-semibold text-primary mb-0.5 flex items-center gap-1"><Pill className="h-3 w-3 text-primary" />{medication?.name || t('patient.prescriptions.unknownMedication')}</div>
+                                    <div className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-1">
                                         <span><b>{t('patient.prescriptions.dosage')}:</b> {medication?.dosage || t('patient.prescriptions.noDosage')}</span>
                                         <span><b>{t('patient.prescriptions.frequency')}:</b> {medication?.frequency || t('patient.prescriptions.noFrequency')}</span>
                                         {medication?.duration && <span><b>{t('patient.prescriptions.duration')}:</b> {medication.duration}</span>}
@@ -206,23 +206,23 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                         </ul>
                     </div>
                     {diagnosis && (
-                        <div className="bg-muted/40 rounded-lg p-4 border border-border">
-                            <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2"><Info className="h-5 w-5 text-blue-400" />{t('patient.prescriptions.diagnosis')}</h4>
-                            <p className="text-muted-foreground leading-relaxed">{diagnosis}</p>
+                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
+                            <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-1"><Info className="h-4 w-4 text-blue-400" />{t('patient.prescriptions.diagnosis')}</h4>
+                            <p className="text-xs text-muted-foreground leading-relaxed">{diagnosis}</p>
                         </div>
                     )}
                     {prescription.notes && (
-                        <div className="bg-muted/40 rounded-lg p-4 border border-border">
-                            <h4 className="text-lg font-semibold text-foreground mb-2">{t('patient.prescriptions.doctorsNotes')}</h4>
-                            <p className="text-muted-foreground leading-relaxed">{prescription.notes}</p>
+                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
+                            <h4 className="text-base font-semibold text-foreground mb-1">{t('patient.prescriptions.doctorsNotes')}</h4>
+                            <p className="text-xs text-muted-foreground leading-relaxed">{prescription.notes}</p>
                         </div>
                     )}
                     {dispenseHistory.length > 0 && (
-                        <div className="bg-muted/40 rounded-lg p-4 border border-border">
-                            <h4 className="text-lg font-semibold text-foreground mb-2">{t('patient.prescriptions.dispenseHistory')}</h4>
-                            <ul className="space-y-2">
+                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
+                            <h4 className="text-base font-semibold text-foreground mb-1">{t('patient.prescriptions.dispenseHistory')}</h4>
+                            <ul className="space-y-1">
                                 {dispenseHistory.map((entry, idx) => (
-                                    <li key={idx} className="flex flex-col md:flex-row md:items-center md:gap-4 text-sm text-muted-foreground border-b border-border pb-2 last:border-b-0 last:pb-0">
+                                    <li key={idx} className="flex flex-col md:flex-row md:items-center md:gap-2 text-xs text-muted-foreground border-b border-border pb-1 last:border-b-0 last:pb-0">
                                         <span><b>{t('patient.prescriptions.pharmacist')}:</b> {entry.pharmacistId || '-'}</span>
                                         <span><b>{t('patient.prescriptions.date')}:</b> {entry.dispenseDate ? new Date(entry.dispenseDate).toLocaleDateString() : '-'}</span>
                                         <span><b>{t('patient.prescriptions.quantityDispensed')}:</b> {entry.quantityDispensed || '-'}</span>
@@ -233,11 +233,11 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                         </div>
                     )}
                 </div>
-                <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end gap-3">
+                <DialogFooter className="py-2 my-2 mx-4 border-t border-border flex justify-end gap-2">
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="px-6 py-2"
+                        className="px-4 m-2 py-1.5"
                     >
                         {t('patient.prescriptions.close')}
                     </Button>
@@ -246,7 +246,7 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                             <Button
                                 variant="info"
                                 onClick={() => onShowQR(prescription)}
-                                className="px-6 py-2 focus:ring-2 focus:ring-primary"
+                                className="px-4 m-2 py-1.5 focus:ring-2 focus:ring-primary"
                             >
                                 <QrCode className="w-5 h-5 mr-2" />
                                 {t('patient.prescriptions.showQRCode')}
@@ -258,20 +258,21 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
         </Dialog>
     );
 };
+
 const QRCodeDialog = ({ open, onClose, prescription }) => {
     const { t } = useTranslation('common');
     if (!prescription) return null;
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-md w-full p-8 rounded-2xl bg-card border border-border text-center">
-                <DialogHeader className="mb-4">
-                    <DialogTitle className="text-2xl font-bold text-foreground">{t('patient.prescriptions.prescriptionQRCode')}</DialogTitle>
+            <DialogContent className="max-w-md w-full p-6 rounded-2xl bg-card border border-border text-center">
+                <DialogHeader className="mb-2"> 
+                    <DialogTitle className="text-xl font-bold text-foreground">{t('patient.prescriptions.prescriptionQRCode')}</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col items-center space-y-6 py-4">
-                    <p className="text-md text-info font-medium">
+                <div className="flex flex-col items-center space-y-4 py-2"> 
+                    <p className="text-sm text-info font-medium">
                         {t('patient.prescriptions.scanThisCodeAtThePharmacyToGetYourPrescription')}
                     </p>
-                    <div className="p-5 bg-background rounded-2xl shadow border-2 border-primary/30">
+                    <div className="p-3 bg-background rounded-2xl shadow border-2 border-primary/30">
                         <QRCodeSVG
                             value={JSON.stringify({
                                 id: prescription.id,
@@ -281,21 +282,21 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                                 patientId: prescription.patientId || '',
                                 patientName: prescription.patientName || '',
                             })}
-                            size={220}
+                            size={180} 
                             level="H"
                             includeMargin={true}
                         />
                     </div>
-                    <div className="text-sm text-muted-foreground mt-2">
+                    <div className="text-xs text-muted-foreground mt-1">
                         <p><span className="font-semibold">{t('patient.prescriptions.prescriptionID')}:</span> {prescription?.id}</p>
                         <p><span className="font-semibold">{t('patient.prescriptions.medications')}:</span> {(Array.isArray(prescription?.medications) ? prescription.medications : []).map(med => med?.name).join(', ')}</p>
                     </div>
                 </div>
-                <DialogFooter className="pt-4 mt-4 border-t border-border flex justify-end">
+                <DialogFooter className="pt-2 mt-2 border-t border-border flex justify-end">
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="px-6 py-2"
+                        className="px-4 py-1.5"
                     >
                         {t('patient.prescriptions.close')}
                     </Button>

@@ -307,8 +307,10 @@ export default function ChatInterface() {
     const filteredConversations = conversations.filter(conversation => {
         const otherParticipant = conversation.participants.find(p => p.role !== 'doctor');
         if (!otherParticipant) return false;
-        const nameMatches = otherParticipant.name.toLowerCase().includes(searchQuery.toLowerCase());
-                const roleMatches = 
+        const nameMatches = typeof otherParticipant.name === 'string'
+          ? otherParticipant.name.toLowerCase().includes(searchQuery.toLowerCase())
+          : String(otherParticipant.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const roleMatches = 
             activeTab === 'all' || 
             (activeTab === 'patients' && otherParticipant.role === 'patient') ||
             (activeTab === 'pharmacists' && otherParticipant.role === 'pharmacist') ||

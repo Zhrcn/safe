@@ -44,7 +44,6 @@ app.use(cors({
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
-// Serve static files from public directory
 app.use('/uploads', express.static('public/uploads'));
 
 if (process.env.NODE_ENV === 'development') {

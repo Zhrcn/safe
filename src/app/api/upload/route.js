@@ -20,7 +20,6 @@ export async function POST(request) {
             );
         }
 
-        // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
         if (!allowedTypes.includes(file.type)) {
             return NextResponse.json(
@@ -29,7 +28,6 @@ export async function POST(request) {
             );
         }
 
-        // Validate file size (5MB max)
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json(
@@ -38,28 +36,23 @@ export async function POST(request) {
             );
         }
 
-        // Create uploads/profile directory if it doesn't exist
         const uploadsDir = join(process.cwd(), 'public', 'uploads', type);
         if (!existsSync(uploadsDir)) {
             await mkdir(uploadsDir, { recursive: true });
         }
 
-        // Generate filename: [userId]-[firstName_lastName].jpg
         const safeName = `${firstName}_${lastName}`.replace(/[^a-zA-Z0-9_]/g, '');
         const fileName = `${userId}-${safeName}.jpg`;
         const filePath = join(uploadsDir, fileName);
 
-        // Convert file to buffer
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Use sharp to resize/crop to 256x256 and convert to jpg
         await sharp(buffer)
             .resize(256, 256, { fit: 'cover' })
             .jpeg({ quality: 90 })
             .toFile(filePath);
 
-        // Return the public URL path
         const publicPath = `/uploads/${type}/${fileName}`;
 
         return NextResponse.json({

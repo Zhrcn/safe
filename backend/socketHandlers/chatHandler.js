@@ -69,24 +69,28 @@ class ChatHandler {
       
       if (!conversation) {
         console.error('ChatHandler: Conversation not found', conversationId);
-        return callback({ error: 'Conversation not found' });
+        if (typeof callback === 'function') return callback({ error: 'Conversation not found' });
+        return;
       }
 
       const participantIds = conversation.participants.map(id => id.toString());
       if (!participantIds.includes(socket.userId)) {
         console.error('ChatHandler: User not a participant', { userId: socket.userId, participantIds });
-        return callback({ error: 'You are not a participant in this conversation' });
+        if (typeof callback === 'function') return callback({ error: 'You are not a participant in this conversation' });
+        return;
       }
 
       if (!message.content || !message.receiver) {
-        console.error('ChatHandler: Invalid message structure', message);
-        return callback({ error: 'Message must have content and receiver' });
+        console.error('ChatHandler: Invalid message structure. Required: content, receiver', message);
+        if (typeof callback === 'function') return callback({ error: 'Message must have both content and receiver fields.' });
+        return;
       }
 
       const receiverId = message.receiver.toString();
       if (!participantIds.includes(receiverId)) {
         console.error('ChatHandler: Receiver not a participant', { receiverId, participantIds });
-        return callback({ error: 'Receiver must be a participant in this conversation' });
+        if (typeof callback === 'function') return callback({ error: 'Receiver must be a participant in this conversation' });
+        return;
       }
 
       const newMessage = {
@@ -117,17 +121,19 @@ class ChatHandler {
         message: populatedMessage 
       });
       
-      callback({ 
-        success: true, 
-        data: { 
-          conversationId, 
-          message: populatedMessage 
-        } 
-      });
+      if (typeof callback === 'function') {
+        callback({ 
+          success: true, 
+          data: { 
+            conversationId, 
+            message: populatedMessage 
+          } 
+        });
+      }
       
     } catch (err) {
       console.error('ChatHandler send_message error:', err);
-      callback({ error: err.message });
+      if (typeof callback === 'function') callback({ error: err.message });
     }
   }
 

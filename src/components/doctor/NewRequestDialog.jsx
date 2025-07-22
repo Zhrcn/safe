@@ -13,7 +13,6 @@ const NewRequestDialog = ({ open, onClose, pharmacies, medicines = [], onCreate,
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef(null);
 
-  // Filtered suggestions for autocomplete
   const filteredSuggestions =
     medicineName && medicines.length > 0
       ? medicines.filter((m) =>

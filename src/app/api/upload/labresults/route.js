@@ -15,7 +15,6 @@ export async function POST(request) {
             );
         }
 
-        // Validate file type
         if (!file.type.includes('pdf')) {
             return NextResponse.json(
                 { error: 'Only PDF files are allowed for lab results' },
@@ -23,24 +22,20 @@ export async function POST(request) {
             );
         }
 
-        // Create upload directory if it doesn't exist
         const uploadDir = join(process.cwd(), 'public', 'upload', 'labresults');
         if (!existsSync(uploadDir)) {
             await mkdir(uploadDir, { recursive: true });
         }
 
-        // Generate unique filename
         const timestamp = Date.now();
         const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fileName = `labresult_${timestamp}_${originalName}`;
         const filePath = join(uploadDir, fileName);
 
-        // Convert file to buffer and save
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         await writeFile(filePath, buffer);
 
-        // Return the public URL
         const publicUrl = `/upload/labresults/${fileName}`;
 
         return NextResponse.json({

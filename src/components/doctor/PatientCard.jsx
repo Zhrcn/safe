@@ -23,8 +23,14 @@ import PrescriptionForm from './PrescriptionForm';
 import PatientConditionForm from './PatientConditionForm';
 import ReferralForm from './ReferralForm';
 import { Button } from '@/components/ui/Button';
+import { Avatar, AvatarImage, AvatarFallback, getInitials, getInitialsFromName } from '@/components/ui';
+
+const DEFAULT_AVATAR = '/avatars/avatar-1.svg';
 
 export default function PatientCard({ patient }) {
+    console.log('PatientCard patient:', patient);
+    console.log('PatientCard patient.user:', patient.user);
+    console.log('PatientCard patient.user?.username:', patient.user?.username);
     const router = useRouter();
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [activeDialog, setActiveDialog] = useState(null);
@@ -36,10 +42,10 @@ export default function PatientCard({ patient }) {
         const lastName = patient.user?.lastName || patient.lastName || '';
         return `${firstName} ${lastName}`.trim();
     };
-    const getPatientAge = () => patient.age || patient.user?.age || 'N/A';
+    const getPatientAge = () => (typeof patient.age !== 'undefined' && patient.age !== null ? patient.age : (patient.user?.age ?? 'N/A'));
     const getPatientGender = () => patient.gender || patient.user?.gender || 'N/A';
     const getPatientCondition = () => patient.condition || 'N/A';
-    const getPatientMedicalId = () => patient.medicalId || patient.user?.medicalId || 'N/A';
+    const getPatientMedicalId = () => patient.patientId || patient.user?.patientId || 'N/A';
     const getPatientLastVisit = () => patient.lastAppointment || patient.updatedAt || patient.lastVisit;
     const isPatientActive = () => patient.user?.isActive ?? patient.isActive ?? true;
 
@@ -88,15 +94,6 @@ export default function PatientCard({ patient }) {
         }
     };
 
-    const getInitials = (patient) => {
-        const name = getPatientName();
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase();
-    };
-
     const handleCardClick = (e) => {
         if (
             e.target.closest('button') ||
@@ -118,9 +115,13 @@ export default function PatientCard({ patient }) {
                 aria-label={`Open profile for ${getPatientName()}`}
             >
                 <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold">
-                        {getInitials(patient)}
-                    </div>
+                    <Avatar size="md" className="w-12 h-12 text-xl font-bold">
+                        {patient.user?.profileImage ? (
+                            <AvatarImage src={patient.user.profileImage} alt={patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : 'Patient'} />
+                        ) : (
+                            <AvatarFallback>{getInitials(patient.user?.firstName, patient.user?.lastName)}</AvatarFallback>
+                        )}
+                    </Avatar>
                     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                         <div className="flex items-center justify-between">
                             <span className="text-base font-semibold text-card-foreground truncate">
@@ -197,22 +198,18 @@ export default function PatientCard({ patient }) {
                         ref={menuRef}
                         className="absolute right-0 top-12 w-48 bg-card rounded-2xl shadow-lg py-1 border border-border z-20"
                     >
+                    
                         <Button
-                            onClick={() => handleOpenDialog('edit')}
-                            className="w-full text-left px-4 py-2 text-sm text-card-foreground hover:bg-muted flex items-center"
-                        >
-                            <Edit className="h-4 w-4 mr-2 text-muted-foreground" />Edit Patient
-                        </Button>
-                        <Button
-                            onClick={() => handleOpenDialog('referral')}
-                            className="w-full text-left px-4 py-2 text-sm text-card-foreground hover:bg-muted flex items-center"
+                        variant="outline"
+                        className="w-full"    
+                        onClick={() => handleOpenDialog('referral')}
                         >
                             <Send className="h-4 w-4 mr-2 text-muted-foreground" />Create Referral
                         </Button>
                         <Button
                             onClick={() => window.location.href = `/doctor/messaging`}
-                            className="w-full text-left px-4 py-2 text-sm text-card-foreground hover:bg-muted flex items-center"
-                        >
+                            variant="outline"
+                            className="w-full"                        >
                             <MessageCircle className="h-4 w-4 mr-2 text-muted-foreground" />Send Message
                         </Button>
                     </div>

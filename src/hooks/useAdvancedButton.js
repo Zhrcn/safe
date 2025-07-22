@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export const useAdvancedButton = (options = {}) => {
   const {
@@ -232,5 +232,27 @@ export const useButtonWithShortcut = (shortcut, options = {}) => {
     ...rest,
   };
 };
+
+/**
+ * useDebounce hook
+ * @param {*} value The value to debounce
+ * @param {number} delay The debounce delay in ms
+ * @returns The debounced value
+ */
+export function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default useAdvancedButton; 

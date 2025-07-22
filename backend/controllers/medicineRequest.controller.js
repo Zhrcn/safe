@@ -1,7 +1,6 @@
 const MedicineRequest = require('../models/MedicineRequest');
 const Pharmacist = require('../models/Pharmacist');
 
-// Create a new medicine request
 exports.createMedicineRequest = async (req, res) => {
   try {
     const { pharmacyId, medicineName } = req.body;
@@ -26,7 +25,6 @@ exports.createMedicineRequest = async (req, res) => {
   }
 };
 
-// Get all medicine requests for the current doctor
 exports.getMedicineRequests = async (req, res) => {
   try {
     const requests = await MedicineRequest.find({ doctor: req.user.id })
@@ -42,14 +40,12 @@ exports.getMedicineRequests = async (req, res) => {
   }
 };
 
-// Delete a medicine request (by owner)
 exports.deleteMedicineRequest = async (req, res) => {
   try {
     const request = await MedicineRequest.findById(req.params.id);
     if (!request) {
       return res.status(404).json({ error: 'Medicine request not found.' });
     }
-    // Only the creator (doctor or patient) can delete
     if (request.doctor.toString() !== req.user.id) {
       return res.status(403).json({ error: 'Not authorized to delete this request.' });
     }
@@ -60,7 +56,6 @@ exports.deleteMedicineRequest = async (req, res) => {
   }
 };
 
-// Respond to a medicine request (pharmacist only)
 exports.respondToMedicineRequest = async (req, res) => {
   try {
     const { available, message } = req.body;
@@ -68,7 +63,6 @@ exports.respondToMedicineRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({ error: 'Medicine request not found.' });
     }
-    // Find the Pharmacist document for the logged-in user
     const pharmacist = await Pharmacist.findOne({ user: req.user.id });
     if (!pharmacist || request.pharmacy.toString() !== pharmacist._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to respond to this request.' });
@@ -86,10 +80,8 @@ exports.respondToMedicineRequest = async (req, res) => {
   }
 };
 
-// Get all medicine requests for the current pharmacist's pharmacy
 exports.getPharmacyMedicineRequests = async (req, res) => {
   try {
-    // Find the Pharmacist document for the logged-in user
     const pharmacist = await Pharmacist.findOne({ user: req.user.id });
     if (!pharmacist) {
       return res.status(404).json({ error: 'Pharmacist profile not found.' });

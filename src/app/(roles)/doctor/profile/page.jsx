@@ -1,13 +1,13 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  fetchUserProfile,
-  selectUser,
-  updateUserProfileData,
-  selectProfileLoading,
-  selectProfileError,
-} from '@/store/slices/user/userSlice';
+  fetchDoctorProfile,
+  selectDoctorProfile,
+  updateDoctorProfileData,
+  selectDoctorProfileLoading,
+  selectDoctorProfileError,
+} from '@/store/slices/doctor/doctorProfileSlice';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,22 +19,32 @@ import EducationList from '@/components/doctor/EducationList';
 import AchievementList from '@/components/doctor/AchievementList';
 import AddEducationDialog from '@/components/doctor/AddEducationDialog';
 import AddAchievementDialog from '@/components/doctor/AddAchievementDialog';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, getInitials, getImageUrl } from '@/components/ui/Avatar';
 import { User, Mail, Phone, Award, GraduationCap, Edit3, Plus, X, Camera, Save, Star, Shield, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function ProfilePage() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const user = useSelector(selectUser);
-  const profileLoading = useSelector(selectProfileLoading);
-  const profileError = useSelector(selectProfileError);
+  const doctorProfile = useSelector(selectDoctorProfile);
+  if (doctorProfile) {
+    console.log('Doctor profile object:', doctorProfile);
+    Object.keys(doctorProfile).forEach(key => {
+      console.log(`doctorProfile.${key}:`, doctorProfile[key]);
+    });
+  }
+  const profileLoading = useSelector(selectDoctorProfileLoading);
+  const profileError = useSelector(selectDoctorProfileError);
 
   const [isEditing, setIsEditing] = useState(false);
   const [openEducationDialog, setOpenEducationDialog] = useState(false);
   const [openAchievementDialog, setOpenAchievementDialog] = useState(false);
   const [localError, setLocalError] = useState('');
   const [localSuccess, setLocalSuccess] = useState('');
+  const [achievements, setAchievements] = useState([]);
+  const [education, setEducation] = useState([]);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
+  const toastTimeout = useRef(null);
 
   const personalInfoSchema = z.object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -46,7 +56,7 @@ export default function ProfilePage() {
     profileImage: z.string().optional(),
   });
 
-  const DEFAULT_AVATAR = '/avatars/default-avatar.svg';
+  const DEFAULT_AVATAR = '/avatars/avatar-1.svg';
 
   const {
     control,
@@ -70,23 +80,25 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    dispatch(fetchUserProfile());
+    dispatch(fetchDoctorProfile());
   }, [dispatch]);
 
   useEffect(() => {
-    if (user) {
+    if (doctorProfile) {
+      setAchievements(doctorProfile.achievements || []);
+      setEducation(doctorProfile.education || []);
       reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        specialization: user.specialization || '',
-        medicalLicenseNumber: user.medicalLicenseNumber || '',
-        yearsOfExperience: user.yearsOfExperience?.toString() || '',
-        phoneNumber: user.phoneNumber || '',
-        email: user.email || '',
-        profileImage: user.profileImage || '',
+        firstName: doctorProfile.firstName || '',
+        lastName: doctorProfile.lastName || '',
+        specialization: doctorProfile.specialization || '',
+        medicalLicenseNumber: doctorProfile.medicalLicenseNumber || '',
+        yearsOfExperience: doctorProfile.yearsOfExperience?.toString() || '',
+        phoneNumber: doctorProfile.phoneNumber || '',
+        email: doctorProfile.email || '',
+        profileImage: doctorProfile.profileImage || '',
       });
     }
-  }, [user, reset]);
+  }, [doctorProfile, reset]);
 
   const profileImage = watch('profileImage');
   const firstName = watch('firstName') || '';
@@ -101,14 +113,18 @@ export default function ProfilePage() {
         const profileData = {
           firstName: data.firstName,
           lastName: data.lastName,
-          specialization: data.specialization,
-          yearsOfExperience: parseInt(data.yearsOfExperience, 10),
           phoneNumber: data.phoneNumber,
           email: data.email,
           profileImage: data.profileImage,
+          specialization: data.specialization,
+          yearsOfExperience: parseInt(data.yearsOfExperience, 10),
+          medicalLicenseNumber: data.medicalLicenseNumber,
+          education,
+          achievements,
         };
-        await dispatch(updateUserProfileData(profileData)).unwrap();
-        await dispatch(fetchUserProfile());
+        console.log('Submitting profileData:', profileData);
+        await dispatch(updateDoctorProfileData(profileData)).unwrap();
+        await dispatch(fetchDoctorProfile());
         setLocalSuccess('Profile updated successfully!');
         setIsEditing(false);
       } catch (err) {
@@ -116,7 +132,7 @@ export default function ProfilePage() {
         setLocalError(errorMessage);
       }
     },
-    [dispatch]
+    [dispatch, education, achievements]
   );
 
   const handleCancel = useCallback(() => {
@@ -126,7 +142,6 @@ export default function ProfilePage() {
     setLocalSuccess('');
   }, [reset]);
 
-  // Image upload logic
   const handleImageUpload = useCallback(
     (imagePath) => {
       setValue('profileImage', imagePath, { shouldDirty: true });
@@ -138,7 +153,47 @@ export default function ProfilePage() {
     setValue('profileImage', '', { shouldDirty: true });
   }, [setValue]);
 
-  if (profileLoading && !user) {
+  const showToast = (message, type = 'success') => {
+    setToast({ open: true, message, type });
+    if (toastTimeout.current) clearTimeout(toastTimeout.current);
+    toastTimeout.current = setTimeout(() => setToast({ open: false, message: '', type: 'success' }), 2500);
+  };
+
+  const handleAddAchievement = (newAchievement) => {
+    const achievementText = typeof newAchievement === 'string'
+      ? newAchievement
+      : newAchievement.achievement || newAchievement.title || '';
+    if (achievementText) {
+      setAchievements((prev) => [achievementText, ...prev]);
+      showToast('Achievement added!');
+    }
+    setOpenAchievementDialog(false);
+  };
+  const handleAddEducation = (newEducation) => {
+    setEducation((prev) => [newEducation, ...prev]);
+    showToast('Education added!');
+    setOpenEducationDialog(false);
+  };
+
+  // Add a debug log for doctorProfile after each update
+  useEffect(() => {
+    if (doctorProfile) {
+      console.log('doctorProfile after update:', doctorProfile);
+    }
+  }, [doctorProfile]);
+
+  if (profileLoading && !doctorProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!doctorProfile) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -169,39 +224,38 @@ export default function ProfilePage() {
                   currentImage={profileImage}
                   onImageUpload={handleImageUpload}
                   onImageRemove={handleImageRemove}
-                  userId={user?._id}
+                  userId={doctorProfile._id}
                   firstName={firstName}
                   lastName={lastName}
                   loading={profileLoading}
                   size="lg"
                 />
               ) : (
-                <Avatar
-                  src={profileImage || DEFAULT_AVATAR}
-                  alt="Profile Picture"
-                  className="w-48 h-48 border-4 border-white shadow-2xl ring-4 ring-blue-100"
-                >
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-6xl font-bold flex items-center justify-center w-full h-full rounded-full">
-                    {firstName.charAt(0)}
-                    {lastName.charAt(0)}
-                  </AvatarFallback>
+                <Avatar className="w-48 h-48 border-4 border-white shadow-2xl ring-4 ring-blue-100">
+                  {profileImage ? (
+                    <AvatarImage src={profileImage} alt="Profile Picture" />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-6xl font-bold flex items-center justify-center w-full h-full rounded-full">
+                      {getInitials(firstName, lastName)}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               )}
             </div>
             <div className="space-y-3">
               <h1 className="text-3xl font-bold text-gray-900">{fullName || 'Doctor Name'}</h1>
               <p className="text-xl text-blue-600 font-semibold">
-                {watch('specialization') || 'Specialty'}
+                {doctorProfile.specialization || 'Specialty'}
               </p>
 
               <div className="flex flex-wrap gap-3 justify-center mt-4">
                 <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
                   <Shield className="h-4 w-4" />
-                  <span>License: {watch('medicalLicenseNumber')}</span>
+                  <span>License: {doctorProfile.medicalLicenseNumber || 'Not assigned'}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                   <Clock className="h-4 w-4" />
-                  <span>{watch('yearsOfExperience')} Years Experience</span>
+                  <span>{doctorProfile.yearsOfExperience} Years Experience</span>
                 </div>
                 <div className="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full text-sm font-medium">
                   <Star className="h-4 w-4" />
@@ -281,65 +335,117 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput
-                  label="First Name"
-                  name="firstName"
-                  control={control}
-                  placeholder="Enter your first name"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.firstName}
-                />
-                <FormInput
-                  label="Last Name"
-                  name="lastName"
-                  control={control}
-                  placeholder="Enter your last name"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.lastName}
-                />
-                <FormInput
-                  label="Specialization"
-                  name="specialization"
-                  control={control}
-                  placeholder="e.g., Cardiology, Neurology"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.specialization}
-                />
-                <div className="space-y-2">
-                  <label className="font-medium text-gray-700">License Number</label>
-                  <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
-                    {watch('medicalLicenseNumber') || 'Not assigned'}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    License number is managed by system administrators
-                  </p>
-                </div>
-                <FormInput
-                  label="Years of Experience"
-                  name="yearsOfExperience"
-                  control={control}
-                  placeholder="e.g., 10"
-                  type="number"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.yearsOfExperience}
-                />
-                <FormInput
-                  label="Email Address"
-                  name="email"
-                  control={control}
-                  placeholder="Enter email address"
-                  type="email"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.email}
-                />
-                <FormInput
-                  label="Phone Number"
-                  name="phoneNumber"
-                  control={control}
-                  placeholder="Enter phone number"
-                  disabled={!isEditing || profileLoading}
-                  error={errors.phoneNumber}
-                />
+                {isEditing ? (
+                  <>
+                    <FormInput
+                      label="First Name"
+                      name="firstName"
+                      control={control}
+                      placeholder="Enter your first name"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.firstName}
+                    />
+                    <FormInput
+                      label="Last Name"
+                      name="lastName"
+                      control={control}
+                      placeholder="Enter your last name"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.lastName}
+                    />
+                    <FormInput
+                      label="Specialization"
+                      name="specialization"
+                      control={control}
+                      placeholder="e.g., Cardiology, Neurology"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.specialization}
+                    />
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">License Number</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {watch('medicalLicenseNumber') || 'Not assigned'}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        License number is managed by system administrators
+                      </p>
+                    </div>
+                    <FormInput
+                      label="Years of Experience"
+                      name="yearsOfExperience"
+                      control={control}
+                      placeholder="e.g., 10"
+                      type="number"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.yearsOfExperience}
+                    />
+                    <FormInput
+                      label="Email Address"
+                      name="email"
+                      control={control}
+                      placeholder="Enter email address"
+                      type="email"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.email}
+                    />
+                    <FormInput
+                      label="Phone Number"
+                      name="phoneNumber"
+                      control={control}
+                      placeholder="Enter phone number"
+                      disabled={!isEditing || profileLoading}
+                      error={errors.phoneNumber}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">First Name</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.firstName}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">Last Name</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.lastName}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">Specialization</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.specialization || 'Not assigned'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">License Number</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.medicalLicenseNumber || 'Not assigned'}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        License number is managed by system administrators
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">Years of Experience</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.yearsOfExperience || 'Not assigned'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">Email Address</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.email}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-medium text-gray-700">Phone Number</label>
+                      <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                        {doctorProfile.phoneNumber}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -353,11 +459,21 @@ export default function ProfilePage() {
                   </div>
                   Education & Training
                 </CardTitle>
-                {/* AddEducationDialog can be enabled in edit mode if needed */}
+                {isEditing && (
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setOpenEducationDialog(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Plus className="w-4 h-4" /> Add
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <EducationList education={user?.education || []} loading={false} />
+              {console.log('Rendering education:', education)}
+              <EducationList education={education} loading={false} animateNew />
             </CardContent>
           </Card>
 
@@ -370,20 +486,44 @@ export default function ProfilePage() {
                   </div>
                   Professional Achievements
                 </CardTitle>
-                {/* AddAchievementDialog can be enabled in edit mode if needed */}
+                {isEditing && (
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => setOpenAchievementDialog(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                  >
+                    <Plus className="w-4 h-4" /> Add
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <AchievementList achievements={user?.achievements || []} loading={false} />
+              {console.log('Rendering achievements:', achievements)}
+              <AchievementList achievements={achievements} loading={false} animateNew />
             </CardContent>
           </Card>
         </form>
+
+        <AddEducationDialog
+          open={openEducationDialog}
+          onClose={() => setOpenEducationDialog(false)}
+          onAdd={handleAddEducation}
+        />
+
+        <AddAchievementDialog
+          open={openAchievementDialog}
+          onClose={() => setOpenAchievementDialog(false)}
+          onAdd={handleAddAchievement}
+        />
       </div>
+      {toast.open && (
+        <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg z-50 transition-all duration-300 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>{toast.message}</div>
+      )}
     </div>
   );
 }
 
-// Extracted form input for DRYness
 function FormInput({
   label,
   name,

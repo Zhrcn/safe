@@ -18,5 +18,7 @@ let requests = [
 
 router.get('/', medicineController.getAllMedicines);
 router.post('/', medicineController.createMedicine);
+router.patch('/:id', medicineController.updateMedicine);
+router.delete('/:id', medicineController.deleteMedicine);
 
 module.exports = router;

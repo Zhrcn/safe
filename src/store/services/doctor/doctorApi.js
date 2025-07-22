@@ -30,7 +30,6 @@ export const deleteDoctor = async (id) => {
   return res.data.data;
 };
 
-// Doctor Profile Management
 export const getDoctorProfile = async () => {
   const res = await axiosInstance.get('/doctors/profile');
   return res.data.data;
@@ -41,7 +40,6 @@ export const updateDoctorProfile = async (profileData) => {
   return res.data.data;
 };
 
-// Profile Image Upload
 export const uploadProfileImage = async (formData) => {
   const res = await axiosInstance.post('/upload/profile', formData, {
     headers: {
@@ -51,7 +49,6 @@ export const uploadProfileImage = async (formData) => {
   return res.data.data;
 };
 
-// Achievements Management
 export const addAchievement = async (achievementData) => {
   const res = await axiosInstance.post('/doctors/achievements', achievementData);
   return res.data.data;
@@ -67,7 +64,6 @@ export const deleteAchievement = async (achievementId) => {
   return res.data.data;
 };
 
-// Education Management
 export const addEducation = async (educationData) => {
   const res = await axiosInstance.post('/doctors/education', educationData);
   return res.data.data;
@@ -83,7 +79,6 @@ export const deleteEducation = async (educationId) => {
   return res.data.data;
 };
 
-// Licenses Management
 export const addLicense = async (licenseData) => {
   const res = await axiosInstance.post('/doctors/licenses', licenseData);
   return res.data.data;

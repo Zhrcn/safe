@@ -525,7 +525,6 @@ export default function DoctorDashboard() {
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
 
-  // State for appointment form
   const [appointmentForm, setAppointmentForm] = useState({
     patientId: '',
     date: '',
@@ -539,16 +538,13 @@ export default function DoctorDashboard() {
   const [appointmentFormError, setAppointmentFormError] = useState('');
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
 
-  // State for prescription dialog
   const [pharmacies, setPharmacies] = useState([]);
   const [medicines, setMedicines] = useState([]);
   const [prescriptionLoading, setPrescriptionLoading] = useState(false);
 
-  // Fetch pharmacies and medicines for prescription dialog
   useEffect(() => {
     if (addPrescriptionDialogOpen) {
       setPrescriptionLoading(true);
-      // Replace with actual fetch logic
       setTimeout(() => {
         setPharmacies([{ id: '1', name: 'Pharmacy A' }, { id: '2', name: 'Pharmacy B' }]);
         setMedicines([
@@ -561,7 +557,6 @@ export default function DoctorDashboard() {
     }
   }, [addPrescriptionDialogOpen]);
 
-  // Appointment form handlers
   const handleAppointmentFormChange = (e) => {
     const { name, value } = e.target;
     setAppointmentForm((prev) => ({ ...prev, [name]: value }));
@@ -570,7 +565,6 @@ export default function DoctorDashboard() {
     e.preventDefault();
     setAppointmentFormError('');
     setAppointmentSubmitting(true);
-    // Replace with actual submit logic
     setTimeout(() => {
       setAppointmentSubmitting(false);
       setAddAppointmentDialogOpen(false);
@@ -587,7 +581,6 @@ export default function DoctorDashboard() {
     }, 1000);
   };
 
-  // Add a quick action for starting a new conversation
   const handleStartConversation = () => {
     router.push('/doctor/messaging?newChat=1');
   };
