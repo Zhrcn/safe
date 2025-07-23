@@ -15,6 +15,11 @@ import { useDebounce } from '@/hooks/useAdvancedButton';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import PrescriptionView from '@/components/medical/PrescriptionView';
+import { getPrescriptionById, updatePrescription } from '@/store/services/doctor/prescriptionsApi';
+
+const QRCodeScanner = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 
 export default function PharmacistDashboardPage() {
   const [pharmacist, setPharmacist] = useState(null);
@@ -29,6 +34,14 @@ export default function PharmacistDashboardPage() {
   const [prescriptionSearch, setPrescriptionSearch] = useState('');
   const debouncedInventorySearch = useDebounce(inventorySearch, 200);
   const debouncedPrescriptionSearch = useDebounce(prescriptionSearch, 200);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrValue, setQrValue] = useState('');
+  const [prescriptionModalOpen, setPrescriptionModalOpen] = useState(false);
+  const [prescriptionDetails, setPrescriptionDetails] = useState(null);
+  const [dispensed, setDispensed] = useState({}); // {medId: true}
+  const [dispenseLocked, setDispenseLocked] = useState({}); // {medId: true}
+  const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+  const [prescriptionError, setPrescriptionError] = useState('');
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -79,8 +92,137 @@ export default function PharmacistDashboardPage() {
     }
   };
 
+  // When QR code is scanned
+  const handleQRScanned = async (value) => {
+    setQrValue(value);
+    // Assume value is a prescription ID (or parse if JSON)
+    let prescriptionId = value;
+    try {
+      setPrescriptionLoading(true);
+      setPrescriptionError('');
+      setPrescriptionDetails(null);
+      setPrescriptionModalOpen(false);
+      // Try to parse as JSON if not a simple ID
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed && parsed.prescriptionId) prescriptionId = parsed.prescriptionId;
+      } catch {}
+      const details = await getPrescriptionById(prescriptionId);
+      setPrescriptionDetails(details);
+      // Mark already dispensed meds as locked
+      const locked = {};
+      if (details && details.medications) {
+        details.medications.forEach(med => {
+          if (med.dispensed) locked[med._id] = true;
+        });
+      }
+      setDispenseLocked(locked);
+      setDispensed({});
+      setPrescriptionModalOpen(true);
+    } catch (err) {
+      setPrescriptionError('Prescription not found or error fetching details.');
+    } finally {
+      setPrescriptionLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {/* QR Code Scanner Modal */}
+      {qrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
+            <h2 className="text-xl font-bold mb-2">Scan Prescription QR Code</h2>
+            <QRCodeScanner
+              onUpdate={(err, result) => {
+                if (result) handleQRScanned(result.text);
+              }}
+              width={350}
+              height={250}
+            />
+            <Button variant="secondary" className="mt-4" onClick={() => setQrModalOpen(false)}>
+              Close
+            </Button>
+            <div className="text-xs text-yellow-700 mt-2">
+              Tip: Hold the QR code steady and fill as much of the frame as possible.
+            </div>
+            {qrValue && (
+              <div className="mt-4 text-sm text-primary font-mono break-all border-t pt-2">
+                Last scanned: {qrValue}
+              </div>
+            )}
+            {prescriptionLoading && <div className="text-muted-foreground mt-2">Loading prescription...</div>}
+            {prescriptionError && <div className="text-red-500 mt-2">{prescriptionError}</div>}
+          </div>
+        </div>
+      )}
+      {/* Prescription Details Modal */}
+      {prescriptionModalOpen && prescriptionDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl relative">
+            <h2 className="text-xl font-bold mb-2">Prescription Details</h2>
+            <div className="mb-4">
+              <div className="font-semibold text-lg mb-1">Patient: <span className="text-primary">{prescriptionDetails.patientName}</span></div>
+              <div className="text-sm text-muted-foreground mb-1">Doctor: {prescriptionDetails.doctorName} ({prescriptionDetails.doctorSpecialty || 'N/A'})</div>
+              <div className="text-sm text-muted-foreground mb-1">Date: {prescriptionDetails.date ? new Date(prescriptionDetails.date).toLocaleDateString() : '-'}</div>
+              <div className="text-sm text-muted-foreground mb-1">Status: <span className="font-semibold">{prescriptionDetails.status?.toUpperCase()}</span></div>
+              {prescriptionDetails.notes && <div className="text-sm text-muted-foreground mb-1">Notes: {prescriptionDetails.notes}</div>}
+            </div>
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2 text-lg">Medicines</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {prescriptionDetails.medications && prescriptionDetails.medications.map(med => {
+                  const refillCount = med.refillCount || 0;
+                  const refillLimit = med.refillLimit || 1;
+                  const canDispense = refillCount < refillLimit;
+                  return (
+                    <div key={med._id} className="border rounded-lg p-4 bg-muted/50 flex flex-col gap-2 shadow-sm">
+                      <div className="font-bold text-primary text-base">{med.name}</div>
+                      <div className="text-sm">Dosage: <span className="font-medium">{med.dosage}</span></div>
+                      <div className="text-sm">Frequency: <span className="font-medium">{med.frequency}</span></div>
+                      <div className="text-sm">Duration: <span className="font-medium">{med.duration}</span></div>
+                      <div className="text-sm">Route: <span className="font-medium">{med.route}</span></div>
+                      {med.instructions && <div className="text-sm">Instructions: <span className="font-medium">{med.instructions}</span></div>}
+                      <div className="text-sm mt-1">Refills: <span className="font-semibold text-success">{refillCount}</span> / <span className="font-semibold">{refillLimit}</span></div>
+                      <Button
+                        className="mt-2"
+                        variant="success"
+                        size="sm"
+                        disabled={!canDispense || prescriptionLoading}
+                        onClick={async () => {
+                          try {
+                            setPrescriptionLoading(true);
+                            setPrescriptionError('');
+                            // Update only this medicine's refillCount
+                            const updated = await updatePrescription(prescriptionDetails.id, {
+                              medications: prescriptionDetails.medications.map(m =>
+                                m._id === med._id
+                                  ? { ...m, refillCount: refillCount + 1 }
+                                  : m
+                              )
+                            });
+                            setPrescriptionDetails(updated);
+                          } catch (err) {
+                            setPrescriptionError('Failed to update refill count.');
+                          } finally {
+                            setPrescriptionLoading(false);
+                          }
+                        }}
+                      >
+                        {canDispense ? 'Dispense' : 'No Refills Left'}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+              {prescriptionError && <div className="text-red-500 mt-4">{prescriptionError}</div>}
+              <Button variant="secondary" className="mt-6" onClick={() => setPrescriptionModalOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Summary Header */}
       <Card className="mb-4 bg-gradient-to-r from-primary/10 via-card to-secondary/10 border-0 shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between gap-4 p-6">
@@ -275,7 +417,10 @@ export default function PharmacistDashboardPage() {
             <Tooltip content="Active and pending prescriptions assigned to you.">
               <span className="ml-1 text-muted-foreground cursor-help">?</span>
             </Tooltip>
-            <div className="ml-auto">
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setQrValue(''); setQrModalOpen(true); }}>
+                Scan QR
+              </Button>
               <Link href="/pharmacist/prescriptions" passHref legacyBehavior>
                 <Button variant="glass" size="sm" className="border-primary text-primary hover:bg-primary/10">
                   <Eye className="w-4 h-4 mr-2" />

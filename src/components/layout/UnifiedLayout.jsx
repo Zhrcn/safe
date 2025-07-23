@@ -208,8 +208,18 @@ const UserProfile = ({ user, collapsed, t, onAvatarClick }) => {
 
 const NavigationMenu = ({ items, pathname, collapsed, t, onNavigate }) => (
   <nav className="px-0.5 sm:px-1 py-2 sm:py-4 space-y-1 sm:space-y-2 overflow-y-auto">
-    {items.map((item) => {
-      const isActive = pathname.startsWith(item.path);
+    {items.filter(item => {
+      if (!item.path) {
+        if (process.env.NODE_ENV !== 'production') {
+          // Warn in dev if a sidebar item is missing a path
+          // eslint-disable-next-line no-console
+          console.warn('Sidebar navigation item missing path:', item);
+        }
+        return false;
+      }
+      return true;
+    }).map((item) => {
+      const isActive = pathname === item.path;
       return (
         <Link
           key={item.path}
@@ -218,13 +228,13 @@ const NavigationMenu = ({ items, pathname, collapsed, t, onNavigate }) => (
           className={cn(
             'flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 font-medium transition-colors duration-200',
             collapsed ? 'justify-center px-0 w-10 sm:w-12 mx-auto' : 'px-2 sm:px-4',
-            isActive
+            pathname === item.path
               ? 'rounded-xl active-sidebar-link'
               : 'rounded-xl hover:bg-muted hover:text-primary',
             'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-sm sm:text-base'
           )}
           style={
-            isActive
+            pathname === item.path
               ? { background: 'var(--color-primary, #0077CC)', color: 'var(--color-primary-foreground, #fff)' }
               : { color: 'var(--color-navbar-foreground)' }
           }

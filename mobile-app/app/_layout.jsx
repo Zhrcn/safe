@@ -12,6 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import { useAppDispatch } from '../store';
 import { setToken } from '../features/auth/authSlice';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -48,6 +50,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...MaterialCommunityIcons.font,
   });
+  const insets = useSafeAreaInsets();
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -58,9 +61,11 @@ export default function RootLayout() {
     <Provider store={store}>
       <AuthGuard>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="+not-found" />
-          </Stack>
+          <View style={{ flex: 1, paddingTop: insets.top }}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </View>
           <StatusBar style="auto" />
         </ThemeProvider>
       </AuthGuard>

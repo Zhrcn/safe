@@ -1,0 +1,571 @@
+# SAFE Medical Health Platform - Comprehensive Documentation
+
+## Table of Contents
+0. Abstract
+1. Introduction & Project Definition
+    - Introduction
+    - The Purpose of the Project
+    - The Scope of the Project
+    - Environments and Programming Languages
+    - Similar Applications
+2. Project Details
+    - Definition
+    - Importance
+    - Components of the System
+    - Benefits
+    - Challenges
+3. System Analysis
+    - Functional Requirements
+    - Non-Functional Requirements
+    - Diagrams
+4. Design Study
+5. Implementation Pictures
+6. Conclusion
+7. References
+8. User Journeys
+9. Frontend (Web Application)
+10. Backend (API & Server)
+11. Mobile Application
+12. Data Models & Database Relationships
+13. API Endpoints (Detailed)
+14. Authentication & Authorization
+15. Notifications & Messaging System
+16. State Management (Frontend & Mobile)
+17. Security & Compliance
+18. Deployment & Configuration
+19. Testing & Quality Assurance
+20. Extensibility & Roadmap
+21. Technologies Used
+
+---
+
+## 0. Abstract
+The SAFE Medical Health Platform is a comprehensive, full-stack healthcare solution designed to securely connect patients, doctors, pharmacists, and distributors. It provides a unified environment for managing medical records, appointments, prescriptions, consultations, and communication, leveraging modern web, mobile, and backend technologies. The platform emphasizes security, scalability, and user-centric design, aiming to improve healthcare delivery and patient outcomes through digital transformation.
+
+## 1. Introduction & Project Definition
+### Introduction
+Healthcare systems worldwide face challenges in data management, accessibility, and secure communication among stakeholders. The SAFE platform addresses these by providing a digital ecosystem for healthcare management, accessible via web and mobile applications.
+
+### The Purpose of the Project
+The primary purpose of SAFE is to streamline healthcare workflows, enhance patient engagement, and ensure secure, efficient communication between patients, providers, and pharmacies. It aims to digitize medical records, automate appointment scheduling, enable digital prescriptions, and support real-time consultations.
+
+### The Scope of the Project
+SAFE covers the following domains:
+- Patient registration, profile, and medical file management
+- Doctor and pharmacist onboarding and verification
+- Appointment scheduling, rescheduling, and management
+- Digital prescription issuance and medication management
+- Real-time messaging and notifications
+- Admin dashboard for system oversight
+- Mobile and web accessibility
+- Secure data storage and compliance
+
+### Environments and Programming Languages
+- **Backend:** Node.js (JavaScript/TypeScript), Express.js
+- **Frontend:** Next.js (React, JavaScript/TypeScript), Tailwind CSS
+- **Mobile:** React Native (Expo, JavaScript)
+- **Database:** MongoDB (NoSQL, Mongoose ODM)
+- **Other:** Socket.IO (real-time), Redux Toolkit (state management), SecureStore (mobile auth)
+
+### Similar Applications
+- **Epic Systems** (EHR)
+- **Cerner** (EHR)
+- **MyChart** (Patient portal)
+- **Babylon Health** (Telemedicine)
+- **Ada Health** (Symptom checker)
+SAFE differentiates itself by combining EHR, telemedicine, pharmacy, and distributor workflows in a single, extensible platform.
+
+## 2. Project Details
+### Definition
+SAFE is a digital health platform that integrates patient, provider, pharmacy, and distributor workflows into a unified, secure system. It supports medical record management, appointment scheduling, digital prescriptions, and real-time communication.
+
+### Importance
+- Improves healthcare accessibility and efficiency
+- Reduces paperwork and manual errors
+- Enables remote consultations and digital prescriptions
+- Enhances patient engagement and self-management
+- Supports compliance and auditability
+
+### Components of the System
+- **Web Application:** For patients, doctors, pharmacists, and admins
+- **Mobile Application:** For patients and providers on the go
+- **Backend API:** RESTful, secure, real-time enabled
+- **Database:** Centralized, secure storage of all health data
+- **Notification & Messaging System:** Real-time, role-aware
+- **Admin Dashboard:** Oversight, analytics, and management
+
+### Benefits
+- Centralized, secure access to health data
+- Streamlined communication and workflows
+- Improved patient outcomes and satisfaction
+- Scalable and extensible for future needs
+- Multi-language and multi-role support
+
+### Challenges
+- Ensuring data privacy and regulatory compliance (HIPAA, GDPR)
+- Integrating real-time features across web and mobile
+- Managing complex user roles and permissions
+- Handling large-scale data and concurrent users
+- Providing a seamless, intuitive user experience
+
+## 3. System Analysis
+### Functional Requirements
+- User registration, authentication, and role management
+- Medical record CRUD operations
+- Appointment scheduling, rescheduling, and cancellation
+- Prescription issuance, management, and refill requests
+- Real-time messaging and notifications
+- Admin management of users, roles, and logs
+- Multi-language support
+- File uploads (documents, images, DICOM)
+
+### Non-Functional Requirements
+- High security and data privacy
+- Scalability to support thousands of users
+- High availability and reliability
+- Responsive design (web/mobile)
+- Fast performance (API, UI)
+- Auditability and logging
+- Accessibility (WCAG compliance)
+
+### Diagrams
+#### System Architecture Diagram
+```
+[User] <--> [Web/Mobile App] <--> [API Server] <--> [MongoDB]
+                                 |                |
+                                 |                +--> [File Storage]
+                                 +--> [Socket.IO] (Real-time)
+                                 +--> [Email Service]
+                                 +--> [Admin Dashboard]
+```
+#### Example: Entity Relationship Diagram (ERD)
+- User (1) --- (1) Patient
+- User (1) --- (1) Doctor
+- User (1) --- (1) Pharmacist
+- Patient (1) --- (1) MedicalFile
+- Patient (1) --- (M) Appointment
+- Doctor (1) --- (M) Appointment
+- Patient (1) --- (M) Prescription
+- Doctor (1) --- (M) Prescription
+- Patient (1) --- (M) Consultation
+- Doctor (1) --- (M) Consultation
+- Pharmacist (1) --- (M) Order
+- Distributor (1) --- (M) Order
+
+## 4. Design Study
+- **UI/UX Principles:** Accessibility, clarity, minimalism, responsive design
+- **Component Library:** Custom React components, Tailwind CSS, NativeWind (mobile)
+- **Navigation:** Role-based, protected routes, deep linking (mobile)
+- **Theming:** Dark/light mode, custom color palettes
+- **Error Handling:** Error boundaries, user-friendly messages
+- **Internationalization:** i18next, RTL support
+- **Testing:** Unit, integration, and manual QA
+
+## 5. Implementation Pictures
+*(Insert screenshots or diagrams of the web and mobile UI, dashboards, forms, and workflows here. Use placeholders if images are not available.)*
+- Web: Login page, dashboard, medical record view, appointment booking, chat window
+- Mobile: Home screen, appointment list, chat, profile, notifications
+
+## 6. Conclusion
+The SAFE Medical Health Platform demonstrates how modern technology can transform healthcare delivery by integrating secure data management, real-time communication, and user-centric design. By addressing the needs of patients, providers, pharmacists, and distributors in a single platform, SAFE paves the way for more efficient, accessible, and effective healthcare systems. Ongoing development will focus on further integrations, advanced analytics, and enhanced user experience.
+
+## 7. References
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [Node.js Documentation](https://nodejs.org/en/docs/)
+- [Express.js Documentation](https://expressjs.com/)
+- [React Documentation](https://react.dev/)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Native Documentation](https://reactnative.dev/docs/getting-started)
+- [Redux Toolkit Documentation](https://redux-toolkit.js.org/)
+- [Socket.IO Documentation](https://socket.io/docs/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Expo Documentation](https://docs.expo.dev/)
+- [HIPAA Compliance](https://www.hhs.gov/hipaa/index.html)
+- [GDPR Compliance](https://gdpr.eu/)
+- [Cerner EHR](https://www.cerner.com/solutions/electronic-health-record-ehr)
+- [Epic Systems](https://www.epic.com/)
+
+---
+
+## 8. User Journeys
+### Patient Journey
+1. Registers and verifies email
+2. Completes profile and uploads documents
+3. Books appointment with doctor
+4. Receives reminders and notifications
+5. Attends consultation (chat/video/phone)
+6. Receives digital prescription
+7. Orders medication, sets reminders
+8. Views health dashboard and history
+
+### Doctor Journey
+1. Registers, submits license for verification
+2. Sets up profile, working hours
+3. Views dashboard (appointments, analytics)
+4. Manages patient records, adds notes
+5. Conducts consultations, issues prescriptions
+6. Communicates with patients and pharmacists
+
+### Pharmacist Journey
+1. Registers, submits license
+2. Manages inventory, receives orders
+3. Processes digital prescriptions
+4. Communicates with doctors and patients
+5. Tracks analytics and order history
+
+### Admin Journey
+1. Logs in to admin dashboard
+2. Manages users, roles, and permissions
+3. Reviews logs, analytics, and system health
+4. Updates content and system settings
+
+## 9. Frontend (Web Application)
+### Framework & Structure
+- **Next.js 13+ (App Router):** Modern file-based routing, layouts, and server components
+- **Tailwind CSS:** Utility-first styling, dark/light mode
+- **Redux Toolkit:** State management, slices for each domain
+- **i18n:** Multi-language, RTL support
+- **Component Structure:**
+  - `src/app/`: Routing, layouts, role-based pages
+  - `src/components/`: UI, role-specific, and common components
+  - `src/store/`: Redux slices, API services
+  - `src/hooks/`: Custom hooks (auth, data fetching, etc.)
+  - `src/styles/`: Global and theme styles
+  - `src/utils/`: Utility functions (API, error handling, etc.)
+
+### Key Pages & Flows
+- **Authentication:** Login, Register, Logout, Email Verification, Password Reset
+- **Dashboards:** Patient, Doctor, Pharmacist, Admin (role-based routing)
+- **Medical Records:** Sectioned views (allergies, vitals, imaging, etc.)
+- **Appointments:** List, book, reschedule, cancel, notifications
+- **Consultations:** Chat, video, phone, follow-ups
+- **Prescriptions:** View, download, request refills
+- **Messaging:** Real-time, role-aware, secure
+- **Notifications:** Real-time, actionable
+- **Profile Management:** Edit, upload images, change password
+- **Admin:** User management, logs, analytics, settings
+
+### UI/UX
+- Responsive, accessible, keyboard navigation
+- Animated sections (Framer Motion)
+- Custom theming, dark/light mode
+- Error boundaries, loading states
+- Multi-language toggle, RTL support
+
+## 10. Backend (API & Server)
+### Framework & Structure
+- **Node.js, Express.js:** RESTful API, modular controllers
+- **MongoDB (Mongoose):** ODM, schema validation, population
+- **Socket.IO:** Real-time messaging, notifications
+- **API Versioning:** `/api/v1/`
+- **File Uploads:** Multer, cloud storage support
+- **Logging:** Morgan, custom error logging
+- **Environment Config:** dotenv, config files
+
+### Key Modules
+- **Authentication:** JWT, password hashing (bcrypt), email verification, password reset
+- **Authorization:** Role-based middleware, endpoint protection
+- **User Management:** CRUD, role assignment, profile updates
+- **Medical Records:** CRUD, sectioned data, DICOM support
+- **Appointments:** Scheduling, status updates, rescheduling
+- **Consultations:** Request, chat, video, phone, follow-ups
+- **Prescriptions:** Issue, update, refill, status tracking
+- **Notifications:** Real-time, batch, read/unread
+- **Messaging:** Conversations, real-time, attachments
+- **Inventory/Orders:** Pharmacy/distributor workflows
+- **Admin:** Logs, analytics, audit trails
+
+### Error Handling
+- Centralized error middleware
+- Custom error responses (ApiResponse)
+- Logging to file/console
+
+## 11. Mobile Application
+### Framework & Structure
+- **React Native (Expo):** Cross-platform, fast iteration
+- **Redux Toolkit:** State management, slices for each domain
+- **React Navigation:** Stack, Tab, Drawer navigation
+- **SecureStore:** Token storage, secure auth
+- **API Integration:** Axios, interceptors for auth
+- **Socket.IO Client:** Real-time messaging/notifications
+
+### Key Screens
+- **Home/Dashboard:** Health metrics, quick actions
+- **Appointments:** List, book, manage, notifications
+- **Consultations:** List, request, follow-up, chat
+- **Medications:** List, reminders, refill requests
+- **Medical Records:** All sections (vitals, allergies, history, etc.)
+- **Messaging:** Conversations, real-time updates
+- **Profile:** View/edit, logout
+- **Providers:** Doctors, Pharmacists
+- **Notifications:** Real-time, actionable
+
+### Navigation & State
+- Drawer, TabBar, Stack navigation
+- Redux slices for each domain
+- API sync on focus/refresh
+- Secure token storage, auto-login
+- Real-time updates via Socket.IO
+
+## 12. Data Models & Database Relationships
+### Core Models
+- **User:** Common fields (name, email, password, role, etc.), unique email, role enum
+- **Patient:** patientId (unique), user ref, medicalFile ref, bloodType, allergies, chronicConditions, medications, insurance, emergencyContacts, appointments, consultations, prescriptions, messages, reminders
+- **Doctor:** doctorId (unique), user ref, specialty, license, experience, patientsList, education, achievements, appointments, consultations, prescriptions
+- **Pharmacist:** pharmacistId (unique), user ref, license, pharmacyName, experience, workingHours, inventory, orders
+- **Distributor:** distributorId (unique), user ref, companyName, contact info, inventory
+- **MedicalFile:** patientId (unique), bloodType, status, allergies, chronicConditions, labResults, imagingReports, vitalSigns, prescriptionsList, medicationHistory, immunizations, attachedDocuments, diagnoses, surgicalHistory, familyMedicalHistory, socialHistory, generalMedicalHistory, emergencyContact, insuranceDetails
+- **Appointment:** patient, doctor, date, time, location, type, status, reason, notes, rescheduleRequest
+- **Consultation:** patient, doctor, question, answer, status, type, scheduledAt, messages
+- **Prescription:** patient, doctor, medicines, dosage, instructions, status, dispenseHistory
+- **Medicine:** name, genericName, description, category, availableForms, sideEffects, contraindications, interactions, storage, manufacturer, barcode, isPrescriptionRequired, availableStock, usageInstructions, status
+- **Order:** pharmacist, distributor, items (medicine, quantity, price), status, notes, driver
+- **Notification:** user, type, content, read, relatedTo, timestamps
+- **Conversation:** participants, messages, subject, lastMessageTimestamp, status
+
+### Relationships & Integrity
+- **References:** All major models use Mongoose refs for relationships (e.g., patient.user, appointment.doctor)
+- **Cascading:** Deleting a user can cascade to related records (medical files, appointments, etc.)
+- **Indexes:** Unique constraints (emails, IDs), compound indexes for queries (e.g., appointment by doctor/date)
+- **Population:** Mongoose population for nested data (e.g., appointment.patient -> user)
+- **Validation:** Schema-level validation (enums, required fields, formats)
+
+## 13. API Endpoints (Detailed)
+### Auth
+- **POST `/auth/register`**
+  - Request: `{ firstName, lastName, email, password, role, ... }`
+  - Response: `{ user, token }`
+- **POST `/auth/login`**
+  - Request: `{ email, password }`
+  - Response: `{ user, token }`
+- **POST `/auth/forgot-password`**
+  - Request: `{ email }`
+  - Response: `{ message }`
+- **POST `/auth/reset-password`**
+  - Request: `{ token, password }`
+  - Response: `{ message }`
+- **GET `/auth/me`**
+  - Headers: `Authorization: Bearer <token>`
+  - Response: `{ user }`
+- **PUT `/auth/profile`**
+  - Headers: `Authorization: Bearer <token>`
+  - Request: `{ ...profileFields }`
+  - Response: `{ user }`
+- **POST `/auth/logout`**
+  - Headers: `Authorization: Bearer <token>`
+  - Response: `{ message }`
+
+### Patients
+- **GET `/patients/profile`**
+- **PUT `/patients/profile`**
+- **GET `/patients/medical-file`**
+- **PUT `/patients/medical-file`**
+- **GET/POST/PUT/DELETE `/patients/appointments`**
+- **GET/POST/PUT/DELETE `/patients/medications`**
+- **GET/POST/PUT `/patients/consultations`**
+- **GET `/patients/prescriptions`**
+- **GET/POST `/patients/messages`**
+- **GET `/patients/doctors`**
+- **GET `/patients/pharmacists`**
+- **GET `/patients/dashboard/summary`**
+
+### Doctors
+- **GET `/doctors/`**
+- **GET `/doctors/:id`**
+- **GET `/doctors/profile`**
+- **PATCH `/doctors/profile`**
+- **GET `/doctors/patients`**
+- **POST `/doctors/appointments`**
+- **PATCH `/doctors/appointments/:id/status`**
+- **GET `/doctors/analytics`**
+
+### Pharmacists
+- **GET `/pharmacists/`**
+- **GET `/pharmacists/:id`**
+- **GET `/pharmacists/profile`**
+- **PATCH `/pharmacists/profile`**
+- **GET `/pharmacists/orders`**
+- **POST `/pharmacists/orders`**
+
+### Appointments
+- **POST `/appointments/`**
+- **GET `/appointments/`**
+- **PATCH `/appointments/:id/status`**
+- **GET `/appointments/:id`**
+
+### Notifications
+- **GET `/notifications/`**
+- **PATCH `/notifications/read-all`**
+
+### Medical Files
+- **GET `/medical-files/:id`**
+- **PATCH `/medical-files/:id/emergency-contact`**
+- **PATCH `/medical-files/:id/insurance`**
+
+### Consultations
+- **GET `/consultations/`**
+- **POST `/consultations/`**
+- **PATCH `/consultations/:id`**
+
+#### (Add more endpoints as needed for admin, distributor, etc.)
+
+## 14. Authentication & Authorization
+### Flow
+- **Registration:** User submits details, receives verification email (tokenized link)
+- **Login:** User submits credentials, receives JWT token
+- **JWT:** Token contains user ID and role, used for all protected endpoints
+- **Middleware:**
+  - `protect`: Verifies JWT, attaches user to request
+  - `authorize`: Checks user role(s) for endpoint access
+- **Password Security:** bcrypt hashing, minimum complexity, reset via email
+- **Session Management:**
+  - Web: Token in localStorage, auto-refresh on expiry
+  - Mobile: Token in SecureStore, auto-login on app start
+- **Role-based Routing:**
+  - Frontend: Redirects based on role after login
+  - Backend: Endpoint protection via middleware
+- **Account Lockout:** After multiple failed logins, temporary lockout
+- **Audit Logging:** All auth events logged for admin review
+
+### Example: Protect Middleware (Backend)
+```js
+exports.protect = asyncHandler(async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    return res.status(401).json(new ApiResponse(401, null, 'Not authorized, no token provided.'));
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) {
+      return res.status(401).json(new ApiResponse(401, null, 'Not authorized, user not found.'));
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json(new ApiResponse(401, null, 'Not authorized, token failed.'));
+  }
+});
+```
+
+## 15. Notifications & Messaging System
+### Notifications
+- **Types:** message, appointment, prescription, inquiry, general, consultation, medical_file_update, reminder
+- **Delivery:**
+  - Real-time via Socket.IO (web/mobile)
+  - Fallback to email for critical events
+- **Storage:**
+  - MongoDB `Notification` model, indexed by user and timestamp
+  - Related to other models (Appointment, Prescription, etc.)
+- **Read/Unread:**
+  - Marked via PATCH endpoints, unread count in UI
+- **Batch Operations:**
+  - Mark all as read, fetch paginated notifications
+- **Frontend:**
+  - Notification context/provider, toast/snackbar UI
+  - Real-time updates via socket listeners
+
+### Messaging
+- **Conversations:**
+  - `Conversation` model: participants, messages, subject, status
+  - `Message` subdocument: sender, receiver, content, timestamp, read, attachments
+- **Real-time:**
+  - Socket.IO for join/leave, send/receive, typing, online status
+  - Mobile and web clients auto-update on new messages
+- **Security:**
+  - Only participants can access conversation/messages
+  - Attachments validated and scanned
+- **Frontend/Mobile:**
+  - Redux slices for conversations/messages
+  - Unread counts, typing indicators, optimistic UI
+
+### Example: Real-time Message Flow
+1. User sends message via UI
+2. Message sent to backend via Socket.IO
+3. Backend validates, saves, emits to all participants
+4. Frontend/mobile updates conversation, shows notification
+
+## 16. State Management (Frontend & Mobile)
+### Web (Redux Toolkit)
+- **Slices:** auth, user, dashboard, appointments, medications, consultations, prescriptions, medicalRecords, conversations, notifications, adminUsers, ui
+- **API Integration:**
+  - RTK Query for API endpoints (authApi, userApi, medicineApi, etc.)
+  - Axios for custom requests
+- **Persistence:**
+  - Auth token, user info in localStorage
+  - Session timeout, auto-logout
+- **Selectors:**
+  - Memoized selectors for performance
+- **Middleware:**
+  - API middleware for error handling, token refresh
+- **Optimistic Updates:**
+  - Messaging, appointments, etc.
+- **Error Handling:**
+  - Centralized, with UI feedback
+
+### Mobile (Redux Toolkit)
+- **Slices:** appointments, medicalRecords, medications, messaging, prescriptions, profile, providers, consultations, dashboard, auth
+- **API Integration:**
+  - Axios with SecureStore token
+  - Interceptors for auth, error handling
+- **Persistence:**
+  - SecureStore for tokens
+  - Redux state for session
+- **Navigation Sync:**
+  - Auto-refresh on screen focus
+  - Real-time updates via Socket.IO
+
+## 17. Security & Compliance
+- **Authentication:** JWT, role-based, password hashing
+- **Data Encryption:** At rest (MongoDB), in transit (HTTPS)
+- **Input Validation:** Backend and frontend, schema-level
+- **Rate Limiting:** Login, registration, sensitive endpoints
+- **Audit Logging:** All critical actions
+- **Compliance:** HIPAA-ready, privacy policy, terms of service
+- **File Uploads:** Virus scanning, file type/size validation
+- **Session Management:** Auto-logout on inactivity, session timeout
+- **CORS:** Configured for frontend/backend separation
+- **Error Handling:** No sensitive info leaked to clients
+
+## 18. Deployment & Configuration
+- **Frontend:** Vercel, auto-deploy from GitHub, environment variables for API URL
+- **Backend:** Render.com, Railway, or Heroku, environment variables for DB, JWT, etc.
+- **Database:** MongoDB Atlas, connection string in config
+- **Mobile:** Expo Go, Android/iOS simulators, physical devices
+- **CI/CD:** GitHub Actions for linting, tests, deploy
+- **Environment Files:** `.env`, `config.env`, `.env.local`
+- **Scaling:** Horizontal scaling for backend, stateless API
+- **Monitoring:** Logs, error tracking, health checks
+
+## 19. Testing & Quality Assurance
+- **Unit Tests:** Jest for backend, React Testing Library for frontend
+- **Integration Tests:** API endpoint tests, e2e flows
+- **Manual QA:** User journeys, edge cases
+- **CI:** Automated on PRs, pre-deploy
+- **Code Quality:** ESLint, Prettier, strict TypeScript (if enabled)
+- **Accessibility:** Keyboard navigation, ARIA labels, color contrast
+
+## 20. Extensibility & Roadmap
+- **Modular Design:** Easy to add new roles, features, endpoints
+- **Plugin System:** For custom analytics, integrations
+- **Internationalization:** Add more languages, RTL support
+- **Mobile Features:** Push notifications, offline mode, biometric auth
+- **Integrations:** Insurance, payment gateways, telemedicine APIs
+- **Analytics:** Advanced dashboards, ML-driven insights
+- **Compliance:** GDPR, regional health regulations
+- **DevOps:** Auto-scaling, blue/green deploys, canary releases
+
+## 21. Technologies Used
+- **Frontend:** Next.js, React, Tailwind CSS, Redux Toolkit, i18next, Framer Motion, Lucide Icons
+- **Backend:** Node.js, Express.js, MongoDB, Mongoose, JWT, bcryptjs, dotenv, cors, morgan, Socket.IO
+- **Mobile:** React Native, Expo, Redux Toolkit, React Navigation, SecureStore, NativeWind
+- **DevOps:** Vercel, Render.com, Railway, Heroku, MongoDB Atlas, GitHub Actions
+- **Testing:** Jest, React Testing Library
+- **Other:** Multer (uploads), Axios, ESLint, Prettier
+
+---
+
+This documentation provides a deep, technical, and architectural overview of the SAFE Medical Health Platform, suitable for AI rewriting, onboarding, or technical review. For further details, see code comments, API docs, and inline documentation throughout the codebase. 

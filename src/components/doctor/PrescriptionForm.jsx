@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X, Plus, Trash2, Edit2, Info
 } from 'lucide-react';
@@ -7,6 +7,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
+import { createPrescription } from '@/store/services/doctor/prescriptionsApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectDoctorProfile } from '@/store/slices/doctor/doctorProfileSlice';
+import { fetchDoctorProfile } from '@/store/slices/doctor/doctorProfileSlice';
 const commonMedications = [
   { name: 'Lisinopril 10mg', type: 'Tablet', dosage: '10mg', frequency: ['Once daily', 'Twice daily'] },
   { name: 'Metformin 500mg', type: 'Tablet', dosage: '500mg', frequency: ['Twice daily', 'Three times daily'] },
@@ -34,8 +38,11 @@ const prescriptionSchema = z.object({
     dosage: z.string(),
     frequency: z.string(),
     type: z.string(),
-    instructions: z.string().optional()
+    instructions: z.string().optional(),
+    refillLimit: z.string().min(1, 'Refill limit required'),
+    duration: z.string().min(1, 'Duration is required'),
   })).min(1, 'At least one medication is required'),
+  diagnosis: z.string().min(2, 'Diagnosis is required'),
   instructions: z.string().min(5, 'Instructions must be at least 5 characters'),
   duration: z.string().min(1, 'Duration is required'),
   notes: z.string().optional()
@@ -49,6 +56,16 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
   const [medicationError, setMedicationError] = useState('');
   const [newFrequency, setNewFrequency] = useState('');
   const [newDosage, setNewDosage] = useState('');
+  const [newRefillLimit, setNewRefillLimit] = useState('1');
+  const doctorProfile = useSelector(selectDoctorProfile);
+  // Prefer doctorProfile.doctorId (the Doctor model _id), fallback to user _id or id
+  const doctorId = doctorProfile?.doctorId || doctorProfile?._id || doctorProfile?.id;
+  useEffect(() => {
+    if (doctorProfile) {
+      console.log('[PrescriptionForm] doctorProfile:', doctorProfile);
+    }
+  }, [doctorProfile]);
+  const dispatch = useDispatch();
   const [editIndex, setEditIndex] = useState(null);
   const [editInstructions, setEditInstructions] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -62,11 +79,45 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
     resolver: zodResolver(prescriptionSchema),
     defaultValues: {
       medications: [],
+      diagnosis: '',
       instructions: '',
       duration: '',
       notes: ''
     }
   });
+  useEffect(() => {
+    if (!doctorProfile || !doctorId) {
+      dispatch(fetchDoctorProfile());
+    }
+  }, [doctorProfile, doctorId, dispatch]);
+
+  useEffect(() => {
+    if (!patientId) {
+      console.error('[PrescriptionForm] Missing patientId:', patientId);
+      setError('Patient ID is missing. Please select a valid patient.');
+    }
+    if (!doctorId) {
+      console.error('[PrescriptionForm] Missing doctorId:', doctorId, 'doctorProfile:', doctorProfile);
+      setError('Doctor ID is missing. Please make sure your profile is loaded.');
+    }
+  }, [patientId, doctorId, doctorProfile]);
+
+  if (!doctorProfile || !doctorId) {
+    return (
+      <div className="p-4 text-center text-sm text-muted-foreground">
+        Loading doctor profile...<br />
+        If this takes too long, please refresh the page.
+      </div>
+    );
+  }
+  if (!patientId) {
+    return (
+      <div className="p-4 text-center text-sm text-red-600">
+        Error: Patient ID is missing. Please select a valid patient.<br />
+        <button onClick={onClose} className="mt-2 underline text-blue-600">Close</button>
+      </div>
+    );
+  }
   const handleMedicationChange = (value) => {
     setNewMedication(value || '');
     const medObj = commonMedications.find(m => m.name === value);
@@ -92,15 +143,28 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
       setMedicationError('Please select a frequency');
       return;
     }
+    if (!newDosage) {
+      setMedicationError('Please enter a dosage');
+      return;
+    }
+    if (!newRefillLimit || isNaN(Number(newRefillLimit)) || Number(newRefillLimit) < 1) {
+      setMedicationError('Please enter a valid refill limit (>= 1)');
+      return;
+    }
+    if (!newDosage) {
+      setMedicationError('Please enter a duration');
+      return;
+    }
     const updatedMedications = [
       ...medications,
-      { ...medObj, frequency: newFrequency, dosage: newDosage || medObj.dosage, instructions: '' }
+      { ...medObj, frequency: newFrequency, dosage: newDosage || medObj.dosage, instructions: '', refillLimit: newRefillLimit, duration: newDosage }
     ];
     setMedications(updatedMedications);
     setValue('medications', updatedMedications);
     setNewMedication('');
     setNewFrequency('');
     setNewDosage('');
+    setNewRefillLimit('1');
     setMedicationError('');
   };
   const handleRemoveMedication = (index) => {
@@ -141,6 +205,29 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
         setError('At least one medication is required');
         return;
       }
+      if (!patientId || !doctorId) {
+        setError('Missing patient or doctor ID.');
+        return;
+      }
+      if (!data.diagnosis) {
+        setError('Diagnosis is required.');
+        return;
+      }
+      // Call backend to create prescription
+      const payload = {
+        patientId,
+        doctorId, // This is doctorProfile.doctorId (Doctor model _id)
+        medications: data.medications.map(med => ({
+          ...med,
+          refillLimit: Number(med.refillLimit),
+          duration: med.duration || data.duration
+        })),
+        instructions: data.instructions,
+        duration: data.duration,
+        notes: data.notes,
+        diagnosis: data.diagnosis,
+      };
+      await createPrescription(payload);
       setSuccess('Prescription created successfully');
       reset();
       setMedications([]);
@@ -194,6 +281,26 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
           <SectionHeader icon={<Info size={16} className="text-blue-600" />}>
             Medications
           </SectionHeader>
+          <div className="mb-3">
+            <label htmlFor="diagnosis" className="block text-xs font-medium text-gray-700">Diagnosis</label>
+            <Controller
+              name="diagnosis"
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="text"
+                  id="diagnosis"
+                  {...field}
+                  disabled={isSubmitting}
+                  placeholder="e.g., Hypertension, Diabetes, etc."
+                  className={`mt-1 block w-full px-2 py-1.5 border rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs ${errors.diagnosis ? 'border-red-500' : 'border-gray-300'}`}
+                />
+              )}
+            />
+            {errors.diagnosis && (
+              <p className="mt-1 text-xs text-red-600">{errors.diagnosis.message}</p>
+            )}
+          </div>
           <div className="border border-gray-200 rounded-2xl overflow-hidden mb-3">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -202,6 +309,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosage</th>
                   <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refill Limit</th>
                   <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Edit</th>
                   <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Remove</th>
                 </tr>
@@ -220,6 +328,7 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                       <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.type}</td>
                       <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.dosage}</td>
                       <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.frequency}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">{med.refillLimit}</td>
                       <td className="px-4 py-2 whitespace-nowrap text-right text-xs font-medium">
                         <Button variant="ghost" size="icon" onClick={() => handleEditMedication(index)} aria-label="Edit medication">
                           <Edit2 className="h-4 w-4" />
@@ -276,6 +385,29 @@ export default function PrescriptionForm({ patientId, patientName, onClose, onSu
                   <option key={freq} value={freq}>{freq}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label htmlFor="newDuration" className="block text-xs font-medium text-gray-700">Duration</label>
+              <input
+                type="text"
+                id="newDuration"
+                value={newDosage}
+                onChange={e => setNewDosage(e.target.value)}
+                placeholder="e.g., 7 days, 2 weeks"
+                className="mt-1 block w-full shadow-sm text-xs border-gray-300 rounded-2xl py-1.5"
+              />
+            </div>
+            <div>
+              <label htmlFor="newRefillLimit" className="block text-xs font-medium text-gray-700">Refill Limit</label>
+              <input
+                type="number"
+                id="newRefillLimit"
+                min="1"
+                value={newRefillLimit}
+                onChange={e => setNewRefillLimit(e.target.value)}
+                placeholder="Refill Limit"
+                className="mt-1 block w-full shadow-sm text-xs border-gray-300 rounded-2xl py-1.5"
+              />
             </div>
             <div className="flex items-end">
               <Button

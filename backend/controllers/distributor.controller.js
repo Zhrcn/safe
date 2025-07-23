@@ -43,6 +43,7 @@ exports.getAllDistributors = async (req, res) => {
 // Inventory management (add/remove/update inventory items)
 exports.updateInventory = async (req, res) => {
   try {
+    console.log('DEBUG: updateInventory - req.body:', req.body);
     const { inventory } = req.body;
     const distributor = await Distributor.findOneAndUpdate(
       { user: req.user._id },
@@ -50,10 +51,12 @@ exports.updateInventory = async (req, res) => {
       { new: true }
     );
     if (!distributor) {
+      console.log('DEBUG: updateInventory - Distributor not found for user:', req.user._id);
       return res.status(404).json(new ApiResponse(404, null, 'Distributor not found'));
     }
     res.status(200).json(new ApiResponse(200, distributor, 'Inventory updated successfully.'));
   } catch (err) {
+    console.error('DEBUG: updateInventory - Error:', err);
     res.status(500).json(new ApiResponse(500, null, 'Server error'));
   }
 };

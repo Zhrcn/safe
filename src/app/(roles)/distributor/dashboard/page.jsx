@@ -61,6 +61,7 @@ export default function DistributorDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         <AnimatePresence>
           <motion.div
+            key="total-orders"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -75,6 +76,7 @@ export default function DistributorDashboard() {
             </Card>
           </motion.div>
           <motion.div
+            key="accepted-orders"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -89,6 +91,7 @@ export default function DistributorDashboard() {
             </Card>
           </motion.div>
           <motion.div
+            key="inventory-items"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}

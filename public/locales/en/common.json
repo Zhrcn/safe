@@ -545,5 +545,64 @@
   "sidebar.medicine Requests": "Medicine Requests",
   "error": "Error",
   "patient.profile.cancel": "Cancel",
-  "patient.profile.saveChanges": "Save Changes"
+  "patient.profile.saveChanges": "Save Changes",
+  "navbar": {
+    "about": "About",
+    "services": "Services",
+    "doctors": "Doctors",
+    "departments": "Departments",
+    "contact": "Contact"
+  },
+  "menu": "Menu",
+  "hero": {
+    "title": "Your Health, Our Priority",
+    "description": "A modern platform for patients, doctors, and pharmacists to connect, manage care, and improve health outcomes.",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "today": "Today",
+    "appointments": "Appts",
+    "prescriptions": "Prescriptions",
+    "active": "Active",
+    "patients": "Patients"
+  },
+  "about": {
+    "title": "About SAFE",
+    "subtitle1": "Empowering Healthcare",
+    "subtitle2": "For Everyone",
+    "mission": "Our mission is to make healthcare accessible, secure, and efficient for all.",
+    "vision": "We envision a world where technology bridges the gap between patients and providers.",
+    "goal": "Our goal is to deliver innovative solutions for better health outcomes."
+  },
+  "roles": {
+    "pharmacist": {
+      "title": "Pharmacist",
+      "description": "Process digital prescriptions and manage medication dispensing.",
+      "features": [
+        "Process prescriptions",
+        "Inventory management",
+        "Patient consultation",
+        "Medication tracking",
+        "Drug interactions check",
+        "Prescription verification"
+      ]
+    },
+    "login": "Login",
+    "register": "Register"
+  },
+  "testimonials": {
+    "5": {
+      "name": "Dr. Lina Khaled",
+      "role": "Doctor",
+      "text": "A must-have for every healthcare provider!"
+    },
+    "rating": "Rating",
+    "outOf5": "out of 5",
+    "prev": "Previous",
+    "goto": "Go to testimonial {{index}}",
+    "next": "Next"
+  },
+  "themeSwitcher": {
+    "toggleTheme": "Toggle theme"
+  },
+  "sidebar.accepted orders": "Accepted Orders"
 }

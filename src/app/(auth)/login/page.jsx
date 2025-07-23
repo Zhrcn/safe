@@ -119,6 +119,9 @@ const LoginPage = () => {
                 } else if (result.user.role === 'pharmacist') {
                     console.log('Redirecting to /pharmacist/dashboard');
                     router.push('/pharmacist/dashboard');
+                } else if (result.user.role === 'distributor') {
+                    console.log('Redirecting to /distributor/dashboard');
+                    router.push('/distributor/dashboard');
                 } else {
                     alert('Unknown user role: ' + result.user.role);
                 }

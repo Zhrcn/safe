@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../../../features/messaging/messagingSlice';
@@ -6,8 +6,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { getSocket } from '../../../utils/socket';
 import { useSelector as useReduxSelector } from 'react-redux';
+import CustomHeader from '../../../components/ui/CustomHeader';
+import CustomTabBar from '../../../components/ui/CustomTabBar';
+import CustomDrawer from '../../../components/ui/CustomDrawer';
 
 export default function MessagingScreen() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
   const { list, loading, error } = useSelector((state) => state.messaging);
@@ -77,23 +81,26 @@ export default function MessagingScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900 p-4">
-      <Text className="text-2xl font-bold mb-4 text-blue-700 dark:text-blue-400">Messages</Text>
-      {loading && <Text>Loading...</Text>}
-      {error && <Text className="text-red-500">{error}</Text>}
-      <FlatList
-        data={list}
-        keyExtractor={item => item._id?.toString() || item.id?.toString()}
-        renderItem={renderItem}
-        ListEmptyComponent={(!loading ? <Text>No messages yet.</Text> : null)}
-      />
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <CustomHeader onMenuPress={() => setDrawerOpen(true)} />
+      <CustomDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <View className="flex-1 p-4">
+        <Text className="text-2xl font-bold mb-4 text-blue-700 dark:text-blue-400">Messages</Text>
+        {loading && <Text>Loading...</Text>}
+        {error && <Text className="text-red-500">{error}</Text>}
+        <FlatList
+          data={list}
+          keyExtractor={item => item._id?.toString() || item.id?.toString()}
+          renderItem={renderItem}
+          ListEmptyComponent={(!loading ? <Text>No messages yet.</Text> : null)}
+        />
+      </View>
+      <CustomTabBar />
     </View>
   );
 }
 
 // Hide the default header for this page
-export const unstable_settings = { initialRouteName: undefined };
-
 MessagingScreen.options = {
   headerShown: false,
 }; 

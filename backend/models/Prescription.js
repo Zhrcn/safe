@@ -29,8 +29,16 @@ const prescribedMedicationSchema = new mongoose.Schema({
   instructions: { 
     type: String,
     trim: true
+  },
+  refillCount: {
+    type: Number,
+    default: 0
+  },
+  refillLimit: {
+    type: Number,
+    default: 1
   }
-}, { _id: false });
+});
 const prescriptionSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -40,7 +48,7 @@ const prescriptionSchema = new mongoose.Schema({
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', 
+    ref: 'Doctor', 
     required: true,
     index: true
   },

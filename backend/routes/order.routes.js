@@ -5,22 +5,23 @@ const orderController = require('../controllers/order.controller');
 
 router.use(protect);
 
-// Pharmacist creates an order to a distributor
-router.post('/', authorize('pharmacist'), orderController.createOrder);
+// Pharmacist or distributor creates an order
+router.post('/', authorize('pharmacist', 'distributor'), orderController.createOrder);
 // Pharmacist views their orders
 router.get('/', authorize('pharmacist'), orderController.getPharmacistOrders);
+
+// Distributor routes FIRST
+router.get('/distributor', authorize('distributor'), orderController.getDistributorOrders);
+router.patch('/distributor/:orderId/status', authorize('distributor'), orderController.updateOrderStatus);
+router.get('/distributor/accepted', authorize('distributor'), orderController.getAcceptedOrders);
+router.patch('/distributor/:orderId/send-to-driver', authorize('distributor'), orderController.sendOrderToDriver);
+
+// Parameterized pharmacist routes AFTER distributor routes
 // Get order by ID
 router.get('/:orderId', authorize('pharmacist'), orderController.getOrderById);
 // Pharmacist cancels an order
 router.patch('/:orderId/cancel', authorize('pharmacist'), orderController.cancelOrder);
-
-// Distributor views their orders
-router.get('/distributor', authorize('distributor'), orderController.getDistributorOrders);
-// Distributor accepts or rejects an order
-router.patch('/distributor/:orderId/status', authorize('distributor'), orderController.updateOrderStatus);
-// Distributor views accepted orders
-router.get('/distributor/accepted', authorize('distributor'), orderController.getAcceptedOrders);
-// Distributor marks order as sent to driver
-router.patch('/distributor/:orderId/send-to-driver', authorize('distributor'), orderController.sendOrderToDriver);
+// Pharmacist marks an order as completed
+router.patch('/:orderId/complete', authorize('pharmacist'), orderController.completeOrder);
 
 module.exports = router; 

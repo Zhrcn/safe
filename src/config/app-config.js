@@ -9,6 +9,7 @@ export const ROLES = {
     PATIENT: 'patient',
     PHARMACIST: 'pharmacist',
     ADMIN: 'admin',
+    DISTRIBUTOR: 'distributor',
 };
 
 export const ROLE_ROUTES = {
@@ -33,5 +34,9 @@ export const ROLE_ROUTES = {
         dashboard: '/admin/dashboard',
         users: '/admin/users',
         settings: '/admin/settings',
+    },
+    distributor: {
+        dashboard: '/distributor/dashboard',
+        // Add more distributor-specific routes here if needed
     },
 };

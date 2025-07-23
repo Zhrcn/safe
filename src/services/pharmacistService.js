@@ -74,8 +74,13 @@ export const updateOrderStatus = async (orderId, status) => {
             const response = await cancelOrder(orderId);
             return response.data.data;
         }
-        // For other statuses, implement as needed
-        throw new Error('Only cancellation is supported from pharmacist side.');
+        if (status === 'completed') {
+            const response = await axiosInstance.patch(`/orders/${orderId}/complete`);
+            return response.data.data;
+        }
+        // For other statuses, send PATCH to /orders/:id with { status }
+        const response = await axiosInstance.patch(`/orders/${orderId}`, { status });
+        return response.data.data;
     } catch (error) {
         console.error('Error updating order status:', error);
         throw error;
@@ -153,6 +158,26 @@ export const getPharmacists = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching pharmacists:', error);
+        throw error;
+    }
+}; 
+
+export const getPrescriptionById = async (id) => {
+    try {
+        const response = await axiosInstance.get(`/prescriptions/${id}`);
+        return response.data.data;
+    } catch (error) {
+        console.error('Error fetching prescription by ID:', error);
+        throw error;
+    }
+}; 
+
+export const getDistributors = async () => {
+    try {
+        const response = await axiosInstance.get('/distributors');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching distributors:', error);
         throw error;
     }
 }; 

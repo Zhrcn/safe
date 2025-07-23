@@ -5,7 +5,7 @@ export const fetchPrescriptions = createAsyncThunk(
   'prescriptions/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/patients/prescriptions');
+      const response = await api.get('/prescriptions');
       console.log('Prescriptions API response:', response.data);
       return response.data.data;
     } catch (error) {
@@ -26,7 +26,9 @@ const prescriptionsSlice = createSlice({
       })
       .addCase(fetchPrescriptions.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = action.payload;
+        if (action.payload !== undefined) {
+          state.list = action.payload;
+        }
       })
       .addCase(fetchPrescriptions.rejected, (state, action) => {
         state.loading = false;
