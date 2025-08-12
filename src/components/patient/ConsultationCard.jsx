@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
-import { Badge, Button } from '@/components/ui';
-import { getDoctorName, getStatusVariant } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { getStatusVariant } from '@/lib/utils';
+import { getDoctorName } from '@/lib/utils';
 import { deleteConsultation } from '@/store/slices/patient/consultationsSlice';
 
 const ConsultationCard = ({ consultation, onDelete, onContinueChat }) => {
@@ -33,7 +35,7 @@ const ConsultationCard = ({ consultation, onDelete, onContinueChat }) => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {t('Consultation with')} {getDoctorName(consultation.doctor)}
+            {t('Consultation with')} {consultation.doctor.name}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {new Date(consultation.createdAt).toLocaleDateString()}

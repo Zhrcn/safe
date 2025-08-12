@@ -2,7 +2,7 @@ const asyncHandler = require('../../utils/asyncHandler');
 const ApiResponse = require('../../utils/apiResponse');
 const Appointment = require('../../models/Appointment');
 const Doctor = require('../../models/Doctor');
-const { createNotification } = require('../../utils/notification.utils');
+const notificationService = require('../../utils/notificationService');
 const Patient = require('../../models/Patient');
 
 exports.getDoctorAppointments = asyncHandler(async (req, res) => {
@@ -103,6 +103,34 @@ exports.acceptAppointment = asyncHandler(async (req, res) => {
 
   console.log('Backend: Updated appointment:', updatedAppointment);
 
+  // Emit real-time status update
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    // Emit to patient
+    if (updatedAppointment.patient && updatedAppointment.patient.user) {
+      io.to(updatedAppointment.patient.user._id.toString()).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Your appointment status has been updated to: ${updatedAppointment.status}`,
+        appointment: updatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (updatedAppointment.doctor && updatedAppointment.doctor.user) {
+      io.to(updatedAppointment.doctor.user._id.toString()).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Appointment status updated to: ${updatedAppointment.status}`,
+        appointment: updatedAppointment
+      });
+    }
+  } catch (error) {
+    console.error('Error emitting appointment status update:', error);
+  }
+
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment accepted successfully.'));
 });
 
@@ -155,6 +183,42 @@ exports.rejectAppointment = asyncHandler(async (req, res) => {
   });
 
   console.log('Backend: Updated appointment:', updatedAppointment);
+
+  // Emit real-time status update
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:status_changed for rejection');
+    
+    // Emit to patient
+    if (updatedAppointment.patient && updatedAppointment.patient.user) {
+      const patientUserId = updatedAppointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Your appointment has been rejected`,
+        appointment: updatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (updatedAppointment.doctor && updatedAppointment.doctor.user) {
+      const doctorUserId = updatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Appointment rejected successfully`,
+        appointment: updatedAppointment
+      });
+    }
+    
+    console.log('🔔 Backend: Rejection events emitted successfully');
+  } catch (error) {
+    console.error('❌ Backend: Error emitting rejection event:', error);
+  }
 
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment rejected successfully.'));
 });
@@ -223,6 +287,42 @@ exports.updateAppointment = asyncHandler(async (req, res) => {
       select: 'firstName lastName'
     }
   });
+
+  console.log('Backend: Updated appointment:', updatedAppointment);
+
+  // Emit real-time update
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:updated event');
+    
+    // Emit to patient
+    if (updatedAppointment.patient && updatedAppointment.patient.user) {
+      const patientUserId = updatedAppointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:updated', {
+        appointmentId: updatedAppointment._id.toString(),
+        message: `Your appointment has been updated`,
+        appointment: updatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (updatedAppointment.doctor && updatedAppointment.doctor.user) {
+      const doctorUserId = updatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:updated', {
+        appointmentId: updatedAppointment._id.toString(),
+        message: `Appointment updated successfully`,
+        appointment: updatedAppointment
+      });
+    }
+    
+    console.log('🔔 Backend: Update events emitted successfully');
+  } catch (error) {
+    console.error('❌ Backend: Error emitting update event:', error);
+  }
 
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment updated successfully.'));
 });
@@ -294,21 +394,173 @@ exports.handleRescheduleRequest = asyncHandler(async (req, res) => {
 
   const updatedAppointment = await appointment.save();
 
+  // Populate the updated appointment for real-time events
+  const populatedAppointment = await Appointment.findById(updatedAppointment._id)
+    .populate({
+      path: 'patient',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email'
+      }
+    })
+    .populate({
+      path: 'doctor',
+      select: 'user specialty',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName'
+      }
+    });
+
   const patientName = appointment.patient ? `${appointment.patient.firstName} ${appointment.patient.lastName}` : 'The patient';
   const notificationMessage = action === 'approve' 
     ? `Your reschedule request has been approved. New appointment time: ${updatedAppointment.date.toLocaleDateString()} at ${updatedAppointment.time}.`
     : `Your reschedule request has been rejected. Your original appointment remains scheduled.`;
 
-  await createNotification(
+  await notificationService.sendAppointmentNotification(
     appointment.patient._id.toString(),
-    `Reschedule Request ${action === 'approve' ? 'Approved' : 'Rejected'}`,
-    notificationMessage,
-    'appointment',
-    appointment._id.toString(),
-    'Appointment'
+    {
+      title: `Reschedule Request ${action === 'approve' ? 'Approved' : 'Rejected'}`,
+      message: notificationMessage,
+      appointmentId: appointment._id.toString(),
+      priority: 'high',
+      data: {
+        appointmentId: appointment._id.toString(),
+        action,
+        newDate: action === 'approve' ? updatedAppointment.date.toLocaleDateString() : null,
+        newTime: action === 'approve' ? updatedAppointment.time : null,
+        originalDate: appointment.date.toLocaleDateString(),
+        originalTime: appointment.time
+      }
+    }
   );
 
+  // Emit real-time reschedule request response
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:reschedule_requested event');
+    
+    // Emit to patient
+    if (populatedAppointment.patient && populatedAppointment.patient.user) {
+      const patientUserId = populatedAppointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:reschedule_requested', {
+        appointmentId: populatedAppointment._id.toString(),
+        action: action,
+        message: notificationMessage,
+        appointment: populatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (populatedAppointment.doctor && populatedAppointment.doctor.user) {
+      const doctorUserId = populatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:reschedule_requested', {
+        appointmentId: populatedAppointment._id.toString(),
+        action: action,
+        message: `Reschedule request ${action}d successfully`,
+        appointment: populatedAppointment
+      });
+    }
+    
+    console.log('🔔 Backend: Reschedule request events emitted successfully');
+  } catch (error) {
+    console.error('❌ Backend: Error emitting reschedule request event:', error);
+  }
+
   res.status(200).json(new ApiResponse(200, updatedAppointment, `Reschedule request ${action}d successfully.`));
+});
+
+exports.completeAppointment = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { appointmentId } = req.params;
+  const { notes } = req.body;
+
+  console.log('Backend: Complete appointment called');
+  console.log('Backend: req.user.id:', req.user.id);
+  console.log('Backend: req.params:', req.params);
+  console.log('Backend: req.body:', req.body);
+
+  const doctor = await Doctor.findOne({ user: userId });
+  if (!doctor) {
+    return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
+  }
+
+  const appointment = await Appointment.findOne({ _id: appointmentId, doctor: doctor._id });
+  if (!appointment) {
+    return res.status(404).json(new ApiResponse(404, null, 'Appointment not found.'));
+  }
+
+  // Only allow completing appointments that are accepted, scheduled, or rescheduled
+  const allowedStatuses = ['accepted', 'scheduled', 'rescheduled'];
+  if (!allowedStatuses.includes(appointment.status)) {
+    return res.status(400).json(new ApiResponse(400, null, `Cannot complete appointment with status '${appointment.status}'.`));
+  }
+
+  const updatedAppointment = await Appointment.findByIdAndUpdate(
+    appointmentId,
+    {
+      status: 'completed',
+      doctorNotes: notes || appointment.doctorNotes
+    },
+    { new: true }
+  ).populate({
+    path: 'patient',
+    populate: {
+      path: 'user',
+      select: 'firstName lastName email'
+    }
+  }).populate({
+    path: 'doctor',
+    select: 'user specialty',
+    populate: {
+      path: 'user',
+      select: 'firstName lastName'
+    }
+  });
+
+  console.log('Backend: Updated appointment:', updatedAppointment);
+
+  // Emit real-time status update
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:status_changed for completion');
+    
+    // Emit to patient
+    if (updatedAppointment.patient && updatedAppointment.patient.user) {
+      const patientUserId = updatedAppointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Your appointment has been completed`,
+        appointment: updatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (updatedAppointment.doctor && updatedAppointment.doctor.user) {
+      const doctorUserId = updatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:status_changed', {
+        appointmentId: updatedAppointment._id.toString(),
+        status: updatedAppointment.status,
+        message: `Appointment completed successfully`,
+        appointment: updatedAppointment
+      });
+    }
+    
+    console.log('🔔 Backend: Completion events emitted successfully');
+  } catch (error) {
+    console.error('❌ Backend: Error emitting completion event:', error);
+  }
+
+  res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment completed successfully.'));
 });
 
 exports.getAppointmentDetails = asyncHandler(async (req, res) => {
@@ -362,6 +614,16 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     status
   } = req.body;
 
+  // Validate required fields
+  if (!date || !time || !type || !reason) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide all required fields: date, time, type, and reason.'));
+  }
+
+  // Validate patient identification
+  if (!patient && !patientId) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide either patient ID or patientId.'));
+  }
+
   const doctor = await Doctor.findOne({ user: userId });
   if (!doctor) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor not found.'));
@@ -377,6 +639,40 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
   }
 
+  // Validate date format
+  let requestedDateObject = new Date(date);
+  if (isNaN(requestedDateObject.getTime())) {
+    requestedDateObject = new Date(date.split('T')[0]);
+    if (isNaN(requestedDateObject.getTime())) {
+      return res.status(400).json(new ApiResponse(400, null, 'Invalid appointment date format. Please use YYYY-MM-DD.'));
+    }
+  }
+
+  // Validate time format
+  const [hours, minutes] = time.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return res.status(400).json(new ApiResponse(400, null, 'Invalid appointment time format. Please use HH:MM.'));
+  }
+
+  // Check if appointment is in the future
+  const requestedDateTime = new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate(), hours, minutes);
+  const now = new Date();
+  now.setSeconds(0, 0);
+  if (requestedDateTime < now) {
+    return res.status(400).json(new ApiResponse(400, null, 'Appointment date and time must be in the future.'));
+  }
+
+  // Check for conflicting appointments
+  const conflictingAppointment = await Appointment.findOne({
+    doctor: doctor._id,
+    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
+    time: time,
+    status: { $in: ['pending', 'confirmed', 'accepted', 'scheduled', 'rescheduled'] }
+  });
+  if (conflictingAppointment) {
+    return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the selected date and time. Please choose a different slot.'));
+  }
+
   const appointment = await Appointment.create({
     doctor: doctor._id,
     patient: patientDoc._id,
@@ -390,7 +686,7 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     status: status || 'accepted'
   });
 
-  await appointment.populate([
+  const populatedAppointment = await appointment.populate([
     {
       path: 'patient',
       populate: { path: 'user', select: 'firstName lastName email profileImage' }
@@ -402,7 +698,41 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     }
   ]);
 
-  res.status(201).json(new ApiResponse(201, appointment, 'Appointment created successfully.'));
+  // Emit real-time event for new appointment
+  try {
+    const { getIO } = require('../../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:new event from doctor creation');
+    
+    // Emit to patient
+    if (populatedAppointment.patient && populatedAppointment.patient.user) {
+      const patientUserId = populatedAppointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:new', {
+        appointmentId: populatedAppointment._id.toString(),
+        message: 'A new appointment has been scheduled for you',
+        appointment: populatedAppointment
+      });
+    }
+
+    // Emit to doctor
+    if (populatedAppointment.doctor && populatedAppointment.doctor.user) {
+      const doctorUserId = populatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:new', {
+        appointmentId: populatedAppointment._id.toString(),
+        message: 'New appointment created successfully',
+        appointment: populatedAppointment
+      });
+    }
+    
+    console.log('🔔 Backend: Doctor appointment creation events emitted successfully');
+  } catch (error) {
+    console.error('❌ Backend: Error emitting doctor appointment creation event:', error);
+  }
+
+  res.status(201).json(new ApiResponse(201, populatedAppointment, 'Appointment created successfully.'));
 });
 
  

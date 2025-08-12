@@ -52,26 +52,27 @@ function normalizeProvider(item, activeTab) {
   } else if (item.user && item.user.rating !== undefined && item.user.rating !== null) {
     rating = parseFloat(item.user.rating);
   }
+  
+  const specialties = item.specialties || [];
+  
   if (activeTab === 'doctors') {
     return {
       name: item.name || (item.user ? `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim() : ''),
-      specialty: item.specialization || 'N/A',
+      specialties,
       rating,
       yearsExperience: item.yearsExperience,
       hospital: item.hospital,
       avatar: item.user?.profileImage || item.profileImage,
-      specialties: item.specialties || [],
       location: item.hospital,
     };
   } else {
     return {
       name: item.name || item.pharmacyName || (item.user ? `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim() : ''),
-      specialty: (item.specialties && item.specialties.length > 0) ? item.specialties.join(', ') : (item.pharmacyName || 'N/A'),
+      specialties,
       rating,
       yearsExperience: item.yearsExperience,
       address: item.address,
       avatar: item.user?.profileImage || item.profileImage,
-      specialties: item.specialties || [],
       location: item.address,
     };
   }
@@ -79,6 +80,7 @@ function normalizeProvider(item, activeTab) {
 
 function ProviderCard({ item, activeTab, index }) {
   const provider = normalizeProvider(item, activeTab);
+  
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -90,6 +92,15 @@ function ProviderCard({ item, activeTab, index }) {
     }).start();
   }, [fadeAnim, index]);
   const isTopRated = provider.rating >= 4.5;
+
+  let avatarSource = null;
+  if (provider.avatar) {
+    if (provider.avatar.includes('/uploads')) {
+      avatarSource = { uri: `http://192.168.1.100:5001${provider.avatar}` };
+    } else {
+      avatarSource = { uri: provider.avatar };
+    }
+  }
 
   return (
     <Animated.View
@@ -110,9 +121,9 @@ function ProviderCard({ item, activeTab, index }) {
     >
       <View style={cardStyles.row}>
         <View style={cardStyles.avatarSection}>
-          {provider.avatar ? (
+          {avatarSource ? (
             <Image
-              source={{ uri: provider.avatar }}
+              source={avatarSource}
               style={cardStyles.avatarImg}
               resizeMode="cover"
             />
@@ -130,7 +141,18 @@ function ProviderCard({ item, activeTab, index }) {
         </View>
         <View style={cardStyles.infoSection}>
           <Text style={cardStyles.name}>{provider.name}</Text>
-          <Text style={cardStyles.specialty}>{provider.specialty}</Text>
+          <View style={cardStyles.specialtiesRow}>
+            {provider.specialties && provider.specialties.length > 0 ? (
+              provider.specialties.map((spec, idx) => (
+                <View key={idx} style={cardStyles.specialtyBadge}>
+                  <MaterialCommunityIcons name="stethoscope" size={13} color="#2563eb" style={{ marginRight: 2 }} />
+                  <Text style={cardStyles.specialtyBadgeText}>{spec}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={cardStyles.specialtyBadgeText}>Not specified</Text>
+            )}
+          </View>
           <View style={cardStyles.metaRow}>
             {activeTab === 'doctors' && provider.hospital && (
               <View style={cardStyles.metaItem}>
@@ -221,7 +243,7 @@ export default function ProvidersScreen() {
       const provider = normalizeProvider(item, activeTab);
       const matchesSearch =
         (provider.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (provider.specialty || '').toLowerCase().includes(search.toLowerCase());
+        (provider.specialties || []).some(spec => spec.toLowerCase().includes(search.toLowerCase()));
       return matchesSearch;
     });
     if (sortBy === 'name')
@@ -314,12 +336,10 @@ export default function ProvidersScreen() {
   );
 }
 
-// Hide the default header for this page
 ProvidersScreen.options = {
   headerShown: false,
 };
 
-// --- Styles ---
 
 const screenStyles = StyleSheet.create({
   container: {
@@ -584,6 +604,27 @@ const cardStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: 44,
+  },
+  specialtiesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 2,
+    gap: 6,
+  },
+  specialtyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0e7ff',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 6,
+    marginBottom: 2,
+  },
+  specialtyBadgeText: {
+    color: '#2563eb',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
 

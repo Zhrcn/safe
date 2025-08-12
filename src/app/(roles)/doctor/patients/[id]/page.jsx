@@ -29,7 +29,8 @@ import {
     ChevronRight,
     Eye,
     Info,
-    Trash2
+    Trash2,
+    Check
 } from 'lucide-react';
 import { useNotification, NotificationProvider } from '@/components/ui/Notification';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,9 +50,9 @@ import { useTranslation } from 'react-i18next';
 import { getImageUrl } from '@/components/ui/Avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/Dialog';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
@@ -60,7 +61,13 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
-import { getDoctorById } from '@/store/services/doctor/doctorApi';
+import { getDoctorById, getDoctorProfile, getDoctorByUserId } from '@/store/services/doctor/doctorApi';
+import { fetchConsultations, sendFollowUpQuestion } from '@/store/slices/patient/consultationsSlice';
+import ConsultationCard from '@/components/patient/ConsultationCard';
+import Consultations from '@/components/doctor/patient/Consultations';
+import PatientDetails from '@/components/doctor/PatientDetails';
+import axios from 'axios';
+import PatientConsultations from '@/components/patient/PatientConsultations';
 
 const DicomViewer = dynamic(() => import('@/components/medical/DicomViewer'), { ssr: false });
 
@@ -315,6 +322,14 @@ const PatientPageContent = () => {
     const [currentRecord, setCurrentRecord] = useState(null);
     const [currentCategory, setCurrentCategory] = useState('');
     const [formData, setFormData] = useState({});
+    const [consultations, setConsultations] = useState([]);
+    const [consultationsLoading, setConsultationsLoading] = useState(false);
+    const [consultationsError, setConsultationsError] = useState(null);
+    const [continueChatDialogOpen, setContinueChatDialogOpen] = useState(false);
+    const [continueChatConsultation, setContinueChatConsultation] = useState(null);
+    const [newQuestion, setNewQuestion] = useState('');
+    const [avatarError, setAvatarError] = useState(false);
+    const [doctorProfile, setDoctorProfile] = useState(null); 
 
     const medicalRecordCategories = [
         { id: 'vitalSigns', label: t('patient.profile.vitalSigns', 'Vital Signs'), icon: HeartPulse },
@@ -337,6 +352,29 @@ const PatientPageContent = () => {
             dispatch(fetchPatientById(params.id));
         }
     }, [dispatch, params.id]);
+
+    useEffect(() => {
+        if (activeTab === 'consultations' && params.id) {
+            setConsultationsLoading(true);
+            dispatch(fetchConsultations())
+                .unwrap()
+                .then(data => setConsultations(data.filter(c => c.patient === params.id)))
+                .catch(err => setConsultationsError(err))
+                .finally(() => setConsultationsLoading(false));
+        }
+    }, [activeTab, params.id, dispatch]);
+
+    useEffect(() => {
+        async function fetchDoctorProfile() {
+            try {
+                const profile = await getDoctorProfile();
+                setDoctorProfile(profile);
+            } catch (e) {
+                setDoctorProfile(null);
+            }
+        }
+        fetchDoctorProfile();
+    }, []);
 
     if (loading) {
         return (
@@ -379,12 +417,29 @@ const PatientPageContent = () => {
 
     const renderProfileHeader = () => (
         <div className={`${glassCard} ${fadeIn} p-6 flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 w-full`}>
-            <Avatar src={avatarUrl} alt="Profile Picture" className="h-32 w-32 border-4 border-primary shadow-xl" />
+            <Avatar className="h-32 w-32 border-4 border-primary shadow-xl">
+                {avatarUrl && !avatarError ? (
+                    <AvatarImage
+                        src={avatarUrl}
+                        alt="Profile Picture"
+                        onError={() => setAvatarError(true)}
+                    />
+                ) : (
+                    <AvatarFallback>{selectedPatient.user?.firstName ? selectedPatient.user.firstName[0] : 'P'}</AvatarFallback>
+                )}
+            </Avatar>
             <div className="text-center md:text-left">
                 <h1 className="text-3xl font-bold text-foreground mb-1">
                     {selectedPatient.user?.firstName || ''} {selectedPatient.user?.lastName || ''}
                 </h1>
                 <p className="text-muted-foreground text-lg">{selectedPatient.user?.email || ''}</p>
+                {selectedPatient.bloodType && (
+                    <div className="mt-2 flex justify-center md:justify-start">
+                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full border border-blue-200">
+                            Blood Type: {selectedPatient.bloodType}
+                        </span>
+                    </div>
+                )}
                 <div className="flex gap-2 justify-center md:justify-start mt-2">
                     <Badge className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-semibold">Patient</Badge>
                     <Badge className="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">Doctor View</Badge>
@@ -445,7 +500,15 @@ const PatientPageContent = () => {
     };
 
     const canEditRecord = (record) => {
-        return record.doctorId?.toString() === user?._id?.toString();
+        const canEdit = record.doctorId?.toString() === user?._id?.toString();
+        console.log('canEditRecord check:', {
+            recordDoctorId: record.doctorId,
+            user_id: user?._id,
+            recordDoctorIdString: record.doctorId?.toString(),
+            user_idString: user?._id?.toString(),
+            canEdit: canEdit
+        });
+        return canEdit;
     };
 
     const getRecordFormFields = (category) => {
@@ -636,7 +699,7 @@ const PatientPageContent = () => {
             }
             const recordData = {
                 ...formData,
-                doctorId: user?._id 
+                doctorId: user?._id
             };
 
             if (formData.pdfFile && currentCategory === 'labResults') {
@@ -735,6 +798,13 @@ const PatientPageContent = () => {
 
     const renderRecordCard = (record, category, index) => {
         const canEdit = canEditRecord(record);
+        console.log('renderRecordCard:', {
+            recordId: record._id,
+            recordDoctorId: record.doctorId,
+            user_id: user?._id,
+            canEdit: canEdit,
+            userLoaded: !!user
+        });
         const categoryMeta = medicalRecordCategories.find(c => c.id === category);
         return (
             <div
@@ -899,9 +969,10 @@ const PatientPageContent = () => {
                 <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/40 rounded-b-xl mt-2">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <User className="h-3 w-3" />
-                        {record.doctorId?.toString() === user?._id?.toString()
-                            ? t('common.you', 'You')
-                            : <DoctorName doctorId={record.doctorId} />}
+                        <DoctorName doctorId={record.doctorId} />
+                        {record.doctorId?.toString() === user?._id?.toString() && (
+                            <span className="ml-1">({t('common.you', 'You')})</span>
+                        )}
                     </div>
                     {canEdit && (
                         <div className="flex gap-1">
@@ -1335,31 +1406,119 @@ const PatientPageContent = () => {
 
     function useDoctorName(doctorId) {
         const [name, setName] = React.useState('');
+        const [loading, setLoading] = React.useState(false);
+        const [error, setError] = React.useState(null);
+        
         React.useEffect(() => {
             let isMounted = true;
+            
             async function fetchName() {
                 if (!doctorId) {
-                    if (isMounted) setName('Unknown');
+                    if (isMounted) {
+                        setName('Unknown');
+                        setLoading(false);
+                    }
                     return;
                 }
+                
+                if (isMounted) {
+                    setLoading(true);
+                    setError(null);
+                }
+                
                 try {
-                    const response = await getDoctorById(doctorId);
-                    const doctor = response?.data;
-                    const doctorName = `${doctor?.user?.firstName || ''} ${doctor?.user?.lastName || ''}`.trim();
-                    if (isMounted) setName(doctorName || 'Unknown');
+                    console.log('Fetching doctor name for ID:', doctorId);
+                    
+                    const response = await getDoctorByUserId(doctorId);
+                    console.log('Doctor response:', response);
+                    
+                    const doctor = response;
+                    if (doctor?.user) {
+                        const doctorName = `${doctor.user.firstName || ''} ${doctor.user.lastName || ''}`.trim();
+                        console.log('Doctor name found:', doctorName);
+                        if (isMounted) {
+                            setName(doctorName || 'Unknown');
+                            setLoading(false);
+                        }
+                    } else {
+                        console.log('No doctor user data found, trying direct user fetch');
+                        try {
+                            const userResponse = await fetch(`/api/users/${doctorId}`, {
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                }
+                            });
+                            
+                            if (userResponse.ok) {
+                                const userData = await userResponse.json();
+                                const userName = `${userData.data.firstName || ''} ${userData.data.lastName || ''}`.trim();
+                                console.log('User name found via fallback:', userName);
+                                if (isMounted) {
+                                    setName(userName || 'Unknown');
+                                    setLoading(false);
+                                }
+                            } else {
+                                throw new Error('User not found');
+                            }
+                        } catch (fallbackError) {
+                            console.log('Fallback user fetch failed:', fallbackError);
+                            if (isMounted) {
+                                setName('Unknown');
+                                setLoading(false);
+                            }
+                        }
+                    }
                 } catch (e) {
-                    if (isMounted) setName('Unknown');
+                    console.error('Error fetching doctor name:', e);
+                    try {
+                        console.log('Trying fallback user fetch after error');
+                        const userResponse = await fetch(`/api/users/${doctorId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        
+                        if (userResponse.ok) {
+                            const userData = await userResponse.json();
+                            const userName = `${userData.data.firstName || ''} ${userData.data.lastName || ''}`.trim();
+                            console.log('User name found via error fallback:', userName);
+                            if (isMounted) {
+                                setName(userName || 'Unknown');
+                                setLoading(false);
+                            }
+                        } else {
+                            throw new Error('User not found');
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback user fetch also failed:', fallbackError);
+                        if (isMounted) {
+                            setError(e.message);
+                            setName('Unknown');
+                            setLoading(false);
+                        }
+                    }
                 }
             }
+            
             fetchName();
             return () => { isMounted = false; };
         }, [doctorId]);
-        return name;
+        
+        return { name, loading, error };
     }
 
     function DoctorName({ doctorId }) {
-        const name = useDoctorName(doctorId);
-        return <span className="text-xs text-muted-foreground">{name || 'Loading...'}</span>;
+        const { name, loading, error } = useDoctorName(doctorId);
+        
+        if (loading) {
+            return <span className="text-xs text-muted-foreground">Loading...</span>;
+        }
+        
+        if (error) {
+            console.error('DoctorName error:', error);
+        }
+        
+        return <span className="text-xs text-muted-foreground">{name || 'Unknown'}</span>;
     }
 
     return (
@@ -1370,7 +1529,7 @@ const PatientPageContent = () => {
                     {renderProfileHeader()}
                     <div className={`${glassCard} ${fadeIn} p-4 mb-8 w-full`}>
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className={`grid w-full grid-cols-4 gap-2 rounded-xl p-1 ${stickyTabs}`}> 
+                            <TabsList className={`grid w-full grid-cols-5 gap-2 rounded-xl p-1 ${stickyTabs}`}> 
                                 <TabsTrigger value="personal"
                                     style={activeTab === 'personal' ? {
                                         background: 'var(--color-primary)',
@@ -1423,6 +1582,19 @@ const PatientPageContent = () => {
                                 >
                                     <span>{t('patient.profile.tabs.medical', 'Medical File')}</span>
                                 </TabsTrigger>
+                                <TabsTrigger value="consultations"
+                                    style={activeTab === 'consultations' ? {
+                                        background: 'var(--color-primary)',
+                                        color: 'var(--color-on-primary)',
+                                        borderRadius: '0.5rem',
+                                        fontWeight: 600
+                                    } : {
+                                        background: 'transparent',
+                                        color: 'var(--color-foreground)'
+                                    }}
+                                >
+                                    <span>{t('patient.profile.tabs.consultations', 'Consultations')}</span>
+                                </TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
@@ -1431,6 +1603,9 @@ const PatientPageContent = () => {
                         {activeTab === 'emergency' && <EmergencyContact patient={selectedPatient} />}
                         {activeTab === 'insurance' && <Insurance patient={selectedPatient} />}
                         {activeTab === 'medical' && renderMedicalFile()}
+                        {activeTab === 'consultations' && (
+                            <PatientConsultations patientId={params.id} />
+                        )}
                     </div>
                 </div>
             </div>

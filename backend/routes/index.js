@@ -19,6 +19,7 @@ const uploadRoutes = require('../routes/upload.routes');
 const medicineRequestRoutes = require('../routes/medicineRequest.routes');
 const distributorRoutes = require('../routes/distributor.routes');
 const orderRoutes = require('../routes/order.routes');
+const referralRoutes = require('../routes/referral.routes');
 
 router.use('/auth', authRoutes);
 router.use('/patients', patientRoutes);
@@ -40,6 +41,7 @@ router.use('/upload', uploadRoutes);
 router.use('/medicine-requests', medicineRequestRoutes);
 router.use('/distributors', distributorRoutes);
 router.use('/orders', orderRoutes);
+router.use('/referrals', referralRoutes);
 
 router.get('/health', (req, res) => {
   res.status(200).json({

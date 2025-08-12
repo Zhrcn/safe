@@ -13,7 +13,7 @@ export const api = createApi({
             }
             headers.set('Content-Type', 'application/json');
             headers.set('Accept', 'application/json');
-            const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5001';
             headers.set('Origin', origin);
             return headers;
         },

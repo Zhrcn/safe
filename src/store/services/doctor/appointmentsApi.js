@@ -61,6 +61,16 @@ export const doctorAppointmentsApi = {
     }
   },
 
+  completeAppointment: async (appointmentId, notes) => {
+    try {
+      const res = await axiosInstance.patch(`/doctors/appointments/${appointmentId}/complete`, { notes });
+      return res;
+    } catch (error) {
+      console.error('API: Complete appointment error', error);
+      throw error;
+    }
+  },
+
   createAppointment: async (appointmentData) => {
     console.log('[API] doctorAppointmentsApi.createAppointment called', appointmentData);
     const res = await axiosInstance.post('/doctors/appointments', appointmentData);

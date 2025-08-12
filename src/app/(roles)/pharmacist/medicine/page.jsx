@@ -13,13 +13,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 
 const usePharmacyMedicineRequests = () => {
-  // TODO: Replace with real fetch logic
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
-      setRequests([]); // TODO: Replace with real data
+      setRequests([]); 
       setLoading(false);
     }, 1000);
   }, []);

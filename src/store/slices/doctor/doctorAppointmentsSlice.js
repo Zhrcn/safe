@@ -97,6 +97,30 @@ export const createAppointment = createAsyncThunk(
   }
 );
 
+export const completeAppointment = createAsyncThunk(
+  'doctorAppointments/completeAppointment',
+  async ({ appointmentId, notes }, { rejectWithValue }) => {
+    try {
+      const response = await doctorAppointmentsApi.completeAppointment(appointmentId, notes);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to complete appointment');
+    }
+  }
+);
+
+export const fetchAppointmentsByPatient = createAsyncThunk(
+  'doctorAppointments/fetchAppointmentsByPatient',
+  async (patientId, { rejectWithValue }) => {
+    try {
+      const response = await doctorAppointmentsApi.getAppointmentsByPatient(patientId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch patient appointments');
+    }
+  }
+);
+
 const initialState = {
   appointments: [],
   selectedAppointment: null,
@@ -240,6 +264,37 @@ const doctorAppointmentsSlice = createSlice({
         }
       })
       .addCase(createAppointment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(completeAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(completeAppointment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = 'Appointment completed successfully';
+        const index = state.appointments.findIndex(apt => apt._id === action.payload.data._id);
+        if (index !== -1) {
+          state.appointments[index] = action.payload.data;
+        }
+        if (state.selectedAppointment && state.selectedAppointment._id === action.payload.data._id) {
+          state.selectedAppointment = action.payload.data;
+        }
+      })
+      .addCase(completeAppointment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAppointmentsByPatient.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAppointmentsByPatient.fulfilled, (state, action) => {
+        state.loading = false;
+        state.appointments = action.payload.data;
+      })
+      .addCase(fetchAppointmentsByPatient.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

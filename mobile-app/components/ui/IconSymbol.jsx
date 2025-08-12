@@ -1,4 +1,3 @@
-// Fallback for using MaterialIcons on Android and web.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SymbolWeight, SymbolViewProps } from 'expo-symbols';

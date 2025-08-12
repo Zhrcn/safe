@@ -10,6 +10,11 @@ export const getDoctorById = async (id) => {
   return res.data.data;
 };
 
+export const getDoctorByUserId = async (userId) => {
+  const res = await axiosInstance.get(`/doctors/user/${userId}`);
+  return res.data.data;
+};
+
 export const getPatientDetails = async (id) => {
   const res = await axiosInstance.get(`/patients/${id}`);
   return res.data.data;
@@ -91,5 +96,31 @@ export const updateLicense = async (licenseId, licenseData) => {
 
 export const deleteLicense = async (licenseId) => {
   const res = await axiosInstance.delete(`/doctors/licenses/${licenseId}`);
+  return res.data.data;
+};
+
+export const createReferral = async ({ patientId, toDoctorId, reason, notes, urgency }) => {
+  const res = await axiosInstance.post('/referrals', {
+    patientId,
+    toDoctorId,
+    reason,
+    notes,
+    urgency
+  });
+  return res.data.data;
+};
+
+export const updateReferralStatus = async (referralId, status) => {
+  const res = await axiosInstance.patch(`/referrals/${referralId}/status`, { status });
+  return res.data.data;
+};
+
+export const getReferralsForDoctor = async () => {
+  const res = await axiosInstance.get('/referrals/doctor');
+  return res.data.data;
+};
+
+export const getReferralsForPatient = async (patientId) => {
+  const res = await axiosInstance.get(`/referrals/patient/${patientId}`);
   return res.data.data;
 };

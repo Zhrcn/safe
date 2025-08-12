@@ -5,6 +5,7 @@ import { useGetCurrentUserQuery } from '@/store/api/authApi';
 import { logoutUser, setCredentials, selectCurrentUser, selectIsAuthenticated } from '@/store/slices/auth/authSlice';
 import { removeToken } from '@/utils/tokenUtils';
 import { getToken } from '@/utils/tokenUtils';
+import { GLOBAL_ROUTES } from '@/config/app-config';
 
 export default function ProtectedLayout({ children }) {
     const router = useRouter();
@@ -20,6 +21,12 @@ export default function ProtectedLayout({ children }) {
         if (currentUser && isAuthenticated) {
             const userRole = currentUser.role?.toLowerCase();
             const pathRole = pathname.split('/')[1]?.toLowerCase();
+            
+            const globalRouteValues = Object.values(GLOBAL_ROUTES);
+            if (globalRouteValues.includes(pathname)) {
+                return;
+            }
+            
             if (pathRole && pathRole !== userRole) {
                 router.replace(`/${userRole}/dashboard`);
             }

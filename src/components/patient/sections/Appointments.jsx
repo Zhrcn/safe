@@ -197,17 +197,14 @@ const Appointments = ({ patient }) => {
 
     const handleChat = (appointment) => {
         console.log('Chat with appointment:', appointment);
-        // TODO: Implement chat functionality
     };
 
     const handleCall = (appointment) => {
         console.log('Call appointment:', appointment);
-        // TODO: Implement call functionality
     };
 
     const handleVideo = (appointment) => {
         console.log('Video call appointment:', appointment);
-        // TODO: Implement video call functionality
     };
 
     return (

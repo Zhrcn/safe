@@ -61,7 +61,7 @@ const PersonalInfo = ({ patient }) => {
                             <span className="text-sm font-semibold text-foreground">Blood Type</span>
                             <div className="mt-1">
                                 <span className="inline-flex items-center px-3 py-1 rounded-2xl text-xs font-bold bg-danger/10 text-danger border border-danger/20 shadow-sm">
-                                    {patient.bloodType}
+                                    {patient.medicalFile?.bloodType || patient.bloodType || 'N/A'}
                                 </span>
                             </div>
                         </div>
@@ -85,26 +85,8 @@ const PersonalInfo = ({ patient }) => {
                             label="Phone"
                             value={patient.user?.phoneNumber}
                         />
-                        <InfoItem
-                            icon={Home}
-                            label="Address"
-                            value={patient.user?.address}
-                        />
-                        <InfoItem
-                            icon={MapPin}
-                            label="City"
-                            value={patient.user?.city}
-                        />
-                        <InfoItem
-                            icon={Building}
-                            label="State"
-                            value={patient.user?.state}
-                        />
-                        <InfoItem
-                            icon={Calendar}
-                            label="Member Since"
-                            value={formatDate(patient.user?.createdAt)}
-                        />
+                        
+                       
                     </div>
                 </div>
             </div>

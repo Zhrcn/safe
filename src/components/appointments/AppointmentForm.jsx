@@ -11,8 +11,7 @@ import { getDoctors } from '@/store/services/doctor/doctorApi';
 
 const initialFormState = {
     doctorId: '',
-    date: '1111-01-01',
-    time: 'TBD',
+    preferredDate: '',
     type: '',
     reason: '',
     notes: ''
@@ -149,6 +148,7 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
         e.preventDefault();
         const newErrors = {};
         if (!formData.doctorId && !isReschedule) newErrors.doctorId = 'Doctor is required';
+        if (!formData.preferredDate) newErrors.preferredDate = 'Preferred date is required';
         if (!formData.type) newErrors.type = 'Appointment type is required';
         if (!formData.reason) newErrors.reason = 'Reason for visit is required';
         if (Object.keys(newErrors).length > 0) {
@@ -156,7 +156,7 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
         } else {
             setIsSubmitting(true);
             try {
-                await onSubmit({ ...formData, date: '1111-01-01', time: 'TBD' });
+                await onSubmit(formData);
             } catch (err) {
             } finally {
                 setIsSubmitting(false);
@@ -242,6 +242,25 @@ function AppointmentForm({ onClose, isReschedule, initialData, onSubmit }) {
                                     <p className="text-sm text-red-500">{errors.type}</p>
                                 )}
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="preferredDate">Preferred Date</Label>
+                            <Input
+                                id="preferredDate"
+                                type="text"
+                                value={formData.preferredDate}
+                                onChange={(e) => handleChange('preferredDate', e.target.value)}
+                                placeholder="e.g., Next Monday, March 15th, or any day next week"
+                                className={cn(
+                                    errors.preferredDate && "border-red-500"
+                                )}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Please describe when you'd prefer to have your appointment. The doctor will schedule the exact date and time.
+                            </p>
+                            {errors.preferredDate && (
+                                <p className="text-sm text-red-500">{errors.preferredDate}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="reason">Reason for Visit</Label>

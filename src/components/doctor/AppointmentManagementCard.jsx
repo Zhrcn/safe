@@ -7,6 +7,7 @@ import {
   updateAppointment,
   approveRescheduleRequest,
   rejectRescheduleRequest,
+  completeAppointment,
   clearError,
   clearSuccess
 } from '../../store/slices/doctor/doctorAppointmentsSlice';
@@ -35,6 +36,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isApproveRescheduleDialogOpen, setIsApproveRescheduleDialogOpen] = useState(false);
   const [isRejectRescheduleDialogOpen, setIsRejectRescheduleDialogOpen] = useState(false);
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   
   const [acceptForm, setAcceptForm] = useState({
     date: '',
@@ -61,6 +63,9 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
   });
   const [rejectRescheduleForm, setRejectRescheduleForm] = useState({
     doctorNotes: ''
+  });
+  const [completeForm, setCompleteForm] = useState({
+    notes: ''
   });
 
   useEffect(() => {
@@ -99,6 +104,7 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       setIsUpdateDialogOpen(false);
       setIsApproveRescheduleDialogOpen(false);
       setIsRejectRescheduleDialogOpen(false);
+      setIsCompleteDialogOpen(false);
     } else if (dialogMode === 'reject') {
       setIsRejectDialogOpen(true);
       setIsAcceptDialogOpen(false);
@@ -123,6 +129,14 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
       setIsRejectDialogOpen(false);
       setIsUpdateDialogOpen(false);
       setIsApproveRescheduleDialogOpen(false);
+      setIsCompleteDialogOpen(false);
+    } else if (dialogMode === 'complete') {
+      setIsCompleteDialogOpen(true);
+      setIsAcceptDialogOpen(false);
+      setIsRejectDialogOpen(false);
+      setIsUpdateDialogOpen(false);
+      setIsApproveRescheduleDialogOpen(false);
+      setIsRejectRescheduleDialogOpen(false);
     }
   }, [dialogMode]);
 
@@ -200,6 +214,16 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
     }));
     setIsRejectRescheduleDialogOpen(false);
     setRejectRescheduleForm({ doctorNotes: '' });
+    if (onActionComplete) onActionComplete();
+  };
+
+  const handleComplete = async () => {
+    await dispatch(completeAppointment({ 
+      appointmentId: appointment._id, 
+      notes: completeForm.notes 
+    }));
+    setIsCompleteDialogOpen(false);
+    setCompleteForm({ notes: '' });
     if (onActionComplete) onActionComplete();
   };
 
@@ -595,6 +619,40 @@ const AppointmentManagementCard = ({ appointment, dialogMode, onActionComplete }
               </DialogContent>
             </Dialog>
           )}
+
+          {appointment?.status === 'accepted' || appointment?.status === 'scheduled' || appointment?.status === 'rescheduled' ? (
+            <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" disabled={loading}>
+                  Complete Appointment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Complete Appointment</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="complete-notes">Completion Notes</Label>
+                    <Textarea
+                      id="complete-notes"
+                      value={completeForm.notes}
+                      onChange={(e) => setCompleteForm({ notes: e.target.value })}
+                      placeholder="Add completion notes (optional)"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
+                      {t('common.cancel', 'Cancel')}
+                    </Button>
+                    <Button variant="default" onClick={handleComplete} disabled={loading}>
+                      {t('common.complete', 'Complete')}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : null}
 
           {!canModify && (
             <div className="text-sm text-red-600">

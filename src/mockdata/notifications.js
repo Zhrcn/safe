@@ -1,1 +1,0 @@
-export const notifications = [  {    id: '1',    user: '3',     type: 'appointment',    title: 'Appointment Reminder',    message: 'You have an appointment tomorrow at 10:00 AM.',    isRead: false,    relatedTo: '1',     relatedModel: 'Appointment',    createdAt: new Date(),    updatedAt: new Date(),  },]; 

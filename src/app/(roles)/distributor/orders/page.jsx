@@ -45,7 +45,6 @@ export default function DistributorOrdersPage() {
       .finally(() => setLoading(false));
   };
 
-  // Fetch pharmacists and medicines for the order form
   useEffect(() => {
     if (showCreateOrder) {
       getPharmacists().then(res => setPharmacists(res.data || res)).catch(() => setPharmacists([]));
@@ -53,7 +52,6 @@ export default function DistributorOrdersPage() {
     }
   }, [showCreateOrder]);
 
-  // Filtered and searched orders
   const filteredOrders = useMemo(() => {
     let filtered = orders;
     if (statusFilter !== 'all') {
@@ -84,7 +82,6 @@ export default function DistributorOrdersPage() {
     setActionLoading(orderId + 'send');
     setActionError('');
     try {
-      // For demo, use a placeholder driverId. In production, select driver from UI.
       await sendOrderToDriver(orderId, 'driverId-placeholder');
       fetchOrders();
     } catch {
@@ -99,7 +96,6 @@ export default function DistributorOrdersPage() {
   const addOrderItem = () => setOrderItems([...orderItems, { medicine: '', quantity: 1, price: 0 }]);
   const removeOrderItem = idx => setOrderItems(items => items.filter((_, i) => i !== idx));
 
-  // --- FORM VALIDATION ---
   const validateOrder = () => {
     if (!orderPharmacist) return 'Please select a pharmacist.';
     if (orderItems.some(item => !item.medicine || !item.quantity)) return 'Please fill all item fields.';
@@ -154,7 +150,6 @@ export default function DistributorOrdersPage() {
     }
   };
 
-  // --- UI ---
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
@@ -268,7 +263,6 @@ export default function DistributorOrdersPage() {
           )}
         </CardContent>
       </Card>
-      {/* Create Order Modal */}
       <Dialog open={showCreateOrder} onOpenChange={setShowCreateOrder}>
         <DialogContent>
           <DialogHeader>
@@ -338,7 +332,6 @@ export default function DistributorOrdersPage() {
                 placeholder="Order notes (optional)"
               />
             </div>
-            {/* Order summary */}
             <div className="bg-muted/30 rounded-xl p-3">
               <div className="font-semibold mb-1">Order Summary</div>
               <div className="text-sm text-muted-foreground">

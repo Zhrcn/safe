@@ -28,6 +28,7 @@ import {
   Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getDoctors, createReferral } from '@/store/services/doctor/doctorApi';
 
 const referralSchema = z.object({
   doctorId: z.string().min(1, 'Doctor is required'),
@@ -68,11 +69,12 @@ export default function ReferralForm({
     const loadDoctors = async () => {
       try {
         setLoading(true);
-        setDoctors([
-          { id: '1', name: 'Dr. John Doe', specialty: 'Cardiologist' },
-          { id: '2', name: 'Dr. Jane Smith', specialty: 'Dermatologist' },
-          { id: '3', name: 'Dr. Bob Johnson', specialty: 'Pediatrician' },
-        ]);
+        const doctorsList = await getDoctors();
+        setDoctors(doctorsList.map(doc => ({
+          id: doc._id || doc.user?._id || doc.user,
+          name: `${doc.user?.firstName || ''} ${doc.user?.lastName || ''}`.trim(),
+          specialty: doc.specialty || doc.specialization || doc.user?.specialty || ''
+        })));
       } catch (err) {
         console.error('Failed to load doctors:', err);
         setError('Failed to load available doctors');
@@ -122,29 +124,23 @@ export default function ReferralForm({
         setError('Selected doctor not found');
         return;
       }
-      const referralData = {
-        doctorId: data.doctorId,
-        doctorName: doctor.name,
-        doctorSpecialty: doctor.specialty,
+      await createReferral({
+        patientId,
+        toDoctorId: data.doctorId,
         reason: data.reason,
         notes: data.notes || '',
-        urgency: data.urgency,
-      };
-      const result = { success: true, referral: referralData };
-      if (result.success) {
-        setSuccess('Referral created successfully');
-        reset();
-        if (onSuccess) {
-          onSuccess(result.referral);
-        }
-        setTimeout(() => {
-          if (onClose) onClose();
-        }, 2000);
-      } else {
-        setError(result.message || 'Failed to create referral');
+        urgency: data.urgency
+      });
+      setSuccess('Referral created successfully');
+      reset();
+      if (onSuccess) {
+        onSuccess();
       }
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 2000);
     } catch (err) {
-      setError('An error occurred while creating the referral');
+      setError(err?.response?.data?.message || 'An error occurred while creating the referral');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -270,7 +266,7 @@ export default function ReferralForm({
                 </SelectTrigger>
                 <SelectContent>
                   {loading ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="loading" disabled>
                       Loading doctors...
                     </SelectItem>
                   ) : doctors.length > 0 ? (
@@ -285,7 +281,7 @@ export default function ReferralForm({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-doctors" disabled>
                       No doctors available
                     </SelectItem>
                   )}

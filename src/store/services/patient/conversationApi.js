@@ -124,13 +124,8 @@ class ConversationService {
 
   static async fallbackToHttp(conversationId, resolve, reject) {
     try {
-      const response = await fetch(`/api/v1/conversations/${conversationId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
+      const response = await axiosInstance.get(`/conversations/${conversationId}`);
+      const data = response.data;
       
       if (data.data && data.data.messages) {
         console.log('[getMessagesSocket] HTTP fallback successful:', data.data.messages);

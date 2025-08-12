@@ -55,25 +55,26 @@ export default function MessagingScreen() {
         onPress={() => handleOpenChat(item)}
         activeOpacity={0.8}
       >
-        {/* Avatar */}
         {other?.profileImage || other?.avatar ? (
-          <Image source={{ uri: other.profileImage || other.avatar }} className="w-12 h-12 rounded-full mr-4 bg-gray-200" />
+          <Image 
+            source={other.profileImage?.includes('/uploads') || other.avatar?.includes('/uploads') ? 
+              { uri: `http://192.168.1.100:5001${other.profileImage || other.avatar}` } : 
+              { uri: other.profileImage || other.avatar }} 
+            className="w-12 h-12 rounded-full mr-4 bg-gray-200" 
+          />
         ) : (
           <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center mr-4">
             <MaterialIcons name="person" size={28} color="#2563eb" />
           </View>
         )}
-        {/* Chat info */}
         <View className="flex-1 min-w-0">
           <Text className="font-semibold text-base text-gray-900 dark:text-white" numberOfLines={1}>{item.title}</Text>
           <Text className="text-gray-500 dark:text-gray-300 text-sm" numberOfLines={1}>{lastMsg ? lastMsg.content : 'No messages yet.'}</Text>
         </View>
-        {/* Last message time and unread badge */}
         <View className="items-end ml-2 min-w-[60px]">
           {lastMsg?.timestamp && (
             <Text className="text-xs text-gray-400 mb-1">{new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           )}
-          {/* Unread badge logic can be added here if available */}
         </View>
         <MaterialIcons name="chevron-right" size={24} color="#9ca3af" style={{ marginLeft: 8 }} />
       </TouchableOpacity>
@@ -100,7 +101,6 @@ export default function MessagingScreen() {
   );
 }
 
-// Hide the default header for this page
 MessagingScreen.options = {
   headerShown: false,
 }; 

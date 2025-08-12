@@ -1,10 +1,12 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useParams } from 'next/navigation';
 import { getOrderById, cancelOrder } from '@/store/services/orderApi';
 
 export default function OrderDetailPage() {
-  const router = useRouter();
-  const { orderId } = router.query;
+  const params = useParams();
+  const orderId = params.orderId;
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

@@ -107,14 +107,8 @@ export default function DistributorProfilePage() {
     setError("");
     try {
       let updatedProfile = { ...profile };
-      // Handle avatar upload if changed
       if (avatarFile) {
-        // Simulate upload, replace with your actual upload logic
-        // For demonstration, we'll just use a fake URL
-        // In real app, upload to server and get the URL
-        // Example: const imageUrl = await uploadImage(avatarFile);
-        // updatedProfile.profileImage = imageUrl;
-        // For now, just use preview as placeholder
+      
         updatedProfile.profileImage = avatarPreview;
       }
       await updateDistributorProfile(updatedProfile);
@@ -127,11 +121,9 @@ export default function DistributorProfilePage() {
     }
   };
 
-  // Full page layout
   return (
     <div className="w-full min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       <div className="flex flex-col md:flex-row w-full h-full flex-1">
-        {/* Left: Avatar and Edit */}
         <div className="flex flex-col items-center justify-center md:w-1/3 w-full py-12 bg-white/80 dark:bg-card/80 border-r border-muted/30 min-h-[350px]">
           <div
             className={`relative group cursor-pointer transition-all`}
@@ -185,7 +177,6 @@ export default function DistributorProfilePage() {
             )}
           </div>
         </div>
-        {/* Right: Profile Form */}
         <div className="flex-1 flex flex-col justify-center items-center py-12 px-4 md:px-16">
           <Card className="w-full max-w-2xl shadow-2xl border-0 rounded-3xl bg-white/90 dark:bg-card/80 backdrop-blur-md">
             <CardHeader className="p-8 border-b border-muted">

@@ -2,6 +2,7 @@
 import { useSession } from '@/hooks/useSession';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from '@/components/ui/Toaster';
 
 function SessionWrapper({ children }) {
   useSession();
@@ -35,6 +36,7 @@ export default function ClientLayout({ children }) {
   return (
     <SessionWrapper>
       {children}
+      <Toaster />
     </SessionWrapper>
   );
 } 

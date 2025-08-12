@@ -27,7 +27,6 @@ export default function LoginScreen() {
         enabled
       >
          <View style={styles.container}>
-          {/* Logo/Icon */}
           <Image source={require('../../assets/images/safe-logo.png')} style={styles.logo} />
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>

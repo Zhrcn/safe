@@ -40,7 +40,6 @@ exports.getAllDistributors = async (req, res) => {
   }
 };
 
-// Inventory management (add/remove/update inventory items)
 exports.updateInventory = async (req, res) => {
   try {
     console.log('DEBUG: updateInventory - req.body:', req.body);
@@ -61,7 +60,6 @@ exports.updateInventory = async (req, res) => {
   }
 };
 
-// Orders for distributor
 exports.getDistributorOrders = async (req, res) => {
   try {
     const distributor = await Distributor.findOne({ user: req.user._id });

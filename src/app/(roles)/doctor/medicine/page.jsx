@@ -105,7 +105,6 @@ export default function MedicineRequestsPage() {
       await deleteRequest(id).unwrap();
       refetch();
     } catch (err) {
-      // Optionally show error
     }
   };
 

@@ -29,7 +29,7 @@ export const deleteSchedule = async (id) => {
 export const scheduleApi = createApi({
     reducerPath: 'scheduleApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'http://localhost:5001',
         prepareHeaders: (headers, { getState }) => {
             const token = getState().auth.token;
             if (token) {

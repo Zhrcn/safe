@@ -108,14 +108,14 @@ export default function PatientCard({ patient }) {
     return (
         <>
             <div
-                className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col relative min-w-[300px] min-h-[220px] max-w-full cursor-pointer hover:bg-muted/30"
+                className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-3 sm:p-4 md:p-6 flex flex-col relative w-full min-h-[200px] sm:min-h-[220px] cursor-pointer hover:bg-muted/30"
                 onClick={handleCardClick}
                 tabIndex={0}
                 role="button"
                 aria-label={`Open profile for ${getPatientName()}`}
             >
-                <div className="flex items-center gap-4 mb-4">
-                    <Avatar size="md" className="w-12 h-12 text-xl font-bold">
+                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4">
+                    <Avatar size="md" className="w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl font-bold flex-shrink-0">
                         {patient.user?.profileImage ? (
                             <AvatarImage src={patient.user.profileImage} alt={patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : 'Patient'} />
                         ) : (
@@ -124,12 +124,13 @@ export default function PatientCard({ patient }) {
                     </Avatar>
                     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                         <div className="flex items-center justify-between">
-                            <span className="text-base font-semibold text-card-foreground truncate">
+                            <span className="text-sm sm:text-base font-semibold text-card-foreground truncate">
                                 {getPatientName()}
                             </span>
-                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusChipClass(isPatientActive() ? 'active' : 'inactive')}`}> 
-                                <span className={`inline-block w-2 h-2 rounded-full ${isPatientActive() ? 'bg-success' : 'bg-muted-foreground'}`}></span>
-                                {isPatientActive() ? 'active' : 'inactive'}
+                            <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${getStatusChipClass(isPatientActive() ? 'active' : 'inactive')}`}> 
+                                <span className={`inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isPatientActive() ? 'bg-success' : 'bg-muted-foreground'}`}></span>
+                                <span className="hidden sm:inline">{isPatientActive() ? 'active' : 'inactive'}</span>
+                                <span className="sm:hidden">{isPatientActive() ? 'A' : 'I'}</span>
                             </span>
                         </div>
                         <span className="text-xs text-muted-foreground truncate">
@@ -142,82 +143,93 @@ export default function PatientCard({ patient }) {
                         variant="ghost"
                         aria-label="Open menu"
                         onClick={handleMenuOpen}
-                        className="ml-2 p-2 rounded-full text-muted-foreground hover:bg-muted no-card-click"
+                        className="ml-1 sm:ml-2 p-1.5 sm:p-2 rounded-full text-muted-foreground hover:bg-muted no-card-click flex-shrink-0"
                         tabIndex={-1}
                     >
-                        <MoreVertical className="h-5 w-5" />
+                        <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                 </div>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4">
+                <div className="grid grid-cols-2 gap-x-3 sm:gap-x-4 md:gap-x-6 gap-y-2 mb-3 sm:mb-4">
                     <div>
                         <p className="text-xs text-muted-foreground font-medium">Condition</p>
-                        <p className="text-sm text-card-foreground font-semibold truncate">{getPatientCondition()}</p>
+                        <p className="text-xs sm:text-sm text-card-foreground font-semibold truncate">{getPatientCondition()}</p>
                     </div>
                     <div>
                         <p className="text-xs text-muted-foreground font-medium">Medical ID</p>
-                        <p className="text-sm text-card-foreground font-semibold truncate">{getPatientMedicalId()}</p>
+                        <p className="text-xs sm:text-sm text-card-foreground font-semibold truncate">{getPatientMedicalId()}</p>
                     </div>
-                    <div>
+                    <div className="col-span-2">
                         <p className="text-xs text-muted-foreground font-medium">Last Visit</p>
-                        <p className="text-sm text-card-foreground font-semibold truncate">
+                        <p className="text-xs sm:text-sm text-card-foreground font-semibold truncate">
                             {getPatientLastVisit() ? format(new Date(getPatientLastVisit()), 'MMM dd, yyyy') : 'None'}
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-row gap-2 mt-auto pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 mt-auto pt-2">
                     <Button
                         type="button"
                         variant="default"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-2xl text-xs sm:text-sm font-medium no-card-click"
                         onClick={e => { e.stopPropagation(); handleViewPatient(); }}
                     >
-                        <Eye className="h-4 w-4 mr-1" /> View
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                        <span className="hidden sm:inline">View</span>
+                        <span className="sm:hidden">V</span>
                     </Button>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-2xl text-xs sm:text-sm font-medium no-card-click"
                         onClick={e => { e.stopPropagation(); handleOpenDialog('condition'); }}
                     >
-                        <Activity className="h-4 w-4 mr-1" /> Update
+                        <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                        <span className="hidden sm:inline">Update</span>
+                        <span className="sm:hidden">U</span>
                     </Button>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1 flex items-center justify-center px-3 py-2 rounded-2xl text-sm font-medium no-card-click"
+                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-2xl text-xs sm:text-sm font-medium no-card-click"
                         onClick={e => { e.stopPropagation(); handleOpenDialog('prescription'); }}
                     >
-                        <FileText className="h-4 w-4 mr-1" /> Prescribe
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1" /> 
+                        <span className="hidden sm:inline">Prescribe</span>
+                        <span className="sm:hidden">P</span>
                     </Button>
                 </div>
                 {Boolean(menuAnchor) && (
                     <div
                         ref={menuRef}
-                        className="absolute right-0 top-12 w-48 bg-card rounded-2xl shadow-lg py-1 border border-border z-20"
+                        className="absolute right-0 top-12 w-40 sm:w-48 bg-card rounded-2xl shadow-lg py-1 border border-border z-20"
                     >
                     
                         <Button
                         variant="outline"
-                        className="w-full"    
+                        className="w-full text-xs sm:text-sm"    
                         onClick={() => handleOpenDialog('referral')}
                         >
-                            <Send className="h-4 w-4 mr-2 text-muted-foreground" />Create Referral
+                            <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-muted-foreground" />
+                            <span className="hidden sm:inline">Create Referral</span>
+                            <span className="sm:hidden">Referral</span>
                         </Button>
                         <Button
                             onClick={() => window.location.href = `/doctor/messaging`}
                             variant="outline"
-                            className="w-full"                        >
-                            <MessageCircle className="h-4 w-4 mr-2 text-muted-foreground" />Send Message
+                            className="w-full text-xs sm:text-sm"
+                        >
+                            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-muted-foreground" />
+                            <span className="hidden sm:inline">Send Message</span>
+                            <span className="sm:hidden">Message</span>
                         </Button>
                     </div>
                 )}
             </div>
             {activeDialog === 'edit' && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-card rounded-xl shadow-xl max-w-md mx-auto border border-border">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+                    <div className="relative p-4 sm:p-6 bg-card rounded-xl shadow-xl w-full max-w-md mx-auto border border-border">
                         <AddPatientForm 
                             onClose={handleCloseDialog} 
                             patientId={getPatientId()}
@@ -228,8 +240,8 @@ export default function PatientCard({ patient }) {
                 </div>
             )}
             {activeDialog === 'prescription' && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-card rounded-xl shadow-xl max-w-2xl mx-auto border border-border">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+                    <div className="relative p-4 sm:p-6 bg-card rounded-xl shadow-xl w-full max-w-2xl mx-auto border border-border">
                         <PrescriptionForm 
                             patientId={getPatientId()} 
                             patientName={getPatientName()} 
@@ -239,8 +251,8 @@ export default function PatientCard({ patient }) {
                 </div>
             )}
             {activeDialog === 'condition' && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-card rounded-xl shadow-xl max-w-md mx-auto border border-border">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+                    <div className="relative p-4 sm:p-6 bg-card rounded-xl shadow-xl w-full max-w-md mx-auto border border-border">
                         <PatientConditionForm 
                             patientId={getPatientId()} 
                             onClose={handleCloseDialog}
@@ -253,8 +265,8 @@ export default function PatientCard({ patient }) {
                 </div>
             )}
             {activeDialog === 'referral' && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-6 bg-card rounded-xl shadow-xl max-w-md mx-auto border border-border">
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+                    <div className="relative p-4 sm:p-6 bg-card rounded-xl shadow-xl w-full max-w-md mx-auto border border-border">
                         <ReferralForm 
                             patientId={getPatientId()} 
                             patientName={getPatientName()} 

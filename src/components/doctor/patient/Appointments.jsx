@@ -209,9 +209,6 @@ const Appointments = ({ patientId }) => {
                                 onValueChange={(value) => setFormData({ ...formData, type: value })}
                             >
                                 <SelectTrigger className="w-full">
-                                    <span>
-                                        {/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}
-                                    </span>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="in-person">In-person</SelectItem>
@@ -227,9 +224,7 @@ const Appointments = ({ patientId }) => {
                                 onValueChange={(value) => setFormData({ ...formData, status: value })}
                             >
                                 <SelectTrigger className="w-full">
-                                    <span>
-                                        {/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}
-                                    </span>
+                                  
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="scheduled">Scheduled</SelectItem>

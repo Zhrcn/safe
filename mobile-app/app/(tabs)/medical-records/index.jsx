@@ -35,7 +35,6 @@ function SectionTab({ icon, label, active, onPress }) {
 }
 
 function RecordCard({ item, sectionKey }) {
-  // Custom rendering for some sections
   if (sectionKey === 'vitalSigns') {
     return (
       <View style={styles.card}>
@@ -110,7 +109,6 @@ function RecordCard({ item, sectionKey }) {
       </View>
     );
   }
-  // Fallback for other sections
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{typeof item === 'object' ? JSON.stringify(item, null, 1) : String(item)}</Text>
@@ -141,7 +139,6 @@ export default function MedicalRecordsScreen() {
         <Text style={{ fontSize: 20 * sizeScale, fontWeight: 'bold', marginBottom: 8 * sizeScale, color: '#2563eb' }}>Medical Records</Text>
       {loading && <Text>Loading...</Text>}
         {error && <Text style={{ color: 'red' }}>{error}</Text>}
-        {/* Tabs */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -158,7 +155,6 @@ export default function MedicalRecordsScreen() {
             />
           ))}
         </ScrollView>
-        {/* Section content */}
         <ScrollView style={{ flex: 1 }}>
           {loading ? null : !section || (Array.isArray(section) && section.length === 0) ? (
             <Text style={{ color: '#64748b', marginTop: 24 * sizeScale }}>No records found in this section.</Text>

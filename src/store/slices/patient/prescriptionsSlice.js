@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getPrescriptions, addPrescription, updatePrescription, deletePrescription } from '@/store/services/patient/prescriptionApi';
 import { fetchPrescriptionsService } from '@/services/prescriptionService';
+import { getSocket } from '@/utils/socket';
 
 export const fetchPrescriptions = createAsyncThunk(
     'prescriptions/fetchPrescriptions',
@@ -59,6 +60,36 @@ const prescriptionsSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+        addPrescriptionRealTime: (state, action) => {
+            const newPrescription = action.payload;
+            if (!Array.isArray(state.prescriptions)) {
+                state.prescriptions = [];
+            }
+            const existingIndex = state.prescriptions.findIndex(p => p.id === newPrescription.prescriptionId);
+            if (existingIndex === -1) {
+                state.prescriptions.unshift(newPrescription.prescription);
+            }
+        },
+        updatePrescriptionRealTime: (state, action) => {
+            const updatedPrescription = action.payload;
+            if (!Array.isArray(state.prescriptions)) {
+                state.prescriptions = [];
+            }
+            const index = state.prescriptions.findIndex(p => p.id === updatedPrescription.prescriptionId);
+            if (index !== -1) {
+                state.prescriptions[index] = updatedPrescription.prescription;
+            }
+        },
+        dispensePrescriptionRealTime: (state, action) => {
+            const dispensedPrescription = action.payload;
+            if (!Array.isArray(state.prescriptions)) {
+                state.prescriptions = [];
+            }
+            const index = state.prescriptions.findIndex(p => p.id === dispensedPrescription.prescriptionId);
+            if (index !== -1) {
+                state.prescriptions[index] = dispensedPrescription.prescription;
+            }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -93,5 +124,44 @@ const prescriptionsSlice = createSlice({
     },
 });
 
-export const { clearError } = prescriptionsSlice.actions;
+export const { 
+    clearError, 
+    addPrescriptionRealTime, 
+    updatePrescriptionRealTime, 
+    dispensePrescriptionRealTime 
+} = prescriptionsSlice.actions;
+
+export const setupPrescriptionSocketListeners = () => (dispatch) => {
+    const socket = getSocket();
+    if (!socket) {
+        console.warn('Socket not available for prescription listeners');
+        return;
+    }
+
+    const handleNewPrescription = (data) => {
+        console.log('Received new prescription via socket:', data);
+        dispatch(addPrescriptionRealTime(data));
+    };
+
+    const handlePrescriptionUpdate = (data) => {
+        console.log('Received prescription update via socket:', data);
+        dispatch(updatePrescriptionRealTime(data));
+    };
+
+    const handlePrescriptionDispensed = (data) => {
+        console.log('Received prescription dispensed via socket:', data);
+        dispatch(dispensePrescriptionRealTime(data));
+    };
+
+    socket.on('prescription:new', handleNewPrescription);
+    socket.on('prescription:updated', handlePrescriptionUpdate);
+    socket.on('prescription:dispensed', handlePrescriptionDispensed);
+
+    return () => {
+        socket.off('prescription:new', handleNewPrescription);
+        socket.off('prescription:updated', handlePrescriptionUpdate);
+        socket.off('prescription:dispensed', handlePrescriptionDispensed);
+    };
+};
+
 export default prescriptionsSlice.reducer; 

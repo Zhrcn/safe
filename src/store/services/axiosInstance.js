@@ -14,7 +14,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
   const token = getToken();
-  console.log('AXIOS TOKEN (from localStorage):', token);
+  
+  // Only log token in browser environment and during development
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('AXIOS TOKEN (from localStorage):', token);
+  }
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

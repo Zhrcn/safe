@@ -45,4 +45,5 @@ router.post(
   authorize('patient'),
   requestReschedule
 );
+
 module.exports = router;

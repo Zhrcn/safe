@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/components/ThemeProviderWrapper';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { logoutUser } from '@/store/slices/auth/authSlice';
 import { useNotification } from '@/components/ui/Notification';
@@ -19,16 +18,16 @@ import {
 import { ThemeButton } from '@/components/ThemeButton';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
-  Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight, Menu as MenuIcon, X as CloseIcon, X
+  Home, Users, Calendar, FileText, Stethoscope, Pill, MessageSquare, ClipboardList, Package, ShoppingCart, Settings as SettingsIcon, User, BarChart, LogOut as LogoutIcon, Bell, ArrowLeft, ArrowRight, Menu as MenuIcon, X as CloseIcon, X as XIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSocket } from '@/utils/socket';
 import { getToken } from '@/utils/tokenUtils';
-import NotificationDialog from '@/components/patient/NotificationDialog';
-import axios from 'axios';
 import { fetchUserProfile, selectUser } from '@/store/slices/user/userSlice';
-import { getInitials } from '@/components/ui/Avatar';
-import { getImageUrl } from '@/components/ui/Avatar';
+import { getInitials, getImageUrl } from '@/components/ui/Avatar';
+import { addPatientById } from '@/store/slices/doctor/doctorPatientsSlice';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import axiosInstance from '@/store/services/axiosInstance';
 
 const NAVIGATION_CONFIG = {
   doctor: [
@@ -66,7 +65,6 @@ const NAVIGATION_CONFIG = {
     { name: 'logs', path: '/admin/logs', icon: FileText },
     { name: 'reports', path: '/admin/reports', icon: BarChart },
     { name: 'support', path: '/admin/support', icon: MessageSquare },
-    { name: 'notifications', path: '/admin/notifications', icon: Bell },
     { name: 'settings', path: '/admin/settings', icon: SettingsIcon },
   ],
   distributor: [
@@ -211,8 +209,7 @@ const NavigationMenu = ({ items, pathname, collapsed, t, onNavigate }) => (
     {items.filter(item => {
       if (!item.path) {
         if (process.env.NODE_ENV !== 'production') {
-          // Warn in dev if a sidebar item is missing a path
-          // eslint-disable-next-line no-console
+       
           console.warn('Sidebar navigation item missing path:', item);
         }
         return false;
@@ -260,7 +257,7 @@ const MobileSidebarDrawer = ({
   pathname,
   handleNavigation,
 }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -342,7 +339,7 @@ const MobileSidebarDrawer = ({
               )}
             >
               <SettingsIcon className="h-5 w-5" />
-                              <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
+              <span>{typeof t('settings') === 'string' ? t('settings') : 'Settings'}</span>
             </Link>
             <Link
               href="/logout"
@@ -353,7 +350,7 @@ const MobileSidebarDrawer = ({
               )}
             >
               <LogoutIcon className="h-5 w-5" />
-                              <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
+              <span>{typeof t('logout') === 'string' ? t('logout') : 'Logout'}</span>
             </Link>
           </div>
         </div>
@@ -417,6 +414,12 @@ const UnifiedLayout = ({ children }) => {
   const isAuthenticated = !!user;
   const token = getToken();
 
+  console.log('[Notifications] User state:', {
+    user: user ? { id: user.id, role: user.role, email: user.email } : null,
+    isAuthenticated,
+    hasToken: !!token
+  });
+
   const menuItems = useMemo(() => {
     const role = user?.role?.toLowerCase();
     return (NAVIGATION_CONFIG[role] || []);
@@ -440,23 +443,32 @@ const UnifiedLayout = ({ children }) => {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [notificationUpdateTrigger, setNotificationUpdateTrigger] = useState(0);
+  const [referralModalOpen, setReferralModalOpen] = useState(false);
+  const [activeReferral, setActiveReferral] = useState(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralResult, setReferralResult] = useState(null);
+
+  const patientBrief = activeReferral?.data?.patientBrief;
+  useEffect(() => {
+    if (referralModalOpen && activeReferral?.data) {
+    }
+  }, [referralModalOpen, activeReferral]);
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const checkBackendHealth = async () => {
       if (!isMounted) return;
-      
+
       try {
         const { checkBackendHealth: healthCheck } = await import('@/utils/backendHealth');
         const result = await healthCheck();
-        
+
         if (!isMounted) return;
-        
-        console.log('Backend health check:', result);
-        
+
+
         if (result.status === 'unhealthy') {
           showNotification(
             t('notification.backendUnavailable', 'Backend service not available. Please check if the server is running.'),
@@ -465,66 +477,60 @@ const UnifiedLayout = ({ children }) => {
         }
       } catch (error) {
         if (!isMounted) return;
-        console.error('Backend health check failed:', error);
       }
     };
-    
+
     checkBackendHealth();
-    
+
     return () => {
       isMounted = false;
     };
-  }, []); 
+  }, [showNotification, t]);
 
   useEffect(() => {
     if (!user || !token) return;
-    
-    console.log('Notifications request - Token exists:', !!token);
-    console.log('Notifications request - User:', user);
-    
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Token payload:', payload);
-      console.log('Token expires:', new Date(payload.exp * 1000).toLocaleString());
-      console.log('Current time:', new Date().toLocaleString());
-      console.log('Token expired:', payload.exp * 1000 < Date.now());
-      
       if (payload.exp * 1000 < Date.now()) {
-        console.error('Token expired');
         showNotification(t('notification.tokenExpired', 'Session expired. Please log in again.'), 'error');
         return;
       }
     } catch (error) {
-      console.error('Invalid token format:', error);
       showNotification(t('notification.invalidToken', 'Invalid session. Please log in again.'), 'error');
       return;
     }
-    
+
     setNotifLoading(true);
-    axios.get('/api/notifications?limit=20', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    console.log('[DEBUG] Making notification API call with axiosInstance');
+    console.log('[DEBUG] axiosInstance baseURL:', axiosInstance.defaults.baseURL);
+    axiosInstance.get('/notifications?limit=20')
       .then(res => {
-        const notifs = res.data.notifications || [];
-        setNotifications(notifs.map(n => ({
+        const notifs = res.data.data?.notifications || [];
+        const formattedNotifications = notifs.map(n => ({
           id: n._id || n.id,
           title: n.title,
           message: n.message,
           time: new Date(n.createdAt).toLocaleTimeString(),
           read: n.isRead,
-        })));
+          type: n.type || 'general',
+          data: n.data || {},
+          priority: n.priority || 'normal'
+        }));
+        setNotifications(prev => {
+          if (prev.length === 0) {
+            return formattedNotifications;
+          }
+          return prev;
+        });
         setUnreadCount(notifs.filter(n => !n.isRead).length);
         setNotifLoading(false);
       })
       .catch(err => {
         setNotifLoading(false);
-        console.error('Notifications fetch error:', err);
-        console.error('Error response:', err.response?.data);
-        console.error('Error status:', err.response?.status);
-        console.error('Error headers:', err.response?.headers);
-        
+
         let errorMessage = t('notification.fetchFail', 'Failed to fetch notifications');
-        
+
         if (err.response?.status === 404) {
           errorMessage = t('notification.backendUnavailable', 'Backend service not available. Please check if the server is running.');
         } else if (err.response?.status === 401) {
@@ -536,92 +542,198 @@ const UnifiedLayout = ({ children }) => {
         } else if (err.code === 'ERR_NETWORK') {
           errorMessage = t('notification.networkError', 'Network error. Please check your connection.');
         }
-        
+
         showNotification(errorMessage, 'error');
       });
-  }, [user, token, showNotification, t]);
+  }, [user?.id, token, showNotification, t, dispatch, router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.id) {
+      console.log('[Notifications] No user or user.id, skipping setup. User:', user);
+      return;
+    }
+    
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      console.log('[Notifications] Socket not available, retrying in 2 seconds...');
+      const timer = setTimeout(() => {
+        const retrySocket = getSocket();
+        if (retrySocket) {
+          console.log('[Notifications] Socket available on retry');
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+
+    console.log('[Notifications] Setting up real-time notifications for user:', user.id);
+    console.log('[Notifications] Socket connected:', socket.connected);
+    console.log('[Notifications] Socket ID:', socket.id);
+
     socket.emit('join', { userId: user.id, role: user.role });
-    socket.on('appointment:update', (data) => {
-      setNotifications(prev => [
-        {
-          id: data.id || Date.now(),
-          title: 'Appointment Update',
-          message: data.message,
-          time: new Date().toLocaleTimeString(),
-          read: false,
-        },
-        ...prev,
-      ]);
-      setUnreadCount(count => count + 1);
-    });
-    socket.on('message:new', (data) => {
-      setNotifications(prev => [
-        {
-          id: data.id || Date.now(),
-          title: 'New Message',
-          message: `${data.senderName}: ${data.text}`,
-          time: new Date().toLocaleTimeString(),
-          read: false,
-        },
-        ...prev,
-      ]);
-      setUnreadCount(count => count + 1);
-    });
-    return () => {
-      socket.off('appointment:update');
-      socket.off('message:new');
+    console.log('[Notifications] Sent join event for user:', user.id, 'role:', user.role);
+
+    const handleNewNotification = (notificationData) => {
+      console.log('[Notifications] Real-time notification received:', notificationData);
+      console.log('[Notifications] Current notifications before update:', notifications.length);
+      console.log('[Notifications] Current unread count before update:', unreadCount);
+      
+      const notification = {
+        id: notificationData.id || `${notificationData.type}-${Date.now()}`,
+        title: notificationData.title || 'Notification',
+        message: notificationData.message || 'You have a new notification',
+        time: new Date(notificationData.timestamp || Date.now()).toLocaleTimeString(),
+        read: false,
+        type: notificationData.type || 'general',
+        data: notificationData.data || {},
+        priority: notificationData.priority || 'normal'
+      };
+
+      console.log('[Notifications] Created notification object:', notification);
+
+      setNotifications(prev => {
+        console.log('[Notifications] Previous notifications count:', prev.length);
+        const exists = prev.some(n => n.id === notification.id);
+        if (exists) {
+          console.log('[Notifications] Duplicate notification ignored:', notification.id);
+          return prev;
+        }
+        console.log('[Notifications] Adding new notification to state:', notification.id);
+        const newNotifications = [notification, ...prev];
+        console.log('[Notifications] New notifications count:', newNotifications.length);
+        return newNotifications;
+      });
+      
+      setUnreadCount(count => {
+        const newCount = count + 1;
+        console.log('[Notifications] Updated unread count:', newCount);
+        return newCount;
+      });
+
+      const toastType = notification.priority === 'high' ? 'warning' : 'info';
+      showNotification(notification.message, toastType);
+      
+      setTimeout(() => {
+        setNotificationUpdateTrigger(prev => prev + 1);
+        console.log('[Notifications] Triggered re-render');
+      }, 50);
     };
-  }, [user]);
+
+    socket.on('notification:new', handleNewNotification);
+
+    const handleConnect = () => {
+      console.log('[Notifications] Socket connected - notifications active');
+      showNotification(t('notification.socketConnected', 'Real-time notifications connected'), 'success');
+    };
+
+    const handleDisconnect = (reason) => {
+      console.log('[Notifications] Socket disconnected:', reason);
+      if (reason === 'io server disconnect') {
+        showNotification(t('notification.socketDisconnected', 'Connection lost. Trying to reconnect...'), 'warning');
+      }
+    };
+
+    const handleReconnect = (attemptNumber) => {
+      console.log('[Notifications] Socket reconnected after', attemptNumber, 'attempts');
+      showNotification(t('notification.socketReconnected', 'Connection restored'), 'success');
+    };
+
+    const handleConnectError = (error) => {
+      console.error('[Notifications] Socket connection error:', error);
+      showNotification(t('notification.socketError', 'Connection error. Notifications may be delayed.'), 'error');
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('reconnect', handleReconnect);
+    socket.on('connect_error', handleConnectError);
+
+    return () => {
+      console.log('[Notifications] Cleaning up socket listeners');
+      socket.off('notification:new', handleNewNotification);
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('reconnect', handleReconnect);
+      socket.off('connect_error', handleConnectError);
+    };
+  }, [user?.id, user?.role, showNotification, t]);
+
+  useEffect(() => {
+    console.log('[Notifications] State changed - notifications count:', notifications.length);
+    console.log('[Notifications] State changed - unread count:', unreadCount);
+    console.log('[Notifications] State changed - update trigger:', notificationUpdateTrigger);
+  }, [notifications, unreadCount, notificationUpdateTrigger]);
 
   const handleNotifOpen = () => {
-    setNotifOpen(true);
     setUnreadCount(0);
-    
     if (!token) {
-      console.error('No token available for marking notifications as read');
       return;
     }
-    
-    axios.patch('/api/notifications/read-all', {}, {
-      headers: { Authorization: `Bearer ${token}` }
+    axiosInstance.patch('/notifications/read-all').then(() => {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     }).catch(err => {
-      console.error('Error marking notifications as read:', err);
       if (err.response?.status === 401) {
         dispatch(logoutUser());
         router.push('/login');
       }
     });
-    
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
-  const handleNotifClose = () => setNotifOpen(false);
-  const handleMarkAsRead = (id) => {
+
+  const handleDeleteNotification = (id) => {
     if (!token) {
-      console.error('No token available for marking notification as read');
       return;
     }
-    
-    axios.patch(`/api/notifications/${id}/read`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
+    axiosInstance.delete(`/notifications/${id}`).then(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
     }).catch(err => {
-      console.error('Error marking notification as read:', err);
       if (err.response?.status === 401) {
         dispatch(logoutUser());
         router.push('/login');
       }
     });
-    
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
-  const handleClearAll = () => {
-    setNotifications([]);
-    setUnreadCount(0);
+
+  const handleDeleteAllNotifications = () => {
+    if (!token) {
+      return;
+    }
+    axiosInstance.delete('/notifications').then(() => {
+      setNotifications([]);
+      setUnreadCount(0);
+    }).catch(err => {
+      if (err.response?.status === 401) {
+        dispatch(logoutUser());
+        router.push('/login');
+      }
+    });
   };
+
+    const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      if (token) {
+        axiosInstance.patch(`/notifications/${notification.id}/read`).then(() => {
+          setNotifications(prev =>
+            prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+          );
+          setUnreadCount(count => Math.max(0, count - 1));
+        }).catch(() => {});
+      }
+    }
+
+    if (notification.type === 'referral' || (notification.title && notification.title.toLowerCase().includes('referral'))) {
+      setActiveReferral(notification);
+      setReferralModalOpen(true);
+    } else if (notification.type === 'appointment') {
+      handleNavigation(`/${user?.role}/appointments`);
+    } else if (notification.type === 'message') {
+      handleNavigation(`/${user?.role}/messaging`);
+    } else if (notification.type === 'prescription') {
+      handleNavigation(`/${user?.role}/prescriptions`);
+    } else if (notification.type === 'consultation') {
+      handleNavigation(`/${user?.role}/consultations`);
+    }
+  };
+
+
 
   useEffect(() => {
     setMounted(true);
@@ -657,7 +769,7 @@ const UnifiedLayout = ({ children }) => {
   if (!ready || !mounted) return null;
 
   return (
-    <div className={cn("flex h-screen bg-background overflow-hidden", 'flex-row')}>
+    <div className={cn("flex h-screen bg-background overflow-hidden", isRtl ? 'flex-row-reverse' : 'flex-row')}>
       {!isMobile && (
         <aside
           className={cn(
@@ -668,7 +780,9 @@ const UnifiedLayout = ({ children }) => {
           )}
           style={{
             background: 'var(--color-navbar)',
-            color: 'var(--color-navbar-foreground)'
+            color: 'var(--color-navbar-foreground)',
+            [isRtl ? 'right' : 'left']: 0,
+            [isRtl ? 'left' : 'right']: 'auto',
           }}
         >
           <div
@@ -744,7 +858,7 @@ const UnifiedLayout = ({ children }) => {
         'flex-1 flex flex-col min-h-screen transition-all duration-300',
         !isMobile && (
           isRtl 
-            ? (sidebarCollapsed ? 'mr-12 sm:mr-16' : 'mr-[60px] sm:mr-[270px]')
+            ? (sidebarCollapsed ? 'mr-12 sm:mr-16' : 'ml-[60px] sm:ml-[270px]')
             : (sidebarCollapsed ? 'ml-12 sm:ml-16' : 'ml-[60px] sm:ml-[270px]')
         )
       )}>
@@ -763,27 +877,140 @@ const UnifiedLayout = ({ children }) => {
               <MenuIcon className="h-6 w-6 sm:h-7 sm:w-7" />
             </Button>
           )}
-          <div className="flex items-center gap-2 sm:gap-3 flex-1">
+          <div className={cn("flex items-center gap-2 sm:gap-3 flex-1", isRtl ? 'flex-row-reverse' : '')}>
             <img src="/logo(1).png" alt="Logo" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
             <span className="project-title font-extrabold text-lg sm:text-2xl tracking-tight">{t('appName', 'SafeApp')}</span>
           </div>
           
           {user && (
             <div className="flex items-center gap-2 ml-auto">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNotifOpen}
-                className="relative h-9 w-9 sm:h-11 sm:w-11 text-white hover:bg-white/10 transition-colors"
-                aria-label={t('notifications', 'Notifications')}
-              >
-                <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 sm:h-6 sm:w-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative h-9 w-9 sm:h-11 sm:w-11 text-white hover:bg-white/10 transition-colors"
+                    aria-label={t('notifications', 'Notifications')}
+                  >
+                    <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+                    {unreadCount > 0 && (
+                        <span className={cn(
+                          'absolute flex items-center justify-center',
+                          isRtl ? 'top-1 left-1 right-auto' : 'top-1 right-1 left-auto')
+                        }>
+                          <span className="flex items-center justify-center h-4 w-4 sm:h-5 sm:w-5 bg-red-500 rounded-full border-2 border-white shadow-md text-white text-[10px] sm:text-xs font-bold">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        </span>
+                      )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto" onOpenAutoFocus={handleNotifOpen} onOpenChange={open => { if (open) handleNotifOpen(); }}>
+                  <div className="flex items-center justify-between px-2 py-2">
+                    <span className="font-semibold text-base">
+                      {t('notifications', 'Notifications')} ({notifications.length})
+                    </span>
+                    {notifications.length > 0 && (
+                      <Button size="xs" variant="ghost" onClick={handleDeleteAllNotifications} className="text-red-500">
+                        {t('clearAll', 'Delete All')}
+                      </Button>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                      <p className="text-sm text-muted-foreground">
+                        {t('noNotifications', 'No notifications at this time')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Debug: {notifications.length} notifications, {unreadCount} unread
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.map((notification, index) => {
+                      const getNotificationIcon = () => {
+                        switch (notification.type) {
+                          case 'appointment':
+                            return <Calendar className="h-4 w-4" />;
+                          case 'message':
+                            return <MessageSquare className="h-4 w-4" />;
+                          case 'prescription':
+                            return <Pill className="h-4 w-4" />;
+                          case 'consultation':
+                            return <Stethoscope className="h-4 w-4" />;
+                          case 'referral':
+                            return <Users className="h-4 w-4" />;
+                          case 'medical_file_update':
+                            return <FileText className="h-4 w-4" />;
+                          case 'reminder':
+                            return <Bell className="h-4 w-4" />;
+                          case 'inquiry':
+                            return <ClipboardList className="h-4 w-4" />;
+                          default:
+                            return <Bell className="h-4 w-4" />;
+                        }
+                      };
+
+                      const getPriorityColor = () => {
+                        switch (notification.priority) {
+                          case 'high':
+                            return 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20';
+                          case 'normal':
+                            return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+                          case 'low':
+                            return 'border-l-4 border-l-gray-500 bg-gray-50 dark:bg-gray-950/20';
+                          default:
+                            return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+                        }
+                      };
+
+                      return (
+                      <DropdownMenuItem
+                        key={`${notification.id}-${notificationUpdateTrigger}-${index}`}
+                          className={cn(
+                            "flex flex-col items-start gap-1 w-full group p-0 transition-all duration-200 hover:bg-muted/50",
+                            getPriorityColor()
+                          )}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="flex items-center justify-between w-full px-3 py-2">
+                            <div className={cn("flex items-center min-w-0 gap-2", isRtl ? 'flex-row-reverse' : '')}>
+                            {!notification.read && (
+                              <span className={cn("inline-block h-2 w-2 bg-red-500 rounded-full align-middle", isRtl ? 'ml-2 mr-0' : 'mr-2 ml-0')} />
+                            )}
+                              <div className="flex items-center gap-2">
+                                <div className={cn(
+                                  "p-1 rounded-full",
+                                  notification.priority === 'high' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
+                                  notification.priority === 'normal' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                                  'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400'
+                                )}>
+                                  {getNotificationIcon()}
+                                </div>
+                            <div className="font-medium text-foreground text-sm truncate max-w-[110px]">
+                              {notification.title}
+                                </div>
+                            </div>
+                          </div>
+                          <span className={cn("text-xs text-muted-foreground whitespace-nowrap", isRtl ? 'mr-2 ml-0' : 'ml-2 mr-0')}>{notification.time}</span>
+                          <button
+                            className={cn("p-1 rounded-full hover:bg-red-100 text-red-500 hover:text-red-700 transition-colors", isRtl ? 'mr-2 ml-0' : 'ml-2 mr-0')}
+                            onClick={e => { e.stopPropagation(); handleDeleteNotification(notification.id); }}
+                            aria-label={t('delete', 'Delete')}
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="text-xs text-muted-foreground w-full break-words px-3 pb-2">
+                          {notification.message}
+                        </div>
+                      </DropdownMenuItem>
+                      );
+                    })
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <LanguageSwitcher />
               <ThemeButton />
               <DropdownMenu>
@@ -825,20 +1052,85 @@ const UnifiedLayout = ({ children }) => {
           {children}
         </main>
       </div>
-      <NotificationDialog
-        open={notifOpen}
-        onClose={handleNotifClose}
-        notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onClearAll={handleClearAll}
-        loading={notifLoading}
-      />
       <ImageModal
         open={imageModalOpen}
         onClose={handleModalClose}
         imageUrl={modalImageUrl}
         alt="Profile Image"
       />
+      {referralModalOpen && activeReferral && (
+        <Dialog open={referralModalOpen} onOpenChange={setReferralModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Referral Request</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">
+              <p className="mb-2">Do you want to add this referred patient to your list?</p>
+              <div className="text-sm text-muted-foreground mb-2">
+                {patientBrief ? (
+                  <div className="mb-2">
+                    <div><strong>Name:</strong> {patientBrief.name}</div>
+                    <div><strong>Age:</strong> {patientBrief.age || 'N/A'}</div>
+                    <div><strong>Gender:</strong> {patientBrief.gender || 'N/A'}</div>
+                    <div><strong>Medical ID:</strong> {patientBrief.medicalId || 'N/A'}</div>
+                    {patientBrief.condition && <div><strong>Condition:</strong> {patientBrief.condition}</div>}
+                    {patientBrief.email && <div><strong>Email:</strong> {patientBrief.email}</div>}
+                    {patientBrief.phone && <div><strong>Phone:</strong> {patientBrief.phone}</div>}
+                  </div>
+                ) : (
+                  <span className="text-red-600">Patient not found.</span>
+                )}
+                {activeReferral.data?.fromDoctorName && (
+                  <div className="mb-2"><strong>Referred by:</strong> {activeReferral.data.fromDoctorName}</div>
+                )}
+                {activeReferral.data?.reason && (
+                  <div><strong>Reason:</strong> {activeReferral.data.reason}</div>
+                )}
+                {activeReferral.data?.urgency && (
+                  <div><strong>Urgency:</strong> {activeReferral.data.urgency}</div>
+                )}
+                {activeReferral.data?.notes && (
+                  <div><strong>Notes:</strong> {activeReferral.data.notes}</div>
+                )}
+                <strong>Message:</strong> {activeReferral.message}
+              </div>
+              {referralResult && (
+                <div className={referralResult.success ? 'text-green-600' : 'text-red-600'}>
+                  {referralResult.message}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="default"
+                disabled={referralLoading}
+                onClick={async () => {
+                  setReferralLoading(true);
+                  setReferralResult(null);
+                  try {
+                    const resultAction = await dispatch(addPatientById(activeReferral.data?.patientId));
+                    if (addPatientById.fulfilled.match(resultAction)) {
+                      setReferralResult({ success: true, message: 'Patient added successfully!' });
+                      setTimeout(() => setReferralModalOpen(false), 1200);
+                    } else {
+                      setReferralResult({ success: false, message: resultAction.payload || 'Failed to add patient.' });
+                    }
+                  } catch (err) {
+                    setReferralResult({ success: false, message: 'An error occurred.' });
+                  } finally {
+                    setReferralLoading(false);
+                  }
+                }}
+              >
+                {referralLoading ? 'Adding...' : 'Accept'}
+              </Button>
+              <Button variant="outline" onClick={() => setReferralModalOpen(false)} disabled={referralLoading}>
+                Reject
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

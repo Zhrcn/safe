@@ -141,7 +141,6 @@ const AddChronicConditionDialog = ({ open, onClose }) => {
               onValueChange={handleSelectChange('status')}
             >
               <SelectTrigger className={cn({ 'border-danger': errors.status })}>
-                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>

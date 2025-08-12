@@ -4,17 +4,18 @@ const {
   getPharmacistProfile,
   updatePharmacistProfile,
   getPharmacists,
+  getPharmacistsForMobile,
   getPharmacist
 } = require('../controllers/pharmacist.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const inventoryController = require('../controllers/inventory.controller');
 
 router.get('/', getPharmacists);
+router.get('/mobile', getPharmacistsForMobile); 
 
 router.use(protect);
 router.use(authorize('pharmacist'));
 
-// Inventory routes
 router.get('/inventory', inventoryController.getInventory);
 router.get('/inventory/low-stock', inventoryController.getLowStockItems);
 router.get('/inventory/:id', inventoryController.getInventoryItem);

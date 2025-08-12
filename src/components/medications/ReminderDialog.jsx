@@ -8,16 +8,16 @@ import { BellRing, BellOff, Trash2, Plus } from 'lucide-react';
 
 const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
     const { t } = useTranslation();
-    const [reminderTimes, setReminderTimes] = useState([]);
-    const [reminderDays, setReminderDays] = useState([]);
+    const [reminders, setReminders] = useState([]);
     const [remindersEnabled, setRemindersEnabled] = useState(true);
 
     useEffect(() => {
-        if (medication) {
-            setReminderTimes(medication.reminderTimes || []);
-            setReminderDays(medication.reminderDays || []);
-            setRemindersEnabled(medication.remindersEnabled ?? true);
+        if (medication && Array.isArray(medication.reminders)) {
+            setReminders(medication.reminders.length > 0 ? medication.reminders : [{ time: '08:00', days: [], note: '' }]);
+        } else {
+            setReminders([{ time: '08:00', days: [], note: '' }]);
         }
+        setRemindersEnabled(true);
     }, [medication, open]);
 
     const DAYS_OF_WEEK = [
@@ -30,35 +30,31 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
         { value: 'sunday', label: t('patient.medications.days.sun', 'Sun') },
     ];
 
-    const handleTimeChange = (e, idx) => {
-        const newTimes = [...reminderTimes];
-        newTimes[idx] = e.target.value;
-        setReminderTimes(newTimes);
+    const handleReminderChange = (idx, field, value) => {
+        setReminders(reminders => reminders.map((rem, i) => i === idx ? { ...rem, [field]: value } : rem));
     };
 
-    const handleAddTime = () => {
-        setReminderTimes([...reminderTimes, '08:00']);
+    const handleDayToggle = (idx, day) => {
+        setReminders(reminders => reminders.map((rem, i) => {
+            if (i !== idx) return rem;
+            const days = rem.days || [];
+            return days.includes(day)
+                ? { ...rem, days: days.filter(d => d !== day) }
+                : { ...rem, days: [...days, day] };
+        }));
     };
 
-    const handleRemoveTime = (idx) => {
-        setReminderTimes(reminderTimes.filter((_, i) => i !== idx));
+    const handleAddReminder = () => {
+        setReminders([...reminders, { time: '08:00', days: [], note: '' }]);
     };
 
-    const handleDayToggle = (day) => {
-        if (reminderDays.includes(day)) {
-            setReminderDays(reminderDays.filter(d => d !== day));
-        } else {
-            setReminderDays([...reminderDays, day]);
-        }
+    const handleRemoveReminder = (idx) => {
+        setReminders(reminders => reminders.filter((_, i) => i !== idx));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit({
-            reminderTimes,
-            reminderDays,
-            remindersEnabled,
-        });
+        onSubmit({ reminders: remindersEnabled ? reminders : [] });
     };
 
     if (!open) return null;
@@ -75,12 +71,12 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                     <div>
                         <Label className="text-primary font-medium">{t('patient.medications.enableReminders', 'Enable Reminders')}</Label>
                         <div className="mt-3">
-                                                            <Button
-                                    type="button"
-                                    variant={remindersEnabled ? "success" : "outline"}
-                                    onClick={() => setRemindersEnabled(!remindersEnabled)}
-                                    className="flex items-center gap-2 transition-all duration-200"
-                                >
+                            <Button
+                                type="button"
+                                variant={remindersEnabled ? "success" : "outline"}
+                                onClick={() => setRemindersEnabled(!remindersEnabled)}
+                                className="flex items-center gap-2 transition-all duration-200"
+                            >
                                 {remindersEnabled ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
                                 {remindersEnabled ? t('patient.medications.enabled', 'Enabled') : t('patient.medications.disabled', 'Disabled')}
                             </Button>
@@ -89,53 +85,58 @@ const ReminderDialog = ({ open, medication, onClose, onSubmit }) => {
                     {remindersEnabled && (
                         <>
                             <div>
-                                <Label className="text-primary font-medium">{t('patient.medications.reminderTimes', 'Reminder Times')}</Label>
+                                <Label className="text-primary font-medium">{t('patient.medications.reminders', 'Reminders')}</Label>
                                 <div className="flex flex-col gap-3 mt-3">
-                                    {reminderTimes.map((time, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    {reminders.map((rem, idx) => (
+                                        <div key={idx} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <Input
+                                                    type="time"
+                                                    value={rem.time}
+                                                    onChange={e => handleReminderChange(idx, 'time', e.target.value)}
+                                                    className="w-32 border-primary/30 focus:border-primary focus:ring-primary/20"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="danger"
+                                                    size="sm"
+                                                    onClick={() => handleRemoveReminder(idx)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-red-400" />
+                                                </Button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {DAYS_OF_WEEK.map(day => (
+                                                    <Button
+                                                        key={day.value}
+                                                        type="button"
+                                                        variant={rem.days && rem.days.includes(day.value) ? "success" : "outline"}
+                                                        onClick={() => handleDayToggle(idx, day.value)}
+                                                        className="w-20 transition-all duration-200"
+                                                    >
+                                                        {day.label}
+                                                    </Button>
+                                                ))}
+                                            </div>
                                             <Input
-                                                type="time"
-                                                value={time}
-                                                onChange={e => handleTimeChange(e, idx)}
-                                                className="w-32 border-primary/30 focus:border-primary focus:ring-primary/20"
+                                                type="text"
+                                                placeholder={t('patient.medications.reminderNote', 'Note (optional)')}
+                                                value={rem.note || ''}
+                                                onChange={e => handleReminderChange(idx, 'note', e.target.value)}
+                                                className="mt-2"
                                             />
-                                            <Button
-                                                type="button"
-                                                variant="danger"
-                                                size="sm"
-                                                onClick={() => handleRemoveTime(idx)}
-                                                
-                                            >
-                                                <Trash2 className="h-4 w-4 text-red-400" />
-                                            </Button>
                                         </div>
                                     ))}
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={handleAddTime}
+                                        onClick={handleAddReminder}
                                         className="transition-colors"
                                     >
                                         <Plus className="h-4 w-4 mr-2" />
-                                        {t('patient.medications.addTime', 'Add Time')}
+                                        {t('patient.medications.addReminder', 'Add Reminder')}
                                     </Button>
-                                </div>
-                            </div>
-                            <div>
-                                <Label className="text-primary font-medium">{t('patient.medications.reminderDays', 'Reminder Days')}</Label>
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                    {DAYS_OF_WEEK.map(day => (
-                                        <Button
-                                            key={day.value}
-                                            type="button"
-                                            variant={reminderDays.includes(day.value) ? "success" : "outline"}
-                                            onClick={() => handleDayToggle(day.value)}
-                                            className="w-20 transition-all duration-200"
-                                        >
-                                            {day.label}
-                                        </Button>
-                                    ))}
                                 </div>
                             </div>
                         </>

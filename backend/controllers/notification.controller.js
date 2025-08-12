@@ -57,3 +57,36 @@ exports.markAllNotificationsAsRead = asyncHandler(async (req, res, next) => {
   }
   res.status(200).json(new ApiResponse(200, { modifiedCount: result.nModified }, `${result.nModified} notifications marked as read.`));
 });
+
+exports.deleteNotification = asyncHandler(async (req, res, next) => {
+  const notificationId = req.params.id;
+  const userId = req.user.id;
+  
+  const notification = await Notification.findById(notificationId);
+  if (!notification) {
+    return res.status(404).json(new ApiResponse(404, null, 'Notification not found.'));
+  }
+  
+  if (notification.user.toString() !== userId) {
+    return res.status(403).json(new ApiResponse(403, null, 'User not authorized to delete this notification.'));
+  }
+  
+  await Notification.findByIdAndDelete(notificationId);
+  res.status(200).json(new ApiResponse(200, null, 'Notification deleted successfully.'));
+});
+
+exports.deleteAllNotifications = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  
+  const result = await Notification.deleteMany({ user: userId });
+  
+  res.status(200).json(new ApiResponse(200, { deletedCount: result.deletedCount }, `${result.deletedCount} notifications deleted successfully.`));
+});
+
+exports.deleteReadNotifications = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  
+  const result = await Notification.deleteMany({ user: userId, isRead: true });
+  
+  res.status(200).json(new ApiResponse(200, { deletedCount: result.deletedCount }, `${result.deletedCount} read notifications deleted successfully.`));
+});

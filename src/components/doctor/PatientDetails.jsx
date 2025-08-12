@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';ButtonButtonButtonButton
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     User as UserIcon,
@@ -13,7 +12,7 @@ import {
     Pill as PrescriptionsIcon,
     CalendarDays as AppointmentsIcon,
 } from 'lucide-react';
-import { fetchPatientDetails } from '../../store/slices/doctor/doctorPatientsSlice';
+import { fetchPatientById } from '../../store/slices/doctor/doctorPatientsSlice';
 import { addPatientToFavorites, removePatientFromFavorites } from '../../store/slices/doctor/doctorPatientsSlice';
 import MedicalHistory from './patient/MedicalHistory';
 import Consultations from './patient/Consultations';
@@ -22,13 +21,12 @@ import Appointments from './patient/Appointments';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
-const PatientDetails = () => {
-    const { patientId } = useParams();
+const PatientDetails = ({ patientId }) => {
     const dispatch = useDispatch();
     const [activeTab, setActiveTab] = useState('medical-history');
     const { selectedPatient: patient, loading, favorites } = useSelector((state) => state.doctorPatients);
     useEffect(() => {
-        dispatch(fetchPatientDetails(patientId));
+        dispatch(fetchPatientById(patientId));
     }, [dispatch, patientId]);
     const handleFavoriteToggle = () => {
         if (favorites.includes(patientId)) {

@@ -6,6 +6,7 @@ const {
   updateDoctorProfile,
   getDoctor,
   getDoctors,
+  getDoctorsForMobile,
   getDoctorPatients,
   getDoctorPatientById,
   addPatientById,
@@ -18,7 +19,8 @@ const {
   addLicense,
   updateLicense,
   deleteLicense,
-  getMedicalFileById
+  getMedicalFileById,
+  getDoctorByUserId
 } = require('../controllers/doctor.controller');
 const { 
   getDoctorAppointments, 
@@ -27,7 +29,8 @@ const {
   updateAppointment, 
   getAppointmentDetails,
   handleRescheduleRequest,
-  createAppointment
+  createAppointment,
+  completeAppointment
 } = require('../controllers/Doctor/doctorAppointment.controller');
 const {
   getDashboardAnalytics,
@@ -40,6 +43,7 @@ const {
 const { protect, authorize } = require('../middleware/auth.middleware');
 const medicineRequestController = require('../controllers/medicineRequest.controller');
 
+router.get('/mobile', getDoctorsForMobile); 
 router.use(protect);
 router.get('/', getDoctors);
 router.get('/patients', authorize('doctor'), getDoctorPatients);
@@ -56,6 +60,7 @@ router.get('/appointments/:appointmentId', authorize('doctor'), getAppointmentDe
 router.patch('/appointments/:appointmentId/accept', authorize('doctor'), acceptAppointment);
 router.patch('/appointments/:appointmentId/reject', authorize('doctor'), rejectAppointment);
 router.patch('/appointments/:appointmentId', authorize('doctor'), updateAppointment);
+router.patch('/appointments/:appointmentId/complete', authorize('doctor'), completeAppointment);
 router.post('/appointments/:appointmentId/reschedule-request', authorize('doctor'), handleRescheduleRequest);
 router.post('/appointments', authorize('doctor'), createAppointment);
 router
@@ -75,6 +80,7 @@ router.post('/licenses', authorize('doctor'), addLicense);
 router.put('/licenses/:id', authorize('doctor'), updateLicense);
 router.delete('/licenses/:id', authorize('doctor'), deleteLicense);
 
+router.get('/user/:userId', getDoctorByUserId);
 router.get('/:id', getDoctor);
 router.post('/patients/add', authorize('doctor'), addPatientById);
 router.get('/medical-file/:id', protect, authorize('doctor'), getMedicalFileById);

@@ -17,7 +17,7 @@ export const fetchPharmacyById = createAsyncThunk(
     'patientPharmacist/fetchPharmacyById',
     async (pharmacyId, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.get(`/api/v1/pharmacists/${pharmacyId}`);
+            const response = await axiosInstance.get(`/pharmacists/${pharmacyId}`);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch pharmacy');
@@ -29,7 +29,7 @@ export const sendMessageToPharmacy = createAsyncThunk(
     'patientPharmacist/sendMessageToPharmacy',
     async ({ pharmacyId, message }, { rejectWithValue }) => {
         try {
-            const response = await axiosInstance.post(`/api/v1/pharmacists/${pharmacyId}/message`, {
+            const response = await axiosInstance.post(`/pharmacists/${pharmacyId}/message`, {
                 message
             });
             return response.data;

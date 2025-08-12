@@ -7,7 +7,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, onDeleteMess
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
-  // Helper to get sender object with image from participants if needed
   function getSenderWithImage(sender) {
     if (typeof sender === 'object' && (sender.profileImage || sender.avatar)) return sender;
     if (participants && typeof sender === 'string') {

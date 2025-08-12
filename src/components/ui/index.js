@@ -1,2 +1,2 @@
 export * from './Avatar';
-// ... add other exports as needed ... 
+export * from './Badge';

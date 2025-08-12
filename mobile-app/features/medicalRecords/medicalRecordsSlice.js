@@ -6,7 +6,6 @@ export const fetchMedicalRecords = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/patients/medical-records');
-      console.log('MedicalRecords API response:', response.data);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

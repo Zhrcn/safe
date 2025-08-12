@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/apiResponse');
 const MedicalRecord = require('../models/MedicalRecord');
 const ErrorResponse = require('../utils/errorResponse');
+const { createNotification } = require('../utils/notification.utils');
 
 const getMedicalRecords = asyncHandler(async (req, res) => {
     let medicalRecord = await MedicalRecord.findOne({ patientId: req.user._id });

@@ -5,10 +5,7 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Returns age in years from a date of birth (string or Date).
- * Returns null if input is invalid.
- */
+
 export function getAgeFromDateOfBirth(dateOfBirth) {
   if (!dateOfBirth) return null;
   const dob = new Date(dateOfBirth);
@@ -20,4 +17,36 @@ export function getAgeFromDateOfBirth(dateOfBirth) {
     age--;
   }
   return age;
+}
+
+export function getDoctorName(appointment, t) {
+  if (appointment.doctor?.user?.firstName && appointment.doctor?.user?.lastName) {
+    return `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`;
+  }
+  if (appointment.doctor?.firstName && appointment.doctor?.lastName) {
+    return `${appointment.doctor.firstName} ${appointment.doctor.lastName}`;
+  }
+  if (appointment.doctor?.name) {
+    return appointment.doctor.name;
+  }
+  if (appointment.doctorName) {
+    return appointment.doctorName;
+  }
+  return t ? t('doctor.appointments.unknownDoctor', 'Unknown Doctor') : 'Unknown Doctor';
+}
+
+
+export function getStatusVariant(status) {
+  switch ((status || '').toLowerCase()) {
+    case 'scheduled':
+      return 'default';
+    case 'completed':
+      return 'secondary';
+    case 'cancelled':
+      return 'danger';
+    case 'pending':
+      return 'outline';
+    default:
+      return 'default';
+  }
 } 

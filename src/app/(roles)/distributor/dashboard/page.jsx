@@ -23,7 +23,6 @@ export default function DistributorDashboard() {
         setProfile(profileRes.data.data);
         setOrders(Array.isArray(ordersRes.data.data) ? ordersRes.data.data : []);
       } catch (err) {
-        // handle error
       } finally {
         setLoading(false);
       }
@@ -35,7 +34,6 @@ export default function DistributorDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Header */}
       <Card className="mb-4 bg-gradient-to-r from-primary/10 via-card to-secondary/10 border-0 shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between gap-4 p-6">
           <div>
@@ -57,7 +55,6 @@ export default function DistributorDashboard() {
         </CardHeader>
       </Card>
 
-      {/* Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         <AnimatePresence>
           <motion.div
@@ -108,7 +105,6 @@ export default function DistributorDashboard() {
         </AnimatePresence>
       </div>
 
-      {/* Quick Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8">
         <Link href="/distributor/orders">
           <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl bg-card/90 border-none flex flex-col items-center p-6">

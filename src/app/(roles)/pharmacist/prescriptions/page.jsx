@@ -2,17 +2,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Eye, CheckCircle, X } from 'lucide-react';
 import { PharmacistPageContainer, PharmacistCard } from '@/components/pharmacist/PharmacistComponents';
-import { SearchField } from '@/components/ui/Notification';
-import { getPrescriptions, updatePrescriptionStatus, getPrescriptionById, markPrescriptionFilled } from '@/services/pharmacistService';
 import { Button } from '@/components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import dynamic from 'next/dynamic';
-import PrescriptionView from '@/components/medical/PrescriptionView';
 import axiosInstance from '@/store/services/axiosInstance';
 const QRCodeScanner = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
+
 export default function PharmacistPrescriptionsPage() {
-  const [prescriptions, setPrescriptions] = useState([]); // All prescriptions for pharmacist
+  const [prescriptions, setPrescriptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [prescriptionDetails, setPrescriptionDetails] = useState(null);
@@ -25,17 +23,21 @@ export default function PharmacistPrescriptionsPage() {
   const [prescriptionError, setPrescriptionError] = useState("");
   const [manualId, setManualId] = useState("");
   const [manualError, setManualError] = useState("");
-  const [dispenseDraft, setDispenseDraft] = useState({}); // { [medId]: { checked: bool, quantity: number } }
+  const [dispenseDraft, setDispenseDraft] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
   const [lastPrescriptionId, setLastPrescriptionId] = useState(null);
-  // Debug: List available video input devices and store in state
   useEffect(() => {
-    // Fetch all prescriptions for the pharmacist on mount
+    if (!prescriptionModalOpen) {
+      setDispenseDraft({});
+    }
+  }, [prescriptionModalOpen]);
+
+  useEffect(() => {
     async function fetchPrescriptions() {
       try {
         setLoading(true);
-        const data = await getPrescriptions();
-        setPrescriptions(Array.isArray(data) ? data : []);
+        const res = await axiosInstance.get('/prescriptions');
+        setPrescriptions(Array.isArray(res.data.data) ? res.data.data : []);
       } catch (error) {
         setPrescriptions([]);
         console.error('Error loading prescriptions:', error);
@@ -44,27 +46,14 @@ export default function PharmacistPrescriptionsPage() {
       }
     }
     fetchPrescriptions();
-
-    // Also enumerate video devices for QR
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      navigator.mediaDevices.enumerateDevices().then(devices => {
-        const videoInputs = devices.filter(device => device.kind === 'videoinput');
-        setVideoDevices(videoInputs);
-        videoInputs.forEach((device, idx) => {
-          console.log(`Camera ${idx}: label=${device.label}, id=${device.deviceId}`);
-        });
-      });
-    } else {
-      console.log('navigator.mediaDevices.enumerateDevices not supported');
-    }
   }, []);
-  // Filter prescriptions by search term
-  const filteredPrescriptions = searchTerm
-    ? prescriptions.filter(prescription =>
-        (prescription.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         prescription.medication?.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    : prescriptions;
+
+  const safeSearch = (searchTerm || '').toLowerCase();
+  const filteredPrescriptions = prescriptions.filter(prescription =>
+    (typeof prescription.patientName === 'string' && prescription.patientName.toLowerCase().includes(safeSearch)) ||
+    (Array.isArray(prescription.medications) && prescription.medications.some(med => (med.name || '').toLowerCase().includes(safeSearch)))
+  );
+
   const handleViewDetails = (prescriptionId) => {
     const prescription = prescriptions.find(p => p.id === prescriptionId);
     if (prescription) {
@@ -72,49 +61,72 @@ export default function PharmacistPrescriptionsPage() {
       setPrescriptionModalOpen(true);
     }
   };
-  const handleMarkAsFilled = async (prescriptionId) => {
-    try {
-      const updatedPrescription = await updatePrescriptionStatus(prescriptionId, 'Filled');
-      setPrescriptions(prev => prev.map(prescription =>
-        prescription.id === prescriptionId ? updatedPrescription : prescription
-      ));
-    } catch (error) {
-      console.error('Error updating prescription status:', error);
-    }
+
+  const handleCheck = (medId, checked) => {
+    setDispenseDraft(prev => {
+      return {
+        ...prev,
+        [medId]: { ...((prev && prev[medId]) || { quantity: 1 }), checked }
+      };
+    });
   };
-  // QR code scan handler for barcode scanner
-  const handleQRScanned = async (value) => {
-    if (!value) return;
-      setQrDialogOpen(false);
-    setQrValue(value);
-    setPrescriptionLoading(true);
-    setPrescriptionError("");
-    setManualError("");
-    let prescriptionId = value;
-    // Try to parse as JSON if not a simple ID
+
+  const handleQuantity = (medId, quantity, max) => {
+    const safeQty = Math.max(1, Math.min(Number(quantity), max));
+    setDispenseDraft(prev => {
+      return {
+        ...prev,
+        [medId]: { ...((prev && prev[medId]) || { checked: false }), quantity: safeQty }
+      };
+    });
+  };
+
+  const handleSaveDispense = async () => {
+    setSaveLoading(true);
     try {
-      const parsed = JSON.parse(value);
-      if (parsed && parsed.prescriptionId) prescriptionId = parsed.prescriptionId;
-    } catch {}
-    try {
-      const details = await getPrescriptionById(prescriptionId.trim());
-      if (details) {
-        setPrescriptionDetails(details);
-        setPrescriptionModalOpen(true);
-        // Do not overwrite the full list; just open the modal
-      } else {
-        setPrescriptionDetails(null);
-        setPrescriptionModalOpen(false);
-        setPrescriptionError("Prescription not found.");
+      const updatedMeds = (prescriptionDetails.medications || [])
+        .filter(med => {
+          const draft = dispenseDraft[med._id];
+          const origCount = med.refillCount || 0;
+          const limit = med.refillLimit ?? 1;
+          return draft && draft.checked && draft.quantity > 0 && origCount < limit;
+        })
+        .map(med => {
+          const draft = dispenseDraft[med._id];
+          const origCount = med.refillCount || 0;
+          const limit = med.refillLimit ?? 1;
+          return { _id: med._id, refillCount: Math.min(origCount + draft.quantity, limit) };
+        });
+
+      if (updatedMeds.length === 0) {
+        setSaveLoading(false);
+        return;
+      }
+
+      await axiosInstance.patch(`/prescriptions/${prescriptionDetails.id}`, { medications: updatedMeds });
+
+      const res = await axiosInstance.get('/prescriptions');
+      setPrescriptions(Array.isArray(res.data.data) ? res.data.data : []);
+      const updated = await axiosInstance.get(`/prescriptions/${prescriptionDetails.id}`);
+      setPrescriptionDetails(updated.data.data);
+      setDispenseDraft({});
+
+      if (updated.data.data.medications && updated.data.data.medications.every(med => (med.refillCount || 0) >= (med.refillLimit ?? 1))) {
+        await axiosInstance.patch(`/prescriptions/${prescriptionDetails.id}`, { status: 'expired' });
+        const expired = await axiosInstance.get(`/prescriptions/${prescriptionDetails.id}`);
+        setPrescriptionDetails(expired.data.data);
       }
     } catch (error) {
-      setPrescriptionDetails(null);
-      setPrescriptionModalOpen(false);
-      setPrescriptionError("Prescription not found or error fetching prescription.");
+      alert('Failed to dispense medicines.');
     } finally {
-      setPrescriptionLoading(false);
+      setSaveLoading(false);
     }
   };
+
+  const handleCloseModal = () => {
+    setPrescriptionModalOpen(false);
+  };
+
   const handleManualFetch = async () => {
     if (!manualId.trim()) {
       setManualError("Please enter a prescription ID.");
@@ -123,11 +135,11 @@ export default function PharmacistPrescriptionsPage() {
     setManualError("");
     setLoading(true);
     try {
-      const details = await getPrescriptionById(manualId.trim());
+      const res = await axiosInstance.get(`/prescriptions/${manualId.trim()}`);
+      const details = res.data.data;
       if (details) {
         setPrescriptionDetails(details);
         setPrescriptionModalOpen(true);
-        // Do not overwrite the full list; just open the modal
       } else {
         setPrescriptionDetails(null);
         setPrescriptionModalOpen(false);
@@ -141,27 +153,38 @@ export default function PharmacistPrescriptionsPage() {
       setLoading(false);
     }
   };
-  // Initialize dispenseDraft when modal opens and prescriptionDetails changes
-  useEffect(() => {
-    if (
-      prescriptionModalOpen &&
-      prescriptionDetails &&
-      prescriptionDetails.id !== lastPrescriptionId
-    ) {
-      const draft = {};
-      (prescriptionDetails.medications || []).forEach(med => {
-        draft[med._id] = { checked: false, quantity: 1 };
-      });
-      setDispenseDraft({ ...draft }); // always a new object
-      setLastPrescriptionId(prescriptionDetails.id);
-    }
-    // eslint-disable-next-line
-  }, [prescriptionModalOpen, prescriptionDetails, lastPrescriptionId]);
 
-  const handleCloseModal = () => {
-    setPrescriptionModalOpen(false);
-    setLastPrescriptionId(null);
+  const handleQRScanned = async (value) => {
+    if (!value) return;
+    setQrDialogOpen(false);
+    setQrValue(value);
+    setPrescriptionLoading(true);
+    setPrescriptionError("");
+    let prescriptionId = value;
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && parsed.prescriptionId) prescriptionId = parsed.prescriptionId;
+    } catch {}
+    try {
+      const res = await axiosInstance.get(`/prescriptions/${prescriptionId.trim()}`);
+      const details = res.data.data;
+      if (details) {
+        setPrescriptionDetails(details);
+        setPrescriptionModalOpen(true);
+      } else {
+        setPrescriptionDetails(null);
+        setPrescriptionModalOpen(false);
+        setPrescriptionError("Prescription not found.");
+      }
+    } catch (error) {
+      setPrescriptionDetails(null);
+      setPrescriptionModalOpen(false);
+      setPrescriptionError("Prescription not found or error fetching prescription.");
+    } finally {
+      setPrescriptionLoading(false);
+    }
   };
+
   return (
     <PharmacistPageContainer
       title="Prescription Management"
@@ -171,6 +194,14 @@ export default function PharmacistPrescriptionsPage() {
         title="Prescriptions List"
         actions={
           <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search by patient or medication"
+              className="border rounded px-2 py-1 text-sm"
+              style={{ minWidth: 220 }}
+            />
             <input
               type="text"
               value={manualId}
@@ -188,15 +219,12 @@ export default function PharmacistPrescriptionsPage() {
           </div>
         }
       >
-        {manualError && (
-          <div className="text-red-500 text-sm mb-2">{manualError}</div>
-        )}
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto ">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Patient</TableHead>
-                <TableHead>Medication</TableHead>
+                <TableHead>Medications</TableHead>
                 <TableHead>Dosage</TableHead>
                 <TableHead>Frequency</TableHead>
                 <TableHead>Issue Date</TableHead>
@@ -214,227 +242,163 @@ export default function PharmacistPrescriptionsPage() {
               ) : filteredPrescriptions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    No prescription loaded. Please scan a QR code.
+                    No prescriptions found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPrescriptions.map((prescription) => (
-                  <TableRow
-                    key={prescription.id}
-                    className="hover:bg-muted/40 transition-colors duration-200"
-                  >
-                    <TableCell>{prescription.patientName}</TableCell>
-                    <TableCell>{prescription.medication}</TableCell>
-                    <TableCell>{prescription.dosage}</TableCell>
-                    <TableCell>{prescription.frequency}</TableCell>
-                    <TableCell>{prescription.issueDate}</TableCell>
-                    <TableCell>
-                      <Badge variant={prescription.status === 'Pending' ? 'warning' : 'success'}>
-                        {prescription.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(prescription.id)}
-                        className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
-                      {prescription.status === 'Pending' && (
+                filteredPrescriptions.map((prescription) => {
+                  const meds = Array.isArray(prescription.medications) ? prescription.medications : [];
+                  return (
+                    <TableRow
+                      key={prescription.id}
+                      className="hover:bg-muted/40 transition-colors duration-200"
+                    >
+                      <TableCell>{prescription.patientName}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {meds.map(med => (
+                            <span key={med._id || med.name} className="inline-block px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
+                              {med.name}
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {meds.map(med => med.dosage).join(', ')}
+                      </TableCell>
+                      <TableCell>
+                        {meds.map(med => med.frequency).join(', ')}
+                      </TableCell>
+                      <TableCell>{prescription.issueDate ? new Date(prescription.issueDate).toLocaleDateString() : '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={prescription.status?.toLowerCase() === 'pending' ? 'warning' : prescription.status?.toLowerCase() === 'filled' ? 'success' : 'secondary'}>
+                          {prescription.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
                         <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleMarkAsFilled(prescription.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => handleViewDetails(prescription.id)}
+                          className="text-blue-600 dark:text-blue-300 border-blue-600 dark:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900"
                         >
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Mark as Filled
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
                         </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                        {prescription.status?.toLowerCase() === 'pending' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleViewDetails(prescription.id)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Dispense
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </div>
+        {manualError && (
+          <div className="text-red-500 text-sm mb-2">{manualError}</div>
+        )}
       </PharmacistCard>
-      {/* Prescription Details Modal (full overlay, dashboard style) */}
-      {prescriptionModalOpen && prescriptionDetails && (() => {
-        const isExpired = (prescriptionDetails.status?.toLowerCase() === 'expired');
-        const isFilled = (prescriptionDetails.status?.toLowerCase() === 'filled');
-        const canDispense = !isExpired && !isFilled;
-
-        // After dispensing, if all at limit, modal is view-only
-        const isViewOnly = isExpired || (prescriptionDetails.medications && prescriptionDetails.medications.every(med => (med.refillCount || 0) >= (med.refillLimit ?? 1)));
-
-        // Handler for checking/unchecking a medicine
-        const handleCheck = (medId, checked) => {
-          setDispenseDraft(prev => {
-            return {
-              ...prev,
-              [medId]: { ...((prev && prev[medId]) || { quantity: 1 }), checked }
-            };
-          });
-        };
-
-        // Handler for changing quantity
-        const handleQuantity = (medId, quantity, max) => {
-          const safeQty = Math.max(1, Math.min(Number(quantity), max));
-          setDispenseDraft(prev => {
-            return {
-              ...prev,
-              [medId]: { ...((prev && prev[medId]) || { checked: false }), quantity: safeQty }
-            };
-          });
-        };
-
-        // Handler for saving all selected dispenses
-        const handleSaveDispense = async () => {
-          setSaveLoading(true);
-          try {
-            // Only include checked medicines with a quantity > 0 and not at limit
-            const updatedMeds = (prescriptionDetails.medications || [])
-              .filter(med => {
-                const draft = dispenseDraft[med._id];
-                const origCount = med.refillCount || 0;
-                const limit = med.refillLimit ?? 1;
-                return draft && draft.checked && draft.quantity > 0 && origCount < limit;
-              })
-              .map(med => {
-                const draft = dispenseDraft[med._id];
-                const origCount = med.refillCount || 0;
-                const limit = med.refillLimit ?? 1;
-                return { _id: med._id, refillCount: Math.min(origCount + draft.quantity, limit) };
-              });
-
-            if (updatedMeds.length === 0) {
-              setSaveLoading(false);
-              return;
-            }
-
-            // Log for debugging
-            console.log('PATCH body:', updatedMeds);
-
-            await axiosInstance.patch(`/prescriptions/${prescriptionDetails.id}`, { medications: updatedMeds });
-
-            // Refresh prescription details and list
-            const data = await getPrescriptions();
-            setPrescriptions(Array.isArray(data) ? data : []);
-            const updated = await getPrescriptionById(prescriptionDetails.id);
-            setPrescriptionDetails(updated);
-            setDispenseDraft({});
-
-            // If all medicines are at their limit after update, set status to expired
-            if (updated.medications && updated.medications.every(med => (med.refillCount || 0) >= (med.refillLimit ?? 1))) {
-              await axiosInstance.patch(`/prescriptions/${prescriptionDetails.id}`, { status: 'expired' });
-              // Refresh again to get the new status
-              const expired = await getPrescriptionById(prescriptionDetails.id);
-              setPrescriptionDetails(expired);
-            }
-          } catch (error) {
-            alert('Failed to dispense medicines.');
-          } finally {
-            setSaveLoading(false);
-          }
-        };
-
-        // Check if any staged changes
-        const hasStaged = dispenseDraft && prescriptionDetails.medications && prescriptionDetails.medications.some(
-          med => {
-            const draft = dispenseDraft[med._id];
-            return draft && draft.checked && draft.quantity > 0 && (med.refillCount || 0) < (med.refillLimit ?? 1);
-          }
-        );
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl relative flex flex-col" style={{ height: '80vh' }}>
-              {/* Header */}
-              <div className="p-6 border-b border-border sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold mb-2">Prescription Details</h2>
-                <div className="font-semibold text-lg mb-1">Patient: <span className="text-primary">{prescriptionDetails.patientName}</span></div>
-                <div className="text-sm text-muted-foreground mb-1">Doctor: {prescriptionDetails.doctorName || '-'} {prescriptionDetails.doctorSpecialty ? `(${prescriptionDetails.doctorSpecialty})` : ''}</div>
-                <div className="text-sm text-muted-foreground mb-1">Date: {prescriptionDetails.date ? new Date(prescriptionDetails.date).toLocaleDateString() : (prescriptionDetails.issueDate || '-')}</div>
-                <div className="text-sm text-muted-foreground mb-1">Status: <span className="font-semibold">{prescriptionDetails.status?.toUpperCase() || '-'}</span></div>
-                {prescriptionDetails.notes && <div className="text-sm text-muted-foreground mb-1">Notes: {prescriptionDetails.notes}</div>}
+      {prescriptionModalOpen && prescriptionDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl relative flex flex-col" style={{ height: '80vh' }}>
+            <div className="p-6 border-b border-border sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold mb-2">Prescription Details</h2>
+              <div className="font-semibold text-lg mb-1">Patient: <span className="text-primary">{prescriptionDetails.patientName}</span></div>
+              <div className="text-sm text-muted-foreground mb-1">Doctor: {prescriptionDetails.doctorName || '-'} {prescriptionDetails.doctorSpecialty ? `(${prescriptionDetails.doctorSpecialty})` : ''}</div>
+              <div className="text-sm text-muted-foreground mb-1">Date: {prescriptionDetails.date ? new Date(prescriptionDetails.date).toLocaleDateString() : (prescriptionDetails.issueDate || '-')}</div>
+              <div className="text-sm text-muted-foreground mb-1">Status: <span className="font-semibold">{prescriptionDetails.status?.toUpperCase() || '-'}</span></div>
+              {prescriptionDetails.notes && <div className="text-sm text-muted-foreground mb-1">Notes: {prescriptionDetails.notes}</div>}
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <h3 className="font-semibold mb-2 text-lg">Medicines</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(prescriptionDetails.medications || [{
+                  name: prescriptionDetails.medication,
+                  dosage: prescriptionDetails.dosage,
+                  frequency: prescriptionDetails.frequency
+                }]).map((med, idx) => {
+                  const refillCount = med.refillCount || 0;
+                  const refillLimit = med.refillLimit ?? 1;
+                  const atLimit = refillCount >= refillLimit;
+                  const isViewOnly = (prescriptionDetails.status?.toLowerCase() === 'expired') || (prescriptionDetails.medications && prescriptionDetails.medications.every(m => (m.refillCount || 0) >= (m.refillLimit ?? 1)));
+                  return (
+                    <div key={med._id || idx} className="border rounded-lg p-4 bg-muted/50 flex flex-col gap-2 shadow-sm">
+                      <div className="font-bold text-primary text-base">{med.name}</div>
+                      <div className="text-sm">Dosage: <span className="font-medium">{med.dosage}</span></div>
+                      <div className="text-sm">Frequency: <span className="font-medium">{med.frequency}</span></div>
+                      {med.duration && <div className="text-sm">Duration: <span className="font-medium">{med.duration}</span></div>}
+                      {med.route && <div className="text-sm">Route: <span className="font-medium">{med.route}</span></div>}
+                      {med.instructions && <div className="text-sm">Instructions: <span className="font-medium">{med.instructions}</span></div>}
+                      <div className="text-sm mt-1">Refills: <span className="font-semibold text-success">{refillCount}</span> / <span className="font-semibold">{refillLimit}</span></div>
+                      <div className="flex items-center gap-2 mt-2">
+                        {atLimit && (
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Done</span>
+                        )}
+                        {!isViewOnly && !atLimit && (
+                          <>
+                            <input
+                              type="checkbox"
+                              checked={!!dispenseDraft[med._id]?.checked}
+                              disabled={isViewOnly || atLimit}
+                              onChange={e => handleCheck(med._id, e.target.checked)}
+                              className="accent-primary h-4 w-4"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              max={refillLimit - refillCount}
+                              value={dispenseDraft[med._id]?.quantity || 1}
+                              disabled={isViewOnly || atLimit || !dispenseDraft[med._id]?.checked}
+                              onChange={e => handleQuantity(med._id, e.target.value, refillLimit - refillCount)}
+                              className="w-16 border rounded px-1 py-0.5 text-sm"
+                            />
+                            <span className="text-xs text-muted-foreground">box(es)</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <h3 className="font-semibold mb-2 text-lg">Medicines</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(() => {
-                    const meds = prescriptionDetails.medications || [{
-                      name: prescriptionDetails.medication,
-                      dosage: prescriptionDetails.dosage,
-                      frequency: prescriptionDetails.frequency
-                    }];
-                    return meds.map((med, idx) => {
-                      const refillCount = med.refillCount || 0;
-                      const refillLimit = (med.refillLimit !== undefined && med.refillLimit !== null) ? med.refillLimit : 1;
-                      const atLimit = refillCount >= refillLimit;
-                      const draft = dispenseDraft[med._id] || { checked: false, quantity: 1 };
-                      return (
-                        <div key={med._id || idx} className="border rounded-lg p-4 bg-muted/50 flex flex-col gap-2 shadow-sm">
-                          <div className="font-bold text-primary text-base">{med.name}</div>
-                          <div className="text-sm">Dosage: <span className="font-medium">{med.dosage}</span></div>
-                          <div className="text-sm">Frequency: <span className="font-medium">{med.frequency}</span></div>
-                          {med.duration && <div className="text-sm">Duration: <span className="font-medium">{med.duration}</span></div>}
-                          {med.route && <div className="text-sm">Route: <span className="font-medium">{med.route}</span></div>}
-                          {med.instructions && <div className="text-sm">Instructions: <span className="font-medium">{med.instructions}</span></div>}
-                          <div className="text-sm mt-1">Refills: <span className="font-semibold text-success">{refillCount}</span> / <span className="font-semibold">{refillLimit}</span></div>
-                          <div className="flex items-center gap-2 mt-2">
-                            {atLimit && (
-                              <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Done</span>
-                            )}
-                            {!isViewOnly && !atLimit && (
-                              <>
-                                <input
-                                  type="checkbox"
-                                  checked={!!dispenseDraft[med._id]?.checked}
-                                  disabled={isViewOnly || atLimit}
-                                  onChange={e => handleCheck(med._id, e.target.checked)}
-                                />
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={refillLimit - refillCount}
-                                  value={dispenseDraft[med._id]?.quantity || 1}
-                                  disabled={isViewOnly || atLimit || !dispenseDraft[med._id]?.checked}
-                                  onChange={e => handleQuantity(med._id, e.target.value, refillLimit - refillCount)}
-                                  className="w-16 border rounded px-1 py-0.5 text-sm"
-                                />
-                                <span className="text-xs text-muted-foreground">box(es)</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-              {/* Footer */}
-              <div className="p-6 border-t border-border sticky bottom-0 bg-white z-10 flex flex-col gap-2">
-                {!isViewOnly && hasStaged && (
+            </div>
+            <div className="p-6 border-t border-border sticky bottom-0 bg-white z-10 flex flex-col gap-2">
+              {(() => {
+                const isExpired = (prescriptionDetails.status?.toLowerCase() === 'expired');
+                const isFilled = (prescriptionDetails.status?.toLowerCase() === 'filled');
+                const canDispense = !isExpired && !isFilled;
+                const isViewOnly = isExpired || (prescriptionDetails.medications && prescriptionDetails.medications.every(med => (med.refillCount || 0) >= (med.refillLimit ?? 1)));
+                const hasStaged = dispenseDraft && prescriptionDetails.medications && prescriptionDetails.medications.some(
+                  med => {
+                    const draft = dispenseDraft[med._id];
+                    return draft && draft.checked && draft.quantity > 0 && (med.refillCount || 0) < (med.refillLimit ?? 1);
+                  }
+                );
+                return !isViewOnly && canDispense ? (
                   <Button
                     variant="primary"
                     onClick={handleSaveDispense}
-                    disabled={saveLoading}
+                    disabled={saveLoading || !hasStaged}
                   >
                     {saveLoading ? 'Saving...' : 'Save'}
                   </Button>
-                )}
-                <Button variant="secondary" onClick={handleCloseModal}>
-                  Close
-                </Button>
-              </div>
+                ) : null;
+              })()}
+              <Button variant="secondary" onClick={handleCloseModal}>
+                Close
+              </Button>
             </div>
           </div>
-        );
-      })()}
-      {/* QR Code Scanner Modal (full overlay, dashboard style) */}
+        </div>
+      )}
       {qrDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">

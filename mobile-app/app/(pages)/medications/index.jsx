@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   Animated,
   Easing,
   Pressable,
-  Platform,
   SafeAreaView,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -25,7 +24,6 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import 'nativewind';
 
-// --- UI Constants ---
 const TABS = [
   { key: 'medications', label: 'Medications', icon: 'pill' },
   { key: 'reminders', label: 'Reminders', icon: 'bell-ring' },
@@ -39,8 +37,7 @@ const STATUS_OPTIONS = [
   { key: 'expired', label: 'Expired', color: '#ef4444' },
 ];
 
-// --- Utility Functions ---
-function getStatusColor(status) {
+const getStatusColor = (status) => {
   switch ((status || '').toLowerCase()) {
     case 'active':
       return '#22c55e';
@@ -51,17 +48,16 @@ function getStatusColor(status) {
     default:
       return '#64748b';
   }
-}
+};
 
-function getInitials(name) {
+const getInitials = (name) => {
   if (!name) return '';
   const parts = name.split(' ');
   if (parts.length === 1) return parts[0][0];
   return parts[0][0] + parts[1][0];
-}
+};
 
-// --- Snackbar Component ---
-function Snackbar({ visible, message, onDismiss }) {
+const Snackbar = ({ visible, message, onDismiss }) => {
   if (!visible) return null;
   return (
     <View className="absolute left-4 right-4 bottom-10 bg-gray-900 rounded-xl px-6 py-4 flex-row items-center justify-between shadow-lg z-200">
@@ -71,10 +67,9 @@ function Snackbar({ visible, message, onDismiss }) {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
-// --- Medication Details Modal ---
-function MedicationDetailsModal({ visible, medication, onClose }) {
+const MedicationDetailsModal = ({ visible, medication, onClose }) => {
   if (!medication) return null;
   return (
     <Modal
@@ -105,7 +100,7 @@ function MedicationDetailsModal({ visible, medication, onClose }) {
           </Text>
         )}
         {medication.notes && (
-          <View className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-2">
+          <View className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-2 flex-row items-center">
             <MaterialCommunityIcons name="alert-circle" size={16} color="#f59e42" />
             <Text className="text-yellow-800 text-sm ml-2">{medication.notes}</Text>
           </View>
@@ -120,10 +115,9 @@ function MedicationDetailsModal({ visible, medication, onClose }) {
       </View>
     </Modal>
   );
-}
+};
 
-// --- Medication Card ---
-function MedicationCard({
+const MedicationCard = ({
   medication,
   onEdit,
   onDelete,
@@ -131,9 +125,9 @@ function MedicationCard({
   onRefill,
   onViewDetails,
   index,
-}) {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  React.useEffect(() => {
+}) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400,
@@ -159,59 +153,67 @@ function MedicationCard({
         },
       ]}
     >
-      <View className="flex-row items-center mb-2">
+      <View className="flex-row items-center mb-1">
         <View
-          className={`w-3 h-3 rounded-full mr-2 ${getStatusColor(medication.status)}`}
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 9999,
+            marginRight: 8,
+            backgroundColor: getStatusColor(medication.status),
+          }}
         />
         <Text className="text-blue-700 font-bold text-lg flex-1" numberOfLines={1} ellipsizeMode="tail">{medication.name}</Text>
         <TouchableOpacity
-          className="w-8 h-8 rounded-lg bg-blue-100 items-center justify-center"
+          className="w-7 h-7 rounded-lg bg-blue-100 items-center justify-center"
           onPress={() => onViewDetails(medication)}
           accessibilityLabel="View details"
         >
-          <MaterialCommunityIcons name="eye" size={20} color="#2563eb" />
+          <MaterialCommunityIcons name="eye" size={16} color="#2563eb" />
         </TouchableOpacity>
       </View>
-      <Text className="text-blue-600 text-base font-semibold mb-1">{medication.dosage} - {medication.frequency}</Text>
+      <Text className="text-blue-600 text-base font-semibold mb-2">{medication.dosage} - {medication.frequency}</Text>
       <View className="flex-row items-center mb-2">
         {medication.prescribedBy && (
-          <View className="mr-2">
-            <View className="w-7 h-7 rounded-lg bg-blue-100 items-center justify-center">
-              <Text className="text-blue-700 font-bold text-sm">{getInitials(
+          <View className="flex-row items-center mr-3">
+            <View className="w-6 h-6 rounded-lg bg-blue-100 items-center justify-center mr-1">
+              <Text className="text-blue-700 font-bold text-xs">{getInitials(
                 `${medication.prescribedBy.firstName} ${medication.prescribedBy.lastName}`
               )}</Text>
             </View>
+            <Text className="text-gray-500 text-xs" numberOfLines={1} ellipsizeMode="tail">
+              <MaterialCommunityIcons name="hospital" size={12} color="#2563eb" />{' '}
+              {medication.prescribedBy.firstName} {medication.prescribedBy.lastName}
+            </Text>
           </View>
         )}
-        {medication.prescribedBy && (
-          <Text className="text-gray-500 text-sm mr-2" numberOfLines={1} ellipsizeMode="tail">
-            <MaterialCommunityIcons name="hospital" size={15} color="#2563eb" />{' '}
-            {medication.prescribedBy.firstName} {medication.prescribedBy.lastName}
-          </Text>
-        )}
         {medication.refillDate && (
-          <Text className="text-gray-500 text-sm">
-            <MaterialCommunityIcons name="calendar" size={15} color="#2563eb" />{' '}
-            {new Date(medication.refillDate).toLocaleDateString()}
-          </Text>
+          <View className="flex-row items-center">
+            <MaterialCommunityIcons name="calendar" size={12} color="#2563eb" />
+            <Text className="text-gray-500 text-xs ml-1">
+              {new Date(medication.refillDate).toLocaleDateString()}
+            </Text>
+          </View>
         )}
       </View>
       {medication.notes ? (
-        <View className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-2">
-          <MaterialCommunityIcons name="alert-circle" size={15} color="#f59e42" />
-          <Text className="text-yellow-800 text-sm ml-2" numberOfLines={2} ellipsizeMode="tail">{medication.notes}</Text>
+        <View className="bg-yellow-100 border border-yellow-300 rounded-lg p-2 mb-3">
+          <View className="flex-row items-start">
+            <MaterialCommunityIcons name="alert-circle" size={14} color="#f59e42" style={{ marginTop: 1 }} />
+            <Text className="text-yellow-800 text-xs ml-1 flex-1" numberOfLines={2} ellipsizeMode="tail">{medication.notes}</Text>
+          </View>
         </View>
       ) : null}
-      <View className="flex-row mt-3">
+      <View className="flex-row justify-end">
         <TouchableOpacity
-          className="w-10 h-10 rounded-lg bg-blue-600 items-center justify-center mr-2 shadow-md"
+          className="w-8 h-8 rounded-lg bg-blue-600 items-center justify-center mr-1 shadow-md"
           onPress={() => onEdit(medication)}
           accessibilityLabel="Edit medication"
         >
-          <MaterialCommunityIcons name="pencil" size={18} color="white" />
+          <MaterialCommunityIcons name="pencil" size={14} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
-          className={`w-10 h-10 rounded-lg items-center justify-center mr-2 ${medication.remindersEnabled ? 'bg-gray-400' : 'bg-green-600'}`}
+          className={`w-8 h-8 rounded-lg items-center justify-center mr-1 ${medication.remindersEnabled ? 'bg-gray-400' : 'bg-green-600'}`}
           onPress={() => onSetReminder(medication)}
           accessibilityLabel={
             medication.remindersEnabled ? 'Disable reminder' : 'Enable reminder'
@@ -219,31 +221,30 @@ function MedicationCard({
         >
           <MaterialCommunityIcons
             name={medication.remindersEnabled ? 'bell-off' : 'bell-ring'}
-            size={18}
+            size={14}
             color="white"
           />
         </TouchableOpacity>
         <TouchableOpacity
-          className="w-10 h-10 rounded-lg bg-green-600 items-center justify-center mr-2 shadow-md"
+          className="w-8 h-8 rounded-lg bg-green-600 items-center justify-center mr-1 shadow-md"
           onPress={() => onRefill(medication)}
           accessibilityLabel="Request refill"
         >
-          <MaterialCommunityIcons name="refresh" size={18} color="white" />
+          <MaterialCommunityIcons name="refresh" size={14} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
-          className="w-10 h-10 rounded-lg bg-red-600 items-center justify-center shadow-md"
+          className="w-8 h-8 rounded-lg bg-red-600 items-center justify-center shadow-md"
           onPress={() => onDelete(medication._id)}
           accessibilityLabel="Delete medication"
         >
-          <MaterialCommunityIcons name="trash-can" size={18} color="white" />
+          <MaterialCommunityIcons name="trash-can" size={14} color="white" />
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
-}
-
-// --- Main Screen ---
-export default function MedicationsScreen() {
+};
+  
+const MedicationsScreen = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const navigation = useNavigation();
@@ -275,7 +276,6 @@ export default function MedicationsScreen() {
     });
   }, [items, search, statusFilter]);
 
-  // --- Handlers ---
   const handleEdit = (med) => {
     setEditMedication(med);
     setShowAddEdit(true);
@@ -307,11 +307,9 @@ export default function MedicationsScreen() {
   };
   const handleSnackbarDismiss = () => setSnackbar({ visible: false, message: '' });
 
-  // --- UI ---
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="flex-row items-center justify-between pt-7 pb-2 px-4 bg-white border-b border-gray-200 shadow-sm">
+      <View className="flex-row items-center justify-between pt-4 pb-1 px-4 bg-white border-b border-gray-200 shadow-sm">
         <TouchableOpacity
           onPress={() => {
             if (navigation.canGoBack()) {
@@ -320,21 +318,20 @@ export default function MedicationsScreen() {
               router.replace('/(tabs)/home');
             }
           }}
-          className="w-9 h-9 rounded-full bg-blue-100 items-center justify-center shadow"
+          className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center shadow"
           accessibilityLabel="Back"
         >
-          <MaterialIcons name="arrow-back" size={28} color="#2563eb" />
+          <MaterialIcons name="arrow-back" size={24} color="#2563eb" />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-blue-700 font-bold text-xl tracking-tight">Medications</Text>
-        <View className="w-9" />
+        <View className="w-8" />
       </View>
 
-      {/* Tabs */}
-      <View className="flex-row justify-center items-center mt-2 mb-2 space-x-2">
+      <View className="flex-row justify-center items-center mt-1 mb-1 space-x-1">
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === tab.key ? 'bg-blue-600 shadow-lg' : 'bg-blue-50'} min-w-[100px] h-9`}
+            className={`flex-row items-center px-3 py-1 rounded-full ${activeTab === tab.key ? 'bg-blue-600 shadow-lg' : 'bg-blue-50'} min-w-[90px] h-7`}
             onPress={() => setActiveTab(tab.key)}
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === tab.key }}
@@ -342,18 +339,17 @@ export default function MedicationsScreen() {
           >
             <MaterialCommunityIcons
               name={tab.icon}
-              size={18}
+              size={16}
               color={activeTab === tab.key ? '#fff' : '#2563eb'}
               className="mr-1"
             />
-            <Text className={`text-base font-semibold ${activeTab === tab.key ? 'text-white' : 'text-blue-700'}`}>{tab.label}</Text>
+            <Text className={`text-sm font-semibold ${activeTab === tab.key ? 'text-white' : 'text-blue-700'}`}>{tab.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Search and Filter */}
-      <View className="flex-row items-center bg-white rounded-xl px-4 py-3 mx-4 mb-2 shadow border border-gray-200">
-        <MaterialCommunityIcons name="magnify" size={22} color="#9ca3af" className="mr-2" />
+      <View className="flex-row items-center bg-white rounded-lg px-3 py-2 mx-4 mb-1 shadow border border-gray-200">
+        <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" className="mr-2" />
         <TextInput
           placeholder="Search medications..."
           value={search}
@@ -368,24 +364,23 @@ export default function MedicationsScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="flex-row mb-2 mt-1 min-h-[36px] px-1"
+        className="flex-row mb-1 mt-1 min-h-[32px] px-1"
         contentContainerStyle={{ alignItems: 'center' }}
       >
         {STATUS_OPTIONS.map((opt) => (
           <TouchableOpacity
             key={opt.key}
-            className={`px-4 h-8 rounded-full border mr-2 items-center justify-center ${statusFilter === opt.key ? '' : 'bg-gray-100 border-gray-200'} ${statusFilter === opt.key ? 'bg-blue-600 border-blue-600' : ''}`}
+            className={`px-3 h-7 rounded-full border mr-1 items-center justify-center ${statusFilter === opt.key ? '' : 'bg-gray-100 border-gray-200'} ${statusFilter === opt.key ? 'bg-blue-600 border-blue-600' : ''}`}
             onPress={() => setStatusFilter(opt.key)}
             accessibilityRole="button"
             accessibilityState={{ selected: statusFilter === opt.key }}
             activeOpacity={0.85}
           >
-            <Text className={`text-sm font-semibold ${statusFilter === opt.key ? 'text-white' : 'text-gray-700'}`}>{opt.label}</Text>
+            <Text className={`text-xs font-semibold ${statusFilter === opt.key ? 'text-white' : 'text-gray-700'}`}>{opt.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Main Content */}
       <View className="flex-1">
         {activeTab === 'medications' && (
           loading ? (
@@ -400,7 +395,7 @@ export default function MedicationsScreen() {
             </View>
           ) : (
             <FlatList
-              contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+              contentContainerStyle={{ paddingHorizontal: 8, paddingTop: 4, paddingBottom: 32, flexGrow: 1 }}
               data={filteredMedications}
               keyExtractor={(item) => item._id?.toString()}
               renderItem={({ item, index }) => (
@@ -415,7 +410,7 @@ export default function MedicationsScreen() {
                 />
               )}
               ListEmptyComponent={
-                <View className="items-center mt-12">
+                <View className="items-center mt-4">
                   <MaterialCommunityIcons name="emoticon-sad-outline" size={48} color="#9ca3af" />
                   <Text className="text-lg font-bold text-gray-400 mt-2 mb-2">No medications found.</Text>
                   <Text className="text-blue-600 font-bold">Try adjusting your search.</Text>
@@ -441,7 +436,6 @@ export default function MedicationsScreen() {
         )}
       </View>
 
-      {/* FAB */}
       {activeTab === 'medications' && (
         <TouchableOpacity
           className="absolute right-7 bottom-9 bg-blue-600 w-16 h-16 rounded-full items-center justify-center shadow-lg z-50"
@@ -454,7 +448,6 @@ export default function MedicationsScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Modals & Snackbar */}
       <MedicationDetailsModal
         visible={showDetails}
         medication={detailsMedication}
@@ -467,9 +460,10 @@ export default function MedicationsScreen() {
       />
     </SafeAreaView>
   );
-}
+};
 
-// --- Styles ---
+export default MedicationsScreen;
+
 const styles = {
   modalOverlay: {
     flex: 1,
@@ -477,9 +471,9 @@ const styles = {
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    marginBottom: 18,
-    padding: 18,
+    borderRadius: 16,
+    marginBottom: 12,
+    padding: 12,
     shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.13,

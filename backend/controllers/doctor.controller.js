@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
 const Appointment = require('../models/Appointment');
+const { createNotification } = require('../utils/notification.utils');
 
 exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
   const doctorUser = await User.findById(req.user.id).select('-password');
@@ -163,6 +164,31 @@ exports.getDoctor = asyncHandler(async (req, res) => {
             professionalBio: null
         }, 'Doctor fetched successfully.'));
     }
+    res.status(200).json(new ApiResponse(200, {
+        _id: doctor._id,
+        user: {
+            firstName: doctor.user.firstName,
+            lastName: doctor.user.lastName,
+            profileImage: doctor.user.profileImage,
+            email: doctor.user.email
+        },
+        specialty: doctor.specialty,
+        experienceYears: doctor.experienceYears,
+        professionalBio: doctor.professionalBio
+    }, 'Doctor fetched successfully.'));
+});
+
+exports.getDoctorByUserId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    const doctor = await Doctor.findOne({ user: userId })
+        .populate('user', 'firstName lastName email profileImage')
+        .select('specialty experienceYears professionalBio');
+    
+    if (!doctor) {
+        return res.status(404).json(new ApiResponse(404, null, 'Doctor not found for this user.'));
+    }
+    
     res.status(200).json(new ApiResponse(200, {
         _id: doctor._id,
         user: {
@@ -367,7 +393,14 @@ exports.addPatientById = asyncHandler(async (req, res) => {
 
   doctor.patientsList.push(patient._id);
   await doctor.save();
-
+  await createNotification(
+    patient.user._id.toString(),
+    'Added to Doctor Profile',
+    'You have been added to a doctor\'s patient list.',
+    'general',
+    doctor._id.toString(),
+    'Doctor'
+  );
   res.status(200).json(new ApiResponse(200, { patientId: patient.patientId, patientMongoId: patient._id }, 'Patient added to your list successfully.'));
 });
 
@@ -546,5 +579,71 @@ exports.getMedicalFileById = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, 'Medical file not found.'));
   }
   res.status(200).json(new ApiResponse(200, medicalFile, 'Medical file fetched successfully.'));
+});
+
+exports.getDoctorsForMobile = asyncHandler(async (req, res) => {
+  try {
+    const doctors = await Doctor.find({})
+      .populate('user', 'firstName lastName email phoneNumber profileImage address dateOfBirth gender')
+      .lean();
+
+    const formattedDoctors = doctors.map(doctor => {
+      let specialties = [];
+      if (doctor.specialties && Array.isArray(doctor.specialties) && doctor.specialties.length > 0) {
+        specialties = doctor.specialties;
+      } else if (doctor.specialty) {
+        specialties = [doctor.specialty];
+      } else if (doctor.specialization) {
+        specialties = [doctor.specialization];
+      }
+
+      let hospital = null;
+      if (doctor.currentHospitalAffiliation && doctor.currentHospitalAffiliation.name) {
+        hospital = doctor.currentHospitalAffiliation.name;
+      } else if (doctor.hospital) {
+        hospital = doctor.hospital;
+      }
+
+      const experienceYears = doctor.experienceYears || doctor.yearsOfExperience || doctor.yearsOfExperience;
+
+      return {
+        _id: doctor._id,
+        doctorId: doctor.doctorId,
+        name: doctor.user ? `${doctor.user.firstName || ''} ${doctor.user.lastName || ''}`.trim() : '',
+        specialties: specialties,
+        rating: doctor.rating || 0,
+        yearsExperience: experienceYears,
+        hospital: hospital,
+        address: doctor.user?.address || null,
+        avatar: doctor.user?.profileImage || null,
+        email: doctor.user?.email || null,
+        phoneNumber: doctor.user?.phoneNumber || null,
+        medicalLicenseNumber: doctor.medicalLicenseNumber || null,
+        education: doctor.education || [],
+        achievements: doctor.achievements || [],
+        professionalBio: doctor.professionalBio || null,
+        consultationFee: doctor.consultationFee || null,
+        availability: doctor.availability || null,
+        workingHours: doctor.workingHours || null,
+        currentHospitalAffiliation: doctor.currentHospitalAffiliation || null,
+        user: {
+          _id: doctor.user?._id,
+          firstName: doctor.user?.firstName,
+          lastName: doctor.user?.lastName,
+          email: doctor.user?.email,
+          phoneNumber: doctor.user?.phoneNumber,
+          profileImage: doctor.user?.profileImage,
+          address: doctor.user?.address,
+          dateOfBirth: doctor.user?.dateOfBirth,
+          gender: doctor.user?.gender
+        }
+      };
+    });
+
+    res.status(200).json(new ApiResponse(200, formattedDoctors, 'Doctors fetched successfully for mobile app.'));
+  } catch (error) {
+    console.error('Error in getDoctorsForMobile:', error);
+    res.status(500).json(new ApiResponse(500, null, 'Error fetching doctors for mobile app.'));
+  }
 });
 "console.log(JSON.stringify(patients[0], null, 2));"  

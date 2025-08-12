@@ -175,7 +175,6 @@ export default function ProfilePage() {
     setOpenEducationDialog(false);
   };
 
-  // Add a debug log for doctorProfile after each update
   useEffect(() => {
     if (doctorProfile) {
       console.log('doctorProfile after update:', doctorProfile);

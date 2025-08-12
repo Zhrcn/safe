@@ -1,21 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import {
     Plus as AddIcon,
     Edit as EditIcon,
     Paperclip as AttachmentIcon
 } from 'lucide-react';
-import { fetchConsultationsByPatient, createConsultation, updateConsultation, addConsultationNote } from '../../../store/slices/doctor/doctorConsultationsSlice';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/hooks/useAuth';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchConsultationsByDoctorAndPatient } from '@/store/slices/patient/consultationsSlice';
+
 const Consultations = ({ patientId }) => {
+    const { user } = useAuth();
+    const doctorId = user?._id || user?.id;
     const dispatch = useDispatch();
-    const { consultations, loading } = useSelector((state) => state.doctorConsultations);
+    const { consultations, loading, error } = useSelector(state => state.consultations);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedConsultation, setSelectedConsultation] = useState(null);
     const [note, setNote] = useState('');
+
     useEffect(() => {
-        dispatch(fetchConsultationsByPatient(patientId));
-    }, [dispatch, patientId]);
+        if (!patientId || !doctorId) return;
+        dispatch(fetchConsultationsByDoctorAndPatient(patientId));
+    }, [dispatch, patientId, doctorId]);
+
     const handleOpenDialog = (consultation = null) => {
         setSelectedConsultation(consultation);
         setOpenDialog(true);
@@ -26,13 +34,7 @@ const Consultations = ({ patientId }) => {
         setNote('');
     };
     const handleAddNote = () => {
-        if (selectedConsultation && note.trim()) {
-            dispatch(addConsultationNote({
-                consultationId: selectedConsultation.id,
-                note: note.trim()
-            }));
-            setNote('');
-        }
+        setNote('');
     };
     const formatDate = (dateString) => {
         const options = {
@@ -65,6 +67,9 @@ const Consultations = ({ patientId }) => {
             </div>
         );
     }
+    if (error) {
+        return <div className="text-red-500">{error}</div>;
+    }
     return (
         <div className="p-4 bg-white rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
@@ -78,60 +83,39 @@ const Consultations = ({ patientId }) => {
                     New Consultation
                 </Button>
             </div>
-            <div className="divide-y divide-gray-200">
-                {consultations.map((consultation, index) => (
-                    <div key={consultation.id} className="py-4">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-lg font-medium text-gray-900">
-                                    {formatDate(consultation.date)}
-                                </p>
-                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${getStatusColorClass(consultation.status)}`}>
-                                    {consultation.status}
-                                </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {consultations.length === 0 ? (
+                    <div className="text-gray-500 text-center py-8 col-span-full">No consultations found.</div>
+                ) : (
+                    consultations.map((consultation, index) => (
+                        <div key={consultation._id || consultation.id} className="bg-gray-50 rounded-xl shadow p-4 flex flex-col gap-2 border border-gray-200">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="font-semibold text-base text-primary">Doctor:</span>
+                                <span className="text-base text-gray-900">{consultation.doctor?.firstName || consultation.doctorName || 'Unknown'} {consultation.doctor?.lastName || ''}</span>
                             </div>
-                            <div className="flex space-x-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleOpenDialog(consultation)}
-                                >
-                                    <EditIcon className="h-5 w-5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                >
-                                    <AttachmentIcon className="h-5 w-5" />
-                                </Button>
+                            <div className="mb-1">
+                                <span className="font-semibold text-sm text-gray-700">Question:</span>
+                                <span className="ml-2 text-gray-800">{consultation.question || 'No question provided.'}</span>
+                            </div>
+                            <div className="mb-1">
+                                <span className="font-semibold text-sm text-gray-700">Status:</span>
+                                <span className="ml-2 text-gray-800">{consultation.status}</span>
+                            </div>
+                            <div className="mb-1">
+                                <span className="font-semibold text-sm text-gray-700">Messages:</span>
+                                <ul className="ml-4 mt-1 list-disc text-gray-700">
+                                    {consultation.messages && consultation.messages.length > 0 ? (
+                                        consultation.messages.map((m, i) => (
+                                            <li key={i}><b>{m.sender}:</b> {m.message}</li>
+                                        ))
+                                    ) : (
+                                        <li className="italic text-gray-400">No messages</li>
+                                    )}
+                                </ul>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-600 mt-2">
-                            {consultation.notes}
-                        </p>
-                        {consultation.attachments?.length > 0 && (
-                            <div className="mt-2">
-                                <p className="text-sm text-gray-600">
-                                    Attachments:
-                                </p>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {consultation.attachments.map((attachment) => (
-                                        <a
-                                            key={attachment.id}
-                                            href={attachment.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                        >
-                                            <AttachmentIcon className="h-3 w-3 mr-1" />
-                                            {attachment.name}
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
             {openDialog && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">

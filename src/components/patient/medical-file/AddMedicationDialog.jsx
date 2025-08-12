@@ -152,7 +152,6 @@ const AddMedicationDialog = ({ open, onClose }) => {
               onValueChange={handleSelectChange('frequency')}
             >
               <SelectTrigger className={cn({ 'border-danger': errors.frequency })}>
-                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="once_daily">Once Daily</SelectItem>

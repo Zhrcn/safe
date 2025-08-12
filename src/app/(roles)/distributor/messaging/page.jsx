@@ -18,7 +18,6 @@ export default function DistributorMessagingPage() {
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Fetch all conversations for this distributor (with pharmacists only)
   useEffect(() => {
     setLoading(true);
     axiosInstance.get('/conversations?role=pharmacist')
@@ -30,13 +29,11 @@ export default function DistributorMessagingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Handler for selecting a conversation
   const handleSelectConversation = (conv) => {
     setSelectedConversation(conv);
     setNewMessage('');
   };
 
-  // Handler for sending a message
   const handleSend = async () => {
     if (!selectedConversation || !newMessage.trim()) return;
     setSending(true);
@@ -44,10 +41,8 @@ export default function DistributorMessagingPage() {
       await axiosInstance.post(`/conversations/${selectedConversation._id}/messages`, {
         content: newMessage,
       });
-      // Refresh conversation messages
       const res = await axiosInstance.get(`/conversations/${selectedConversation._id}`);
       setSelectedConversation(res.data.data);
-      // Optionally refresh conversation list
       setConversations(convs => convs.map(c => c._id === res.data.data._id ? res.data.data : c));
       setNewMessage('');
     } catch {
@@ -56,10 +51,8 @@ export default function DistributorMessagingPage() {
     setSending(false);
   };
 
-  // Handler for input change
   const handleInputChange = (e) => setNewMessage(e.target.value);
 
-  // Handler for search
   const filteredConversations = conversations.filter(conv => {
     if (!searchTerm) return true;
     return (conv.title || '').toLowerCase().includes(searchTerm.toLowerCase());

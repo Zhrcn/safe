@@ -67,6 +67,10 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const ChatHandler = require('./socketHandlers/chatHandler');
+const AppointmentHandler = require('./socketHandlers/appointmentHandler');
+const NotificationHandler = require('./socketHandlers/notificationHandler');
+const PrescriptionHandler = require('./socketHandlers/prescriptionHandler');
+const { setIO } = require('./utils/socket.utils');
 
 const io = new Server(server, {
   cors: {
@@ -80,6 +84,8 @@ const io = new Server(server, {
     credentials: true
   }
 });
+
+setIO(io);
 
 io.use(async (socket, next) => {
   try {
@@ -104,7 +110,27 @@ io.use(async (socket, next) => {
   }
 });
 
+io.on('connection', (socket) => {
+  
+  socket.join(socket.userId);
+  
+  socket.on('test:connection', (data) => {
+    socket.emit('test:response', { 
+      message: 'Test response from server',
+      userId: socket.userId,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected:', socket.userId);
+  });
+});
+
 new ChatHandler(io);
+new AppointmentHandler(io);
+new NotificationHandler(io);
+new PrescriptionHandler(io);
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled Rejection: ${err.message}`.red);

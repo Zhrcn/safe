@@ -1,7 +1,5 @@
 const ApiResponse = require('../utils/apiResponse');
 const errorHandler = (err, req, res, next) => {
-  console.error('ERROR STACK:', err.stack);
-  console.error('ERROR MESSAGE:', err.message);
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal Server Error';
   if (err.name === 'CastError' && err.kind === 'ObjectId') {

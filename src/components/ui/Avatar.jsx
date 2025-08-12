@@ -60,7 +60,6 @@ const AvatarFallback = React.forwardRef(({ className, children, ...props }, ref)
 })
 AvatarFallback.displayName = "AvatarFallback"
 
-// Helper for profile pages
 export function PatientProfileAvatar({ src, firstName, lastName, size = "lg", className }) {
   const initials =
     (firstName || lastName)
@@ -74,7 +73,6 @@ export function PatientProfileAvatar({ src, firstName, lastName, size = "lg", cl
   );
 }
 
-// Helper to get initials from first and last name or a full name string
 export function getInitials(firstName, lastName) {
   if (firstName || lastName) {
     return `${firstName ? firstName.charAt(0) : ''}${lastName ? lastName.charAt(0) : ''}`.toUpperCase();

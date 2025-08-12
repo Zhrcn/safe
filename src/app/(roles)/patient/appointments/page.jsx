@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAppointments, createAppointment, removeAppointment, editAppointment } from '@/store/slices/patient/appointmentsSlice';
 import { requestReschedule } from '@/store/services/patient/appointmentApi';
+import useAppointmentSocket from '@/hooks/useAppointmentSocket';
 
 const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestReschedule }) => {
     const getStatusProps = (status) => {
@@ -69,12 +70,14 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
     const appointmentDate = appointment.date ? new Date(appointment.date) : null;
     const hoursDiff = appointmentDate ? (appointmentDate - now) / (1000 * 60 * 60) : 0;
     
-    const hasValidDate = appointmentDate && appointment.date !== "1111-01-01T00:00:00.000Z";
+    const hasValidDate = appointmentDate && appointment.date !== "1111-11-01T00:00:00.000Z";
     const canReschedule = hasValidDate && hoursDiff >= 24;
     
-    const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && canReschedule;
+    const showButtons = hasValidDate && hoursDiff >= 24;
+  
+    const canRequestReschedule = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status) && showButtons;
     
-    const canRequestRescheduleTest = ['accepted', 'scheduled', 'rescheduled'].includes(appointment.status);
+    const canCancel = appointment.status === 'accepted' && showButtons;
     
    
     let doctorName = '';
@@ -112,8 +115,8 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarIcon className="h-4 w-4" />
               <span>{
-                appointment.date && appointment.date.startsWith('1111-01-01')
-                  ? 'TBD'
+                appointment.date && appointment.date.startsWith('1111-11-01')
+                  ? (appointment.preferredDate || 'TBD')
                   : format(parseISO(appointment.date), 'yyyy-MM-dd')
               }</span>
             </div>
@@ -145,6 +148,11 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
                 <span>Notes: {appointment.notes}</span>
               </div>
             )}
+            {appointment.preferredDate && appointment.date && appointment.date.startsWith('1111-11-01') && (
+              <div className="flex items-center gap-1 text-sm text-blue-600">
+                <span>Preferred: {appointment.preferredDate}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-end gap-3">
             {appointment.status === "pending" && (
@@ -157,7 +165,7 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
                 Edit
               </Button>
             )}
-            {appointment.status === "pending" && (
+            {(appointment.status === "pending") || canCancel ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -166,8 +174,8 @@ const AppointmentCard = ({ appointment, onReschedule, onCancel, onRequestResched
               >
                 Cancel
               </Button>
-            )}
-            {canRequestRescheduleTest && (
+            ) : null}
+            {canRequestReschedule && (
               <Button
                 variant="outline"
                 size="sm"
@@ -194,6 +202,8 @@ const AppointmentsPage = () => {
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [rescheduleLoading, setRescheduleLoading] = useState(false);
     const dispatch = useDispatch();
+    
+    const appointmentSocket = useAppointmentSocket();
 
     useEffect(() => {
         dispatch(fetchAppointments());
@@ -258,14 +268,12 @@ const AppointmentsPage = () => {
     };
 
     const handleSubmitAppointment = async (data) => {
-        const time = data.time || timeSlotToTime[data.timeSlot] || data.timeSlot || '09:00';
         try {
             if (modalType === 'reschedule' && selectedAppointment) {
                 await dispatch(editAppointment({
                     id: selectedAppointment.id || selectedAppointment._id,
                     appointmentData: {
-                        date: data.date,
-                        time,
+                        preferredDate: data.preferredDate,
                         type: data.type,
                         reason: data.reason,
                         notes: data.notes,
@@ -274,8 +282,7 @@ const AppointmentsPage = () => {
             } else {
                 await dispatch(createAppointment({
                     doctorId: data.doctorId,
-                    date: data.date,
-                    time,
+                    preferredDate: data.preferredDate,
                     reason: data.reason,
                     type: data.type,
                     notes: data.notes,

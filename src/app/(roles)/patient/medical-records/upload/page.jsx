@@ -18,7 +18,7 @@ import {
   addImagingReport,
   addMedication,
 } from "@/store/slices/patient/medicalRecordSlice";
-import axios from "axios";
+import axiosInstance from "@/store/services/axiosInstance";
 
 const CATEGORY_OPTIONS = [
   { value: "vitalSigns", label: "Vital Signs" },
@@ -119,10 +119,10 @@ export default function UploadMedicalRecordPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       let uploadUrl = "";
-      if (category === "labResults") uploadUrl = "/api/v1/medical-records/upload/labtest";
-      else if (category === "imagingReports") uploadUrl = "/api/v1/medical-records/upload/imaging";
+      if (category === "labResults") uploadUrl = "/medical-records/upload/labtest";
+      else if (category === "imagingReports") uploadUrl = "/medical-records/upload/imaging";
       else return;
-      const res = await axios.post(uploadUrl, formData, { headers: { "Content-Type": "multipart/form-data" } });
+      const res = await axiosInstance.post(uploadUrl, formData, { headers: { "Content-Type": "multipart/form-data" } });
       setFileUrl(res.data.filePath);
     } catch (err) {
       setError("File upload failed");

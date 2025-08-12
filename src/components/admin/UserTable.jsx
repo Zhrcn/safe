@@ -97,7 +97,6 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
             <TableHead>{t('admin.users.email')}</TableHead>
             <TableHead>{t('admin.users.role')}</TableHead>
             <TableHead>{t('admin.users.status')}</TableHead>
-            <TableHead>{t('admin.users.lastActive')}</TableHead>
             <TableHead align="right">{t('admin.users.actions')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -116,7 +115,6 @@ export function UserTable({ users = [], onEdit, onDeactivate, onActivate, onBloc
                   <TableCell>{user.email}</TableCell>
                   <TableCell><UserRoleBadge role={user.role} /></TableCell>
                   <TableCell><UserStatusBadge status={user.status} /></TableCell>
-                  <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</TableCell>
                   <TableCell align="right">
                     <div className="flex gap-1 flex-wrap justify-end">
                       <Button variant="info" size="sm" onClick={() => { setEditUser(user); setEditData({ name: safeName, email: user.email, role: user.role }); }}><Edit className="w-4 h-4" /></Button>

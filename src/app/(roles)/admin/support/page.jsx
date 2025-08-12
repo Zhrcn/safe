@@ -5,9 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableRow, TableHeader } from '@
 import Button from '@/components/ui/Button';
 
 const mockTickets = [
-  { id: 'TCK-001', user: 'Dr. Sarah Johnson', subject: 'Password Reset', status: 'Open', createdAt: '2024-03-15T09:00:00Z' },
-  { id: 'TCK-002', user: 'Emma Wilson', subject: 'Account Locked', status: 'Closed', createdAt: '2024-03-14T15:30:00Z' },
-  { id: 'TCK-003', user: 'John Smith', subject: 'Unable to access records', status: 'Open', createdAt: '2024-03-13T11:20:00Z' },
+  { id: 'TCK-001', user: 'Dr. Aishaaasssشش Al-Kurdi', subject: 'Password Reset', status: 'Open', createdAt: '2024-03-15T09:00:00Z' },
+  { id: 'TCK-002', user: 'Omar Al-Homsi', subject: 'Account Locked', status: 'Closed', createdAt: '2024-03-14T15:30:00Z' },
+  { id: 'TCK-003', user: 'Dr. Aishaaass Al-Lataki', subject: 'Unable to access records', status: 'Open', createdAt: '2024-03-13T11:20:00Z' },
 ];
 
 export default function AdminSupportPage() {

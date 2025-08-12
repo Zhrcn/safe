@@ -3,20 +3,19 @@ const ApiResponse = require('../utils/apiResponse');
 const Appointment = require('../models/Appointment'); 
 const User = require('../models/User'); 
 const Doctor = require('../models/Doctor'); 
-const { createNotification } = require('../utils/notification.utils'); 
-const { io } = require('../server');
+const notificationService = require('../utils/notificationService');
+const { getIO } = require('../utils/socket.utils');
 
 exports.createAppointment = asyncHandler(async (req, res, next) => {
   const patientId = req.user.id; 
   const {
     doctorId, 
-    date,
-    time,
+    preferredDate,
     reason,
     type, 
   } = req.body;
-  if (!doctorId || !date || !time || !reason || !type) {
-    return res.status(400).json(new ApiResponse(400, null, 'Please provide all required fields for the appointment (doctorId, date, time, reason, type).'));
+  if (!doctorId || !preferredDate || !reason || !type) {
+    return res.status(400).json(new ApiResponse(400, null, 'Please provide all required fields for the appointment (doctorId, preferredDate, reason, type).'));
   }
   const doctorUser = await User.findById(doctorId);
   if (!doctorUser || doctorUser.role !== 'doctor') {
@@ -26,32 +25,6 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   if (!doctorRecord) {
     return res.status(404).json(new ApiResponse(404, null, 'Doctor profile not found.'));
   }
-  const [hours, minutes] = time.split(':').map(Number);
-  let requestedDateObject = new Date(date);
-  if (isNaN(requestedDateObject.getTime())) {
-    requestedDateObject = new Date(date.split('T')[0]); 
-    if(isNaN(requestedDateObject.getTime())){
-        return res.status(400).json(new ApiResponse(400, null, 'Invalid appointment date format. Please use YYYY-MM-DD.'));
-    }
-  }
-  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    return res.status(400).json(new ApiResponse(400, null, 'Invalid appointment time format. Please use HH:MM.'));
-  }
-  const requestedDateTime = new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate(), hours, minutes);
-  const now = new Date();
-  now.setSeconds(0, 0);
-  if (requestedDateTime < now) { 
-    return res.status(400).json(new ApiResponse(400, null, 'Appointment date and time must be in the future.'));
-  }
-  const conflictingAppointment = await Appointment.findOne({
-    doctor: doctorRecord._id,
-    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
-    time: time,         
-    status: { $in: ['pending', 'confirmed'] } 
-  });
-  if (conflictingAppointment) {
-    return res.status(409).json(new ApiResponse(409, null, 'The doctor is unavailable at the selected date and time. Please choose a different slot.'));
-  }
   const patient = await require('../models/Patient').findOne({ user: patientId });
   if (!patient) {
     return res.status(404).json(new ApiResponse(404, null, 'Patient not found.'));
@@ -60,45 +33,115 @@ exports.createAppointment = asyncHandler(async (req, res, next) => {
   const appointment = new Appointment({
     patient: patient._id,
     doctor: doctorRecord._id,
-    date: new Date(requestedDateObject.getFullYear(), requestedDateObject.getMonth(), requestedDateObject.getDate()),
-    time,
+    date: new Date('1111-11-01'), 
+    time: 'TBD', 
     reason,
     type,
+    preferredDate, 
     status: 'pending', 
   });
   
   await appointment.save();
   
-  const populatedAppointmentForNotif = await Appointment.findById(appointment._id)
+  const populatedAppointment = await Appointment.findById(appointment._id)
     .populate({
       path: 'patient',
-      select: 'user',
       populate: {
         path: 'user',
-        select: 'firstName lastName'
+        select: 'firstName lastName email'
+      }
+    })
+    .populate({
+      path: 'doctor',
+      select: 'user specialty',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email'
       }
     });
-  const patientName = populatedAppointmentForNotif.patient.user ? `${populatedAppointmentForNotif.patient.user.firstName} ${populatedAppointmentForNotif.patient.user.lastName}` : 'A patient';
-  if (populatedAppointmentForNotif && doctorRecord && doctorRecord.user) {
-    await createNotification(
+    
+  console.log('🔍 Backend: Populated appointment doctor:', populatedAppointment.doctor);
+  console.log('🔍 Backend: Populated appointment doctor.user:', populatedAppointment.doctor?.user);
+  console.log('🔍 Backend: Doctor record user:', doctorRecord?.user);
+  console.log('🔍 Backend: Doctor record user ID:', doctorRecord?.user?._id?.toString());
+  console.log('🔍 Backend: Populated doctor user ID:', populatedAppointment.doctor?.user?._id?.toString());
+    
+  const patientName = populatedAppointment.patient.user ? `${populatedAppointment.patient.user.firstName} ${populatedAppointment.patient.user.lastName}` : 'A patient';
+  
+  try {
+    const { getIO } = require('../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:new event');
+    console.log('🔔 Backend: Doctor user ID:', populatedAppointment.doctor?.user?._id?.toString());
+    console.log('🔔 Backend: Patient user ID:', populatedAppointment.patient?.user?._id?.toString());
+    
+    if (populatedAppointment.doctor && populatedAppointment.doctor.user) {
+      const doctorUserId = populatedAppointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting appointment:new to doctor:', doctorUserId);
+      
+      const eventData = {
+        appointmentId: populatedAppointment._id.toString(),
+        message: `New appointment request from ${patientName}`,
+        appointment: populatedAppointment
+      };
+      
+      io.to(doctorUserId).emit('appointment:new', eventData);
+    } else {
+    }
+    
+    if (populatedAppointment.patient && populatedAppointment.patient.user) {
+      const patientUserId = populatedAppointment.patient.user._id.toString();
+      io.to(patientUserId).emit('appointment:new', {
+        appointmentId: populatedAppointment._id.toString(),
+        message: 'Your appointment request has been submitted',
+        appointment: populatedAppointment
+      });
+    }
+    
+  } catch (error) {
+  }
+  
+  if (populatedAppointment && doctorRecord && doctorRecord.user) {
+    await notificationService.sendAppointmentNotification(
       doctorRecord.user._id.toString(),
-      'New Appointment Request',
-      `${patientName} has requested an appointment with you on ${date} at ${time}. Reason: ${reason}.`,
-      'appointment',
-      appointment._id.toString(),
-      'Appointment'
+      {
+        title: 'New Appointment Request',
+        message: `${patientName} has requested an appointment with you. Preferred date: ${preferredDate}. Reason: ${reason}.`,
+        appointmentId: appointment._id.toString(),
+        priority: 'high',
+        data: {
+          appointmentId: appointment._id.toString(),
+          patientName,
+          preferredDate,
+          reason,
+          type
+        }
+      }
     );
-    io.to(doctorRecord.user._id.toString()).emit('appointment:update', {
-      id: appointment._id.toString(),
-      title: 'New Appointment Request',
-      message: `${patientName} has requested an appointment with you on ${date} at ${time}. Reason: ${reason}.`,
-      appointmentId: appointment._id.toString(),
-      type: 'appointment',
-      time: new Date().toISOString(),
-    });
+  }
+  if (patientId) {
+    await notificationService.sendAppointmentNotification(
+      patientId,
+      {
+        title: 'Appointment Created',
+        message: `Your appointment request has been submitted and is pending confirmation.`,
+        appointmentId: appointment._id.toString(),
+        priority: 'normal',
+        data: {
+          appointmentId: appointment._id.toString(),
+          doctorName: `${populatedAppointment.doctor.user.firstName} ${populatedAppointment.doctor.user.lastName}`,
+          preferredDate,
+          reason,
+          type
+        }
+      }
+    );
   }
   res.status(201).json(new ApiResponse(201, appointment, 'Appointment requested successfully. Awaiting confirmation.'));
 });
+
+
 exports.getAppointments = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const userRole = req.user.role;
@@ -197,9 +240,45 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
   }
   appointment.status = status;
   await appointment.save();
+  
+  try {
+    const { getIO } = require('../utils/socket.utils');
+    const io = getIO();
+    
+    console.log('🔔 Backend: Emitting appointment:status_changed event');
+    console.log('🔔 Backend: New status:', appointment.status);
+    console.log('🔔 Backend: Doctor user ID:', appointment.doctor?.user?._id?.toString());
+    console.log('🔔 Backend: Patient user ID:', appointment.patient?.user?._id?.toString());
+    
+    if (appointment.patient && appointment.patient.user) {
+      const patientUserId = appointment.patient.user._id.toString();
+      console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+      io.to(patientUserId).emit('appointment:status_changed', {
+        appointmentId: appointment._id.toString(),
+        status: appointment.status,
+        message: `Your appointment status has been updated to: ${appointment.status}`,
+        appointment: appointment
+      });
+    }
+
+    if (appointment.doctor && appointment.doctor.user) {
+      const doctorUserId = appointment.doctor.user._id.toString();
+      console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+      io.to(doctorUserId).emit('appointment:status_changed', {
+        appointmentId: appointment._id.toString(),
+        status: appointment.status,
+        message: `Appointment status updated to: ${appointment.status}`,
+        appointment: appointment
+      });
+    }
+    
+    console.log('🔔 Backend: Status change events emitted successfully');
+  } catch (error) {
+  }
+  
   const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'The patient';
   const doctorName = appointment.doctor.user ? `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` : 'your doctor';
-      const appointmentDateTime = populatedAppointmentForNotif.date && populatedAppointmentForNotif.time ? `on ${new Date(populatedAppointmentForNotif.date).toLocaleDateString()} at ${populatedAppointmentForNotif.time}` : 'for the scheduled time';
+  const appointmentDateTime = appointment.date && appointment.time ? `on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}` : 'for the scheduled time';
   let notificationUserId = null;
   let notificationTitle = '';
   let notificationMessage = '';
@@ -219,30 +298,47 @@ exports.updateAppointmentStatus = asyncHandler(async (req, res, next) => {
         notificationMessage = `Your appointment with ${doctorName} ${appointmentDateTime} has been marked as completed.`;
         break;
     }
+    if (notificationUserId && notificationTitle && notificationMessage) {
+      await notificationService.sendAppointmentNotification(
+        notificationUserId,
+        {
+          title: notificationTitle,
+          message: notificationMessage,
+          appointmentId: appointment._id.toString(),
+          priority: status === 'cancelled' ? 'high' : 'normal',
+          data: {
+            appointmentId: appointment._id.toString(),
+            status,
+            appointmentDateTime,
+            doctorName,
+            patientName
+          }
+        }
+      );
+    }
   } else if (userRole === 'patient' && appointment.doctor) {
     if (status === 'cancelled') {
       notificationUserId = appointment.doctor.user._id.toString();
       notificationTitle = 'Appointment Cancelled by Patient';
       notificationMessage = `The appointment with ${patientName} ${appointmentDateTime} has been cancelled by the patient.`;
+      if (notificationUserId && notificationTitle && notificationMessage) {
+        await notificationService.sendAppointmentNotification(
+          notificationUserId,
+          {
+            title: notificationTitle,
+            message: notificationMessage,
+            appointmentId: appointment._id.toString(),
+            priority: 'high',
+            data: {
+              appointmentId: appointment._id.toString(),
+              status,
+              appointmentDateTime,
+              patientName
+            }
+          }
+        );
+      }
     }
-  }
-  if (notificationUserId && notificationTitle && notificationMessage) {
-    await createNotification(
-      notificationUserId,
-      notificationTitle,
-      notificationMessage,
-      'appointment',
-      appointment._id.toString(),
-      'Appointment'
-    );
-    io.to(notificationUserId).emit('appointment:update', {
-      id: appointment._id.toString(),
-      title: notificationTitle,
-      message: notificationMessage,
-      appointmentId: appointment._id.toString(),
-      type: 'appointment',
-      time: new Date().toISOString(),
-    });
   }
   res.status(200).json(new ApiResponse(200, appointment, `Appointment status updated to '${status}'.`));
 });
@@ -357,22 +453,50 @@ exports.updateAppointmentDetails = asyncHandler(async (req, res, next) => {
       changeSummary.push(`consultation type updated to "${req.body.consultationType}"`);
     }
     if (changeSummary.length > 0) {
-      await createNotification(
+      await notificationService.sendAppointmentNotification(
         appointment.doctor._id.toString(),
-        'Appointment Details Updated by Patient',
-        `${patientName} has updated their appointment. Details: ${changeSummary.join(', ')}. Please review. `,
-        'appointment',
-        updatedAppointment._id.toString(),
-        'Appointment'
+        {
+          title: 'Appointment Details Updated by Patient',
+          message: `${patientName} has updated their appointment. Details: ${changeSummary.join(', ')}. Please review.`,
+          appointmentId: updatedAppointment._id.toString(),
+          priority: 'normal',
+          data: {
+            appointmentId: updatedAppointment._id.toString(),
+            patientName,
+            changeSummary,
+            updatedDetails: {
+              date: req.body.date,
+              time: req.body.time,
+              reason: req.body.reason,
+              consultationType: req.body.consultationType
+            }
+          }
+        }
       );
-      io.to(appointment.doctor._id.toString()).emit('appointment:update', {
-        id: updatedAppointment._id.toString(),
-        title: 'Appointment Details Updated by Patient',
-        message: `${patientName} has updated their appointment. Details: ${changeSummary.join(', ')}. Please review.`,
-        appointmentId: updatedAppointment._id.toString(),
-        type: 'appointment',
-        time: new Date().toISOString(),
-      });
+      try {
+        const { getIO } = require('../utils/socket.utils');
+        const io = getIO();
+        
+        if (updatedAppointment.patient && updatedAppointment.patient.user) {
+          io.to(updatedAppointment.patient.user._id.toString()).emit('appointment:updated', {
+            appointmentId: updatedAppointment._id.toString(),
+            updateType: 'updated',
+            message: `Appointment has been updated`,
+            appointment: updatedAppointment
+          });
+        }
+
+        if (updatedAppointment.doctor && updatedAppointment.doctor.user) {
+          io.to(updatedAppointment.doctor.user._id.toString()).emit('appointment:updated', {
+            appointmentId: updatedAppointment._id.toString(),
+            updateType: 'updated',
+            message: `Appointment has been updated`,
+            appointment: updatedAppointment
+          });
+        }
+      } catch (error) {
+        console.error('Error emitting appointment update:', error);
+      }
     }
   }
   res.status(200).json(new ApiResponse(200, updatedAppointment, 'Appointment details updated successfully.'));
@@ -393,6 +517,8 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
     notes,
     body: req.body
   });
+
+  try {
 
   if (!reason) {
     return res.status(400).json(new ApiResponse(400, null, 'Please provide reason for reschedule.'));
@@ -486,7 +612,9 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
     rescheduleRequest: appointment.rescheduleRequest
   });
 
+  console.log('About to save appointment...');
   await appointment.save();
+  console.log('Appointment saved successfully');
 
   const patientName = appointment.patient.user ? `${appointment.patient.user.firstName} ${appointment.patient.user.lastName}` : 'A patient';
   const doctorUserId = appointment.doctor.user._id;
@@ -501,22 +629,47 @@ exports.requestReschedule = asyncHandler(async (req, res, next) => {
   
   notificationMessage += ` Reason: ${reason}.`;
   
-  await createNotification(
+  console.log('Creating notification...');
+  await notificationService.sendAppointmentNotification(
     doctorUserId.toString(),
-    'Reschedule Request',
-    notificationMessage,
-    'appointment',
-    appointment._id.toString(),
-    'Appointment'
+    {
+      title: 'Reschedule Request',
+      message: notificationMessage,
+      appointmentId: appointment._id.toString(),
+      priority: 'high',
+      data: {
+        appointmentId: appointment._id.toString(),
+        patientName,
+        currentDate: appointment.date.toLocaleDateString(),
+        currentTime: appointment.time,
+        requestedDate: requestedDateObject ? requestedDateObject.toLocaleDateString() : null,
+        requestedTime,
+        reason,
+        notes,
+        preferredTimes
+      }
+    }
   );
-  io.to(doctorUserId.toString()).emit('appointment:update', {
-    id: appointment._id.toString(),
-    title: 'Reschedule Request',
-    message: notificationMessage,
-    appointmentId: appointment._id.toString(),
-    type: 'appointment',
-    time: new Date().toISOString(),
-  });
+  console.log('Notification created successfully');
+  try {
+    const { getIO } = require('../utils/socket.utils');
+    const io = getIO();
+    
+    if (appointment.doctor && appointment.doctor.user) {
+      io.to(appointment.doctor.user._id.toString()).emit('appointment:reschedule_requested', {
+        appointmentId: appointment._id.toString(),
+        message: `Reschedule request from ${patientName}`,
+        rescheduleRequest: appointment.rescheduleRequest,
+        appointment: appointment
+      });
+    }
+  } catch (error) {
+    console.error('Error emitting reschedule request:', error);
+  }
 
   res.status(200).json(new ApiResponse(200, appointment, 'Reschedule request submitted successfully. Awaiting doctor approval.'));
+  } catch (error) {
+    console.error('Error in requestReschedule:', error);
+    return res.status(500).json(new ApiResponse(500, null, 'Internal server error during reschedule request.'));
+  }
 });

@@ -71,7 +71,6 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
       setNewRequestDialog(false);
       refetch();
     } catch (err) {
-      // Optionally show error
     } finally {
       setIsCreating(false);
     }
@@ -82,7 +81,6 @@ export default function PatientCheckMedicinePage({ hideHeader = false }) {
       await deleteRequest(id).unwrap();
       refetch();
     } catch (err) {
-      // Optionally show error
     }
   };
 

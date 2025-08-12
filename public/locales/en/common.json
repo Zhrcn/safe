@@ -140,6 +140,8 @@
   "admin.users.pharmacist": "Pharmacist",
   "admin.users.phoneNumber": "Phone Number",
   "admin.users.address": "Address",
+  " admin.notifications.title":"Notifications",
+  "admin.users.allRoles": "All Roles",
   "admin.users.patientFields": "Patient Details",
   "admin.users.age": "Age",
   "admin.users.selectGender": "Select Gender",
@@ -216,6 +218,8 @@
   "patient.prescriptions.unknownStatus": "Unknown Status",
   "patient.prescriptions.noEndDate": "No End Date",
   "patient.prescriptions.noDiagnosis": "No Diagnosis",
+  "patient.prescriptions.unknownDoctor": "Unknown Doctor",
+  "patient.prescriptions.unknownSpecialty": "Unknown Specialty",
   "settings": "Settings",
   "logout": "Logout",
   "notifications": "Notifications",
@@ -285,6 +289,12 @@
   "patient.profile.address": "Address",
   "patient.profile.dateOfBirth": "Date of Birth",
   "patient.profile.selectDate": "Select date",
+  "patient.medications.viewPrescriptions": "View Prescriptions",
+  "patient.medications.tabs.medications": "Medications",
+"patient.medications.tabs.reminders": "Reminders",
+"patient.medications.tabs.availability": "Check Availability",
+"patient.medications.searchPlaceholder": "Search medications...",
+"patient.medications.status.all": "All Status",
   "patient.medicalRecords.title": "Medical Records",
   "patient.medicalRecords.accessAndManageYourMedicalHistoryAndDocuments": "Access and manage your medical history and documents.",
   "patient.medicalRecords.searchPlaceholder": "Search records by title or provider",
@@ -514,7 +524,9 @@
   "themeSwitcher.safeNight": "SafeNight",
   "testKey": "Test Key",
   "patient.medicalRecords.uploadDescription": "Add a new entry to your personal medical record.",
-  "patient.dashboard.breadcrumb": "Dashboard",
+  "patient.breadcrumb": "Patient",
+  "patient.medications.title": "Medications",
+  "patient.medications.description": "Manage your prescribed medications and set reminders.",
   "Category": "Category",
   "Upload successful!": "Upload successful!",
   "Uploading...": "Uploading...",
@@ -586,6 +598,17 @@
         "Prescription verification"
       ]
     },
+    "distributor": {
+      "title": "Distributor",
+      "description": "Manage medicine inventory, fulfill pharmacy orders, and coordinate logistics.",
+      "features": [
+        "Manage inventory",
+        "Fulfill pharmacy orders",
+        "Track shipments",
+        "Coordinate with pharmacists",
+        "Order analytics & reporting"
+      ]
+    },
     "login": "Login",
     "register": "Register"
   },
@@ -604,5 +627,20 @@
   "themeSwitcher": {
     "toggleTheme": "Toggle theme"
   },
-  "sidebar.accepted orders": "Accepted Orders"
+  "sidebar.accepted orders": "Accepted Orders",
+  "patient.medications.status": "Status",
+  "patient.medications.startDate": "Start Date",
+  "patient.medications.endDate": "End Date",
+  "patient.medications.delete": "Delete",
+  "patient.medications.prescribedBy": "Prescribed by",
+  "patient.medications.note": "Note",
+  "patient.medications.reminders": "Reminders",
+  "patient.medications.at": "At",
+  "patient.medications.setReminders": "Set Reminders",
+  "patient.medications.viewDetails": "Details",
+  "common.close": "Close",
+  "patient.dashboard.noAppointments": "No appointments at this time.",
+  "common.noNotifications": "No notifications at this time.",
+  "common.clearAll": "Delete All",
+  "common.delete": "Delete"
 }

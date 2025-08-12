@@ -57,7 +57,6 @@ export default function ProfileScreen() {
   }, [data]);
 
   const handleEdit = () => {
-    // Placeholder: Replace with real API call
     setSuccess(true);
     setTimeout(() => {
       setSuccess(false);
@@ -70,7 +69,6 @@ export default function ProfileScreen() {
     router.replace('/auth/login');
   };
 
-  // Insurance info (mocked for demo)
   const insurance = data?.insurance || data?.insuranceDetails || {};
 
   return (
@@ -80,11 +78,12 @@ export default function ProfileScreen() {
       <ScrollView className="flex-1 p-4">
         <View className="items-center mb-6">
           {data?.user?.profileImage ? (
-            <Image source={{ uri: data.user.profileImage }} className="w-24 h-24 rounded-full mb-2 bg-gray-200" />
+            <Image
+              source={data.user.profileImage.includes('/uploads') ? { uri: `http://192.168.1.100:5001${data.user.profileImage}` } : { uri: data.user.profileImage }}
+              className="w-24 h-24 rounded-full mb-2 bg-gray-200"
+            />
           ) : (
-            <View className="w-24 h-24 rounded-full bg-blue-100 items-center justify-center mb-2">
-              <Text className="text-4xl text-blue-700 font-bold">{data?.user?.firstName?.[0] || 'U'}</Text>
-            </View>
+            <Image source={require('../../../assets/images/6872779a3ccff829030148a7-John_Smith.jpg')} className="w-24 h-24 rounded-full mb-2 bg-gray-200" />
           )}
           <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{form.name}</Text>
           <Text className="text-base text-gray-500 dark:text-gray-300 mb-1">{form.email}</Text>
@@ -102,7 +101,6 @@ export default function ProfileScreen() {
         {error && <Text className="text-red-500">{error}</Text>}
         {data && (
           <>
-            {/* Basic Information */}
             <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 mb-4 shadow">
               <Text className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2">Basic Information</Text>
               <InfoRow icon="person" label="Full Name" value={form.name} />
@@ -110,7 +108,6 @@ export default function ProfileScreen() {
               <InfoRow icon="wc" label="Gender" value={form.gender} />
               <InfoRow icon="bloodtype" label="Blood Type" value={form.bloodType} />
             </View>
-            {/* Contact Information */}
             <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 mb-4 shadow">
               <Text className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2">Contact Information</Text>
               <InfoRow icon="email" label="Email" value={form.email} />
@@ -120,14 +117,12 @@ export default function ProfileScreen() {
               <InfoRow icon="business" label="State" value={form.state} />
               <InfoRow icon="calendar-today" label="Member Since" value={formatDate(form.memberSince)} />
             </View>
-            {/* Additional Information */}
             <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 mb-4 shadow">
               <Text className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2">Additional Information</Text>
               <InfoRow icon="school" label="Education" value={form.education} />
               <InfoRow icon="work" label="Occupation" value={form.occupation} />
               <InfoRow icon="favorite" label="Marital Status" value={form.maritalStatus} />
             </View>
-            {/* Insurance Information */}
             <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 mb-4 shadow">
               <Text className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2">Insurance Information</Text>
               <InfoRow icon="local-hospital" label="Provider" value={insurance.provider} />
@@ -177,7 +172,6 @@ export default function ProfileScreen() {
   );
 }
 
-// Hide the default header for this page
 ProfileScreen.options = {
   headerShown: false,
 }; 

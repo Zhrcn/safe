@@ -7,7 +7,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['message', 'appointment', 'prescription', 'inquiry', 'general', 'consultation', 'medical_file_update', 'reminder'], 
+    enum: ['message', 'appointment', 'prescription', 'inquiry', 'general', 'consultation', 'medical_file_update', 'reminder', 'referral'], 
     required: true
   },
   title: {
@@ -31,6 +31,10 @@ const notificationSchema = new mongoose.Schema({
   relatedModel: {
     type: String,
     enum: ['Appointment', 'Prescription', 'Conversation', 'Inquiry', 'Consultation', 'MedicalFile', 'User'], 
+  },
+  data: {
+    type: Object,
+    default: {},
   },
 }, {
   timestamps: true,

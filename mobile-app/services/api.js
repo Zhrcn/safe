@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.106:5001/api/v1', // Updated to match backend API prefix
+  baseURL: 'http://192.168.1.100:5001/api/v1',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -17,7 +17,6 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   response => response,
   error => {
-    // Optionally handle global errors here
     return Promise.reject(error);
   }
 );

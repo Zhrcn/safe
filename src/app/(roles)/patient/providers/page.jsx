@@ -661,14 +661,14 @@ const ProvidersPageContent = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px]">
-                                            <div className="flex items-center">
+                                            <div className="flex items-center text-primary">
                                                 <Filter className="h-4 w-4 mr-2 text-primary" />
                                                 {specialtyFilter === 'all' ? t('allSpecialties') : specialtyFilter}
                                                 <ChevronRight className="h-4 w-4 ml-2 text-primary" />
                                             </div>
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-[180px] bg-background border border-border">
+                                    <DropdownMenuContent className="w-[180px] bg-background border border-border text-primary">
                                         <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>
                                             {t('allSpecialties')}
                                         </DropdownMenuItem>
@@ -685,7 +685,7 @@ const ProvidersPageContent = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="h-10 px-4 justify-between min-w-[180px]">
-                                            <div className="flex items-center">
+                                            <div className="flex items-center text-primary">
                                                 <Building2 className="h-4 w-4 mr-2 text-primary" />
                                                 {locationFilter === 'all' ? t('allLocations') : locationFilter}
                                                 <ChevronRight className="h-4 w-4 ml-2 text-primary" />
@@ -708,7 +708,7 @@ const ProvidersPageContent = () => {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="h-10 px-4 justify-between min-w-[160px]">
-                                        <div className="flex items-center">
+                                        <div className="flex items-center text-primary">
                                             <ArrowUpDown className="h-4 w-4 mr-2 text-primary" />
                                             {(() => {
                                                 switch (sortBy) {

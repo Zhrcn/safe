@@ -5,7 +5,7 @@ import { getMedicines } from '@/store/services/doctor/medicineApi';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
-import { ClipboardList, Plus, Trash2, Save } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Save, Edit, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -35,13 +35,13 @@ export default function DistributorInventoryPage() {
   const [quaggaError, setQuaggaError] = useState('');
   const [quaggaLastScan, setQuaggaLastScan] = useState('');
   const [lastScanResult, setLastScanResult] = useState('');
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     getDistributorProfile()
       .then(res => setInventory(res.data.data.inventory || []))
       .catch(() => setError('Failed to load inventory'))
       .finally(() => setLoading(false));
-    // Fetch medicines for dropdown
     getMedicines().then(res => setMedicines(res.data || res)).catch(() => setMedicines([]));
   }, []);
 
@@ -83,7 +83,7 @@ export default function DistributorInventoryPage() {
     setInventory(inv => [
       ...inv,
       {
-        medicine: newItem.medicine, // ObjectId string
+        medicine: newItem.medicine, 
         quantity: Number(newItem.quantity),
         price: Number(newItem.price),
       },
@@ -96,23 +96,22 @@ export default function DistributorInventoryPage() {
     setError('');
     setSaving(true);
     try {
-      // Ensure all items are valid objects with correct types
       const cleanedInventory = inventory
         .filter(item => typeof item === 'object' && item !== null && 'medicine' in item)
         .map(item => ({
-          medicine: item.medicine, // ObjectId string
+          medicine: item.medicine, 
           quantity: Number(item.quantity) || 0,
           price: Number(item.price) || 0
         }));
       await updateDistributorInventory(cleanedInventory);
       setSuccess('Inventory updated!');
+      setEditMode(false);
     } catch {
       setError('Failed to update inventory.');
     }
     setSaving(false);
   };
 
-  // Barcode scan/keyboard handler
   const handleBarcode = (barcode) => {
     setBarcodeError('');
     setLastScanned(barcode);
@@ -127,7 +126,6 @@ export default function DistributorInventoryPage() {
     }
   };
 
-  // Quagga handler
   const handleQuaggaDetected = (barcode) => {
     setQuaggaLastScan(barcode);
     setLastScanResult(barcode);
@@ -139,6 +137,11 @@ export default function DistributorInventoryPage() {
     } else {
       setBarcodeError('No medicine found for this barcode.');
     }
+  };
+
+  const getMedicineName = (medicineId) => {
+    const medicine = medicines.find(m => m._id === medicineId);
+    return medicine ? medicine.name : 'Unknown Medicine';
   };
 
   return (
@@ -160,15 +163,26 @@ export default function DistributorInventoryPage() {
             onChange={e => setSearch(e.target.value)}
             className="w-full sm:w-64"
           />
-          <Button variant="outline" onClick={() => setBarcodeModalOpen(true)}>
-            Scan QR
-          </Button>
-          <Button variant="outline" onClick={() => setQuaggaModalOpen(true)}>
-            Scan Barcode
+          {editMode && (
+            <>
+              <Button variant="outline" onClick={() => setBarcodeModalOpen(true)}>
+                Scan QR
+              </Button>
+              <Button variant="outline" onClick={() => setQuaggaModalOpen(true)}>
+                Scan Barcode
+              </Button>
+            </>
+          )}
+          <Button 
+            variant={editMode ? "secondary" : "primary"}
+            onClick={() => setEditMode(!editMode)}
+            className="flex items-center gap-2"
+          >
+            {editMode ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+            {editMode ? 'View Mode' : 'Edit Mode'}
           </Button>
         </div>
       </div>
-      {/* QuaggaJS Scanner Modal */}
       {quaggaModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
@@ -192,7 +206,6 @@ export default function DistributorInventoryPage() {
           </div>
         </div>
       )}
-      {/* ZXing Scanner Modal (for QR/2D) */}
       {barcodeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
@@ -213,29 +226,35 @@ export default function DistributorInventoryPage() {
           </div>
         </div>
       )}
-      {/* Keyboard Barcode Input */}
-      <div className="flex items-center gap-2 mb-4">
-        <label htmlFor="barcode-input" className="text-sm font-medium">Barcode (USB scanner):</label>
-        <Input
-          id="barcode-input"
-          ref={barcodeInputRef}
-          placeholder="Scan or type barcode"
-          onKeyDown={e => {
-            if (e.key === 'Enter') handleBarcode(e.target.value);
-          }}
-          className="w-48"
-        />
-        <BarcodeReader
-          onError={() => setBarcodeError('Barcode scan failed.')}
-          onScan={barcode => barcode && handleBarcode(barcode)}
-        />
-        {barcodeError && <span className="text-red-500 ml-2">{barcodeError}</span>}
-        {lastScanned && <span className="text-xs ml-2">Last scanned: <span className="font-mono">{lastScanned}</span></span>}
-      </div>
+      {editMode && (
+        <div className="flex items-center gap-2 mb-4">
+          <label htmlFor="barcode-input" className="text-sm font-medium">Barcode (USB scanner):</label>
+          <Input
+            id="barcode-input"
+            ref={barcodeInputRef}
+            placeholder="Scan or type barcode"
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleBarcode(e.target.value);
+            }}
+            className="w-48"
+          />
+          <BarcodeReader
+            onError={() => setBarcodeError('Barcode scan failed.')}
+            onScan={barcode => barcode && handleBarcode(barcode)}
+          />
+          {barcodeError && <span className="text-red-500 ml-2">{barcodeError}</span>}
+          {lastScanned && <span className="text-xs ml-2">Last scanned: <span className="font-mono">{lastScanned}</span></span>}
+        </div>
+      )}
       <Card className="shadow-2xl border border-primary/10">
         <CardHeader className="flex flex-row items-center gap-4 p-6 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-t-xl">
           <ClipboardList className="w-8 h-8 text-secondary" />
           <CardTitle className="text-2xl font-bold">Inventory Management</CardTitle>
+          {editMode && (
+            <Badge variant="secondary" className="ml-auto">
+              Edit Mode
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -251,13 +270,13 @@ export default function DistributorInventoryPage() {
                       <TableHead className="w-1/2">Medicine/Package</TableHead>
                       <TableHead className="w-1/6 text-center">Quantity</TableHead>
                       <TableHead className="w-1/6 text-center">Price</TableHead>
-                      <TableHead className="w-1/6 text-center">Remove</TableHead>
+                      {editMode && <TableHead className="w-1/6 text-center">Remove</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredInventory.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+                        <TableCell colSpan={editMode ? 4 : 3} className="text-center text-muted-foreground py-6">
                           No inventory items found.
                         </TableCell>
                       </TableRow>
@@ -268,11 +287,82 @@ export default function DistributorInventoryPage() {
                         className="hover:bg-primary/5 transition-colors"
                       >
                         <TableCell>
+                          {editMode ? (
+                            <Select
+                              value={item.medicine}
+                              onValueChange={val => handleChange(idx, 'medicine', val)}
+                            >
+                              <SelectTrigger className="bg-white/80">
+                                <SelectValue placeholder="Select medicine" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {medicines.map(med => (
+                                  <SelectItem key={med._id} value={med._id}>
+                                    {med.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="font-medium">{getMedicineName(item.medicine)}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {editMode ? (
+                            <Input
+                              type="number"
+                              min={0}
+                              value={item.quantity}
+                              onChange={e => handleChange(idx, 'quantity', e.target.value.replace(/^0+/, ''))}
+                              required
+                              className="bg-white/80 text-center"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                            />
+                          ) : (
+                            <span className="font-semibold">{item.quantity}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {editMode ? (
+                            <Input
+                              type="number"
+                              min={0}
+                              value={item.price}
+                              onChange={e => handleChange(idx, 'price', e.target.value.replace(/^0+/, ''))}
+                              required
+                              className="bg-white/80 text-center"
+                              inputMode="decimal"
+                              pattern="[0-9.]*"
+                            />
+                          ) : (
+                            <span className="font-semibold">${item.price}</span>
+                          )}
+                        </TableCell>
+                        {editMode && (
+                          <TableCell className="text-center">
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => handleRemove(idx)}
+                              className="transition-transform hover:scale-110"
+                              aria-label="Remove item"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                    {editMode && (
+                      <TableRow className="bg-muted/30">
+                        <TableCell>
                           <Select
-                            value={item.medicine}
-                            onValueChange={val => handleChange(idx, 'medicine', val)}
+                            value={newItem.medicine}
+                            onValueChange={val => setNewItem({ ...newItem, medicine: val })}
                           >
-                            <SelectTrigger className="bg-white/80">
+                            <SelectTrigger className="bg-white/90">
                               <SelectValue placeholder="Select medicine" />
                             </SelectTrigger>
                             <SelectContent>
@@ -288,10 +378,10 @@ export default function DistributorInventoryPage() {
                           <Input
                             type="number"
                             min={0}
-                            value={item.quantity}
-                            onChange={e => handleChange(idx, 'quantity', e.target.value.replace(/^0+/, ''))}
-                            required
-                            className="bg-white/80 text-center"
+                            placeholder="Qty"
+                            value={newItem.quantity}
+                            onChange={e => setNewItem({ ...newItem, quantity: e.target.value.replace(/^0+/, '') })}
+                            className="bg-white/90 text-center"
                             inputMode="numeric"
                             pattern="[0-9]*"
                           />
@@ -300,10 +390,10 @@ export default function DistributorInventoryPage() {
                           <Input
                             type="number"
                             min={0}
-                            value={item.price}
-                            onChange={e => handleChange(idx, 'price', e.target.value.replace(/^0+/, ''))}
-                            required
-                            className="bg-white/80 text-center"
+                            placeholder="Price"
+                            value={newItem.price}
+                            onChange={e => setNewItem({ ...newItem, price: e.target.value.replace(/^0+/, '') })}
+                            className="bg-white/90 text-center"
                             inputMode="decimal"
                             pattern="[0-9.]*"
                           />
@@ -311,110 +401,57 @@ export default function DistributorInventoryPage() {
                         <TableCell className="text-center">
                           <Button
                             type="button"
-                            variant="destructive"
+                            variant="success"
                             size="icon"
-                            onClick={() => handleRemove(idx)}
+                            onClick={handleAdd}
                             className="transition-transform hover:scale-110"
-                            aria-label="Remove item"
+                            aria-label="Add item"
+                            disabled={
+                              !newItem.medicine ||
+                              newItem.quantity === '' ||
+                              newItem.price === '' ||
+                              isNaN(Number(newItem.quantity)) ||
+                              isNaN(Number(newItem.price)) ||
+                              Number(newItem.quantity) < 0 ||
+                              Number(newItem.price) < 0
+                            }
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Plus className="w-5 h-5" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
-                    <TableRow className="bg-muted/30">
-                      <TableCell>
-                        <Select
-                          value={newItem.medicine}
-                          onValueChange={val => setNewItem({ ...newItem, medicine: val })}
-                        >
-                          <SelectTrigger className="bg-white/90">
-                            <SelectValue placeholder="Select medicine" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {medicines.map(med => (
-                              <SelectItem key={med._id} value={med._id}>
-                                {med.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          type="number"
-                          min={0}
-                          placeholder="Qty"
-                          value={newItem.quantity}
-                          onChange={e => setNewItem({ ...newItem, quantity: e.target.value.replace(/^0+/, '') })}
-                          className="bg-white/90 text-center"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          type="number"
-                          min={0}
-                          placeholder="Price"
-                          value={newItem.price}
-                          onChange={e => setNewItem({ ...newItem, price: e.target.value.replace(/^0+/, '') })}
-                          className="bg-white/90 text-center"
-                          inputMode="decimal"
-                          pattern="[0-9.]*"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          type="button"
-                          variant="success"
-                          size="icon"
-                          onClick={handleAdd}
-                          className="transition-transform hover:scale-110"
-                          aria-label="Add item"
-                          disabled={
-                            !newItem.medicine ||
-                            newItem.quantity === '' ||
-                            newItem.price === '' ||
-                            isNaN(Number(newItem.quantity)) ||
-                            isNaN(Number(newItem.price)) ||
-                            Number(newItem.quantity) < 0 ||
-                            Number(newItem.price) < 0
-                          }
-                        >
-                          <Plus className="w-5 h-5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSave}
-                    variant="primary"
-                    className="flex items-center gap-2 px-6 py-2 text-base font-semibold shadow-lg"
-                    disabled={saving}
-                  >
-                    <Save className="w-5 h-5" />
-                    {saving ? 'Saving...' : 'Save Inventory'}
-                  </Button>
-                  {success && (
-                    <Badge variant="success" className="flex items-center gap-1 animate-fade-in">
-                      {success}
-                    </Badge>
-                  )}
-                  {error && (
-                    <Badge variant="destructive" className="flex items-center gap-1 animate-fade-in">
-                      {error}
-                    </Badge>
-                  )}
+              {editMode && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSave}
+                      variant="primary"
+                      className="flex items-center gap-2 px-6 py-2 text-base font-semibold shadow-lg"
+                      disabled={saving}
+                    >
+                      <Save className="w-5 h-5" />
+                      {saving ? 'Saving...' : 'Save Inventory'}
+                    </Button>
+                    {success && (
+                      <Badge variant="success" className="flex items-center gap-1 animate-fade-in">
+                        {success}
+                      </Badge>
+                    )}
+                    {error && (
+                      <Badge variant="destructive" className="flex items-center gap-1 animate-fade-in">
+                        {error}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2 sm:mt-0">
+                    <span className="font-medium">Tip:</span> Click <span className="font-bold">Save Inventory</span> to persist your changes.
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground mt-2 sm:mt-0">
-                  <span className="font-medium">Tip:</span> Click <span className="font-bold">Save Inventory</span> to persist your changes.
-                </div>
-              </div>
+              )}
             </>
           )}
         </CardContent>
@@ -423,14 +460,12 @@ export default function DistributorInventoryPage() {
   );
 }
 
-// ZXingBarcodeScanner component
 function ZXingBarcodeScanner({ onDetected, onError }) {
   const videoRef = useRef(null);
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [deviceError, setDeviceError] = useState('');
 
-  // Helper to get a user-friendly error message
   function getFriendlyCameraError(errorMsg) {
     if (!errorMsg) return '';
     if (/permission|denied/i.test(errorMsg)) {
@@ -487,7 +522,6 @@ function ZXingBarcodeScanner({ onDetected, onError }) {
       active = false;
       if (controls) controls.stop();
     };
-    // eslint-disable-next-line
   }, [onDetected, onError, selectedDeviceId]);
 
   return (
@@ -505,7 +539,6 @@ function ZXingBarcodeScanner({ onDetected, onError }) {
   );
 }
 
-// QuaggaScanner component
 function QuaggaScanner({ onDetected, onError }) {
   const scannerRef = useRef(null);
   useEffect(() => {
@@ -544,7 +577,6 @@ function QuaggaScanner({ onDetected, onError }) {
       Quagga.stop();
     });
     Quagga.onProcessed((result) => {
-      // Optionally, draw boxes/lines for debugging
     });
     return () => {
       active = false;

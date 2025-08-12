@@ -44,7 +44,6 @@ export default function LoginForm({ role, redirectUrl }) {
                 console.log('Navigating to:', dashboardPath);
                 router.push(dashboardPath);
             } else if (userRole.toLowerCase() === 'distributor') {
-                // Fallback for distributor if not in ROLE_ROUTES
                 router.push('/distributor/dashboard');
             } else {
                 console.error('No dashboard path found for role:', userRole);

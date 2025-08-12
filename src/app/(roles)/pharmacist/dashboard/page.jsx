@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import PrescriptionView from '@/components/medical/PrescriptionView';
 import { getPrescriptionById, updatePrescription } from '@/store/services/doctor/prescriptionsApi';
+import PharmacistPrescriptionSocketListener from '@/components/pharmacist/PharmacistPrescriptionSocketListener';
 
 const QRCodeScanner = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 
@@ -38,8 +39,8 @@ export default function PharmacistDashboardPage() {
   const [qrValue, setQrValue] = useState('');
   const [prescriptionModalOpen, setPrescriptionModalOpen] = useState(false);
   const [prescriptionDetails, setPrescriptionDetails] = useState(null);
-  const [dispensed, setDispensed] = useState({}); // {medId: true}
-  const [dispenseLocked, setDispenseLocked] = useState({}); // {medId: true}
+  const [dispensed, setDispensed] = useState({});
+  const [dispenseLocked, setDispenseLocked] = useState({});
   const [prescriptionLoading, setPrescriptionLoading] = useState(false);
   const [prescriptionError, setPrescriptionError] = useState('');
 
@@ -69,7 +70,7 @@ export default function PharmacistDashboardPage() {
   const handleInventoryAdded = () => setRefreshFlag(f => f + 1);
 
   const filteredInventory = inventory.filter(item =>
-    item.name.toLowerCase().includes(debouncedInventorySearch.toLowerCase())
+    (item.name || '').toLowerCase().includes(debouncedInventorySearch.toLowerCase())
   );
   const filteredLowStockItems = filteredInventory.filter(item => item.stock <= item.lowStockThreshold);
 
@@ -92,24 +93,20 @@ export default function PharmacistDashboardPage() {
     }
   };
 
-  // When QR code is scanned
   const handleQRScanned = async (value) => {
     setQrValue(value);
-    // Assume value is a prescription ID (or parse if JSON)
     let prescriptionId = value;
     try {
       setPrescriptionLoading(true);
       setPrescriptionError('');
       setPrescriptionDetails(null);
       setPrescriptionModalOpen(false);
-      // Try to parse as JSON if not a simple ID
       try {
         const parsed = JSON.parse(value);
         if (parsed && parsed.prescriptionId) prescriptionId = parsed.prescriptionId;
       } catch {}
       const details = await getPrescriptionById(prescriptionId);
       setPrescriptionDetails(details);
-      // Mark already dispensed meds as locked
       const locked = {};
       if (details && details.medications) {
         details.medications.forEach(med => {
@@ -128,7 +125,7 @@ export default function PharmacistDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* QR Code Scanner Modal */}
+      <PharmacistPrescriptionSocketListener />
       {qrModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
@@ -156,7 +153,6 @@ export default function PharmacistDashboardPage() {
           </div>
         </div>
       )}
-      {/* Prescription Details Modal */}
       {prescriptionModalOpen && prescriptionDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl relative">
@@ -193,7 +189,6 @@ export default function PharmacistDashboardPage() {
                           try {
                             setPrescriptionLoading(true);
                             setPrescriptionError('');
-                            // Update only this medicine's refillCount
                             const updated = await updatePrescription(prescriptionDetails.id, {
                               medications: prescriptionDetails.medications.map(m =>
                                 m._id === med._id
@@ -223,7 +218,6 @@ export default function PharmacistDashboardPage() {
           </div>
         </div>
       )}
-      {/* Summary Header */}
       <Card className="mb-4 bg-gradient-to-r from-primary/10 via-card to-secondary/10 border-0 shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between gap-4 p-6">
           <div>
@@ -240,7 +234,6 @@ export default function PharmacistDashboardPage() {
             </CardDescription>
           </div>
           <div className="flex items-center gap-6">
-            {/* Notification Bell */}
             <div className="relative">
               <button
                 className="relative p-2 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -251,7 +244,6 @@ export default function PharmacistDashboardPage() {
                 <span className="absolute -top-1 -right-1 bg-danger text-white text-xs rounded-full px-1.5 py-0.5 font-bold" aria-label="3 unread notifications">3</span>
               </button>
             </div>
-            {/* Profile Avatar & Info */}
             <div className="flex items-center gap-3">
               <Avatar size="sm">
                 <AvatarImage src={pharmacist?.profileImage} alt="Profile" />
@@ -261,13 +253,11 @@ export default function PharmacistDashboardPage() {
                 <span className="font-semibold text-foreground text-sm">{pharmacist ? `${pharmacist.firstName} ${pharmacist.lastName}` : ''}</span>
                 <span className="text-xs text-muted-foreground">{pharmacist?.email}</span>
               </div>
-              {/* Dropdown for profile/settings could go here */}
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      {/* Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <AnimatePresence>
           <motion.div
@@ -330,7 +320,6 @@ export default function PharmacistDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Low Stock Items Card */}
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
@@ -409,7 +398,6 @@ export default function PharmacistDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Prescriptions to Fill Card */}
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center gap-2">
             <FileText className="w-6 h-6 text-primary" />
@@ -467,20 +455,35 @@ export default function PharmacistDashboardPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPrescriptions.map((prescription) => (
+                  filteredPrescriptions.slice(-5).map((prescription, idx, arr) => (
                     <motion.tr
                       key={prescription.id}
                       whileHover={{ scale: 1.01, backgroundColor: 'rgba(59, 130, 246, 0.06)' }}
                       transition={{ type: 'spring', stiffness: 300 }}
-                      className="hover:bg-primary/5 transition-colors duration-200"
+                      className="hover:bg-primary/10 transition-colors duration-200 border-b border-muted last:border-0"
                     >
-                      <TableCell className="text-foreground font-semibold">{prescription.patientName || '-'}</TableCell>
-                      <TableCell className="text-foreground">
-                        {Array.isArray(prescription.medications) && prescription.medications.length > 0
-                          ? prescription.medications.map(med => med.name).join(', ')
-                          : '-'}
+                      <TableCell className="text-foreground font-bold text-base">
+                        {prescription.patientName || '-'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{prescription.date ? new Date(prescription.date).toLocaleDateString() : '-'}</TableCell>
+                      <TableCell className="text-foreground">
+                        {Array.isArray(prescription.medications) && prescription.medications.length > 0 ? (
+                          <ul className="list-disc list-inside space-y-1">
+                            {prescription.medications.map((med, i) => (
+                              <li key={i} className="truncate max-w-xs" title={med.name}>{med.name}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {prescription.date ? (
+                          <span title={new Date(prescription.date).toLocaleString()}>
+                            {new Date(prescription.date).toLocaleDateString()}<br/>
+                            <span className="text-xs text-muted-foreground">{new Date(prescription.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </span>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
@@ -489,6 +492,7 @@ export default function PharmacistDashboardPage() {
                               : prescription.status === 'filled' ? 'secondary'
                               : 'outline'
                           }
+                          className="px-2 py-1 text-xs font-semibold"
                         >
                           {prescription.status.replace('_', ' ').toUpperCase()}
                         </Badge>
@@ -533,7 +537,6 @@ export default function PharmacistDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Orders Card */}
         <Card className="shadow-lg md:col-span-2">
           <CardHeader className="flex flex-row items-center gap-2">
             <ShoppingCart className="w-6 h-6 text-accent" />

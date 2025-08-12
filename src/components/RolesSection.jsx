@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Stethoscope, Droplet, CheckCircle2 } from 'lucide-react';
+import { User, Stethoscope, Droplet, CheckCircle2, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { ROLES } from '@/config/app-config';
@@ -265,13 +265,28 @@ export default function RolesSection() {
       badge: 'warning',
       gradient: 'linear-gradient(135deg, var(--color-warning) 0%, var(--color-error) 100%)',
     },
+    {
+      icon: Package,
+      title: t('roles.distributor.title', 'Distributor'),
+      description: t('roles.distributor.description', 'Manage medicine inventory, fulfill pharmacy orders, and coordinate logistics.'),
+      features: [
+        t('roles.distributor.features.0', 'Manage inventory'),
+        t('roles.distributor.features.1', 'Fulfill pharmacy orders'),
+        t('roles.distributor.features.2', 'Track shipments'),
+        t('roles.distributor.features.3', 'Coordinate with pharmacists'),
+        t('roles.distributor.features.4', 'Order analytics & reporting'),
+      ],
+      role: ROLES.DISTRIBUTOR,
+      color: 'var(--color-info, #6366f1)',
+      badge: 'info',
+      gradient: 'linear-gradient(135deg, var(--color-info, #6366f1) 0%, var(--color-primary) 100%)',
+    },
   ];
   return (
     <Section
       id="roles"
       className="relative overflow-hidden bg-transparent py-16"
     >
-      <p>{t('testKey')}</p>
       <div
         className="absolute inset-0 pointer-events-none select-none z-0"
         aria-hidden="true"
@@ -300,7 +315,7 @@ export default function RolesSection() {
             {t('roles.sectionDescription', 'Select your role to get started with SAFE.')}
           </p>
         </motion.div>
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto px-2 sm:px-6">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8 max-w-7xl mx-auto px-2 sm:px-6">
           {roles.map((role, index) => (
             <RoleCard key={role.title} {...role} index={index} />
           ))}

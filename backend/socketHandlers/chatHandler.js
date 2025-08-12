@@ -53,16 +53,13 @@ class ChatHandler {
 
   handleJoinConversation(socket, conversationId) {
     socket.join(conversationId);
-    console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
   }
 
   handleLeaveConversation(socket, conversationId) {
     socket.leave(conversationId);
-    console.log(`Socket ${socket.id} left conversation ${conversationId}`);
   }
 
   async handleSendMessage(socket, conversationId, message, callback) {
-    console.log('ChatHandler send_message:', { conversationId, message });
     
     try {
       const conversation = await Conversation.findById(conversationId);
@@ -110,7 +107,6 @@ class ChatHandler {
       
       const populatedMessage = populatedConversation.messages[populatedConversation.messages.length - 1];
 
-      console.log('ChatHandler: Message saved successfully', { conversationId, messageId: populatedMessage._id });
       
       if (receiverId !== socket.userId) {
         await this.createMessageNotification(socket.user, message.content, receiverId, conversationId);
@@ -138,7 +134,6 @@ class ChatHandler {
   }
 
   async handleGetMessages(socket, conversationId, callback) {
-    console.log('[ChatHandler] get_messages request received:', { conversationId, userId: socket.userId });
     
     try {
       const conversation = await Conversation.findById(conversationId)
@@ -156,7 +151,6 @@ class ChatHandler {
         return callback({ error: 'You are not a participant in this conversation' });
       }
       
-      console.log('[ChatHandler] Messages returned. Count:', conversation.messages.length);
       callback({ success: true, messages: conversation.messages });
     } catch (err) {
       console.error('[ChatHandler] get_messages error:', err);
@@ -165,7 +159,6 @@ class ChatHandler {
   }
 
   async handleDeleteMessage(socket, conversationId, messageId, callback) {
-    console.log('[ChatHandler] delete_message request received:', { conversationId, messageId, userId: socket.userId });
     
     try {
       const conversation = await Conversation.findById(conversationId);

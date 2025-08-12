@@ -453,10 +453,7 @@ export default function AnalyticsPage() {
                 : 'View analytics and statistics about your patients, appointments, and prescriptions.'}
             </CardDescription>
           </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={loading}>
-            <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+                  
         </div>
       </CardHeader>
       <CardContent>

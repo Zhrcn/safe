@@ -37,7 +37,7 @@
   "footer.rights": "جميع الحقوق محفوظة",
   "footer.designedWith": "مصمم بـ",
   "footer.forHealthcare": "للرعاية الصحية",
-  "appName": "منصة االصحة المستقلبية السورية",
+  "appName": "منصة االصحة المستقبلية السورية",
   "footer.social.facebook": "فيسبوك",
   "footer.social.twitter": "تويتر",
   "footer.social.instagram": "إنستغرام",
@@ -610,6 +610,17 @@
         "التحقق من الوصفات"
       ]
     },
+    "distributor": {
+      "title": "موزع الأدوية",
+      "description": "إدارة مخزون الأدوية، تلبية طلبات الصيدليات، وتنسيق الخدمات اللوجستية.",
+      "features": [
+        "إدارة المخزون",
+        "تلبية طلبات الصيدليات",
+        "تتبع الشحنات",
+        "التنسيق مع الصيادلة",
+        "تحليلات وتقارير الطلبات"
+      ]
+    },
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب"
   },
@@ -628,5 +639,10 @@
   "themeSwitcher": {
     "toggleTheme": "تبديل النمط"
   },
-  "sidebar.accepted orders": "الطلبات المقبولة"
+  "sidebar.accepted orders": "الطلبات المقبولة",
+  "patient.prescriptions.unknownDoctor": "طبيب غير معروف",
+  "patient.prescriptions.unknownSpecialty": "تخصص غير معروف",
+  "common.noNotifications": "لا توجد إشعارات في هذا الوقت.",
+  "common.clearAll": "حذف الكل",
+  "common.delete": "حذف"
 }

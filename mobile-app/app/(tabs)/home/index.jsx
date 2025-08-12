@@ -61,14 +61,11 @@ export default function DashboardScreen() {
   const chronicConditions = medicalFile.chronicConditions || [];
   const vitals = (medicalFile.vitalSigns && medicalFile.vitalSigns.length > 0) ? medicalFile.vitalSigns[medicalFile.vitalSigns.length - 1] : {};
 
-  // Responsive scaling
   const { width } = useWindowDimensions();
-  // scale: 1 for small, 1.15 for medium, 1.3 for large screens
   let sizeScale = 1;
   if (width >= 900) sizeScale = 1.3;
   else if (width >= 600) sizeScale = 1.15;
 
-  // Responsive: for large screens, show metrics and quick actions in grid, else column/row
   const isLargeScreen = width >= 900;
   const isMediumScreen = width >= 600 && width < 900;
   const isSmallScreen = width < 600;
@@ -77,7 +74,6 @@ export default function DashboardScreen() {
     dispatch(fetchDashboard());
   }, [dispatch]);
 
-  // Health metrics config
   const healthMetrics = [
     { icon: MaterialCommunityIcons, label: 'Heart Rate', value: vitals.heartRate ? `${vitals.heartRate} BPM` : 'N/A', iconName: 'heart-pulse' },
     { icon: MaterialCommunityIcons, label: 'Blood Pressure', value: vitals.bloodPressure || 'N/A', iconName: 'water' },
@@ -87,7 +83,6 @@ export default function DashboardScreen() {
     { icon: MaterialCommunityIcons, label: 'Oxygen Saturation', value: vitals.oxygenSaturation ? `${vitals.oxygenSaturation}%` : 'N/A', iconName: 'water-percent' },
   ];
 
-  // Quick actions config
   const quickActions = [
     { icon: MaterialIcons, iconName: 'event-available', label: 'Schedule Appointment', onPress: () => router.push('/(pages)/appointments') },
     { icon: MaterialCommunityIcons, iconName: 'file-document', label: 'Medical Records', onPress: () => router.push('/(tabs)/medical-records') },
@@ -99,14 +94,12 @@ export default function DashboardScreen() {
       <CustomHeader onMenuPress={() => setDrawerOpen(true)} />
       <CustomDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <ScrollView style={{ flex: 1 }}>
-        {/* Welcome header */}
         <Text style={[styles.welcome, { fontSize: 24 * sizeScale, marginTop: 8 * sizeScale }]}>
           Welcome{user.name ? `, ${user.name}` : ''}!
         </Text>
         <Text style={[styles.subtitle, { fontSize: 15 * sizeScale, marginBottom: 12 * sizeScale }]}>
           Here’s an overview of your health and activity.
         </Text>
-        {/* Loading/Error State */}
         {loading && (
           <View style={styles.centeredWrap}>
             <ActivityIndicator size={48 * sizeScale} color="#2563eb" style={{ marginVertical: 32 * sizeScale }} />
@@ -122,7 +115,6 @@ export default function DashboardScreen() {
         )}
         {!loading && !error && (
         <>
-        {/* Health metrics */}
         <View style={styles.sectionDivider} />
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialCommunityIcons name="heart-pulse" size={22 * sizeScale} color="#2563eb" style={{ marginRight: 8 }} />
@@ -169,7 +161,6 @@ export default function DashboardScreen() {
           </View>
         )}
         <View style={styles.sectionDivider} />
-        {/* Quick actions */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialIcons name="flash-on" size={22 * sizeScale} color="#2563eb" style={{ marginRight: 8 }} />
           <Text style={[styles.sectionTitle, { fontSize: 18 * sizeScale }]}>Quick Actions</Text>
@@ -215,7 +206,6 @@ export default function DashboardScreen() {
           </View>
         )}
         <View style={styles.sectionDivider} />
-        {/* Appointments */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialIcons name="event-available" size={22 * sizeScale} color="#2563eb" style={{ marginRight: 8 }} />
           <Text style={[styles.sectionTitle, { fontSize: 18 * sizeScale }]}>Upcoming Appointments</Text>
@@ -254,7 +244,6 @@ export default function DashboardScreen() {
           ))
         )}
         <View style={styles.sectionDivider} />
-        {/* Medications */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialCommunityIcons name="medical-bag" size={22 * sizeScale} color="#2563eb" style={{ marginRight: 8 }} />
           <Text style={[styles.sectionTitle, { fontSize: 18 * sizeScale }]}>Active Medications</Text>
@@ -291,7 +280,6 @@ export default function DashboardScreen() {
           ))
         )}
         <View style={styles.sectionDivider} />
-        {/* Allergies */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialCommunityIcons name="alert-circle" size={22 * sizeScale} color="#f59e42" style={{ marginRight: 8 }} />
           <Text style={[styles.sectionTitle, { fontSize: 18 * sizeScale }]}>Allergies</Text>
@@ -318,7 +306,6 @@ export default function DashboardScreen() {
           ))
         )}
         <View style={styles.sectionDivider} />
-        {/* Chronic Conditions */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 * sizeScale }}>
           <MaterialCommunityIcons name="heart-broken" size={22 * sizeScale} color="#ef4444" style={{ marginRight: 8 }} />
           <Text style={[styles.sectionTitle, { fontSize: 18 * sizeScale }]}>Chronic Conditions</Text>
@@ -352,12 +339,10 @@ export default function DashboardScreen() {
   );
 }
 
-// Hide the default header for this page
 DashboardScreen.options = {
   headerShown: false,
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,

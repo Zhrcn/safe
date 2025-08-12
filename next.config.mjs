@@ -39,9 +39,7 @@ const nextConfig = {
   },
 
   experimental: {
-    logging: {
-      level: 'error'
-    }
+    // Removed invalid logging option
   }
 };
 

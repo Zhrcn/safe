@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getConsultations,
   requestConsultation,
+  answerConsultation,
   updateConsultation,
   deleteConsultation,
   addFollowUpQuestion,
@@ -13,11 +14,13 @@ router.use(protect);
 router.route('/')
   .get(getConsultations)
   .post(requestConsultation);
-router.route('/:id')
-  .patch(updateConsultation)
-  .delete(deleteConsultation);
+router.route('/:id/answer')
+  .put(answerConsultation);
 router.route('/:id/follow-up')
   .post(addFollowUpQuestion);
 router.route('/:id/messages')
   .get(getConsultationMessages);
+router.route('/:id')
+  .patch(updateConsultation)
+  .delete(deleteConsultation);
 module.exports = router;

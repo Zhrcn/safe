@@ -162,8 +162,11 @@ const patientSchema = new mongoose.Schema({
     },
   }],
   reminders: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Reminder'
+    medicationId: mongoose.Schema.Types.ObjectId,
+    time: String,
+    days: [String],
+    note: String,
+    enabled: { type: Boolean, default: true }
   }],
   createdAt: {
     type: Date,

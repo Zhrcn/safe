@@ -53,12 +53,15 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
     completed: 'bg-green-100 text-green-800 border-green-200',
     cancelled: 'bg-red-100 text-red-800 border-red-200',
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    answered: 'bg-green-100 text-green-800 border-green-200',
   };
+  
   const statusIcons = {
     scheduled: Clock,
     completed: Check,
     cancelled: X,
     pending: Clock,
+    answered: Check,
   };
 
   const getTypeLabel = (type) => {
@@ -66,7 +69,7 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
       case 'video': return 'Video Call';
       case 'chat': return 'Chat';
       case 'phone': return 'Phone Call';
-      default: return type;
+      default: return 'Chat';
     }
   };
 
@@ -81,77 +84,123 @@ const ConsultationCard = ({ consultation, onOpenDialog, onCancel, onDelete, doct
 
   const StatusIconComponent = statusIcons[consultation.status] || Info;
   const TypeIconComponent = getTypeIcon(consultation.type) || MessageCircle;
-
   const getDoctorName = () => getDoctorNameFromConsultation(consultation, doctorsList);
 
+  const getActionButtonText = () => {
+    if (consultation.status === 'pending') return 'Answer';
+    if (consultation.answer) return 'Chat';
+    return 'View';
+  };
+
+  const getActionButtonVariant = () => {
+    if (consultation.status === 'pending') return 'default';
+    if (consultation.answer) return 'default';
+    return 'outline';
+  };
+
   return (
-    <Card className="flex flex-col shadow-sm border border-border rounded-2xl hover:shadow-lg transition-all duration-200 w-full h-full min-h-[220px]">
-      <CardContent className="p-4 flex flex-col gap-3 h-full text-sm">
-        <div className="flex items-center gap-3 mb-1">
-          <Avatar className="h-10 w-10">
-            {consultation.doctorAvatar ? (
-              <AvatarImage src={consultation.doctorAvatar} />
-            ) : (
-              <AvatarFallback className="bg-primary text-primary text-base font-semibold">
-                {getInitialsFromName(getDoctorName())}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <div className="font-semibold text-base text-foreground truncate">{getDoctorName()}</div>
-            {consultation.doctorSpecialty && (
-              <div className="text-xs text-muted-foreground truncate">{consultation.doctorSpecialty}</div>
-            )}
+    <Card className="group relative overflow-hidden border border-border rounded-xl hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-gray-50/50">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+              {consultation.doctorAvatar ? (
+                <AvatarImage src={consultation.doctorAvatar} />
+              ) : (
+                <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                  {getInitialsFromName(getDoctorName())}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg text-foreground truncate">{getDoctorName()}</h3>
+              {consultation.doctorSpecialty && (
+                <p className="text-sm text-muted-foreground truncate">{consultation.doctorSpecialty}</p>
+              )}
+              <div className="flex items-center gap-2 mt-1">
+                <TypeIconComponent className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{getTypeLabel(consultation.type)}</span>
+              </div>
+            </div>
           </div>
-          <Badge className={statusColors[consultation.status] || 'bg-muted text-muted-foreground border-border'} size="sm">
+          <Badge 
+            className={`${statusColors[consultation.status] || 'bg-muted text-muted-foreground'} transition-all`} 
+            size="sm"
+          >
             <StatusIconComponent className="w-3 h-3 mr-1" />
             {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
           </Badge>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-          <TypeIconComponent className="h-4 w-4" />
-          <span className="font-medium">{getTypeLabel(consultation.type)} Consultation</span>
-        </div>
-        <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
-          <div className="flex items-center gap-1 mb-0.5">
-            <Info className="h-3 w-3 text-primary" />
-            <span className="font-semibold text-xs text-foreground">Question</span>
+
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Info className="h-4 w-4 text-blue-600" />
+              <span className="font-semibold text-sm text-blue-900">Your Question</span>
+            </div>
+            <p className="text-sm text-blue-800 leading-relaxed">
+              {consultation.question || 'No question provided.'}
+            </p>
           </div>
-          <div className="text-muted-foreground text-xs">{consultation.question || 'No question provided.'}</div>
-        </div>
-        <div className="p-2 rounded-lg bg-muted/40 border border-border flex flex-col gap-0.5 mb-1 text-xs">
-          <div className="flex items-center gap-1 mb-0.5">
-            <Check className="h-3 w-3 text-success" />
-            <span className="font-semibold text-xs text-foreground">Answer</span>
+
+          <div className={`border rounded-lg p-4 ${
+            consultation.answer 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Check className={`h-4 w-4 ${
+                consultation.answer ? 'text-green-600' : 'text-gray-400'
+              }`} />
+              <span className={`font-semibold text-sm ${
+                consultation.answer ? 'text-green-900' : 'text-gray-600'
+              }`}>
+                Doctor's Answer
+              </span>
+            </div>
+            <p className={`text-sm leading-relaxed ${
+              consultation.answer ? 'text-green-800' : 'text-gray-500 italic'
+            }`}>
+              {consultation.answer || 'Waiting for doctor response...'}
+            </p>
           </div>
-          <div className="text-muted-foreground text-xs">{consultation.answer || <span className="italic text-warning">No answer yet.</span>}</div>
+
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
+            <span>Created: {new Date(consultation.createdAt).toLocaleDateString()}</span>
+            {consultation.updatedAt && consultation.updatedAt !== consultation.createdAt && (
+              <span>Updated: {new Date(consultation.updatedAt).toLocaleDateString()}</span>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2 mt-1">
+
+        <div className="flex gap-2 mt-6 pt-4 border-t border-border">
           <Button
-            className="flex-1 text-xs py-2"
-            variant="default"
+            className="flex-1"
+            variant={getActionButtonVariant()}
             onClick={() => onOpenDialog(consultation)}
           >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            {consultation.status === 'pending' ? 'Continue Chat' : 'View'}
+            <MessageCircle className="h-4 w-4 mr-2" />
+            {getActionButtonText()}
           </Button>
+          
           {consultation.status === 'pending' && (
             <Button
               variant="outline"
-              className="flex-1 border-danger text-danger hover:bg-danger/10 text-xs py-2"
+              size="sm"
+              className="border-destructive text-destructive hover:bg-destructive/10"
               onClick={() => onCancel && onCancel(consultation)}
             >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
+              <X className="h-4 w-4" />
             </Button>
           )}
+          
           <Button
             variant="outline"
-            className="flex-1 text-xs py-2 bg-secondary"
+            size="sm"
+            className="border-destructive text-destructive hover:bg-destructive/10"
             onClick={() => onDelete && onDelete(consultation)}
           >
-            <X className="h-4 w-4 mr-1" />
-            Delete
+            <X className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
@@ -174,9 +223,12 @@ const ConsultationsPageContent = () => {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [consultationToDelete, setConsultationToDelete] = useState(null);
-  const [continueChatDialogOpen, setContinueChatDialogOpen] = useState(false);
-  const [continueChatConsultation, setContinueChatConsultation] = useState(null);
-  const [newQuestion, setNewQuestion] = useState('');
+
+  const [chatDialogOpen, setChatDialogOpen] = useState(false);
+  const [chatConsultation, setChatConsultation] = useState(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [isAnswerMode, setIsAnswerMode] = useState(false);
+  const [chatMessagesRef, setChatMessagesRef] = useState(null);
 
   useEffect(() => {
     dispatch(fetchConsultations());
@@ -219,6 +271,12 @@ const ConsultationsPageContent = () => {
     }
   }, [consultations]);
 
+  useEffect(() => {
+    if (chatMessagesRef && chatConsultation?.messages) {
+      chatMessagesRef.scrollTop = chatMessagesRef.scrollHeight;
+    }
+  }, [chatConsultation?.messages, chatMessagesRef]);
+
   const handleCancelConsultation = (consultation) => {
     setAlert({ message: 'Cancel feature coming soon.', severity: 'info' });
   };
@@ -239,8 +297,13 @@ const ConsultationsPageContent = () => {
 
   const handleChat = (consultation) => {
     if (consultation.status === 'pending') {
-      setContinueChatConsultation(consultation);
-      setContinueChatDialogOpen(true);
+      setChatConsultation(consultation);
+      setChatDialogOpen(true);
+      setIsAnswerMode(true);
+    } else if (consultation.answer) {
+      setChatConsultation(consultation);
+      setChatDialogOpen(true);
+      setIsAnswerMode(false);
     } else {
       setSelectedConsultation(consultation);
     }
@@ -264,20 +327,30 @@ const ConsultationsPageContent = () => {
     }
   };
 
-  const handleContinueChatSubmit = async () => {
-    if (!newQuestion.trim() || !continueChatConsultation) return;
+  const handleChatMessageSubmit = async () => {
+    if (!chatMessage.trim() || !chatConsultation) return;
     try {
-      await dispatch(sendFollowUpQuestion({ 
-        consultationId: continueChatConsultation._id, 
-        question: newQuestion 
-      })).unwrap();
-      setAlert({ message: 'Question sent successfully. Waiting for doctor response.', severity: 'success' });
-      setContinueChatDialogOpen(false);
-      setNewQuestion('');
-      setContinueChatConsultation(null);
-      dispatch(fetchConsultations());
+      if (isAnswerMode) {
+        await dispatch(sendFollowUpQuestion({ 
+          consultationId: chatConsultation._id, 
+          question: chatMessage 
+        })).unwrap();
+        setAlert({ message: 'Answer sent successfully.', severity: 'success' });
+      } else {
+        await dispatch(sendFollowUpQuestion({ 
+          consultationId: chatConsultation._id, 
+          question: chatMessage 
+        })).unwrap();
+        setAlert({ message: 'Message sent successfully.', severity: 'success' });
+      }
+      setChatMessage('');
+      const result = await dispatch(fetchConsultations()).unwrap();
+      const updatedConsultation = result.find(c => c._id === chatConsultation._id);
+      if (updatedConsultation) {
+        setChatConsultation(updatedConsultation);
+      }
     } catch (e) {
-      setAlert({ message: e?.message || 'Failed to send question', severity: 'error' });
+      setAlert({ message: e?.message || 'Failed to send message', severity: 'error' });
     }
   };
 
@@ -310,74 +383,119 @@ const ConsultationsPageContent = () => {
 
   return (
     <div
-      className="flex flex-col gap-8 w-full max-w-none px-0 py-8"
+      className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50"
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
-      style={{ width: "100%" }}
     >
-      <PageHeader
-        title={t("patient.consultations.title")}
-        description={t("patient.consultations.description")}
-        breadcrumbs={[
-          {
-            label: t("patient.dashboard.breadcrumb"),
-            href: "/patient/dashboard",
-          },
-          {
-            label: t("patient.consultations.title"),
-            href: "/patient/consultations",
-          },
-        ]}
-      />
+      <div className="bg-white border-b border-border/50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <PageHeader
+            title={t("patient.consultations.title")}
+            description={t("patient.consultations.description")}
+            breadcrumbs={[
+              {
+                label: t("patient.dashboard.breadcrumb"),
+                href: "/patient/dashboard",
+              },
+              {
+                label: t("patient.consultations.title"),
+                href: "/patient/consultations",
+              },
+            ]}
+          />
+          
+          <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-medium">Total:</span>
+                <Badge variant="secondary" className="text-xs">
+                  {consultations.length} consultation{consultations.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+              {consultations.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-medium">Answered:</span>
+                  <Badge variant="outline" className="text-xs">
+                    {consultations.filter(c => c.answer).length}
+                  </Badge>
+                </div>
+              )}
+            </div>
+            
+            <Button
+              onClick={() => setNewConsultationDialogOpen(true)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              {t("patient.consultations.askQuestion")}
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {alert && (
-        <div className="w-full px-4">
-          <Alert>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Alert className={`${
+            alert.severity === 'error' ? 'border-destructive bg-destructive/10' :
+            alert.severity === 'success' ? 'border-green-200 bg-green-50' :
+            'border-blue-200 bg-blue-50'
+          }`}>
             {typeof alert.message === "string"
               ? alert.message
               : alert.message?.message || JSON.stringify(alert.message)}
           </Alert>
         </div>
       )}
-      <div className="flex justify-end w-full px-6">
-        <Button
-          onClick={() => setNewConsultationDialogOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 py-3 font-semibold text-lg"
-        >
-          {t("patient.consultations.askQuestion")}
-        </Button>
-      </div>
-      <div className="w-full px-4">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {consultationsLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-muted-foreground text-xl">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+            <span className="text-muted-foreground text-xl font-medium">
               {t("patient.consultations.loading")}
             </span>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-danger text-xl">
-              {typeof error === "string"
-                ? error
-                : error?.message || JSON.stringify(error)}
-            </span>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-8 max-w-md text-center">
+              <X className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-destructive mb-2">Error Loading Consultations</h3>
+              <p className="text-destructive/80">
+                {typeof error === "string"
+                  ? error
+                  : error?.message || JSON.stringify(error)}
+              </p>
+            </div>
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <span className="text-muted-foreground text-xl">
-              {t("patient.consultations.noConsultations")}
-            </span>
+            <div className="bg-muted/50 border border-border rounded-lg p-12 max-w-md text-center">
+              <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-muted-foreground mb-2">
+                No Consultations Yet
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {t("patient.consultations.noConsultations")}
+              </p>
+              <Button
+                onClick={() => setNewConsultationDialogOpen(true)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Ask Your First Question
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {consultations.map((consultation) => (
-              <div key={consultation._id} className="w-full h-full flex">
-                <ConsultationCard
-                  consultation={consultation}
-                  doctorsList={filteredDoctors}
-                  onOpenDialog={handleChat}
-                  onCancel={handleCancelConsultation}
-                  onDelete={handleDeleteConsultation}
-                />
-              </div>
+              <ConsultationCard
+                key={consultation._id}
+                consultation={consultation}
+                doctorsList={filteredDoctors}
+                onOpenDialog={handleChat}
+                onCancel={handleCancelConsultation}
+                onDelete={handleDeleteConsultation}
+              />
             ))}
           </div>
         )}
@@ -471,7 +589,7 @@ const ConsultationsPageContent = () => {
             {doctorsLoading ? (
               <div className="text-muted-foreground">Loading doctors...</div>
             ) : doctorsError ? (
-              <div className="text-danger">Failed to load doctors</div>
+              <div className="text-destructive">Failed to load doctors</div>
             ) : filteredDoctors.length === 0 ? (
               <div className="text-muted-foreground">No doctors available.</div>
             ) : (
@@ -546,7 +664,7 @@ const ConsultationsPageContent = () => {
               Cancel
             </Button>
             <Button
-              variant="danger"
+              variant="destructive"
               onClick={confirmDeleteConsultation}
             >
               Delete
@@ -554,78 +672,107 @@ const ConsultationsPageContent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={continueChatDialogOpen} onOpenChange={setContinueChatDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Continue Chat with Doctor</DialogTitle>
+
+      <Dialog open={chatDialogOpen} onOpenChange={setChatDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] h-[80vh] max-h-[600px] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              {isAnswerMode ? 'Answer Consultation' : 'Chat with Doctor'}
+            </DialogTitle>
           </DialogHeader>
-          {continueChatConsultation && (
-            <div className="flex flex-col gap-4 py-2">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60">
+          {chatConsultation && (
+            <div className="flex flex-col h-full min-h-0">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/60 mb-4 flex-shrink-0">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={continueChatConsultation.doctorAvatar || '/images/default-avatar.png'} />
+                  <AvatarImage src={chatConsultation.doctorAvatar || '/images/default-avatar.png'} />
                   <AvatarFallback className="bg-primary text-primary text-lg font-semibold">
-                    {getInitialsFromName(getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors))}
+                    {getInitialsFromName(getDoctorNameFromConsultation(chatConsultation, filteredDoctors))}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="font-semibold text-lg text-foreground">
-                    {getDoctorNameFromConsultation(continueChatConsultation, filteredDoctors)}
+                    {getDoctorNameFromConsultation(chatConsultation, filteredDoctors)}
                   </div>
-                  {continueChatConsultation.doctorSpecialty && (
-                    <div className="text-sm text-muted-foreground">{continueChatConsultation.doctorSpecialty}</div>
+                  {chatConsultation.doctorSpecialty && (
+                    <div className="text-sm text-muted-foreground">{chatConsultation.doctorSpecialty}</div>
                   )}
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-muted/40 border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="h-4 w-4 text-primary" />
-                  <span className="font-semibold text-sm text-foreground">Previous Question</span>
-                </div>
-                <div className="text-muted-foreground text-sm">{continueChatConsultation.question}</div>
-              </div>
-              {continueChatConsultation.answer && (
-                <div className="p-3 rounded-lg bg-muted/40 border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check className="h-4 w-4 text-success" />
-                    <span className="font-semibold text-sm text-foreground">Doctor's Response</span>
+
+              <div 
+                ref={setChatMessagesRef}
+                className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20 rounded-lg mb-4 min-h-0"
+              >
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] bg-primary text-primary-foreground p-3 rounded-lg">
+                    <div className="text-xs opacity-80 mb-1">Your Question:</div>
+                    <div>{chatConsultation.question}</div>
                   </div>
-                  <div className="text-muted-foreground text-sm">{continueChatConsultation.answer}</div>
                 </div>
-              )}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="newQuestion" className="text-sm font-medium">
-                  Your New Question
-                </Label>
+
+                {chatConsultation.answer && (
+                  <div className="flex justify-end">
+                    <div className="max-w-[80%] bg-muted p-3 rounded-lg">
+                      <div className="text-xs text-muted-foreground mb-1">Doctor's Answer:</div>
+                      <div>{chatConsultation.answer}</div>
+                    </div>
+                  </div>
+                )}
+
+                {chatConsultation.messages && chatConsultation.messages.length > 0 && 
+                  chatConsultation.messages.map((message, index) => (
+                    <div key={index} className={`flex ${message.sender === 'patient' ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-[80%] p-3 rounded-lg ${
+                        message.sender === 'patient' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}>
+                        <div className="text-xs opacity-80 mb-1">
+                          {message.sender === 'patient' ? 'You' : 'Doctor'}:
+                        </div>
+                        <div>{message.message}</div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+
+              <div className="flex gap-2 flex-shrink-0">
                 <Textarea
-                  id="newQuestion"
-                  rows={4}
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  placeholder="Type your follow-up question here..."
-                  required
-                  className="rounded-xl"
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  placeholder={isAnswerMode ? "Type your answer..." : "Type your message..."}
+                  className="flex-1 resize-none min-h-[60px] max-h-[120px]"
+                  rows={2}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleChatMessageSubmit();
+                    }
+                  }}
                 />
+                <Button
+                  onClick={handleChatMessageSubmit}
+                  disabled={!chatMessage.trim()}
+                  className="px-4 self-end"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
-          <DialogFooter className="mt-4 flex gap-2">
+          <DialogFooter className="mt-4 flex-shrink-0">
             <Button
               variant="outline"
               onClick={() => {
-                setContinueChatDialogOpen(false);
-                setNewQuestion('');
-                setContinueChatConsultation(null);
+                setChatDialogOpen(false);
+                setChatMessage('');
+                setChatConsultation(null);
+                setIsAnswerMode(false);
               }}
             >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleContinueChatSubmit}
-              disabled={!newQuestion.trim()}
-            >
-              Send Question
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -131,7 +131,22 @@ const createAppointment = asyncHandler(async (req, res) => {
 const updateAppointment = asyncHandler(async (req, res) => {
     const { date, time, reason, status, type, notes } = req.body;
     const Appointment = require('../models/Appointment');
-    const appointment = await Appointment.findById(req.params.id);
+    const appointment = await Appointment.findById(req.params.id)
+        .populate({
+            path: 'patient',
+            populate: {
+                path: 'user',
+                select: 'firstName lastName email'
+            }
+        })
+        .populate({
+            path: 'doctor',
+            select: 'user specialty',
+            populate: {
+                path: 'user',
+                select: 'firstName lastName'
+            }
+        });
     if (!appointment) {
         res.status(404);
         throw new Error('Appointment not found');
@@ -145,7 +160,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error('Patient not found');
     }
-    if (appointment.patient.toString() !== patient._id.toString()) {
+    if (appointment.patient._id.toString() !== patient._id.toString()) {
         res.status(403);
         throw new Error('Not authorized to edit this appointment');
     }
@@ -155,6 +170,38 @@ const updateAppointment = asyncHandler(async (req, res) => {
     appointment.type = type || appointment.type;
     appointment.notes = notes || appointment.notes;
     await appointment.save();
+    
+    try {
+        const { getIO } = require('../utils/socket.utils');
+        const io = getIO();
+        
+        console.log('🔔 Backend: Emitting appointment:updated event from patient update');
+        
+        if (appointment.patient && appointment.patient.user) {
+            const patientUserId = appointment.patient.user._id.toString();
+            console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+            io.to(patientUserId).emit('appointment:updated', {
+                appointmentId: appointment._id.toString(),
+                message: 'Your appointment has been updated',
+                appointment: appointment
+            });
+        }
+
+        if (appointment.doctor && appointment.doctor.user) {
+            const doctorUserId = appointment.doctor.user._id.toString();
+            console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+            io.to(doctorUserId).emit('appointment:updated', {
+                appointmentId: appointment._id.toString(),
+                message: 'Patient has updated their appointment',
+                appointment: appointment
+            });
+        }
+        
+        console.log('🔔 Backend: Patient update events emitted successfully');
+    } catch (error) {
+        console.error('❌ Backend: Error emitting patient update event:', error);
+    }
+    
     res.status(200).json(new ApiResponse(200, appointment, 'Appointment updated successfully.'));
 });
 const deleteAppointment = asyncHandler(async (req, res) => {
@@ -164,16 +211,71 @@ const deleteAppointment = asyncHandler(async (req, res) => {
         throw new Error('Patient not found');
     }
     const Appointment = require('../models/Appointment');
-    const appointment = await Appointment.findById(req.params.id);
+    const appointment = await Appointment.findById(req.params.id)
+        .populate({
+            path: 'patient',
+            populate: {
+                path: 'user',
+                select: 'firstName lastName email'
+            }
+        })
+        .populate({
+            path: 'doctor',
+            select: 'user specialty',
+            populate: {
+                path: 'user',
+                select: 'firstName lastName'
+            }
+        });
     if (!appointment) {
         res.status(404);
         throw new Error('Appointment not found');
     }
+    
+    const appointmentData = {
+        id: appointment._id.toString(),
+        patient: appointment.patient,
+        doctor: appointment.doctor,
+        date: appointment.date,
+        time: appointment.time
+    };
+    
     patient.appointments = patient.appointments.filter(
         appId => appId.toString() !== req.params.id
     );
     await patient.save();
     await appointment.deleteOne();
+    
+    try {
+        const { getIO } = require('../utils/socket.utils');
+        const io = getIO();
+        
+        console.log('🔔 Backend: Emitting appointment:deleted event');
+        
+        if (appointmentData.patient && appointmentData.patient.user) {
+            const patientUserId = appointmentData.patient.user._id.toString();
+            console.log('🔔 Backend: Emitting to patient room:', patientUserId);
+            io.to(patientUserId).emit('appointment:deleted', {
+                appointmentId: appointmentData.id,
+                message: 'Your appointment has been deleted',
+                appointment: appointmentData
+            });
+        }
+
+        if (appointmentData.doctor && appointmentData.doctor.user) {
+            const doctorUserId = appointmentData.doctor.user._id.toString();
+            console.log('🔔 Backend: Emitting to doctor room:', doctorUserId);
+            io.to(doctorUserId).emit('appointment:deleted', {
+                appointmentId: appointmentData.id,
+                message: 'Patient has deleted their appointment',
+                appointment: appointmentData
+            });
+        }
+        
+        console.log('🔔 Backend: Deletion events emitted successfully');
+    } catch (error) {
+    }
+    
     res.status(200).json(new ApiResponse(200, null, 'Appointment deleted successfully.'));
 });
 const getMedications = asyncHandler(async (req, res) => {
@@ -433,6 +535,45 @@ const getMyMedicalRecords = asyncHandler(async (req, res) => {
     
     res.status(200).json(new ApiResponse(200, medicalRecords, 'Medical records retrieved successfully.'));
 });
+const getConsultationsByDoctor = asyncHandler(async (req, res) => {
+    let patientId = req.params.id;
+    let doctorId = req.user.id;
+    const Patient = require('../models/Patient');
+    const Doctor = require('../models/Doctor');
+
+    let patient = await Patient.findById(patientId);
+    if (!patient) {
+        patient = await Patient.findOne({ user: patientId });
+    }
+    if (!patient) {
+        return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+    const patientUserId = patient.user; 
+
+    let doctor = await Doctor.findOne({ user: doctorId });
+    if (doctor) {
+        doctorId = doctor.user; 
+    }
+
+
+    const Consultation = require('../models/Consultation');
+    const consultations = await Consultation.find({
+        patient: patientUserId,
+        doctor: doctorId
+    })
+    .populate({
+        path: 'doctor',
+        model: 'User',
+        select: 'firstName lastName email'
+    })
+    .populate({
+        path: 'patient',
+        model: 'User', 
+        select: 'firstName lastName email'
+    })
+    .sort('-createdAt');
+    res.status(200).json({ success: true, data: { consultations } });
+});
 module.exports = {
     getProfile,
     updateProfile,
@@ -456,4 +597,5 @@ module.exports = {
     getDashboardSummary,
     getLatestVitals,
     getMyMedicalRecords,
+    getConsultationsByDoctor,
 };

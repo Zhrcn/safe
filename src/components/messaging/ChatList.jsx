@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/store/services/axiosInstance";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName, getImageUrl } from "@/components/ui/Avatar";
@@ -8,10 +8,9 @@ import { useTranslation } from 'react-i18next';
 
 export default function ChatList({ conversations, selectedId, onSelect, searchTerm, setSearchTerm, onNewChat, isTyping, unreadCounts, currentUser }) {
   const { t } = useTranslation('common');
-  const [userImages, setUserImages] = useState({}); // { userId: { profileImage, avatar, ... } }
+  const [userImages, setUserImages] = useState({});
 
   useEffect(() => {
-    // Find all unique participant IDs (excluding current user)
     const ids = new Set();
     conversations.forEach(conv => {
       if (conv.participants) {
@@ -22,12 +21,11 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
         });
       }
     });
-    // Fetch missing user profiles
     const missingIds = Array.from(ids).filter(id => !userImages[id]);
     if (missingIds.length > 0) {
       Promise.all(
         missingIds.map(id =>
-          axios.get(`/api/v1/users/${id}`).then(res => ({ id, data: res.data.data })).catch(() => null)
+          axiosInstance.get(`/users/${id}`).then(res => ({ id, data: res.data.data })).catch(() => null)
         )
       ).then(results => {
         const newImages = {};
@@ -100,7 +98,6 @@ export default function ChatList({ conversations, selectedId, onSelect, searchTe
                   {(() => {
                     let img = null;
                     let initials = '';
-                    // Try to find the other participant (not currentUser)
                     let other = null;
                     if (conv.participants && Array.isArray(conv.participants)) {
                       const currentId = currentUser?._id || currentUser?.id;

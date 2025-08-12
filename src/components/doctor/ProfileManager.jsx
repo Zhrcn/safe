@@ -30,7 +30,7 @@ import { Alert } from '@/components/ui/Alert';
 import { useNotification } from '@/components/ui/Notification';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { useDoctorProfile } from '@/hooks/useDoctorProfile';
-import { getToken } from '@/utils/tokenUtils';
+import axiosInstance from '@/store/services/axiosInstance';
 import { updateUserProfileData } from '@/store/slices/user/userSlice';
 
 const personalInfoSchema = z.object({
@@ -163,22 +163,9 @@ function PersonalInfoForm() {
     try {
       const currentImageUrl = watch('profileImage');
       if (currentImageUrl && currentImageUrl !== DEFAULT_AVATAR) {
-        const token = getToken();
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/upload/profile`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ imageUrl: currentImageUrl }),
-          }
-        );
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Failed to delete image');
-        }
+        const response = await axiosInstance.delete('/upload/profile', {
+          data: { imageUrl: currentImageUrl },
+        });
         showNotification('Profile image deleted successfully!', 'success');
       }
       setValue('profileImage', '', { shouldDirty: true });

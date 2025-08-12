@@ -6,7 +6,6 @@ export const fetchPrescriptions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/prescriptions');
-      console.log('Prescriptions API response:', response.data);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

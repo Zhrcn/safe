@@ -1,8 +1,3 @@
-/**
- * Extract error message from various error formats
- * @param {any} error - The error object or response
- * @returns {string} - The extracted error message
- */
 export const extractErrorMessage = (error) => {
   if (!error) return 'An error occurred';
   

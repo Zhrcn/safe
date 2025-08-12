@@ -64,7 +64,7 @@ export const getDoctorConsultations = async () => {
 };
 
 export const answerConsultation = async (consultationId, answer) => {
-  const res = await axiosInstance.put(`/consultations/${consultationId}`, { answer });
+  const res = await axiosInstance.put(`/consultations/${consultationId}/answer`, { answer });
   return res.data.data;
 };
 

@@ -51,11 +51,9 @@ export default function CustomDrawer({ visible, onClose }) {
 
   return (
     <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}> 
-      {/* Close button */}
       <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
         <MaterialIcons name="close" size={24} color="#64748b" />
       </TouchableOpacity>
-      {/* Drawer items */}
       <View style={{ flex: 1 }}>
         {PAGES.map(page => {
           const isActive = pathname.includes(page.name);
@@ -72,7 +70,6 @@ export default function CustomDrawer({ visible, onClose }) {
           );
         })}
       </View>
-      {/* Logout button at bottom */}
       <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
         <MaterialCommunityIcons name="logout" size={20} color="#ef4444" style={{ marginRight: 10 }} />
         <Text style={{ color: '#ef4444', fontWeight: 'bold', fontSize: 15 }}>Logout</Text>

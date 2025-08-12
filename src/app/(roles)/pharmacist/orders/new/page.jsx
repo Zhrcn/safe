@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect, useState } from 'react';
 import { getAllDistributors } from '@/store/services/distributorApi';
 import { createOrder } from '@/store/services/orderApi';

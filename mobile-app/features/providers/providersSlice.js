@@ -5,9 +5,11 @@ const fetchProviders = createAsyncThunk(
   'providers/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/patients/doctors');
+      const response = await api.get('/doctors/mobile');
+      console.log('Doctors API response:', response.data);
       return response.data.data;
     } catch (error) {
+      console.error('Error fetching doctors:', error);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -17,9 +19,11 @@ const fetchPharmacists = createAsyncThunk(
   'providers/fetchPharmacists',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/pharmacists');
+      const response = await api.get('/pharmacists/mobile');
+      console.log('Pharmacists API response:', response.data);
       return response.data.data;
     } catch (error) {
+      console.error('Error fetching pharmacists:', error);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -50,6 +54,7 @@ const providersSlice = createSlice({
       .addCase(fetchPharmacists.fulfilled, (state, action) => {
         state.loadingPharmacists = false;
         state.pharmacists = action.payload;
+        console.log('Pharmacists loaded into state:', action.payload);
       })
       .addCase(fetchPharmacists.rejected, (state, action) => {
         state.loadingPharmacists = false;

@@ -15,7 +15,6 @@ const TableHeader = React.forwardRef(({ className, ...props }, ref) => (
 ))
 TableHeader.displayName = "TableHeader"
 
-// Restored TableHead as requested
 const TableHead = React.forwardRef(({ className, ...props }, ref) => (
   <th
     ref={ref}
@@ -91,7 +90,7 @@ TableCaption.displayName = "TableCaption"
 export {
   Table,
   TableHeader,
-  TableHead, // Restored export
+  TableHead, 
   TableHeaderCell,
   TableBody,
   TableFooter,

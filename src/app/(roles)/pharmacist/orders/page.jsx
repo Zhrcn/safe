@@ -5,7 +5,8 @@ import {
   PharmacistPageContainer,
   PharmacistCard,
 } from '@/components/pharmacist/PharmacistComponents';
-import { getOrders, getInventory, updateInventoryItem, addInventoryItem, updateOrderStatus, getDistributors } from '@/services/pharmacistService';
+import { getOrders, getInventory, updateInventoryItem, addInventoryItem, updateOrderStatus, getDistributors, getMedicineById, deleteOrder } from '@/services/pharmacistService';
+import axiosInstance from '@/store/services/axiosInstance';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
@@ -17,7 +18,6 @@ import {
 } from '@/components/ui/Dialog';
 import { createOrder } from '@/store/services/orderApi';
 
-// Status configuration for easy extension and maintenance
 const STATUS_CONFIG = {
   pending: {
     colorClass: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
@@ -186,6 +186,21 @@ export default function PharmacistOrdersPage() {
   const [inventory, setInventory] = useState([]);
   const [orderForm, setOrderForm] = useState({ distributorId: '', items: [], notes: '' });
   const [itemDraft, setItemDraft] = useState({ medicineId: '', quantity: 1 });
+  const [medicineNames, setMedicineNames] = useState({});
+  const [medicines, setMedicines] = useState([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+
+  const fetchMedicineName = useCallback(async (id) => {
+    if (!id || medicineNames[id]) return;
+    try {
+      const med = await getMedicineById(id);
+      setMedicineNames(prev => ({ ...prev, [id]: med?.name || 'Unknown' }));
+    } catch {
+      setMedicineNames(prev => ({ ...prev, [id]: 'Unknown' }));
+    }
+  }, [medicineNames]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -203,7 +218,6 @@ export default function PharmacistOrdersPage() {
     loadOrders();
   }, [loadOrders]);
 
-  // Load distributors and inventory when dialog opens
   useEffect(() => {
     if (addOrderDialogOpen) {
       setNewOrderError(null);
@@ -212,11 +226,11 @@ export default function PharmacistOrdersPage() {
       (async () => {
         try {
           const d = await getDistributors();
-          setDistributors(d.data || d); // handle both {data:[]} and []
-          const inv = await getInventory();
-          setInventory(inv);
+          setDistributors(d.data || d);
+          const response = await axiosInstance.get('/medicines');
+          setMedicines(response.data.data || response.data);
         } catch (err) {
-          setNewOrderError('Failed to load distributors or inventory');
+          setNewOrderError('Failed to load distributors or medicines');
         }
       })();
     }
@@ -226,7 +240,6 @@ export default function PharmacistOrdersPage() {
     if (!searchTerm) return orders;
     const lower = searchTerm.toLowerCase();
     return orders.filter(order => {
-      // Search by medicine name, distributor, or ID
       const itemsString = order.items && Array.isArray(order.items)
         ? order.items.map(item => item.medicine?.name || '').join(' ').toLowerCase()
         : '';
@@ -240,33 +253,33 @@ export default function PharmacistOrdersPage() {
   }, [orders, searchTerm]);
 
   const handleViewDetails = useCallback((orderId) => {
-    const order = orders.find(o => o.id === orderId);
+    const order = orders.find(o => (o.id || o._id) === orderId);
     setSelectedOrder(order);
     setDetailDialogOpen(true);
   }, [orders]);
 
-  // Patch updateOrderStatus to allow 'completed' status
   async function completeOrder(order) {
     setCompletingOrderId(order.id || order._id);
     setCompleteError(null);
     try {
-      // 1. Mark order as completed (extend updateOrderStatus logic)
       await updateOrderStatus(order.id || order._id, 'completed');
-      // 2. Fetch current inventory
       const inventory = await getInventory();
-      // 3. For each item in the order, update/add inventory
       for (const item of order.items || []) {
         const medicineName = item.medicine?.name?.trim().toLowerCase();
+        const genericName = item.medicine?.genericName?.trim().toLowerCase();
+        const category = item.medicine?.category?.trim().toLowerCase();
         if (!medicineName) continue;
-        const existing = inventory.find(inv => inv.name?.trim().toLowerCase() === medicineName);
+        const existing = inventory.find(inv =>
+          inv.name?.trim().toLowerCase() === medicineName &&
+          (genericName ? inv.genericName?.trim().toLowerCase() === genericName : true) &&
+          (category ? inv.category?.trim().toLowerCase() === category : true)
+        );
         if (existing) {
-          // Update stock
           await updateInventoryItem({
             ...existing,
             stock: (existing.stock || 0) + (item.quantity || 0),
           });
         } else {
-          // Add new inventory item (minimal fields)
           await addInventoryItem({
             name: item.medicine?.name || 'Unknown',
             genericName: item.medicine?.genericName || '',
@@ -276,7 +289,6 @@ export default function PharmacistOrdersPage() {
           });
         }
       }
-      // 4. Reload orders
       await loadOrders();
     } catch (err) {
       setCompleteError('Failed to complete order: ' + (err?.message || err));
@@ -285,10 +297,22 @@ export default function PharmacistOrdersPage() {
     }
   }
 
-  // Add item to order
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setDeleteError(null);
+    try {
+      await deleteOrder(orderToDelete);
+      setDeleteDialogOpen(false);
+      setOrderToDelete(null);
+      await loadOrders();
+    } catch (err) {
+      setDeleteError('Failed to delete order: ' + (err?.message || err));
+    }
+  };
+
   const handleAddItem = () => {
     if (!itemDraft.medicineId || !itemDraft.quantity) return;
-    const medicine = inventory.find(m => m.id === itemDraft.medicineId || m._id === itemDraft.medicineId);
+    const medicine = medicines.find(m => m._id === itemDraft.medicineId);
     if (!medicine) return;
     setOrderForm(f => ({
       ...f,
@@ -296,19 +320,19 @@ export default function PharmacistOrdersPage() {
         ...f.items,
         {
           medicine: medicine,
-          medicineId: itemDraft.medicineId,
-          medicineName: medicine.name, // Store the name directly
+          medicineId: medicine._id,
+          medicineName: medicine.name,
           quantity: itemDraft.quantity
         }
       ],
     }));
     setItemDraft({ medicineId: '', quantity: 1 });
   };
-  // Remove item from order
+
   const handleRemoveItem = idx => {
     setOrderForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
   };
-  // Submit new order
+
   const handleCreateOrder = async () => {
     setNewOrderLoading(true);
     setNewOrderError(null);
@@ -318,11 +342,13 @@ export default function PharmacistOrdersPage() {
         setNewOrderLoading(false);
         return;
       }
-      await createOrder({
+      const payload = {
         distributorId: orderForm.distributorId,
         items: orderForm.items.map(i => ({ medicine: i.medicineId, quantity: i.quantity })),
         notes: orderForm.notes,
-      });
+      };
+      console.log('Order payload:', payload);
+      await createOrder(payload);
       setAddOrderDialogOpen(false);
       await loadOrders();
     } catch (err) {
@@ -403,16 +429,21 @@ export default function PharmacistOrdersPage() {
                   </td>
                   <td className="max-w-xs truncate py-4 px-4">
                     {order.items && Array.isArray(order.items)
-                      ? order.items.map((item, idx) => (
-                          <span key={idx}>
-                            {item.medicine && typeof item.medicine === 'object'
-                              ? item.medicine.name || 'Unknown'
-                              : typeof item.medicine === 'string'
-                                ? item.medicine
-                                : 'Unknown'} <span className="text-xs text-muted-foreground">({item.quantity})</span>
-                            {idx < order.items.length - 1 ? ', ' : ''}
-                          </span>
-                        ))
+                      ? order.items.map((item, idx) => {
+                          let displayName = 'Unknown';
+                          if (item.medicine && typeof item.medicine === 'object') {
+                            displayName = item.medicine.name || 'Unknown';
+                          } else if (typeof item.medicine === 'string') {
+                            displayName = medicineNames[item.medicine] || item.medicine;
+                            if (!medicineNames[item.medicine]) fetchMedicineName(item.medicine);
+                          }
+                          return (
+                            <span key={idx}>
+                              {displayName} <span className="text-xs text-muted-foreground">({item.quantity})</span>
+                              {idx < order.items.length - 1 ? ', ' : ''}
+                            </span>
+                          );
+                        })
                       : <span className="text-muted-foreground">-</span>}
                   </td>
                   <td className="py-4 px-4">
@@ -439,7 +470,6 @@ export default function PharmacistOrdersPage() {
                       <Eye size={16} className="mr-2" />
                       View
                     </Button>
-                    {/* Complete button: only show if status is 'accepted' */}
                     {order.status === 'accepted' && (
                       <Button
                         variant="success"
@@ -450,13 +480,24 @@ export default function PharmacistOrdersPage() {
                         {completingOrderId === (order.id || order._id) ? 'Completing...' : 'Complete'}
                       </Button>
                     )}
+                    {order.status === 'pending' && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setOrderToDelete(order.id || order._id);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-        {/* Show error if any */}
         {completeError && (
           <div className="text-red-500 text-sm mt-2">{completeError}</div>
         )}
@@ -466,7 +507,6 @@ export default function PharmacistOrdersPage() {
         onClose={() => setDetailDialogOpen(false)}
         order={selectedOrder}
       />
-      {/* New Order Dialog */}
       <Dialog open={addOrderDialogOpen} onOpenChange={setAddOrderDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -497,8 +537,8 @@ export default function PharmacistOrdersPage() {
                   onChange={e => setItemDraft(d => ({ ...d, medicineId: e.target.value }))}
                 >
                   <option value="">Select medicine</option>
-                  {inventory.map(m => (
-                    <option key={m.id || m._id} value={m.id || m._id}>
+                  {medicines.map(m => (
+                    <option key={m._id} value={m._id}>
                       {m.name}
                     </option>
                   ))}
@@ -559,6 +599,19 @@ export default function PharmacistOrdersPage() {
             <Button onClick={handleCreateOrder} loading={newOrderLoading}>
               Create Order
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+          </DialogHeader>
+          <div>Are you sure you want to delete this pending order?</div>
+          {deleteError && <div className="text-red-500 text-sm mt-2">{deleteError}</div>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteOrder}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -12,11 +12,13 @@ const appointmentSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    default: new Date('1111-11-01')
   },
   time: {
     type: String,
     required: true,
+    default: 'TBD',
     validate: {
       validator: function(v) {
         return v === 'TBD' || /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
@@ -41,6 +43,10 @@ const appointmentSchema = new mongoose.Schema({
   reason: {
     type: String,
     required: true
+  },
+  preferredDate: {
+    type: String,
+    required: false
   },
   notes: {
     type: String
@@ -86,7 +92,7 @@ const appointmentSchema = new mongoose.Schema({
 
 appointmentSchema.methods.canBeModified = function() {
   const appointmentDate = new Date(this.date);
-  const placeholderDate = new Date('1111-01-01');
+  const placeholderDate = new Date('1111-11-01');
   
   if (appointmentDate.getTime() === placeholderDate.getTime() || isNaN(appointmentDate.getTime())) {
     return true;

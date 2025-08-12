@@ -1,7 +1,0 @@
-graph TD
-A[page.jsx] -- dispatches --> B[dashboardSlice.js]
-B -- calls --> C[dashboardApi.js]
-C -- makes HTTP request --> D[Backend API Endpoint]
-D -- returns data --> C
-C -- returns data --> B
-B -- updates Redux state --> A

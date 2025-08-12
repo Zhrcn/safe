@@ -3,10 +3,13 @@ import { Inter } from 'next/font/google';
 import { Providers } from '@/store/provider';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import GlobalMessageListener from '@/components/messaging/GlobalMessageListener';
+import PrescriptionSocketListener from '@/components/prescriptions/PrescriptionSocketListener';
 import '@/utils/consoleFilter';
 import { ThemeProvider } from '@/components/ThemeProviderWrapper';
 import ClientLayout from '@/components/layout/ClientLayout';
 import I18nProvider from '@/components/providers/I18nProvider';
+
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,6 +28,7 @@ export default function RootLayout({ children }) {
               <I18nProvider>
                 <ClientLayout>
                   <GlobalMessageListener />
+                  <PrescriptionSocketListener />
                   {children}
                 </ClientLayout>
               </I18nProvider>

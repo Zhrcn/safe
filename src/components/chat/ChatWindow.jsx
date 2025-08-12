@@ -1,4 +1,4 @@
-'use client';ButtonButtonButtonButtonButtonButtonButtonButton
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Paperclip, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -24,6 +24,7 @@ const {
     getDashboardSummary,
     getLatestVitals,
     getMyMedicalRecords,
+    getConsultationsByDoctor,
 } = require('../controllers/patient.controller');
 const {
     getDoctors,
@@ -33,6 +34,18 @@ const {
     getPharmacists,
     getPharmacist,
 } = require('../controllers/pharmacist.controller');
+const Patient = require('../models/Patient');
+const User = require('../models/User');
+
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ user: req.params.userId }).populate('user');
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    res.json(patient);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.get('/medical-file', protect, getMedicalFile);
@@ -59,4 +72,5 @@ router.get('/pharmacists', protect, getPharmacists);
 router.get('/pharmacists/:id', protect, getPharmacist);
 router.get('/dashboard/summary', protect, getDashboardSummary);
 router.get('/vitals/latest', protect, getLatestVitals);
+router.get('/:id/consultations', protect, getConsultationsByDoctor);
 module.exports = router;

@@ -86,6 +86,18 @@ export const renewPrescriptionThunk = createAsyncThunk(
         }
     }
 );
+
+export const fetchPrescriptionsByPatient = createAsyncThunk(
+    'doctorPrescriptions/fetchPrescriptionsByPatient',
+    async (patientId, { rejectWithValue }) => {
+        try {
+            const response = await getPrescriptions();
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
 const initialState = {
     prescriptions: [],
     selectedPrescription: null,

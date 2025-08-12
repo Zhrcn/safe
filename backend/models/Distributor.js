@@ -50,6 +50,5 @@ const distributorSchema = new mongoose.Schema({
   collection: 'Distributors'
 });
 
-// TODO: Add pre-save hook for distributorId if needed
 
 module.exports = mongoose.model('Distributor', distributorSchema); 

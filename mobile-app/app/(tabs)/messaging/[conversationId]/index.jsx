@@ -91,15 +91,12 @@ export default function ChatPage() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-        {/* Chat header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#2563eb', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginBottom: 2 }}>
           <MaterialIcons name="arrow-back" size={24} color="#fff" style={{ marginRight: 12 }} onPress={() => window.history.back()} />
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>{title}</Text>
-            {/* Optionally show recipient name here */}
           </View>
         </View>
-        {/* Chat messages */}
         {currentLoading ? <Text style={{ margin: 16 }}>Loading...</Text> : (
           <FlatList
             ref={flatListRef}
@@ -111,7 +108,6 @@ export default function ChatPage() {
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           />
         )}
-        {/* Chat input */}
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#e5e7eb' }}>
           <TextInput
             style={{ flex: 1, backgroundColor: '#f3f4f6', borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, marginRight: 8 }}
@@ -129,8 +125,7 @@ export default function ChatPage() {
     </KeyboardAvoidingView>
   );
 }
-
-// Hide the default header for this page
+  
 export const unstable_settings = { initialRouteName: undefined };
 
 ChatPage.options = {

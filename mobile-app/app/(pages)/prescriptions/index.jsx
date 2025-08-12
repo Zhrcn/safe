@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, StyleSheet, ScrollView, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, StyleSheet, ScrollView, Dimensions, TouchableWithoutFeedback, Image } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPrescriptions } from '../../../features/prescriptions/prescriptionsSlice';
 import { useRouter, useNavigation } from 'expo-router';
@@ -24,15 +24,6 @@ function getStatusColor(status) {
   }
 }
 
-function DoctorAvatar({ doctorName }) {
-  const initials = doctorName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'D';
-  return (
-    <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#e0e7ef', marginRight: 12, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#64748b', fontWeight: 'bold', fontSize: 18 }}>{initials}</Text>
-    </View>
-  );
-}
-
 function StatusBadge({ status }) {
   const color = getStatusColor(status);
   return (
@@ -50,7 +41,6 @@ function PrescriptionCard({ prescription, onViewDetails }) {
   return (
     <TouchableOpacity style={styles.card} onPress={() => onViewDetails(prescription)}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <DoctorAvatar doctorName={doctorName} />
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>{doctorName}</Text>
           <Text style={styles.cardSub}>{prescription.doctorSpecialty || ''}</Text>
@@ -118,7 +108,6 @@ function PrescriptionDetailsModal({ visible, prescription, onClose }) {
                   ))}
                 </View>
               )}
-              {/* QR Code for prescription: only if active and not expired */}
               {isActiveAndNotExpired && prescription.id && (
                 <View style={{ alignSelf: 'center', marginTop: 18, marginBottom: 8, alignItems: 'center' }}>
                   <Text style={{ fontWeight: 'bold', color: '#2563eb', marginBottom: 6 }}>Show this QR code to the pharmacist</Text>
@@ -171,7 +160,6 @@ export default function PrescriptionsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingTop: 12 }}>
-      {/* Back Button */}
       <TouchableOpacity onPress={() => {
         if (navigation.canGoBack()) {
           router.back();
@@ -182,7 +170,6 @@ export default function PrescriptionsScreen() {
         <MaterialIcons name="arrow-back" size={28} color="#2563eb" />
       </TouchableOpacity>
       <Text style={{ fontSize: 26, fontWeight: 'bold', color: '#2563eb', marginBottom: 8 }}>Prescriptions</Text>
-      {/* Search bar */}
       <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 10, marginBottom: 10, borderWidth: 1, borderColor: '#e5e7eb' }}>
         <MaterialIcons name="search" size={20} color="#64748b" style={{ marginRight: 6 }} />
         <TextInput
@@ -193,7 +180,6 @@ export default function PrescriptionsScreen() {
           placeholderTextColor="#9ca3af"
         />
       </View>
-      {/* Status filter */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }} contentContainerStyle={{ flexDirection: 'row' }}>
         {STATUS_OPTIONS.map(opt => (
           <TouchableOpacity
@@ -214,7 +200,6 @@ export default function PrescriptionsScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {/* List */}
       {loading && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#2563eb" />

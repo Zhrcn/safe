@@ -78,7 +78,6 @@ const MedicationFormDialog = ({ open, mode, medication, onClose, onSubmit }) => 
                         <Label>{t('patient.medications.frequency', 'Frequency')}</Label>
                         <Select value={frequency} onValueChange={setFrequency} required>
                             <SelectTrigger>
-                                <span>{/* Place the trigger content here, or leave empty if using <SelectValue /> elsewhere */}</span>
                             </SelectTrigger>
                             <SelectContent>
                                 {FREQUENCY_OPTIONS.map(opt => (

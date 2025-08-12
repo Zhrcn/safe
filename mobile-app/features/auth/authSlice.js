@@ -9,7 +9,6 @@ export const login = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log('Login API response:', response.data);
       await SecureStore.setItemAsync('token', String(response.data.data.token));
       return response.data.data;
     } catch (error) {
@@ -35,7 +34,6 @@ const authSlice = createSlice({
       SecureStore.deleteItemAsync('token');
     },
     setToken: (state, action) => {
-      console.log('Redux setToken called with:', action.payload);
       state.token = action.payload;
     },
   },
@@ -46,7 +44,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        console.log('Redux login.fulfilled, payload:', action.payload);
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;

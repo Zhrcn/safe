@@ -57,13 +57,17 @@ export default function PharmacistProfilePage() {
     setSaving(true);
     setError(null);
     try {
-      const payload = { ...formData };
+      // Filter out fields that shouldn't be sent to the backend
+      const { _id, userId, pharmacistId, email, role, ...payload } = formData;
+      console.log('Sending payload:', payload);
       const updated = await updatePharmacistProfile(payload);
       setPharmacist(updated);
       setFormData({ ...updated });
       setIsEditing(false);
     } catch (err) {
-      setError('Failed to update profile. Please try again.');
+      console.error('Profile update error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update profile. Please try again.';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -103,7 +107,6 @@ export default function PharmacistProfilePage() {
       description="Your professional and personal information."
     >
       <div className="w-full flex flex-col md:flex-row gap-8 items-start bg-background rounded-2xl p-6 shadow-lg">
-        {/* Sidebar Card */}
         <div className="md:w-1/3 w-full flex flex-col items-center">
           <Card className="w-full bg-card text-card-foreground shadow-2xl rounded-2xl border border-border p-4 transition-shadow hover:shadow-3xl">
             <CardContent className="flex flex-col items-center text-center p-12 min-h-[650px] bg-card text-card-foreground rounded-2xl border border-border shadow-lg">
@@ -177,7 +180,6 @@ export default function PharmacistProfilePage() {
             </CardContent>
           </Card>
         </div>
-        {/* Main Info */}
         <div className="md:w-2/3 w-full flex flex-col gap-8">
           <Card className="bg-card text-card-foreground rounded-2xl border border-border shadow-md p-4">
             <CardHeader className="pb-2 border-b border-border mb-4">

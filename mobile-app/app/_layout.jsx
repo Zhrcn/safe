@@ -23,7 +23,6 @@ function AuthGuard({ children }) {
   const segments = useSegments();
   const router = useRouter();
 
-  // Rehydrate token from SecureStore on app start
   useEffect(() => {
     SecureStore.getItemAsync('token').then(storedToken => {
       if (storedToken) {
@@ -53,7 +52,6 @@ export default function RootLayout() {
   const insets = useSafeAreaInsets();
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 

@@ -14,58 +14,45 @@ import {
     X,
     QrCode,
     Eye,
-    Sun,
-    Moon,
     Info,
+    ChevronDown,
+    ListFilter,
+    Search,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback, AvatarImage, getInitialsFromName } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Separator } from '@/components/ui/Separator';
 import { Input } from '@/components/ui/Input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/DropdownMenu';
-import { ChevronDown, ListFilter, Search } from 'lucide-react';
-import StatusBadge from '@/components/common/StatusBadge';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPrescriptions } from '@/store/slices/patient/prescriptionsSlice';
 import { useTheme } from '@/components/ThemeProviderWrapper';
 
-const pillColors = [
-  'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
-  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
-  'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200',
-  'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-200',
-  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
-  'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200',
-];
+const statusColors = {
+    active: 'bg-green-100 text-green-700 border-green-200',
+    completed: 'bg-blue-100 text-blue-700 border-blue-200',
+    pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    expired: 'bg-red-100 text-red-700 border-red-200',
+    default: 'bg-gray-100 text-gray-700 border-gray-200',
+};
 
-const getPillColor = (idx) => pillColors[idx % pillColors.length];
-
-const AnimatedStatusBadge = ({ status }) => {
-  const animated = status === 'active' || status === 'pending';
-  return (
-    <span className={animated ? 'animate-pulse' : ''}>
-      <StatusBadge status={status} size="medium" className="shadow-sm" />
-    </span>
-  );
+const statusIcons = {
+    active: <Check className="w-4 h-4" />,
+    completed: <Check className="w-4 h-4" />,
+    pending: <Clock className="w-4 h-4" />,
+    expired: <X className="w-4 h-4" />,
+    default: <AlertCircle className="w-4 h-4" />,
 };
 
 const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
     const { t } = useTranslation('common');
     if (!prescription) return null;
-    const statusMap = {
-        active: { label: t('patient.prescriptions.active'), className: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: <Check className="w-4 h-4" /> },
-        completed: { label: t('patient.prescriptions.completed'), className: 'bg-blue-100 text-blue-700 border-blue-200', icon: <Check className="w-4 h-4" /> },
-        pending: { label: t('patient.prescriptions.pending'), className: 'bg-amber-100 text-amber-700 border-amber-200', icon: <Clock className="w-4 h-4" /> },
-        expired: { label: t('patient.prescriptions.expired'), className: 'bg-red-100 text-red-700 border-red-200', icon: <X className="w-4 h-4" /> },
-        default: { label: t('patient.prescriptions.unknownStatus'), className: 'bg-gray-100 text-gray-700 border-gray-200', icon: <AlertCircle className="w-4 h-4" /> },
-    };
     const status = prescription.status || 'default';
-    const statusInfo = statusMap[status] || statusMap.default;
+    const statusLabel = t(`patient.prescriptions.${status}`) || t('patient.prescriptions.unknownStatus');
     const doctorName = prescription.doctorName ? `Dr. ${prescription.doctorName}` : t('patient.prescriptions.unknownDoctor');
     const doctorSpecialty = prescription.doctorSpecialty || t('patient.prescriptions.unknownSpecialty');
     const doctorPhoto = prescription.doctorPhoto || null;
@@ -74,44 +61,47 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
     const diagnosis = prescription.diagnosis || t('patient.prescriptions.noDiagnosis');
     const medications = Array.isArray(prescription.medications) ? prescription.medications : [];
     return (
-        <Card className="group hover:shadow-2xl transition-all border border-border bg-card flex flex-col h-full relative rounded-2xl focus-within:ring-2 focus-within:ring-primary outline-none">
-            <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border shadow-sm ${statusInfo.className}`}>{statusInfo.icon}{statusInfo.label}</span>
+        <Card className="group hover:shadow-xl border border-border bg-card flex flex-col h-full rounded-2xl transition-all">
+            <div className="absolute top-4 right-4 z-10">
+                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border shadow-sm ${statusColors[status] || statusColors.default}`}>
+                    {statusIcons[status] || statusIcons.default}
+                    {statusLabel}
+                </span>
             </div>
-            <CardContent className="p-6 flex flex-col h-full justify-between">
-                <div className="flex-1 space-y-3 mb-4">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Avatar className="h-12 w-12 border-2 border-primary/30 shadow">
-                            {doctorPhoto ? (
-                                <AvatarImage src={doctorPhoto} alt={doctorName} />
-                            ) : (
-                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                                    {getInitialsFromName(doctorName)}
-                                </AvatarFallback>
-                            )}
-                        </Avatar>
-                        <div>
-                            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate">{doctorName}</h3>
-                            <p className="text-xs text-muted-foreground font-medium truncate">{doctorSpecialty}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>{prescriptionDate}</span>
-                        <span className="mx-2">|</span>
-                        <Clock className="h-4 w-4" />
-                        <span>{expiryDate}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Pill className="h-4 w-4 text-primary" />
-                        <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">{t('patient.prescriptions.medications')}: <b>{medications.length}</b></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Info className="h-4 w-4 text-blue-400" />
-                        <span className="truncate" title={diagnosis}>{diagnosis}</span>
+            <CardContent className="p-6 flex flex-col h-full">
+                <div className="flex items-center gap-4 mb-4">
+                    <Avatar className="h-12 w-12 border-2 border-primary/30 shadow">
+                        {doctorPhoto ? (
+                            <AvatarImage src={doctorPhoto} alt={doctorName} />
+                        ) : (
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                                {getInitialsFromName(doctorName)}
+                            </AvatarFallback>
+                        )}
+                    </Avatar>
+                    <div>
+                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors truncate">{doctorName}</h3>
+                        <p className="text-xs text-muted-foreground font-medium truncate">{doctorSpecialty}</p>
                     </div>
                 </div>
-                <div className="flex items-end gap-3">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{prescriptionDate}</span>
+                    <span className="mx-2">|</span>
+                    <Clock className="h-4 w-4" />
+                    <span>{expiryDate}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
+                    <Pill className="h-4 w-4 text-primary" />
+                    <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+                        {t('patient.prescriptions.medications')}: <b>{medications.length}</b>
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                    <Info className="h-4 w-4 text-blue-400" />
+                    <span className="truncate" title={diagnosis}>{diagnosis}</span>
+                </div>
+                <div className="flex items-end gap-3 mt-auto">
                     <Tooltip content={t('patient.prescriptions.viewDetails')}>
                         <Button
                             variant="outline"
@@ -123,6 +113,19 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
                             {t('patient.prescriptions.viewDetails')}
                         </Button>
                     </Tooltip>
+                    {(prescription.status === 'active' || prescription.status === 'pending') && (
+                        <Tooltip content={t('patient.prescriptions.showQRCode')}>
+                            <Button
+                                variant="info"
+                                size="sm"
+                                onClick={() => onShowQR(prescription)}
+                                className="focus:ring-2 focus:ring-primary"
+                            >
+                                <QrCode className="w-4 h-4 mr-1" />
+                                {t('patient.prescriptions.showQRCode')}
+                            </Button>
+                        </Tooltip>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -132,15 +135,8 @@ const PrescriptionCard = ({ prescription, onShowQR, onViewDetails }) => {
 const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => {
     const { t } = useTranslation('common');
     if (!prescription) return null;
-    const statusMap = {
-        active: { label: t('patient.prescriptions.active'), className: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: <Check className="w-4 h-4" /> },
-        completed: { label: t('patient.prescriptions.completed'), className: 'bg-blue-100 text-blue-700 border-blue-200', icon: <Check className="w-4 h-4" /> },
-        pending: { label: t('patient.prescriptions.pending'), className: 'bg-amber-100 text-amber-700 border-amber-200', icon: <Clock className="w-4 h-4" /> },
-        expired: { label: t('patient.prescriptions.expired'), className: 'bg-red-100 text-red-700 border-red-200', icon: <X className="w-4 h-4" /> },
-        default: { label: t('patient.prescriptions.unknownStatus'), className: 'bg-gray-100 text-gray-700 border-gray-200', icon: <AlertCircle className="w-4 h-4" /> },
-    };
     const status = prescription.status || 'default';
-    const statusInfo = statusMap[status] || statusMap.default;
+    const statusLabel = t(`patient.prescriptions.${status}`) || t('patient.prescriptions.unknownStatus');
     const doctorName = prescription.doctorName ? `Dr. ${prescription.doctorName}` : t('patient.prescriptions.unknownDoctor');
     const doctorSpecialty = prescription.doctorSpecialty || t('patient.prescriptions.unknownSpecialty');
     const doctorPhoto = prescription.doctorPhoto || null;
@@ -152,7 +148,7 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
     const dispenseHistory = Array.isArray(prescription.dispenseHistory) ? prescription.dispenseHistory : [];
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg w-full p-0 rounded-2xl bg-card border border-border overflow-hidden"> 
+            <DialogContent className="max-w-2xl w-full p-0 rounded-2xl bg-card border border-border overflow-hidden">
                 <div className="bg-primary/10 border-b border-border px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12 border-2 border-primary/30 shadow">
@@ -166,34 +162,57 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                         </Avatar>
                         <div>
                             <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                                <Pill className="w-5 h-5 text-primary" /> 
+                                <Pill className="w-5 h-5 text-primary" />
                                 {t('patient.prescriptions.prescriptionDetails')}
                             </DialogTitle>
                             <div className="text-xs text-muted-foreground font-medium mt-1">{doctorName}</div>
                             <div className="text-xs text-muted-foreground font-medium">{doctorSpecialty}</div>
                         </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border shadow-sm ${statusInfo.className}`}>{statusInfo.icon}{statusInfo.label}</span>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border shadow-sm ${statusColors[status] || statusColors.default}`}>
+                        {statusIcons[status] || statusIcons.default}
+                        {statusLabel}
+                    </span>
                 </div>
-                <div className="p-4 space-y-4"> 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2"> 
-                        <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" /> <b>{t('patient.prescriptions.prescribedOn')}</b>: {prescriptionDate}</span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> <b>{t('patient.prescriptions.validUntil')}</b>: {prescriptionEndDate}</span>
-                            <span className="text-xs text-muted-foreground"><b>{t('patient.prescriptions.prescriptionID')}</b>: {prescriptionId}</span>
+                <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <b>{t('patient.prescriptions.prescribedOn')}</b>: {prescriptionDate}
+                            </span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <b>{t('patient.prescriptions.validUntil')}</b>: {prescriptionEndDate}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                                <b>{t('patient.prescriptions.prescriptionID')}</b>: {prescriptionId}
+                            </span>
                         </div>
-                        <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Info className="h-3 w-3 text-blue-400" /> <b>{t('patient.prescriptions.diagnosis')}</b>: {diagnosis}</span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Pill className="h-3 w-3 text-primary" /> <b>{t('patient.prescriptions.medications')}</b>: {medications.length}</span>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Info className="h-3 w-3 text-blue-400" />
+                                <b>{t('patient.prescriptions.diagnosis')}</b>: {diagnosis}
+                            </span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Pill className="h-3 w-3 text-primary" />
+                                <b>{t('patient.prescriptions.medications')}</b>: {medications.length}
+                            </span>
                         </div>
                     </div>
                     <Separator />
                     <div>
-                        <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-1"><Pill className="h-4 w-4 text-primary" />{t('patient.prescriptions.medications')}</h4>
-                        <ul className="space-y-1">
+                        <h4 className="text-base font-semibold text-foreground mb-2 flex items-center gap-1">
+                            <Pill className="h-4 w-4 text-primary" />
+                            {t('patient.prescriptions.medications')}
+                        </h4>
+                        <ul className="space-y-2">
                             {medications.length > 0 ? medications.map((medication, index) => (
-                                <li key={index} className="border border-border rounded-lg p-2 bg-muted/30">
-                                    <div className="font-semibold text-primary mb-0.5 flex items-center gap-1"><Pill className="h-3 w-3 text-primary" />{medication?.name || t('patient.prescriptions.unknownMedication')}</div>
+                                <li key={index} className="border border-border rounded-lg p-3 bg-muted/30">
+                                    <div className="font-semibold text-primary mb-1 flex items-center gap-1">
+                                        <Pill className="h-3 w-3 text-primary" />
+                                        {medication?.name || t('patient.prescriptions.unknownMedication')}
+                                    </div>
                                     <div className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-1">
                                         <span><b>{t('patient.prescriptions.dosage')}:</b> {medication?.dosage || t('patient.prescriptions.noDosage')}</span>
                                         <span><b>{t('patient.prescriptions.frequency')}:</b> {medication?.frequency || t('patient.prescriptions.noFrequency')}</span>
@@ -206,19 +225,22 @@ const PrescriptionDetailDialog = ({ open, onClose, prescription, onShowQR }) => 
                         </ul>
                     </div>
                     {diagnosis && (
-                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
-                            <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-1"><Info className="h-4 w-4 text-blue-400" />{t('patient.prescriptions.diagnosis')}</h4>
+                        <div className="bg-muted/40 rounded-lg p-3 border border-border">
+                            <h4 className="text-base font-semibold text-foreground mb-1 flex items-center gap-1">
+                                <Info className="h-4 w-4 text-blue-400" />
+                                {t('patient.prescriptions.diagnosis')}
+                            </h4>
                             <p className="text-xs text-muted-foreground leading-relaxed">{diagnosis}</p>
                         </div>
                     )}
                     {prescription.notes && (
-                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
+                        <div className="bg-muted/40 rounded-lg p-3 border border-border">
                             <h4 className="text-base font-semibold text-foreground mb-1">{t('patient.prescriptions.doctorsNotes')}</h4>
                             <p className="text-xs text-muted-foreground leading-relaxed">{prescription.notes}</p>
                         </div>
                     )}
                     {dispenseHistory.length > 0 && (
-                        <div className="bg-muted/40 rounded-lg p-2 border border-border">
+                        <div className="bg-muted/40 rounded-lg p-3 border border-border">
                             <h4 className="text-base font-semibold text-foreground mb-1">{t('patient.prescriptions.dispenseHistory')}</h4>
                             <ul className="space-y-1">
                                 {dispenseHistory.map((entry, idx) => (
@@ -265,10 +287,10 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="max-w-md w-full p-6 rounded-2xl bg-card border border-border text-center">
-                <DialogHeader className="mb-2"> 
+                <DialogHeader className="mb-2">
                     <DialogTitle className="text-xl font-bold text-foreground">{t('patient.prescriptions.prescriptionQRCode')}</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col items-center space-y-4 py-2"> 
+                <div className="flex flex-col items-center space-y-4 py-2">
                     <p className="text-sm text-info font-medium">
                         {t('patient.prescriptions.scanThisCodeAtThePharmacyToGetYourPrescription')}
                     </p>
@@ -282,7 +304,7 @@ const QRCodeDialog = ({ open, onClose, prescription }) => {
                                 patientId: prescription.patientId || '',
                                 patientName: prescription.patientName || '',
                             })}
-                            size={180} 
+                            size={180}
                             level="H"
                             includeMargin={true}
                         />
@@ -376,7 +398,6 @@ const PrescriptionsPage = () => {
 
     return (
         <div className={`min-h-screen bg-card dark:bg-background p-4 sm:p-8 lg:p-12 transition-colors duration-300 ${currentTheme === 'safeNight' ? 'dark' : ''}`}>
-            
             <PageHeader
                 title={t('patient.prescriptions.title')}
                 description={t('patient.prescriptions.description')}
@@ -397,9 +418,9 @@ const PrescriptionsPage = () => {
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="flex items-center gap-2 w-full justify-center sm:w-auto text-base px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
+                                className="text-primary"
                             >
-                                <ListFilter className="w-5 h-5" />
+                                <ListFilter className="w-5 h-5 text-primary" />
                                 {t('patient.prescriptions.status')}
                                 {': '}
                                 {t(`patient.prescriptions.${filterStatus}`)}
@@ -431,11 +452,11 @@ const PrescriptionsPage = () => {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                variant="outline"
-                                className="flex items-center gap-2 w-full justify-center sm:w-auto text-base px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100"
+                                variant="primary"
+                                className="flex items-center gap-2 w-full justify-center sm:w-auto  px-5 py-3 rounded-xl shadow bg-white dark:bg-blue-950/30 dark:text-blue-100 text-primary"
                             >
-                                <ListFilter className="w-5 h-5" />
-                                <span>
+                                <ListFilter className="w-5 h-5 text-primary" />
+                                <span className='text-primary'>
                                     {t('patient.prescriptions.sort')}
                                     {': '}
                                     {sortBy === 'date' ? t('patient.prescriptions.date') : t('patient.prescriptions.doctorName')}
@@ -553,4 +574,4 @@ const PrescriptionsPage = () => {
     );
 };
 
-export default PrescriptionsPage; 
+export default PrescriptionsPage;

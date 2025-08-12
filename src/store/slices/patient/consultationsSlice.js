@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getConsultations, createConsultation, answerConsultation, addFollowUpQuestion, getConsultationMessages } from '@/store/services/patient/consultationApi';
+import { getConsultations, createConsultation, answerConsultation, addFollowUpQuestion, getConsultationMessages, getConsultationsByDoctorAndPatient } from '@/store/services/patient/consultationApi';
 import axiosInstance from '../../services/axiosInstance';
 
 export const fetchConsultations = createAsyncThunk(
@@ -63,6 +63,17 @@ export const fetchConsultationMessages = createAsyncThunk(
     async (consultationId, { rejectWithValue }) => {
         try {
             return await getConsultationMessages(consultationId);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || err.message);
+        }
+    }
+);
+
+export const fetchConsultationsByDoctorAndPatient = createAsyncThunk(
+    'consultations/fetchConsultationsByDoctorAndPatient',
+    async (patientId, { rejectWithValue }) => {
+        try {
+            return await getConsultationsByDoctorAndPatient(patientId);
         } catch (err) {
             return rejectWithValue(err.response?.data || err.message);
         }

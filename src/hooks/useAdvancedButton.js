@@ -233,12 +233,7 @@ export const useButtonWithShortcut = (shortcut, options = {}) => {
   };
 };
 
-/**
- * useDebounce hook
- * @param {*} value The value to debounce
- * @param {number} delay The debounce delay in ms
- * @returns The debounced value
- */
+
 export function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 

@@ -24,6 +24,19 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select('-password');
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, null, 'User not found'));
+    }
+    res.status(200).json(new ApiResponse(200, { ...user.toObject(), id: user._id.toString() }, 'User fetched successfully.'));
+  } catch (err) {
+    res.status(500).json(new ApiResponse(500, null, 'Server error'));
+  }
+};
+
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -146,7 +159,7 @@ exports.createUser = async (req, res) => {
         contactEmail: req.body.contactEmail,
         contactPhone: req.body.contactPhone,
         address: req.body.address,
-        distributorId: `DST-${Date.now()}` // Simple unique ID, can be improved
+        distributorId: `DST-${Date.now()}` 
       });
     }
     const userResponse = user.toObject();

@@ -147,6 +147,11 @@ const MedicalRecordsPage = () => {
         return matchesSearch && matchesType && matchesDate && matchesTab;
     });
 
+    const getTabTriggerClass = (tabValue) =>
+        activeTab === tabValue
+            ? "bg-primary text-white shadow font-semibold"
+            : "";
+
     return (
         <div className="flex flex-col space-y-6">
             <PageHeader
@@ -209,26 +214,33 @@ const MedicalRecordsPage = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <Button  className="w-full md:w-auto">
-                    <Link href="/patient/medical-records/upload">
-                        <span className="flex items-center gap-2 text-primary-foreground">
-                            <Plus className="h-4 w-4 mr-2" />
-                            {t('patient.medicalRecords.upload', 'Upload New Record')}
-                        </span>
-                    </Link>
-                </Button>
+                
             </div>
 
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-7">
-                    <TabsTrigger value="vitalSigns"><span>{t('patient.profile.vitalSigns', 'Vital Signs')}</span></TabsTrigger>
-                    <TabsTrigger value="allergies"><span>{t('patient.profile.allergies', 'Allergies')}</span></TabsTrigger>
-                    <TabsTrigger value="chronicConditions"><span>{t('patient.profile.chronicConditions', 'Chronic Conditions')}</span></TabsTrigger>
-                    <TabsTrigger value="diagnoses"><span>{t('patient.profile.diagnoses', 'Diagnoses')}</span></TabsTrigger>
-                    <TabsTrigger value="labResults"><span>{t('patient.profile.labResults', 'Lab Results')}</span></TabsTrigger>
-                    <TabsTrigger value="imagingReports"><span>{t('patient.profile.imagingReports', 'Imaging')}</span></TabsTrigger>
-                    <TabsTrigger value="medications"><span>{t('patient.profile.medications', 'Medications')}</span></TabsTrigger>
+                    <TabsTrigger value="vitalSigns" className={getTabTriggerClass('vitalSigns')}>
+                        <span>{t('patient.profile.vitalSigns', 'Vital Signs')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="allergies" className={getTabTriggerClass('allergies')}>
+                        <span>{t('patient.profile.allergies', 'Allergies')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="chronicConditions" className={getTabTriggerClass('chronicConditions')}>
+                        <span>{t('patient.profile.chronicConditions', 'Chronic Conditions')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="diagnoses" className={getTabTriggerClass('diagnoses')}>
+                        <span>{t('patient.profile.diagnoses', 'Diagnoses')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="labResults" className={getTabTriggerClass('labResults')}>
+                        <span>{t('patient.profile.labResults', 'Lab Results')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="imagingReports" className={getTabTriggerClass('imagingReports')}>
+                        <span>{t('patient.profile.imagingReports', 'Imaging')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="medications" className={getTabTriggerClass('medications')}>
+                        <span>{t('patient.profile.medications', 'Medications')}</span>
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeTab} className="mt-6">
                     <MedicalFileTabs medicalRecord={patientMedicalRecords} loading={medicalRecordLoading} error={medicalRecordError} activeTab={activeTab} />

@@ -198,7 +198,6 @@ export default function ConsultationsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Back Button */}
       <TouchableOpacity onPress={() => {
         if (navigation.canGoBack()) {
           router.back();
@@ -236,7 +235,6 @@ export default function ConsultationsScreen() {
         onRefresh={handleRefresh}
         contentContainerStyle={{ paddingBottom: 80 }}
       />
-      {/* New Consultation Modal */}
       <Modal visible={showNewModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -288,7 +286,6 @@ export default function ConsultationsScreen() {
           </View>
         </View>
       </Modal>
-      {/* Consultation Details Modal */}
       <Modal visible={showDetailModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -324,7 +321,6 @@ export default function ConsultationsScreen() {
           </View>
         </View>
       </Modal>
-      {/* Follow Up Modal */}
       <Modal visible={showFollowUpModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

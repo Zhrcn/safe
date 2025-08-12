@@ -42,7 +42,8 @@ const DoctorAvatar = ({ doctor }) => {
   const uri = doctor?.user?.profileImage;
   const initials = doctor?.user ? `${doctor.user.firstName?.[0] || ''}${doctor.user.lastName?.[0] || ''}`.toUpperCase() : 'D';
   if (uri) {
-    return <Image source={{ uri }} style={{ width: 44, height: 44, borderRadius: 22, marginRight: 12, backgroundColor: '#e0e7ef' }} />;
+    const source = uri.includes('/uploads') ? { uri: `http://192.168.1.100:5001${uri}` } : { uri };
+    return <Image source={source} style={{ width: 44, height: 44, borderRadius: 22, marginRight: 12, backgroundColor: '#e0e7ef' }} />;
   }
   return (
     <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#e0e7ef', marginRight: 12, alignItems: 'center', justifyContent: 'center' }}>
@@ -122,7 +123,6 @@ export default function AppointmentsScreen() {
     dispatch(fetchAppointments());
   }, [dispatch]);
 
-  // Filter appointments by tab
   const now = new Date();
   const filtered = (list || []).filter(item => {
     if (activeTab === 'upcoming') {
@@ -140,7 +140,6 @@ export default function AppointmentsScreen() {
     }
     return true;
   }).filter(item => {
-    // Search filter
     const docName = getDoctorName(item).toLowerCase();
     const typeMatch = (item.type || '').toLowerCase();
     return (
@@ -176,33 +175,7 @@ export default function AppointmentsScreen() {
       return;
     }
     setFormError('');
-    if (editId) {
-      // Edit or reschedule
-      // This part of the logic needs to be updated to use the backend data
-      // For now, it will just update the local state, which won't persist
-      // setAppointments((prev) => prev.map((apt) =>
-      //   (apt._id === editId || apt.id === editId)
-      //     ? { ...apt, type, date, time, location, notes, status: apt.status === 'pending' ? 'pending' : 'rescheduled' }
-      //     : apt
-      // ));
-    } else {
-      // New appointment: always pending
-      // This part of the logic needs to be updated to use the backend data
-      // For now, it will just update the local state, which won't persist
-      // setAppointments((prev) => [
-      //   ...prev,
-      //   {
-      //     id: Date.now(),
-      //     type,
-      //     date: date || '1111-01-01T00:00:00.000Z',
-      //     time,
-      //     location,
-      //     notes,
-      //     status: 'pending',
-      //     doctor: { user: { firstName: 'John', lastName: 'Doe' } },
-      //   },
-      // ]);
-    }
+   
     setSuccess(true);
     setTimeout(() => {
       setSuccess(false);
@@ -226,20 +199,13 @@ export default function AppointmentsScreen() {
         {
           text: 'Yes',
           onPress: () => {
-            // This part of the logic needs to be updated to use the backend data
-            // For now, it will just update the local state, which won't persist
-            // setAppointments((prev) => prev.map((apt) =>
-            //   (apt._id === item._id || apt.id === item.id)
-            //     ? { ...apt, status: 'cancelled' }
-            //     : apt
-            // ));
+                                                                                                                                // TODO: Cancel appointment
           },
         },
       ]
     );
   };
 
-  // Date/time picker handlers
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -330,7 +296,6 @@ export default function AppointmentsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingHorizontal: 8 * sizeScale, paddingTop: 12 * sizeScale }}>
-      {/* Back Button */}
       <TouchableOpacity onPress={() => {
         if (navigation.canGoBack()) {
           router.back();
@@ -341,13 +306,11 @@ export default function AppointmentsScreen() {
         <MaterialIcons name="arrow-back" size={28} color="#2563eb" />
       </TouchableOpacity>
       <Text style={{ fontSize: 26 * sizeScale, fontWeight: 'bold', color: '#2563eb', marginBottom: 8 * sizeScale }}>Appointments</Text>
-      {/* Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 * sizeScale }} contentContainerStyle={{ flexDirection: 'row' }}>
         {TABS.map(tab => (
           <TabButton key={tab.key} icon={tab.icon} label={tab.label} active={activeTab === tab.key} onPress={() => setActiveTab(tab.key)} />
         ))}
       </ScrollView>
-      {/* Search bar */}
       <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 10, marginBottom: 10 * sizeScale, borderWidth: 1, borderColor: '#e5e7eb' }}>
         <MaterialIcons name="search" size={20} color="#64748b" style={{ marginRight: 6 }} />
         <TextInput
@@ -358,7 +321,6 @@ export default function AppointmentsScreen() {
           placeholderTextColor="#9ca3af"
         />
       </View>
-      {/* List */}
       {loading && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#2563eb" />
@@ -422,22 +384,7 @@ export default function AppointmentsScreen() {
                 </Picker>
               </View>
             </View>
-            {/* Date field removed: patient cannot choose date */}
-            {/* <TouchableOpacity className="mb-4 w-full" onPress={() => setShowDatePicker(true)}>
-              <Text className="mb-1 text-sm font-medium">Date <Text className="text-red-500">*</Text></Text>
-              <View className="p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                <Text className={date ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>{date || 'Select date'}</Text>
-              </View>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={date && !isNaN(new Date(date)) ? new Date(date) : new Date()}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )} */}
+        
             <TouchableOpacity style={styles.modalInputGroup} onPress={() => setShowTimePicker(true)}>
               <Text style={styles.modalLabel}>Time <Text style={styles.modalRequired}>*</Text></Text>
               <View style={styles.modalInputGroup}>

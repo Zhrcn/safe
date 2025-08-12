@@ -1,12 +1,5 @@
-import { 
-    mockPharmacistProfile, 
-    mockInventory, 
-    mockPrescriptions, 
-    mockNotifications, 
-    mockStats 
-} from '@/data/mock/pharmacistData';
+
 import axiosInstance from '@/store/services/axiosInstance';
-import { getPharmacistOrders, cancelOrder } from '@/store/services/orderApi';
 
 export const getInventory = async () => {
     try {
@@ -38,29 +31,13 @@ export const getPharmacistProfile = async () => {
     }
 };
 
-export const getNotifications = async () => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockNotifications;
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        throw error;
-    }
-};
 
-export const getStats = async () => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockStats;
-    } catch (error) {
-        console.error('Error fetching stats:', error);
-        throw error;
-    }
-};
+
+
 
 export const getOrders = async () => {
     try {
-        const response = await getPharmacistOrders();
+        const response = await axiosInstance.get('/orders');
         return response.data.data;
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -71,14 +48,13 @@ export const getOrders = async () => {
 export const updateOrderStatus = async (orderId, status) => {
     try {
         if (status === 'cancelled') {
-            const response = await cancelOrder(orderId);
+            const response = await axiosInstance.patch(`/orders/${orderId}/cancel`);
             return response.data.data;
         }
         if (status === 'completed') {
             const response = await axiosInstance.patch(`/orders/${orderId}/complete`);
             return response.data.data;
         }
-        // For other statuses, send PATCH to /orders/:id with { status }
         const response = await axiosInstance.patch(`/orders/${orderId}`, { status });
         return response.data.data;
     } catch (error) {
@@ -87,20 +63,7 @@ export const updateOrderStatus = async (orderId, status) => {
     }
 };
 
-export const updatePrescriptionStatus = async (prescriptionId, status) => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const prescription = mockPrescriptions.find(p => p.id === prescriptionId);
-        if (prescription) {
-            prescription.status = status;
-            return prescription;
-        }
-        throw new Error('Prescription not found');
-    } catch (error) {
-        console.error('Error updating prescription status:', error);
-        throw error;
-    }
-};
+
 
 export const updateInventoryItem = async (item) => {
     try {
@@ -138,6 +101,8 @@ export const updatePharmacistProfile = async (profileData) => {
         return response.data.data;
     } catch (error) {
         console.error('Error updating pharmacist profile:', error);
+        console.error('Request payload:', profileData);
+        console.error('Response data:', error.response?.data);
         throw error;
     }
 };
@@ -178,6 +143,46 @@ export const getDistributors = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching distributors:', error);
+        throw error;
+    }
+}; 
+
+export const getMedicineById = async (id) => {
+    try {
+        const response = await axiosInstance.get(`/medicines/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching medicine by ID:', error);
+        throw error;
+    }
+}; 
+
+export const deleteOrder = async (orderId) => {
+    try {
+        const response = await axiosInstance.delete(`/orders/${orderId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        throw error;
+    }
+};
+
+export const getPharmacistOrders = async () => {
+    try {
+        const response = await axiosInstance.get('/orders');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching pharmacist orders:', error);
+        throw error;
+    }
+};
+
+export const cancelOrder = async (orderId) => {
+    try {
+        const response = await axiosInstance.patch(`/orders/${orderId}/cancel`);
+        return response.data;
+    } catch (error) {
+        console.error('Error cancelling order:', error);
         throw error;
     }
 }; 

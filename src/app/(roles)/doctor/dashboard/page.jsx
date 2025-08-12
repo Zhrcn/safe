@@ -20,13 +20,13 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
+import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
 const Calendar = dynamic(() => import('react-calendar'), { ssr: false });
 import 'react-calendar/dist/Calendar.css';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
-import { appointments } from '@/mockdata/appointments';
-import { doctors } from '@/mockdata/doctors';
+
 import { useTheme } from '@/components/ThemeProviderWrapper';
 import {
   Card,
@@ -49,9 +49,8 @@ import { Button } from '@/components/ui/Button';
 import AddPatientForm from '@/components/doctor/AddPatientForm';
 import NewRequestDialog from '@/components/doctor/NewRequestDialog';
 import { useRouter } from 'next/navigation';
-import { createConversation } from '@/store/slices/patient/conversationsSlice';
-import { patients as mockPatients } from '@/mockdata/patients';
-import { format } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+import DoctorPrescriptionSocketListener from '@/components/doctor/DoctorPrescriptionSocketListener';
 
 ChartJS.register(
   CategoryScale,
@@ -288,6 +287,7 @@ export default function DoctorDashboard() {
   const { currentTheme } = useTheme();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { user: authUser } = useAuth();
   
   const { patients, loading: patientsLoading, error: patientsError } = useAppSelector(
     (state) => state.doctorPatients
@@ -519,7 +519,8 @@ export default function DoctorDashboard() {
     lastVisit: patient.updatedAt || patient.lastVisit,
   }));
 
-  const doctorName = doctors[0]?.user?.firstName || 'Doctor';
+  const doctorName = authUser?.firstName || authUser?.name || 'Doctor';
+  const doctorLastName = authUser?.lastName || '';
 
   const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
@@ -626,6 +627,7 @@ export default function DoctorDashboard() {
 
   return (
     <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 min-h-screen">
+      <DoctorPrescriptionSocketListener />
       <div className="flex flex-col gap-y-4 sm:gap-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="space-y-1">
@@ -633,7 +635,10 @@ export default function DoctorDashboard() {
               {t('doctor.dashboard.title', 'Dashboard')}
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-              {t('doctor.dashboard.welcome', 'Welcome back')}, <span className="font-semibold text-primary">{doctorName}</span>
+              {t('doctor.dashboard.welcome', 'Welcome back')},{' '}
+              <span className="font-semibold text-primary">
+                {doctorName} {doctorLastName}
+              </span>
             </p>
           </div>
         </div>

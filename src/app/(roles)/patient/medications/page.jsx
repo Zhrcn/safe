@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import {
     Search,
     Plus,
-    FileText
+    FileText,
+    Bell,
+    Clock,
+    Calendar,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { useNotification } from '@/components/ui/Notification';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,6 +25,12 @@ import MedicationFormDialog from '@/components/medications/MedicationFormDialog'
 import ReminderDialog from '@/components/medications/ReminderDialog';
 import MedicationCard from '@/components/patient/MedicationCard';
 import PatientCheckMedicinePage from './check-medicine.jsx';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle
+} from '@/components/ui/Dialog';
+import { Switch } from '@/components/ui/Switch';
 
 const MedicationsPage = () => {
     const router = useRouter();
@@ -32,6 +43,8 @@ const MedicationsPage = () => {
     const [selectedMedication, setSelectedMedication] = useState(null);
     const { t, i18n } = useTranslation('common');
     const [_, setRerender] = useState(0);
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+    const [detailsMedication, setDetailsMedication] = useState(null);
     
     useEffect(() => {
         const handleLangChange = () => setRerender(x => x + 1);
@@ -101,8 +114,8 @@ const MedicationsPage = () => {
     };
 
     const handleViewDetails = (medication) => {
-        console.log(t('patient.medications.viewingDetails', 'Viewing details for:'), medication);
-        showNotification(t('patient.medications.viewingDetailsFor', { name: medication.name, defaultValue: 'Viewing details for {{name}}' }), 'info');
+        setDetailsMedication(medication);
+        setDetailsDialogOpen(true);
     };
 
     const handleSetReminder = (medication) => {
@@ -112,7 +125,8 @@ const MedicationsPage = () => {
 
     const handleReminderUpdate = async (formData) => {
         try {
-            await dispatch(updateReminders({ id: selectedMedication._id, reminderData: formData })).unwrap();
+            const reminders = formData.reminders || [];
+            await dispatch(updateReminders({ id: selectedMedication._id, reminderData: { reminders } })).unwrap();
             showNotification(t('patient.medications.reminderUpdated', 'Reminders updated successfully!'), 'success');
             setReminderDialogOpen(false);
         } catch (error) {
@@ -126,23 +140,18 @@ const MedicationsPage = () => {
 
     const safeToLower = (val) => (typeof val === 'string' ? val.toLowerCase() : '');
 
-    const filteredMedications = medsArray.filter(med => {
-        const medName = safeToLower(med?.name);
-        const medPrescribedBy = safeToLower(med?.prescribedBy?.firstName + ' ' + med?.prescribedBy?.lastName);
-        const medStatus = safeToLower(med?.status);
+    const filteredMedications = medsArray;
 
-        const matchesSearch =
-            medName.includes(searchQuery.toLowerCase()) ||
-            medPrescribedBy.includes(searchQuery.toLowerCase());
-
-        const matchesStatus =
-            statusFilter === 'all' || medStatus === safeToLower(statusFilter);
-
-        const matchesTab =
-            activeTab === 'all' || medStatus === safeToLower(activeTab);
-
-        return matchesSearch && matchesStatus && matchesTab;
-    });
+    const allReminders = medsArray
+      .filter(med => Array.isArray(med.reminders) && med.reminders.length > 0)
+      .map(med => ({
+        medicationName: med.name,
+        medicationId: med._id,
+        reminders: (med.reminders || []).map(rem => ({
+          ...rem,
+          medicationId: med._id
+        }))
+      }));
 
     const [dialog, setDialog] = useState({ open: false, mode: 'add', medication: null });
     const openAddDialog = () => setDialog({ open: true, mode: 'add', medication: null });
@@ -163,6 +172,60 @@ const MedicationsPage = () => {
         }
         closeDialog();
     };
+
+    const handleToggleReminder = async (medicationId, idx) => {
+        const med = medsArray.find(m => m._id === medicationId);
+        if (!med) return;
+        const reminders = med.reminders.map((rem, i) => i === idx ? { ...rem, enabled: !rem.enabled } : rem);
+        await dispatch(updateReminders({ id: medicationId, reminderData: { reminders } }));
+    };
+
+    const handleDeleteReminder = async (medicationId, idx) => {
+        const med = medsArray.find(m => m._id === medicationId);
+        if (!med) return;
+        const reminders = med.reminders.filter((_, i) => i !== idx);
+        await dispatch(updateReminders({ id: medicationId, reminderData: { reminders } }));
+    };
+
+    const handleEditReminder = (medicationId, idx) => {
+        const med = medsArray.find(m => m._id === medicationId);
+        if (!med) return;
+        setSelectedMedication({ ...med, editingReminderIdx: idx });
+        setReminderDialogOpen(true);
+    };
+
+    const renderDetailsDialog = () => (
+        <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+            <DialogContent>
+                <DialogTitle>{detailsMedication?.name}</DialogTitle>
+                <div className="space-y-2 mt-2">
+                    <div><b>{t('patient.medications.dosage', 'Dosage')}:</b> {detailsMedication?.dosage}</div>
+                    <div><b>{t('patient.medications.frequency', 'Frequency')}:</b> {detailsMedication?.frequency}</div>
+                    <div><b>{t('patient.medications.status', 'Status')}:</b> {detailsMedication?.status}</div>
+                    <div><b>{t('patient.medications.startDate', 'Start Date')}:</b> {detailsMedication?.startDate ? new Date(detailsMedication.startDate).toLocaleDateString() : '-'}</div>
+                    <div><b>{t('patient.medications.endDate', 'End Date')}:</b> {detailsMedication?.endDate ? new Date(detailsMedication.endDate).toLocaleDateString() : '-'}</div>
+                    <div><b>{t('patient.medications.notes', 'Notes')}:</b> {detailsMedication?.notes || '-'}</div>
+                    {Array.isArray(detailsMedication?.reminders) && detailsMedication.reminders.length > 0 && (
+                        <div>
+                            <b>{t('patient.medications.reminders', 'Reminders')}:</b>
+                            <ul className="list-disc list-inside ml-4">
+                                {detailsMedication.reminders.map((rem, idx) => (
+                                    <li key={rem._id || idx}>
+                                        {rem.time ? `${t('patient.medications.at', 'At')} ${rem.time}` : ''}
+                                        {rem.days && rem.days.length > 0 ? ` (${rem.days.join(', ')})` : ''}
+                                        {rem.note ? ` - ${rem.note}` : ''}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+                <div className="flex justify-end mt-4">
+                    <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>{t('common.close', 'Close')}</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
 
     if (isLoading) {
         return (
@@ -216,8 +279,99 @@ const MedicationsPage = () => {
         );
     }
 
+    function ReminderCard({ medicationName, medicationId, reminders }) {
+        return (
+            <div
+                className="rounded-2xl border shadow-lg p-0 bg-gradient-to-br from-white via-card to-gray-50"
+                style={{
+                    borderColor: border,
+                    background: cardBg,
+                    minHeight: 180,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-start'
+                }}
+            >
+                <div className="flex items-center gap-2 px-5 pt-5 pb-2 border-b" style={{ borderColor: border }}>
+                    <Bell className="h-5 w-5 text-primary" style={{ color: primary }} />
+                    <span className="font-bold text-lg" style={{ color: text }}>{medicationName}</span>
+                </div>
+                <div className="flex-1 flex flex-col gap-3 px-5 py-4">
+                    {reminders.length > 0 ? (
+                        reminders.map((rem, i) => (
+                            <div
+                                key={rem._id || i}
+                                className="rounded-xl border flex flex-col md:flex-row md:items-center gap-2 md:gap-4 p-3 bg-gradient-to-r from-white via-muted to-gray-100 shadow-sm"
+                                style={{
+                                    borderColor: rem.enabled !== false ? primary : border,
+                                    background: rem.enabled !== false
+                                        ? 'linear-gradient(90deg, #e6f7ff 0%, #f0f4fa 100%)'
+                                        : cardBg,
+                                    opacity: rem.enabled !== false ? 1 : 0.7,
+                                    transition: 'background 0.2s, opacity 0.2s'
+                                }}
+                            >
+                                <div className="flex-1 flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4 text-primary" style={{ color: primary }} />
+                                        <span className="font-semibold text-base" style={{ color: text }}>
+                                            {rem.time ? `${t('patient.medications.at', 'At')} ${rem.time}` : ''}
+                                        </span>
+                                        {rem.days && rem.days.length > 0 && (
+                                            <span className="ml-2 flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                                <Calendar className="h-3 w-3" />
+                                                {rem.days.join(', ')}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {rem.note && (
+                                        <div className="text-sm text-muted-foreground mt-1 pl-6" style={{ color: muted }}>
+                                            {rem.note}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-2 md:mt-0">
+                                    <Switch
+                                        checked={rem.enabled !== false}
+                                        onCheckedChange={() => handleToggleReminder(medicationId, i)}
+                                        className="mr-1"
+                                    />
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => handleEditReminder(medicationId, i)}
+                                        aria-label={t('common.edit', 'Edit')}
+                                        className="hover:bg-blue-100"
+                                        style={{ color: primary }}
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => handleDeleteReminder(medicationId, i)}
+                                        aria-label={t('common.delete', 'Delete')}
+                                        className="hover:bg-red-100"
+                                        style={{ color: errorColor }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center text-muted-foreground py-4">
+                            <span>{t('patient.medications.noReminders', 'No reminders set for this medication.')}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col space-y-6">
+            {renderDetailsDialog()}
             <div className="flex items-center justify-between">
                 <PageHeader
                     title={t('patient.medications.title', 'Medications')}
@@ -303,18 +457,6 @@ const MedicationsPage = () => {
                             {t('patient.medications.viewPrescriptions', 'View Prescriptions')}
                         </span>
                     </Button>
-                    <Button
-                        onClick={openAddDialog}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl"  
-                        style={{
-                            background: primary,
-                            color: 'var(--color-primary-foreground)',
-                            fontWeight: 500,
-                            transition: 'background 0.2s, color 0.2s'
-                        }}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        {t('patient.medications.addMedication', 'Add Medication')}
-                    </Button>
                 </div>
             </div>
 
@@ -353,7 +495,7 @@ const MedicationsPage = () => {
                 </TabsList>
                 <TabsContent value="medications" className="mt-6">
                     {filteredMedications.length > 0 ? (
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                             {filteredMedications.map((medication) => (
                                 <MedicationCard
                                     key={medication._id}
@@ -378,17 +520,6 @@ const MedicationsPage = () => {
                                     ? t('patient.medications.tryAdjustingSearch', 'Try adjusting your search or filters to find medications.')
                                     : t('patient.medications.noMedicationsDefault', "You don't have any medications here yet. Add your first medication!")}
                             </p>
-                            <Button
-                                onClick={openAddDialog}
-                                style={{
-                                    background: primary,
-                                    color: 'var(--color-primary-foreground)',
-                                    fontWeight: 500,
-                                    transition: 'background 0.2s, color 0.2s'
-                                }}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                {t('patient.medications.addNewMedication', 'Add New Medication')}
-                            </Button>
                         </div>
                     )}
                 </TabsContent>
@@ -399,9 +530,22 @@ const MedicationsPage = () => {
                         onClose={() => setReminderDialogOpen(false)}
                         onSubmit={handleReminderUpdate}
                     />
-                    <div className="text-center text-muted-foreground py-12">
-                        <span>{t('patient.medications.remindersTabPlaceholder', 'Manage and view your medication reminders here.')}</span>
-                    </div>
+                    {allReminders.length > 0 ? (
+                        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {allReminders.map(({ medicationName, medicationId, reminders }, medIdx) => (
+                                <ReminderCard
+                                    key={medicationId}
+                                    medicationName={medicationName}
+                                    medicationId={medicationId}
+                                    reminders={reminders}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-12">
+                            <span>{t('patient.medications.remindersTabPlaceholder', 'Manage and view your medication reminders here.')}</span>
+                        </div>
+                    )}
                 </TabsContent>
                 <TabsContent value="availability" className="mt-6">
                     <PatientCheckMedicinePage hideHeader />

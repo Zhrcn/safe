@@ -1,19 +1,4 @@
-import { mockAdminProfile } from '@/data/mock/adminData';
-import { mockPharmacistProfile } from '@/data/mock/pharmacistData';
-import { getToken } from '@/utils/tokenUtils';
 
-const MOCK_USERS = {
-    'admin@safemedical.com': {
-        password: 'admin123',
-        role: 'admin',
-        profile: mockAdminProfile
-    },
-    'pharmacist@safemedical.com': {
-        password: 'pharm123',
-        role: 'pharmacist',
-        profile: mockPharmacistProfile
-    }
-};
 
 export const login = async (email, password) => {
     try {

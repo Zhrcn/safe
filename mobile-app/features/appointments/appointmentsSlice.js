@@ -6,7 +6,6 @@ export const fetchAppointments = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/patients/appointments');
-      console.log('Appointments API response:', response.data);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

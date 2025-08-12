@@ -14,6 +14,7 @@ import { fetchDoctorAppointments, createAppointment } from '@/store/slices/docto
 import { fetchPatients, fetchPatientById } from '@/store/slices/doctor/doctorPatientsSlice';
 import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '@/components/ui/Dialog';
+import useAppointmentSocket from '@/hooks/useAppointmentSocket';
 
 function getStatusColor(status) {
     switch (status?.toLowerCase()) {
@@ -49,14 +50,14 @@ function getTypeIcon(type) {
     }
 }
 
-function formatDateTime(date, time) {
+function formatDateTime(date, time, preferredDate) {
     try {
         const dateObj = new Date(date);
-        const placeholderDate = new Date('1111-01-01');
+        const placeholderDate = new Date('1111-11-01');
         
         if (dateObj.getTime() === placeholderDate.getTime() || isNaN(dateObj.getTime())) {
             return {
-                date: 'TBD',
+                date: preferredDate || 'TBD',
                 time: time || 'TBD'
             };
         }
@@ -67,7 +68,7 @@ function formatDateTime(date, time) {
         };
     } catch (error) {
         return {
-            date: 'TBD',
+            date: preferredDate || 'TBD',
             time: 'TBD'
         };
     }
@@ -93,7 +94,7 @@ function isMoreThan24HoursAway(date, time) {
 const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
     const appointmentDate = appointment.date || appointment.appointmentDate;
     const appointmentTime = appointment.time || appointment.appointmentTime;
-    const { date, time } = formatDateTime(appointmentDate, appointmentTime);
+    const { date, time } = formatDateTime(appointmentDate, appointmentTime, appointment.preferredDate);
 
     const patientName = appointment.patient
         ? `${appointment.patient.user?.firstName || appointment.patient.firstName || ''} ${appointment.patient.user?.lastName || appointment.patient.lastName || ''}`.trim()
@@ -202,6 +203,19 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
                         {t('doctor.appointments.rescheduled', 'Rescheduled')}
                     </Button>
                 )}
+                {appointment.status === 'completed' && (
+                    <Button
+                        size="sm"
+                        variant="success"
+                        className="text-xs px-3 py-1 h-8 w-full sm:w-auto lg:w-full xl:w-auto"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAction(appointment, 'confirm');
+                        }}
+                    >
+                        {t('doctor.appointments.confirm', 'Confirm')}
+                    </Button>
+                )}
                 <Button
                     variant="outline"
                     size="sm"
@@ -222,7 +236,7 @@ const AppointmentMobileCard = ({ appointment, onSelect, onAction, t }) => {
 const AppointmentTableRow = ({ appointment, onSelect, onAction, t }) => {
     const appointmentDate = appointment.date || appointment.appointmentDate;
     const appointmentTime = appointment.time || appointment.appointmentTime;
-    const { date, time } = formatDateTime(appointmentDate, appointmentTime);
+    const { date, time } = formatDateTime(appointmentDate, appointmentTime, appointment.preferredDate);
 
     const patientName = appointment.patient
         ? `${appointment.patient.user?.firstName || appointment.patient.firstName || ''} ${appointment.patient.user?.lastName || appointment.patient.lastName || ''}`.trim()
@@ -334,6 +348,19 @@ const AppointmentTableRow = ({ appointment, onSelect, onAction, t }) => {
                             }}
                         >
                             {t('doctor.appointments.rescheduled', 'Rescheduled')}
+                        </Button>
+                    )}
+                    {appointment.status === 'completed' && (
+                        <Button
+                            size="sm"
+                            variant="success"
+                            className="text-xs px-2 py-1 h-7 lg:h-8 lg:px-3"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAction(appointment, 'confirm');
+                            }}
+                        >
+                            {t('doctor.appointments.confirm', 'Confirm')}
                         </Button>
                     )}
                     <Button
@@ -472,12 +499,25 @@ const AppointmentsPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const dispatch = useAppDispatch();
-
+    
     const { appointments, loading, error } = useAppSelector(
         (state) => state.doctorAppointments
     );
 
     const { user } = useAppSelector((state) => state.auth);
+    const { patients, loading: patientsLoading } = useAppSelector((state) => state.doctorPatients);
+    
+    const { isConnected } = useAppointmentSocket();
+
+
+
+
+
+
+
+
+
+
     const doctorName = user ? `${user.firstName} ${user.lastName}` : 'Doctor';
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -499,7 +539,6 @@ const AppointmentsPage = () => {
     });
     const [formError, setFormError] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const { patients, loading: patientsLoading } = useAppSelector((state) => state.doctorPatients);
 
     useEffect(() => {
         dispatch(fetchDoctorAppointments());
@@ -632,7 +671,9 @@ const AppointmentsPage = () => {
                                 {t('doctor.appointments.subtitle', 'Dr.')} {doctorName}
                             </p>
                         </div>
-                        <Button variant="default" onClick={() => setNewDialogOpen(true)} className="mt-2 lg:mt-0">+ New Appointment</Button>
+                                <div className="flex gap-2">
+            <Button variant="default" onClick={() => setNewDialogOpen(true)} className="mt-2 lg:mt-0">+ New Appointment</Button>
+        </div>
                         <div className="w-full lg:w-auto space-y-3 lg:space-y-0 lg:space-x-3 lg:flex lg:items-center">
                             <div className="relative w-full lg:w-64">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />

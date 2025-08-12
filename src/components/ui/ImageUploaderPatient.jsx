@@ -4,8 +4,7 @@ import { Camera, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarFallback, AvatarImage, getImageUrl } from '@/components/ui/Avatar';
 import { useNotification } from '@/components/ui/Notification';
-import { API_BASE_URL } from '@/config/api';
-import { getToken } from '@/utils/tokenUtils';
+import axiosInstance from '@/store/services/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProfile, editProfile } from '@/store/slices/patient/profileSlice';
 
@@ -61,14 +60,12 @@ const ImageUploaderPatient = ({
         try {
             const formData = new FormData();
             formData.append('profileImage', file);
-            const token = getToken();
-            const response = await fetch(`${API_BASE_URL}/api/v1/upload/profile`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData,
+            const response = await axiosInstance.post('/upload/profile', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            if (!response.ok) throw new Error('Failed to upload image');
-            const data = await response.json();
+            const data = response.data;
             const imageUrl = data?.data?.imageUrl;
             await dispatch(editProfile({ profileImage: imageUrl })).unwrap();
             await dispatch(fetchProfile());

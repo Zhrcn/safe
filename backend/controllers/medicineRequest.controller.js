@@ -1,5 +1,6 @@
 const MedicineRequest = require('../models/MedicineRequest');
 const Pharmacist = require('../models/Pharmacist');
+const { createNotification } = require('../utils/notification.utils');
 
 exports.createMedicineRequest = async (req, res) => {
   try {
@@ -19,6 +20,17 @@ exports.createMedicineRequest = async (req, res) => {
       available: null,
       message: ''
     });
+    if (pharmacy.user) {
+      await createNotification(
+        pharmacy.user.toString(),
+        'New Medicine Request',
+        `A new medicine request for "${medicineName}" has been submitted to your pharmacy.
+`,
+        'inquiry',
+        request._id.toString(),
+        'MedicineRequest'
+      );
+    }
     res.status(201).json(request);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -34,7 +46,13 @@ exports.getMedicineRequests = async (req, res) => {
         populate: { path: 'user', select: 'firstName lastName email profileImage' }
       })
       .sort({ createdAt: -1 });
-    res.json(requests);
+    const data = requests.map(req => ({
+      ...req.toObject(),
+      pharmacyName: req.pharmacy
+        ? req.pharmacy.pharmacyName || (req.pharmacy.user ? `${req.pharmacy.user.firstName} ${req.pharmacy.user.lastName}` : 'Pharmacy')
+        : 'Pharmacy',
+    }));
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -74,6 +92,16 @@ exports.respondToMedicineRequest = async (req, res) => {
     request.available = available;
     request.message = message || '';
     await request.save();
+    if (request.doctor) {
+      await createNotification(
+        request.doctor.toString(),
+        'Medicine Availability Response',
+        `Your medicine request for "${request.medicineName}" has been responded to. ${available ? 'Available' : 'Not available'}. ${message || ''}`,
+        'inquiry',
+        request._id.toString(),
+        'MedicineRequest'
+      );
+    }
     res.status(200).json(request);
   } catch (err) {
     res.status(500).json({ error: err.message });
